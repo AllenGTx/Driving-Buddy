@@ -17,7 +17,11 @@ dependencies:
   shared_preferences: ^2.3.3
   permission_handler: ^11.3.1
   audioplayers: ^5.2.1
-
+  supabase_flutter: ^2.5.0
+  share_plus: ^10.0.0
+  google_mlkit_face_mesh_detection: ^0.3.0
+  google_mlkit_commons: ^0.9.0
+  wakelock_plus: ^1.2.10
 dev_dependencies:
   flutter_test:
     sdk: flutter
@@ -30,3 +34,4 @@ flutter:
     - assets/models/face_landmark.tflite
     - assets/images/meme_tidur.png
     - assets/audio/alarm.mp3
+    - assets/sounds/alarm.mp3

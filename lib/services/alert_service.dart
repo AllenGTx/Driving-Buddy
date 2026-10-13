@@ -1,0 +1,49 @@
+import 'package:audioplayers/audioplayers.dart';
+import 'package:flutter/services.dart';
+
+import '../core/thresholds.dart';
+import '../models/detection_result.dart';
+
+/// Alarm suara + getar saat status Sleep atau Drowsy.
+class AlertService {
+  final AudioPlayer _player = AudioPlayer();
+  bool _playing = false;
+  DateTime _lastHaptic = DateTime.fromMillisecondsSinceEpoch(0);
+
+  bool get isPlaying => _playing;
+
+  Future<void> onStatus(DriverStatus status) async {
+    final isAlert =
+        status == DriverStatus.sleep || status == DriverStatus.drowsy;
+
+    if (isAlert) {
+      await playAlert();
+    }
+  }
+
+  Future<void> playAlert() async {
+    final now = DateTime.now();
+    if (now.difference(_lastHaptic) >= Thresholds.alertCooldown) {
+      _lastHaptic = now;
+      HapticFeedback.heavyImpact();
+    }
+
+    if (!_playing) {
+      _playing = true;
+      await _player.setReleaseMode(ReleaseMode.loop);
+      await _player.play(AssetSource('sounds/alarm.mp3'));
+    }
+  }
+
+  Future<void> stop() async {
+    if (_playing) {
+      _playing = false;
+      await _player.stop();
+    }
+  }
+
+  Future<void> dispose() async {
+    await stop();
+    await _player.dispose();
+  }
+}

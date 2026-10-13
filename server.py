@@ -28,7 +28,7 @@ MAR_YAWN_THRESH       = 0.35   # Ambang mulut menguap
 HEAD_DROP_THRESH      = 0.68   # Ambang kepala menunduk ke bawah
 
 # Ambang Batas Durasi Waktu (Detik)
-EYE_CLOSED_TIME_LIMIT = 1.7   # Mata terpejam >= 1.6s -> Trigger SLEEP / MICROSLEEP
+EYE_CLOSED_TIME_LIMIT = 1.5   # Mata terpejam >= 1.6s -> Trigger SLEEP / MICROSLEEP
 YAWN_TIME_LIMIT       = 1.20   # Mulut terbuka >= 1.2s -> Status YAWN DETECTED
 HEAD_DROP_TIME_LIMIT  = 2.00   # Kepala menunduk >= 2.0s -> Peringatan DROWSY
 YAWN_COOLDOWN_SEC     = 3.5    # Jeda antar menguap agar tidak terhitung ganda

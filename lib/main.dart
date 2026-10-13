@@ -2,21 +2,38 @@ import 'dart:async';
 import 'dart:io';
 import 'dart:math';
 import 'dart:typed_data';
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'dart:convert';
 import 'package:camera/camera.dart';
-import 'package:web_socket_channel/web_socket_channel.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:audioplayers/audioplayers.dart';
+import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:wakelock_plus/wakelock_plus.dart';
+
+import 'supabase_service.dart';
+import 'auth_screen.dart';
+import 'driving_card_screen.dart';
+import 'core/thresholds.dart';
+import 'models/detection_result.dart';
+import 'services/alert_service.dart';
+import 'services/camera_image_converter.dart';
+import 'services/drowsiness_detector.dart';
+import 'services/face_mesh_service.dart';
+
 
 // ============================================================================
 // MAIN ENTRY POINT
 // ============================================================================
 
-void main() {
+void main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  await Supabase.initialize(
+    url: supabaseUrl,
+    anonKey: supabaseAnonKey,
+  );
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
@@ -52,24 +69,32 @@ class AppColors {
 // KONFIGURASI SERVER — Disimpan permanen via SharedPreferences
 // ============================================================================
 
-const String kDefaultServerIp = '192.168.10.19'; // Fallback default
-const int kServerPort = 8000;
+// ACCOUNT CONFIG — Simpan profil user secara lokal
+// ============================================================================
 
-/// Service untuk baca/tulis IP server dari penyimpanan lokal HP
-class ServerConfig {
-  static const _keyIp = 'server_ip';
+class AccountConfig {
+  static const _keyName = 'account_name';
+  static const _keyEmail = 'account_email';
 
-  static Future<String> getIp() async {
+  static Future<Map<String, String>> getProfile() async {
     final prefs = await SharedPreferences.getInstance();
-    return prefs.getString(_keyIp) ?? kDefaultServerIp;
+    return {
+      'name': prefs.getString(_keyName) ?? '',
+      'email': prefs.getString(_keyEmail) ?? '',
+    };
   }
 
-  static Future<void> saveIp(String ip) async {
+  static Future<void> saveProfile(String name, String email) async {
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString(_keyIp, ip);
+    await prefs.setString(_keyName, name);
+    await prefs.setString(_keyEmail, email);
   }
 
-  static String buildWsUrl(String ip) => 'ws://$ip:$kServerPort/ws';
+  static Future<void> clearProfile() async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.remove(_keyName);
+    await prefs.remove(_keyEmail);
+  }
 }
 
 // ============================================================================
@@ -210,7 +235,6 @@ class DrivingBuddyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
-        fontFamily: 'Segoe UI',
         brightness: Brightness.light,
         primaryColor: AppColors.primary,
         scaffoldBackgroundColor: AppColors.background,
@@ -221,29 +245,31 @@ class DrivingBuddyApp extends StatelessWidget {
           surface: AppColors.surface,
         ),
         appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.white,
+          backgroundColor: Colors.transparent,
           foregroundColor: AppColors.textPrimary,
           elevation: 0,
           centerTitle: false,
         ),
         cardTheme: CardThemeData(
           color: AppColors.cardBg,
-          elevation: 1,
+          elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16),
+            borderRadius: BorderRadius.circular(20),
           ),
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
           style: ElevatedButton.styleFrom(
             backgroundColor: AppColors.primary,
             foregroundColor: Colors.white,
+            elevation: 0,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(30),
+              borderRadius: BorderRadius.circular(16),
             ),
-            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
             textStyle: const TextStyle(
               fontWeight: FontWeight.w700,
               fontSize: 15,
+              letterSpacing: 0.3,
             ),
           ),
         ),
@@ -252,17 +278,35 @@ class DrivingBuddyApp extends StatelessWidget {
             foregroundColor: AppColors.primary,
             side: const BorderSide(color: AppColors.primary, width: 1.5),
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(30),
+              borderRadius: BorderRadius.circular(16),
             ),
-            padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 24),
+            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
             textStyle: const TextStyle(
               fontWeight: FontWeight.w700,
               fontSize: 15,
             ),
           ),
         ),
+        inputDecorationTheme: InputDecorationTheme(
+          filled: true,
+          fillColor: Colors.white,
+          border: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+          ),
+          enabledBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
+          ),
+          focusedBorder: OutlineInputBorder(
+            borderRadius: BorderRadius.circular(14),
+            borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
+          ),
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        ),
       ),
-      home: const MainShell(),
+      home: AuthService.isLoggedIn ? const MainShell() : const LoginScreen(),
     );
   }
 }
@@ -280,16 +324,14 @@ class MainShell extends StatefulWidget {
 
 class _MainShellState extends State<MainShell> {
   int _currentIndex = 0;
-
   final GlobalKey<MonitorScreenState> _monitorKey = GlobalKey();
 
-  void _switchToTab(int index) {
-    setState(() => _currentIndex = index);
-  }
+  void _switchToTab(int index) => setState(() => _currentIndex = index);
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
+      backgroundColor: AppColors.background,
       body: IndexedStack(
         index: _currentIndex,
         children: [
@@ -298,38 +340,48 @@ class _MainShellState extends State<MainShell> {
           const HistoryScreen(),
         ],
       ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: Colors.white,
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withOpacity(0.06),
-              blurRadius: 12,
-              offset: const Offset(0, -2),
+      // ── Floating pill bottom nav ──
+      bottomNavigationBar: Padding(
+        padding: const EdgeInsets.fromLTRB(24, 0, 24, 20),
+        child: ClipRRect(
+          borderRadius: BorderRadius.circular(28),
+          child: Container(
+            height: 64,
+            decoration: BoxDecoration(
+              color: const Color(0xFF1C2333),
+              borderRadius: BorderRadius.circular(28),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.25),
+                  blurRadius: 24,
+                  offset: const Offset(0, 8),
+                ),
+              ],
             ),
-          ],
-        ),
-        child: SafeArea(
-          child: Padding(
-            padding: const EdgeInsets.symmetric(vertical: 8),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
+              mainAxisAlignment: MainAxisAlignment.spaceEvenly,
               children: [
-                _buildNavItem(
+                _NavItem(
                   icon: Icons.dashboard_rounded,
                   label: 'Cockpit',
                   index: 0,
+                  current: _currentIndex,
+                  onTap: _switchToTab,
                 ),
-                _buildNavItem(
+                _NavItem(
                   icon: Icons.videocam_rounded,
                   label: 'Monitor',
                   index: 1,
+                  current: _currentIndex,
+                  onTap: _switchToTab,
                   isCenter: true,
                 ),
-                _buildNavItem(
+                _NavItem(
                   icon: Icons.history_rounded,
                   label: 'Riwayat',
                   index: 2,
+                  current: _currentIndex,
+                  onTap: _switchToTab,
                 ),
               ],
             ),
@@ -338,82 +390,95 @@ class _MainShellState extends State<MainShell> {
       ),
     );
   }
+}
 
-  Widget _buildNavItem({
-    required IconData icon,
-    required String label,
-    required int index,
-    bool isCenter = false,
-  }) {
-    final isActive = _currentIndex == index;
+class _NavItem extends StatelessWidget {
+  final IconData icon;
+  final String label;
+  final int index;
+  final int current;
+  final ValueChanged<int> onTap;
+  final bool isCenter;
+
+  const _NavItem({
+    required this.icon,
+    required this.label,
+    required this.index,
+    required this.current,
+    required this.onTap,
+    this.isCenter = false,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isActive = current == index;
 
     if (isCenter) {
       return GestureDetector(
-        onTap: () => setState(() => _currentIndex = index),
-        behavior: HitTestBehavior.opaque,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 52,
-              height: 52,
-              decoration: BoxDecoration(
-                gradient: isActive
-                    ? const LinearGradient(
-                        colors: [AppColors.primary, AppColors.accent])
-                    : null,
-                color: isActive ? null : Colors.grey.shade200,
-                shape: BoxShape.circle,
-                boxShadow: isActive
-                    ? [
-                        BoxShadow(
-                          color: AppColors.primary.withOpacity(0.35),
-                          blurRadius: 12,
-                          offset: const Offset(0, 4),
-                        ),
-                      ]
-                    : [],
-              ),
-              child: Icon(
-                icon,
-                color: isActive ? Colors.white : AppColors.textSecondary,
-                size: 26,
-              ),
-            ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: isActive ? FontWeight.w800 : FontWeight.w500,
-                color: isActive ? AppColors.primary : AppColors.textSecondary,
-              ),
-            ),
-          ],
+        onTap: () => onTap(index),
+        child: AnimatedContainer(
+          duration: const Duration(milliseconds: 250),
+          curve: Curves.easeOutCubic,
+          width: 56,
+          height: 56,
+          decoration: BoxDecoration(
+            gradient: isActive
+                ? const LinearGradient(
+                    colors: [AppColors.primary, AppColors.accent],
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                  )
+                : const LinearGradient(
+                    colors: [Color(0xFF252D3F), Color(0xFF252D3F)]),
+            shape: BoxShape.circle,
+            boxShadow: isActive
+                ? [
+                    BoxShadow(
+                      color: AppColors.primary.withOpacity(0.5),
+                      blurRadius: 16,
+                      offset: const Offset(0, 4),
+                    )
+                  ]
+                : [],
+          ),
+          child: Icon(icon,
+              color: isActive ? Colors.white : const Color(0xFF6B7280),
+              size: 26),
         ),
       );
     }
 
     return GestureDetector(
-      onTap: () => setState(() => _currentIndex = index),
+      onTap: () => onTap(index),
       behavior: HitTestBehavior.opaque,
       child: SizedBox(
-        width: 70,
+        width: 80,
         child: Column(
-          mainAxisSize: MainAxisSize.min,
+          mainAxisAlignment: MainAxisAlignment.center,
           children: [
-            Icon(
-              icon,
-              color: isActive ? AppColors.primary : AppColors.textSecondary,
-              size: 25,
+            AnimatedContainer(
+              duration: const Duration(milliseconds: 200),
+              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+              decoration: BoxDecoration(
+                color: isActive
+                    ? AppColors.primary.withOpacity(0.18)
+                    : Colors.transparent,
+                borderRadius: BorderRadius.circular(16),
+              ),
+              child: Icon(icon,
+                  color: isActive
+                      ? AppColors.primary
+                      : const Color(0xFF6B7280),
+                  size: 22),
             ),
-            const SizedBox(height: 4),
+            const SizedBox(height: 2),
             Text(
               label,
               style: TextStyle(
-                fontSize: 11,
-                fontWeight: isActive ? FontWeight.w800 : FontWeight.w500,
-                color: isActive ? AppColors.primary : AppColors.textSecondary,
+                fontSize: 10,
+                fontWeight: isActive ? FontWeight.w700 : FontWeight.w500,
+                color:
+                    isActive ? AppColors.primary : const Color(0xFF6B7280),
               ),
             ),
           ],
@@ -429,86 +494,123 @@ class _MainShellState extends State<MainShell> {
 
 class DrivingBuddyAppBar extends StatelessWidget {
   final List<Widget>? trailing;
-
   const DrivingBuddyAppBar({super.key, this.trailing});
 
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.fromLTRB(16, 8, 16, 4),
+      padding: const EdgeInsets.fromLTRB(16, 12, 16, 4),
       child: Row(
         children: [
+          // Logo mark
           Container(
-            width: 36,
-            height: 36,
+            width: 38,
+            height: 38,
             decoration: BoxDecoration(
               gradient: const LinearGradient(
                 colors: [AppColors.primary, AppColors.accent],
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
               ),
-              borderRadius: BorderRadius.circular(10),
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: AppColors.primary.withOpacity(0.3),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-            child: const Icon(Icons.remove_red_eye_rounded,
+            child: const Icon(Icons.directions_car_rounded,
                 color: Colors.white, size: 20),
           ),
           const SizedBox(width: 10),
-          const Text(
-            'DrivingBuddy',
-            style: TextStyle(
-              fontSize: 19,
-              fontWeight: FontWeight.w800,
-              color: AppColors.textPrimary,
+          const Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'DrivingBuddy',
+                  style: TextStyle(
+                    fontSize: 17,
+                    fontWeight: FontWeight.w900,
+                    color: AppColors.textPrimary,
+                    letterSpacing: -0.3,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+                Text(
+                  'Pantau keselamatan',
+                  style: TextStyle(
+                    fontSize: 10,
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w500,
+                  ),
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
             ),
           ),
-          const Spacer(),
-          // Badge Siaga
+          const SizedBox(width: 6),
+
+          // Status badge
           Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 5),
+            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
             decoration: BoxDecoration(
-              color: AppColors.primaryLight,
+              color: const Color(0xFFECFDF5),
               borderRadius: BorderRadius.circular(20),
-              border: Border.all(color: AppColors.primary.withOpacity(0.3)),
+              border: Border.all(
+                  color: const Color(0xFF10B981).withOpacity(0.3)),
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  width: 7,
-                  height: 7,
+                  width: 6,
+                  height: 6,
                   decoration: const BoxDecoration(
-                    color: AppColors.success,
+                    color: Color(0xFF10B981),
                     shape: BoxShape.circle,
                   ),
                 ),
-                const SizedBox(width: 6),
+                const SizedBox(width: 4),
                 const Text(
-                  'Siaga',
+                  'On-Device AI',
                   style: TextStyle(
-                    fontSize: 12,
+                    fontSize: 10,
                     fontWeight: FontWeight.w700,
-                    color: AppColors.primaryDark,
+                    color: Color(0xFF059669),
                   ),
                 ),
               ],
             ),
           ),
+
           if (trailing != null) ...trailing!,
-          // Tombol Settings
-          const SizedBox(width: 6),
+          const SizedBox(width: 8),
+
+          // Profile / Settings button
           Builder(
             builder: (ctx) => GestureDetector(
               onTap: () => Navigator.push(
                 ctx,
                 MaterialPageRoute(
-                  builder: (_) => const ServerSettingsScreen(),
-                ),
+                    builder: (_) => const AccountSettingsScreen()),
               ),
               child: Container(
-                width: 36,
-                height: 36,
+                width: 38,
+                height: 38,
                 decoration: BoxDecoration(
-                  color: Colors.grey.shade100,
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: Colors.grey.shade200),
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: const Color(0xFFE5E7EB)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.04),
+                      blurRadius: 8,
+                    )
+                  ],
                 ),
                 child: const Icon(Icons.settings_rounded,
                     color: AppColors.textSecondary, size: 20),
@@ -521,9 +623,11 @@ class DrivingBuddyAppBar extends StatelessWidget {
   }
 }
 
+
 // ============================================================================
 // LAYAR 1 — COCKPIT (Dashboard Beranda — Tanpa Kamera)
 // ============================================================================
+
 
 class CockpitScreen extends StatelessWidget {
   final VoidCallback onStartMonitoring;
@@ -590,7 +694,7 @@ class CockpitScreen extends StatelessWidget {
                   color: Colors.white.withOpacity(0.1),
                   borderRadius: BorderRadius.circular(14),
                 ),
-                child: const Icon(Icons.shield_rounded,
+                child: const Icon(Icons.psychology_rounded,
                     color: AppColors.success, size: 26),
               ),
               const SizedBox(width: 14),
@@ -599,7 +703,7 @@ class CockpitScreen extends StatelessWidget {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     const Text(
-                      'Sistem Siap Memantau',
+                      'AI On-Device Siap',
                       style: TextStyle(
                         fontSize: 17,
                         fontWeight: FontWeight.w800,
@@ -608,7 +712,7 @@ class CockpitScreen extends StatelessWidget {
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Kamera & AI belum aktif. Buka tab Monitor untuk memulai deteksi kantuk secara real-time.',
+                      'Tidak perlu server atau internet. Deteksi kantuk berjalan langsung di HP kamu.',
                       style: TextStyle(
                         fontSize: 12,
                         color: Colors.white.withOpacity(0.6),
@@ -621,14 +725,14 @@ class CockpitScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-          _buildCheckRow(Icons.camera_alt_rounded, 'Kamera IR',
+          _buildCheckRow(Icons.camera_alt_rounded, 'Kamera Depan',
               'Standby — siap diaktifkan'),
           const SizedBox(height: 8),
-          _buildCheckRow(Icons.psychology_rounded, 'Model AI (Dlib/YOLO)',
-              'Terload & siap inferensi'),
+          _buildCheckRow(Icons.psychology_rounded, 'ML Kit Face Mesh',
+              'On-device, tanpa internet'),
           const SizedBox(height: 8),
-          _buildCheckRow(Icons.gps_fixed_rounded, 'GPS & Lokasi',
-              'Akurat — sinyal kuat'),
+          _buildCheckRow(Icons.shield_rounded, 'Privasi Terjaga',
+              'Data tidak keluar dari HP'),
         ],
       ),
     );
@@ -1001,264 +1105,240 @@ class MonitorScreen extends StatefulWidget {
 }
 
 class MonitorScreenState extends State<MonitorScreen> {
+  // Timer kemudi
   Timer? _drivingTimer;
-  Timer? _processingTimer;
   int _elapsedSeconds = 0;
   bool _isMonitoring = false;
 
-  // Kamera & WebSocket
+  // Kamera & On-Device AI
   CameraController? _cameraController;
-  WebSocketChannel? _channel;
-  bool _isProcessingFrame = false;
-  String _currentServerIp = kDefaultServerIp;
+  CameraDescription? _frontCamera;
+  bool _busy = false;
+  int _frameCount = 0;
 
-  // Metrik real-time dari Python server
-  double _earIndex = 0.00;
-  final String _earRange = 'Ambang > 0.15';
-  String _earStatus = '—';
-  int _blinkFrequency = 0;
-  int _fatigueScore = 0;
-  String _fatigueLabel = '—';
-  String _driverCondition = 'MENUNGGU';
-  String _conditionDescription = 'Tekan tombol di bawah untuk memulai sesi monitoring.';
-  double _awarenessLevel = 0.0;
-  String _cameraMode = 'Standby';
+  // ML Kit Services (Offline Face Mesh)
+  final FaceMeshService _mesh = FaceMeshService();
+  final DrowsinessDetector _detector = DrowsinessDetector();
+  final AlertService _alert = AlertService();
+
+  // Hasil deteksi real-time
+  DetectionResult _result = DetectionResult.initial;
   bool _eyeDetected = false;
-  bool _isAlertShowing = false; // Cegah dialog menumpuk saat status SLEEP terus menerus
+  String _cameraMode = 'Standby';
+
+  // Alert guard
+  bool _isAlertShowing = false;
+  static const int _alertCooldownSeconds = 10;
+
+  // === Supabase Session Tracking ===
+  String? _currentSessionId;
+  DateTime? _sessionStartTime;
+  int _drowsyCount = 0;
+  int _yawnCount = 0;
+  int _microsleepCount = 0;
 
   @override
   void didUpdateWidget(covariant MonitorScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.isActive && !oldWidget.isActive && _isMonitoring) {
-      _resumeTimer();
-    }
-    if (!widget.isActive && oldWidget.isActive) {
-      _pauseTimer();
-    }
+    if (widget.isActive && !oldWidget.isActive && _isMonitoring) _resumeTimer();
+    if (!widget.isActive && oldWidget.isActive) _pauseTimer();
   }
 
   @override
   void dispose() {
     _drivingTimer?.cancel();
     _cameraController?.dispose();
-    _channel?.sink.close();
+    _mesh.dispose();
+    _alert.dispose();
+    WakelockPlus.disable();
     super.dispose();
   }
 
-  // ---------- Request permission kamera di runtime ----------
+  // ---------- Runtime Camera Permission ----------
   Future<bool> _requestCameraPermission() async {
+    if (kIsWeb) return true;
+
     final status = await Permission.camera.status;
     if (status.isGranted) return true;
-    if (status.isDenied) {
-      final result = await Permission.camera.request();
-      return result.isGranted;
-    }
-    if (status.isPermanentlyDenied) {
-      if (mounted) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          SnackBar(
-            content: const Text(
-                'Izin kamera ditolak permanen. Buka Pengaturan > Aplikasi untuk mengaktifkannya.'),
-            backgroundColor: AppColors.danger,
-            behavior: SnackBarBehavior.floating,
-            action: SnackBarAction(
-              label: 'Buka Pengaturan',
-              textColor: Colors.white,
-              onPressed: () => openAppSettings(),
-            ),
+    if (status.isDenied) return (await Permission.camera.request()).isGranted;
+    if (status.isPermanentlyDenied && mounted) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: const Text(
+              'Izin kamera ditolak permanen. Buka Pengaturan > Aplikasi untuk mengaktifkannya.'),
+          backgroundColor: AppColors.danger,
+          behavior: SnackBarBehavior.floating,
+          action: SnackBarAction(
+            label: 'Buka Pengaturan',
+            textColor: Colors.white,
+            onPressed: () => openAppSettings(),
           ),
-        );
-      }
-      return false;
+        ),
+      );
     }
     return false;
   }
 
-  // ---------- Inisialisasi Kamera & WebSocket ----------
+
+  // ---------- Mulai Monitoring ----------
   Future<void> _startMonitoring() async {
     setState(() {
       _isMonitoring = true;
       _elapsedSeconds = 0;
-      _cameraMode = 'AI Siaga Optimal';
-      _driverCondition = 'MEMUAT KAMERA...';
-      _conditionDescription = 'Menginisialisasi kamera & koneksi ke server.';
+      _cameraMode = 'Memuat AI...';
+      _result = DetectionResult.initial;
+      _drowsyCount = 0;
+      _yawnCount = 0;
+      _microsleepCount = 0;
+      _currentSessionId = null;
     });
+    _sessionStartTime = DateTime.now();
 
-    // 1. Minta izin kamera runtime
     final hasPermission = await _requestCameraPermission();
     if (!hasPermission) {
-      if (mounted) {
-        setState(() {
-          _isMonitoring = false;
-          _driverCondition = 'IZIN DITOLAK';
-          _conditionDescription = 'Izin kamera dibutuhkan untuk monitoring.\nBuka Pengaturan dan aktifkan izin kamera.';
-        });
-      }
+      if (mounted) setState(() { _isMonitoring = false; _cameraMode = 'Standby'; });
       return;
     }
 
-    try {
-      // 2. Load IP server dari SharedPreferences
-      _currentServerIp = await ServerConfig.getIp();
-      final wsUrl = ServerConfig.buildWsUrl(_currentServerIp);
-
-      // 3. Konek ke Server Python via WebSocket
-      _channel = WebSocketChannel.connect(Uri.parse(wsUrl));
-
-      // Tunggu koneksi ready (timeout 5 detik)
+    // Mulai sesi di Supabase (jika login)
+    if (AuthService.isLoggedIn) {
       try {
-        await _channel!.ready.timeout(
-          const Duration(seconds: 5),
-          onTimeout: () => throw Exception('Timeout: server tidak merespon'),
-        );
+        _currentSessionId = await SessionService.startSession();
+        debugPrint('✅ Sesi Supabase dimulai ID: $_currentSessionId');
       } catch (e) {
-        if (mounted) {
-          setState(() {
-            _driverCondition = 'KONEKSI GAGAL';
-            _conditionDescription =
-                'Tidak bisa terhubung ke $_currentServerIp:$kServerPort\n'
-                'Pastikan:\n'
-                '• server.py sudah dijalankan di laptop\n'
-                '• HP & laptop di WiFi yang sama\n'
-                '• IP di Settings sudah benar';
-          });
-        }
-        _channel?.sink.close();
-        _channel = null;
-        setState(() => _isMonitoring = false);
-        return;
+        debugPrint('Supabase startSession error: $e');
       }
+    }
 
-      // 4. Dengarkan balasan dari Python
-      _channel!.stream.listen(
-        (message) {
-          if (!mounted) return;
-          try {
-            final data = jsonDecode(message as String);
-            setState(() {
-              final status = data['status']?.toString() ?? 'No Face';
-              _eyeDetected = status != 'No Face';
+    try {
+      await WakelockPlus.enable();
 
-              if (_eyeDetected) {
-                _earIndex = (data['ear'] as num?)?.toDouble() ?? 0.0;
-                _blinkFrequency = (data['blinkCount'] as num?)?.toInt() ?? _blinkFrequency;
-                _driverCondition = status.toUpperCase();
-                _conditionDescription = data['subStatus']?.toString() ?? '';
-
-                // Logika UI berdasarkan status dari server
-                if (_driverCondition == 'AWAKE') {
-                  _earStatus = 'Aman';
-                  _awarenessLevel = 0.99;
-                  _fatigueScore = 5;
-                  _fatigueLabel = 'Segar';
-                } else if (_driverCondition == 'YAWN') {
-                  _earStatus = 'Mengantuk';
-                  _awarenessLevel = 0.70;
-                  _fatigueScore = 40;
-                  _fatigueLabel = 'Perlu Waspada';
-                } else if (_driverCondition == 'DROWSY') {
-                  _earStatus = 'Waspada!';
-                  _awarenessLevel = 0.40;
-                  _fatigueScore = 70;
-                  _fatigueLabel = 'Lelah';
-                } else if (_driverCondition == 'SLEEP') {
-                  _earStatus = 'BAHAYA!';
-                  _awarenessLevel = 0.10;
-                  _fatigueScore = 95;
-                  _fatigueLabel = 'Kritis';
-                  _triggerMicrosleepAlert();
-                }
-              } else {
-                _driverCondition = 'MENUNGGU DETEKSI';
-                _conditionDescription = 'Wajah tidak terlihat oleh kamera.';
-                _awarenessLevel = 0.0;
-              }
-            });
-          } catch (e) {
-            debugPrint('Error parsing WebSocket message: $e');
-          }
-        },
-        onError: (error) {
-          debugPrint('WebSocket Error: $error');
-          if (mounted) {
-            setState(() {
-              _driverCondition = 'KONEKSI ERROR';
-              _conditionDescription =
-                  'Koneksi ke server terputus.\n'
-                  'IP: $_currentServerIp:$kServerPort\n'
-                  'Pastikan server.py masih berjalan.';
-            });
-          }
-        },
-        onDone: () {
-          if (mounted && _isMonitoring) {
-            setState(() {
-              _driverCondition = 'SERVER TERPUTUS';
-              _conditionDescription = 'Koneksi WebSocket ditutup oleh server.';
-            });
-          }
-        },
-      );
-
-      // 5. Siapkan Kamera Depan
       final cameras = await availableCameras();
-      if (cameras.isEmpty) {
-        throw Exception('Tidak ada kamera yang tersedia di perangkat ini.');
-      }
-
-      final frontCam = cameras.firstWhere(
-        (cam) => cam.lensDirection == CameraLensDirection.front,
-        orElse: () => cameras.first,
+      if (cameras.isEmpty) throw Exception('Tidak ada kamera tersedia di perangkat ini.');
+      _frontCamera = cameras.firstWhere(
+        (c) => c.lensDirection == CameraLensDirection.front,
+        orElse: () => cameras.firstWhere(
+          (c) => c.lensDirection == CameraLensDirection.external,
+          orElse: () => cameras.first,
+        ),
       );
 
-      // Gunakan resolusi rendah agar tidak berat
-      // ImageFormatGroup: yuv420 untuk Android, bgra8888 untuk iOS
       _cameraController = CameraController(
-        frontCam,
-        ResolutionPreset.low,
+        _frontCamera!,
+        ResolutionPreset.medium,
         enableAudio: false,
         imageFormatGroup: Platform.isAndroid
-            ? ImageFormatGroup.yuv420
+            ? ImageFormatGroup.nv21
             : ImageFormatGroup.bgra8888,
       );
       await _cameraController!.initialize();
+      await _cameraController!.startImageStream(_onFrame);
 
-      // Rebuild UI agar CameraPreview tampil
-      if (mounted) setState(() {});
-
-      // 6. Mulai ambil frame dan kirim ke Python
-      _resumeTimer();
-      _processingTimer?.cancel();
-      _processingTimer = Timer.periodic(const Duration(milliseconds: 300), (_) async {
-        if (!_isProcessingFrame && _isMonitoring &&
-            _channel != null && _cameraController != null &&
-            (_cameraController?.value.isInitialized ?? false)) {
-          _isProcessingFrame = true;
-          String? tempPath;
-          try {
-            final XFile photo = await _cameraController!.takePicture();
-            tempPath = photo.path;
-            final bytes = await File(tempPath).readAsBytes();
-            _channel?.sink.add(base64Encode(bytes));
-          } catch (e) {
-            debugPrint('Error streaming frame: $e');
-          } finally {
-            _isProcessingFrame = false;
-            if (tempPath != null) {
-              try { await File(tempPath).delete(); } catch (_) {}
-            }
-          }
-        }
+      if (!mounted) return;
+      setState(() {
+        _cameraMode = 'ML Kit Aktif';
       });
+      _resumeTimer();
+
     } catch (e) {
-      debugPrint('Kamera gagal dimuat: $e');
+      debugPrint('Init kamera gagal: $e');
       if (mounted) {
         setState(() {
           _isMonitoring = false;
-          _driverCondition = 'GAGAL MEMUAT';
-          _conditionDescription = 'Error: $e';
+          _cameraMode = 'Standby';
+        });
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal memulai kamera: $e'),
+            backgroundColor: AppColors.danger,
+          ),
+        );
+      }
+    }
+  }
+
+  // ---------- ML Kit Frame Processing (Offline 100%) ----------
+  Future<void> _onFrame(CameraImage image) async {
+    if (_busy) return;
+    if (++_frameCount % Thresholds.processEveryNthFrame != 0) return;
+    _busy = true;
+
+    try {
+      final controller = _cameraController;
+      if (controller == null || _frontCamera == null) return;
+
+      final input = cameraImageToInputImage(
+        image,
+        _frontCamera!,
+        controller.value.deviceOrientation,
+      );
+      if (input == null) return;
+
+      final points = await _mesh.detect(input);
+      final result = _detector.update(points);
+
+      // Cek kondisi bahaya
+      final isSleep = result.status == DriverStatus.sleep;
+      final isExcessiveYawn = result.yawnCount >= Thresholds.yawnAlertFreq;
+      final isDrowsy = result.status == DriverStatus.drowsy;
+
+      if (isSleep) {
+        _microsleepCount++;
+        if (AuthService.isLoggedIn && _currentSessionId != null) {
+          SessionService.logEvent(
+            sessionId: _currentSessionId!,
+            eventType: 'microsleep',
+          );
+        }
+      } else if (isExcessiveYawn) {
+        _yawnCount++;
+        if (AuthService.isLoggedIn && _currentSessionId != null) {
+          SessionService.logEvent(
+            sessionId: _currentSessionId!,
+            eventType: 'yawn',
+          );
+        }
+      } else if (isDrowsy) {
+        _drowsyCount++;
+        if (AuthService.isLoggedIn && _currentSessionId != null) {
+          SessionService.logEvent(
+            sessionId: _currentSessionId!,
+            eventType: 'drowsy',
+          );
+        }
+      }
+
+      if ((isSleep || isExcessiveYawn) && !_isAlertShowing) {
+        await _alert.playAlert();
+        if (isSleep) {
+          _triggerSafetyAlert(
+            title: 'MATA TERPEJAM!\nISTIRAHAT SEKARANG',
+            subtitle: '🚨 PERINGATAN MICROSLEEP',
+            reason:
+                'Mata terpejam melebihi ${Thresholds.eyeClosedLimit} detik. Segera cari tempat aman untuk berhenti.',
+            resetYawnsOnDismiss: false,
+          );
+        } else {
+          _triggerSafetyAlert(
+            title: 'TERLALU SERING\nMENGUAP!',
+            subtitle: '⚠️ INDIKASI KELELAHAN BERAT',
+            reason:
+                'Terdeteksi ${result.yawnCount}x menguap dalam 5 menit terakhir. Tingkat kantuk Anda sangat tinggi!',
+            resetYawnsOnDismiss: true,
+          );
+        }
+      }
+
+      if (mounted) {
+        setState(() {
+          _result = result;
+          _eyeDetected = result.status != DriverStatus.noFace;
         });
       }
+    } catch (e) {
+      debugPrint('[FaceMesh] Error deteksi frame: $e');
+    } finally {
+      _busy = false;
     }
   }
 
@@ -1278,29 +1358,148 @@ class MonitorScreenState extends State<MonitorScreen> {
 
   Future<void> _stopMonitoring() async {
     _pauseTimer();
-    _processingTimer?.cancel();
 
-    _cameraController?.dispose();
+    final int finalDuration = _elapsedSeconds;
+    final int finalDrowsy = _drowsyCount;
+    final int finalYawn = _result.yawnCount > _yawnCount ? _result.yawnCount : _yawnCount;
+    final int finalMicro = _microsleepCount;
+    final double avgBlink = _result.blinkCount.toDouble();
+    final DateTime sessionStart = _sessionStartTime ?? DateTime.now();
+
+    // Hitung driving score (0-100)
+    int score = 100;
+    score -= (finalDrowsy * 5).clamp(0, 40);
+    score -= (finalYawn * 2).clamp(0, 20);
+    score -= (finalMicro * 10).clamp(0, 40);
+    score = score.clamp(0, 100);
+
+    // Simpan sesi ke Supabase jika login
+    if (AuthService.isLoggedIn && _currentSessionId != null) {
+      try {
+        await SessionService.endSession(
+          sessionId: _currentSessionId!,
+          durationSeconds: finalDuration,
+          avgSpeedKmh: 0,
+          maxSpeedKmh: 0,
+          distanceKm: 0,
+          drivingScore: score,
+          avgBlinkRate: avgBlink,
+          totalYawns: finalYawn,
+          totalDrowsyEvents: finalDrowsy,
+          totalMicrosleeps: finalMicro,
+        );
+        debugPrint('✅ Sesi tersimpan ke Supabase! Score: $score');
+      } catch (e) {
+        debugPrint('❌ Gagal simpan sesi ke Supabase: $e');
+      }
+    }
+
+    try {
+      await _cameraController?.stopImageStream();
+    } catch (_) {}
+    await _cameraController?.dispose();
     _cameraController = null;
-    _channel?.sink.close();
-    _channel = null;
+    await _alert.stop();
+    await WakelockPlus.disable();
 
     setState(() {
       _isMonitoring = false;
       _elapsedSeconds = 0;
-      _earIndex = 0.00;
-      _earStatus = '—';
-      _blinkFrequency = 0;
-      _fatigueScore = 0;
-      _fatigueLabel = '—';
-      _driverCondition = 'MENUNGGU';
-      _conditionDescription =
-          'Tekan tombol di bawah untuk memulai sesi monitoring.';
-      _awarenessLevel = 0.0;
-      _cameraMode = 'Standby';
+      _result = DetectionResult.initial;
       _eyeDetected = false;
+      _cameraMode = 'Standby';
       _isAlertShowing = false;
+      _frameCount = 0;
+      _currentSessionId = null;
     });
+
+    // Dialog konfirmasi kartu berkendara
+    if (mounted && finalDuration > 5) {
+      await Future.delayed(const Duration(milliseconds: 400));
+      if (!mounted) return;
+      final wantCard = await showDialog<bool>(
+        context: context,
+        barrierDismissible: false,
+        builder: (ctx) => AlertDialog(
+          backgroundColor: const Color(0xFF1A1F2E),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(20),
+          ),
+          title: const Row(
+            children: [
+              Icon(Icons.directions_car_rounded,
+                  color: Color(0xFFFF6D00), size: 28),
+              SizedBox(width: 10),
+              Text('Sesi Selesai! 🎉',
+                  style: TextStyle(
+                      color: Colors.white,
+                      fontSize: 17,
+                      fontWeight: FontWeight.w800)),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Text(
+                'Durasi: ${_formatDuration(finalDuration)}',
+                style: const TextStyle(color: Colors.white70, fontSize: 14),
+              ),
+              const SizedBox(height: 6),
+              Text(
+                'Skor berkendaramu: $score / 100',
+                style: TextStyle(
+                  color: score >= 80
+                      ? AppColors.success
+                      : (score >= 50 ? AppColors.warning : AppColors.danger),
+                  fontSize: 15,
+                  fontWeight: FontWeight.bold,
+                ),
+              ),
+              const SizedBox(height: 10),
+              const Text(
+                'Mau lihat kartu pencapaian berkendaramu?',
+                style: TextStyle(color: Colors.white54, fontSize: 13),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx, false),
+              child: const Text('Nanti saja',
+                  style: TextStyle(color: Colors.white38)),
+            ),
+            ElevatedButton(
+              onPressed: () => Navigator.pop(ctx, true),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFFF6D00),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12)),
+              ),
+              child: const Text('Lihat Kartu! 🏆',
+                  style: TextStyle(
+                      color: Colors.white, fontWeight: FontWeight.w700)),
+            ),
+          ],
+        ),
+      );
+
+      if (wantCard == true && mounted) {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => DrivingCardScreen(
+              durationSeconds: finalDuration,
+              drivingScore: score,
+              totalMicrosleeps: finalMicro,
+              totalDrowsy: finalDrowsy,
+              totalYawns: finalYawn,
+              startedAt: sessionStart,
+            ),
+          ),
+        );
+      }
+    }
   }
 
   void _togglePauseResume() {
@@ -1309,7 +1508,7 @@ class MonitorScreenState extends State<MonitorScreen> {
       setState(() => _cameraMode = 'Dijeda');
     } else {
       _resumeTimer();
-      setState(() => _cameraMode = 'AI Siaga Optimal');
+      setState(() => _cameraMode = 'ML Kit Aktif');
     }
   }
 
@@ -1320,10 +1519,12 @@ class MonitorScreenState extends State<MonitorScreen> {
     return '$h:$m:$s';
   }
 
-  static const int _alertCooldownSeconds = 10;
-
-  void _triggerMicrosleepAlert() {
-    // Jangan buat dialog baru jika sudah ada yang terbuka
+  void _triggerSafetyAlert({
+    required String title,
+    required String subtitle,
+    required String reason,
+    required bool resetYawnsOnDismiss,
+  }) {
     if (_isAlertShowing) return;
     _isAlertShowing = true;
 
@@ -1331,22 +1532,81 @@ class MonitorScreenState extends State<MonitorScreen> {
       context: context,
       barrierDismissible: false,
       barrierColor: Colors.black87,
-      builder: (_) => const MicrosleepAlertDialog(),
-    ).whenComplete(() {
-      // Setelah ditutup, tunggu 10 detik sebelum boleh muncul lagi
-      Future.delayed(
-        const Duration(seconds: _alertCooldownSeconds),
-        () {
-          if (mounted) {
-            setState(() => _isAlertShowing = false);
+      builder: (_) => MicrosleepAlertDialog(
+        title: title,
+        subtitle: subtitle,
+        reason: reason,
+        onDismiss: () async {
+          await _alert.stop();
+          if (resetYawnsOnDismiss) {
+            _detector.resetYawns();
           }
         },
-      );
+        onRestArea: () async {
+          await _alert.stop();
+          if (resetYawnsOnDismiss) {
+            _detector.resetYawns();
+          }
+          if (mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Mengarahkan ke rest area terdekat...'),
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          }
+        },
+      ),
+    ).whenComplete(() {
+      _alert.stop();
+      Future.delayed(const Duration(seconds: _alertCooldownSeconds), () {
+        if (mounted) setState(() => _isAlertShowing = false);
+      });
     });
+  }
+
+  Color _statusColor(DriverStatus s) {
+    switch (s) {
+      case DriverStatus.awake:  return AppColors.success;
+      case DriverStatus.yawn:   return AppColors.warning;
+      case DriverStatus.drowsy: return AppColors.danger;
+      case DriverStatus.sleep:  return Colors.red.shade900;
+      case DriverStatus.noFace: return AppColors.textSecondary;
+    }
+  }
+
+  double _awarenessLevel(DriverStatus s) {
+    switch (s) {
+      case DriverStatus.awake:  return 0.99;
+      case DriverStatus.yawn:   return 0.70;
+      case DriverStatus.drowsy: return 0.40;
+      case DriverStatus.sleep:  return 0.05;
+      case DriverStatus.noFace: return 0.0;
+    }
+  }
+
+  int _fatigueScore(DriverStatus s) {
+    switch (s) {
+      case DriverStatus.sleep:  return 95;
+      case DriverStatus.drowsy: return 60;
+      case DriverStatus.yawn:   return 35;
+      default:                  return 5;
+    }
+  }
+
+  String _fatigueLabel(DriverStatus s) {
+    switch (s) {
+      case DriverStatus.sleep:  return 'Kritis';
+      case DriverStatus.drowsy: return 'Lelah';
+      case DriverStatus.yawn:   return 'Mengantuk';
+      default:                  return 'Segar';
+    }
   }
 
   @override
   Widget build(BuildContext context) {
+    final statusColor = _isMonitoring ? _statusColor(_result.status) : AppColors.textSecondary;
+
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
@@ -1354,33 +1614,39 @@ class MonitorScreenState extends State<MonitorScreen> {
           physics: const BouncingScrollPhysics(),
           child: Column(
             children: [
-              DrivingBuddyAppBar(
-                trailing: [
-                  if (_isMonitoring) ...[
-                    const SizedBox(width: 8),
-                    GestureDetector(
-                      onTap: _triggerMicrosleepAlert,
-                      child: Container(
-                        width: 36,
-                        height: 36,
-                        decoration: BoxDecoration(
-                          color: AppColors.danger.withOpacity(0.1),
-                          borderRadius: BorderRadius.circular(10),
+              const DrivingBuddyAppBar(),
+              _buildCameraSection(),
+              const SizedBox(height: 12),
+              if (!_isMonitoring)
+                Padding(
+                  padding: const EdgeInsets.symmetric(horizontal: 16),
+                  child: SizedBox(
+                    width: double.infinity,
+                    child: ElevatedButton.icon(
+                      onPressed: _startMonitoring,
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: AppColors.primary,
+                        padding: const EdgeInsets.symmetric(vertical: 18),
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
                         ),
-                        child: const Icon(Icons.warning_amber_rounded,
-                            color: AppColors.danger, size: 20),
+                        elevation: 4,
+                        shadowColor: AppColors.primary.withOpacity(0.35),
+                      ),
+                      icon: const Icon(Icons.play_arrow_rounded, size: 24),
+                      label: const Text(
+                        'Mulai Sesi Monitoring',
+                        style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900),
                       ),
                     ),
-                  ],
-                ],
-              ),
-              _buildCameraSection(),
-              _buildConditionStatus(),
+                  ),
+                )
+              else
+                _buildActionButtons(),
+              _buildConditionStatus(statusColor),
               _buildMetricsGrid(),
               const SizedBox(height: 10),
               if (_isMonitoring) _buildInfoBanner(),
-              const SizedBox(height: 16),
-              _buildActionButtons(),
               const SizedBox(height: 20),
             ],
           ),
@@ -1400,13 +1666,18 @@ class MonitorScreenState extends State<MonitorScreen> {
       ),
       child: Stack(
         children: [
-          // CameraPreview jika kamera sudah siap
-          if (_cameraController != null &&
-              _cameraController!.value.isInitialized)
+          if (_cameraController != null && _cameraController!.value.isInitialized)
             ClipRRect(
               borderRadius: BorderRadius.circular(16),
               child: SizedBox.expand(
-                child: CameraPreview(_cameraController!),
+                child: FittedBox(
+                  fit: BoxFit.cover,
+                  child: SizedBox(
+                    width: _cameraController!.value.previewSize?.height ?? 640,
+                    height: _cameraController!.value.previewSize?.width ?? 480,
+                    child: CameraPreview(_cameraController!),
+                  ),
+                ),
               ),
             )
           else
@@ -1419,8 +1690,7 @@ class MonitorScreenState extends State<MonitorScreen> {
                         ? Icons.videocam_rounded
                         : Icons.videocam_off_rounded,
                     size: 48,
-                    color: Colors.white
-                        .withOpacity(_isMonitoring ? 0.3 : 0.15),
+                    color: Colors.white.withOpacity(_isMonitoring ? 0.3 : 0.15),
                   ),
                   const SizedBox(height: 8),
                   Text(
@@ -1428,8 +1698,7 @@ class MonitorScreenState extends State<MonitorScreen> {
                         ? 'Memuat Kamera...'
                         : 'Pratinjau Kamera Langsung',
                     style: TextStyle(
-                      color: Colors.white
-                          .withOpacity(_isMonitoring ? 0.35 : 0.2),
+                      color: Colors.white.withOpacity(_isMonitoring ? 0.35 : 0.2),
                       fontSize: 13,
                     ),
                   ),
@@ -1446,17 +1715,17 @@ class MonitorScreenState extends State<MonitorScreen> {
                 ],
               ),
             ),
-          // Top-left info
+          // Top-left label
           Positioned(
             top: 12,
             left: 12,
             child: Row(
               children: [
-                Icon(Icons.camera_alt_rounded,
+                Icon(Icons.memory_rounded,
                     color: Colors.white.withOpacity(0.6), size: 14),
                 const SizedBox(width: 4),
                 Text(
-                  _isMonitoring ? 'Kamera Aktif • 30 FPS' : 'Kamera • Standby',
+                  _isMonitoring ? 'ML Kit Face Mesh • Aktif' : 'ML Kit Face Mesh • Standby',
                   style: TextStyle(
                     color: Colors.white.withOpacity(0.6),
                     fontSize: 11,
@@ -1465,7 +1734,7 @@ class MonitorScreenState extends State<MonitorScreen> {
               ],
             ),
           ),
-          // Top-right mode
+          // Top-right mode badge
           Positioned(
             top: 12,
             right: 12,
@@ -1490,7 +1759,6 @@ class MonitorScreenState extends State<MonitorScreen> {
               ),
             ),
           ),
-          // Recording dot
           if (_isMonitoring)
             Positioned(
               top: 14,
@@ -1498,15 +1766,14 @@ class MonitorScreenState extends State<MonitorScreen> {
               right: 0,
               child: Center(child: _RecordingDot()),
             ),
-          // Eye detection badge
+          // Bottom face detection badge
           Positioned(
             bottom: 12,
             left: 0,
             right: 0,
             child: Center(
               child: Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
                 decoration: BoxDecoration(
                   color: _eyeDetected
                       ? AppColors.success.withOpacity(0.15)
@@ -1522,9 +1789,7 @@ class MonitorScreenState extends State<MonitorScreen> {
                   mainAxisSize: MainAxisSize.min,
                   children: [
                     Icon(
-                      _eyeDetected
-                          ? Icons.visibility_rounded
-                          : Icons.visibility_off_rounded,
+                      _eyeDetected ? Icons.face_rounded : Icons.face_retouching_off_rounded,
                       color: _eyeDetected
                           ? AppColors.success
                           : Colors.white.withOpacity(0.3),
@@ -1532,9 +1797,7 @@ class MonitorScreenState extends State<MonitorScreen> {
                     ),
                     const SizedBox(width: 6),
                     Text(
-                      _eyeDetected
-                          ? 'MATA TERDETEKSI'
-                          : 'MENUNGGU DETEKSI',
+                      _eyeDetected ? 'WAJAH TERDETEKSI' : 'MENUNGGU DETEKSI',
                       style: TextStyle(
                         color: _eyeDetected
                             ? AppColors.success
@@ -1549,38 +1812,12 @@ class MonitorScreenState extends State<MonitorScreen> {
               ),
             ),
           ),
-          if (_isMonitoring) ...[
-            Positioned(
-              bottom: 42,
-              left: 12,
-              child: Text(
-                'HUD: 480p IR NightVision',
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.4),
-                  fontSize: 10,
-                ),
-              ),
-            ),
-            Positioned(
-              bottom: 42,
-              right: 12,
-              child: Text(
-                'Privasi Terjaga',
-                style: TextStyle(
-                  color: Colors.white.withOpacity(0.4),
-                  fontSize: 10,
-                ),
-              ),
-            ),
-          ],
         ],
       ),
     );
   }
 
-  Widget _buildConditionStatus() {
-    final Color statusColor = _isMonitoring ? AppColors.success : AppColors.textSecondary;
-
+  Widget _buildConditionStatus(Color statusColor) {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 12, 16, 8),
       padding: const EdgeInsets.all(16),
@@ -1602,10 +1839,7 @@ class MonitorScreenState extends State<MonitorScreen> {
               Container(
                 width: 8,
                 height: 8,
-                decoration: BoxDecoration(
-                  color: statusColor,
-                  shape: BoxShape.circle,
-                ),
+                decoration: BoxDecoration(color: statusColor, shape: BoxShape.circle),
               ),
               const SizedBox(width: 8),
               const Text(
@@ -1621,7 +1855,7 @@ class MonitorScreenState extends State<MonitorScreen> {
           ),
           const SizedBox(height: 10),
           Text(
-            _driverCondition,
+            _isMonitoring ? _result.status.name.toUpperCase() : 'MENUNGGU',
             style: TextStyle(
               fontSize: 26,
               fontWeight: FontWeight.w900,
@@ -1632,7 +1866,9 @@ class MonitorScreenState extends State<MonitorScreen> {
           ),
           const SizedBox(height: 6),
           Text(
-            _conditionDescription,
+            _isMonitoring
+                ? _result.subStatus
+                : 'Tekan tombol di bawah untuk memulai sesi monitoring.',
             textAlign: TextAlign.center,
             style: const TextStyle(
               fontSize: 13,
@@ -1644,9 +1880,7 @@ class MonitorScreenState extends State<MonitorScreen> {
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
             decoration: BoxDecoration(
-              color: _isMonitoring
-                  ? AppColors.primaryLight
-                  : Colors.grey.shade100,
+              color: _isMonitoring ? AppColors.primaryLight : Colors.grey.shade100,
               borderRadius: BorderRadius.circular(20),
             ),
             child: Row(
@@ -1654,22 +1888,16 @@ class MonitorScreenState extends State<MonitorScreen> {
               children: [
                 Icon(
                   Icons.shield_rounded,
-                  color: _isMonitoring
-                      ? AppColors.primary
-                      : AppColors.textSecondary,
+                  color: _isMonitoring ? AppColors.primary : AppColors.textSecondary,
                   size: 16,
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  _isMonitoring
-                      ? 'Tingkat Kewaspadaan: ${(_awarenessLevel * 100).toInt()}%'
-                      : 'Tingkat Kewaspadaan: 0%',
+                  'Tingkat Kewaspadaan: ${(_awarenessLevel(_result.status) * 100).toInt()}%',
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w700,
-                    color: _isMonitoring
-                        ? AppColors.primaryDark
-                        : AppColors.textSecondary,
+                    color: _isMonitoring ? AppColors.primaryDark : AppColors.textSecondary,
                   ),
                 ),
               ],
@@ -1687,7 +1915,7 @@ class MonitorScreenState extends State<MonitorScreen> {
         crossAxisCount: 2,
         crossAxisSpacing: 10,
         mainAxisSpacing: 10,
-        childAspectRatio: 1.8,
+        childAspectRatio: 1.5,
         shrinkWrap: true,
         physics: const NeverScrollableScrollPhysics(),
         children: [
@@ -1695,32 +1923,32 @@ class MonitorScreenState extends State<MonitorScreen> {
             label: 'WAKTU KEMUDI',
             value: _formatDuration(_elapsedSeconds),
             subtitle: _isMonitoring
-                ? (_drivingTimer?.isActive ?? false ? 'Berjalan...' : 'Dijeda')
+                ? ((_drivingTimer?.isActive ?? false) ? 'Berjalan...' : 'Dijeda')
                 : 'Belum mulai',
             icon: Icons.timer_outlined,
             iconColor: AppColors.primary,
             dimmed: !_isMonitoring,
           ),
           _MetricCard(
-            label: 'INDEKS EAR',
-            value: _isMonitoring ? _earIndex.toStringAsFixed(2) : '0.00',
-            subtitle: _isMonitoring ? '$_earRange\n$_earStatus' : 'Ambang > 0.15',
+            label: 'EAR MATA',
+            value: _isMonitoring ? _result.ear.toStringAsFixed(2) : '0.00',
+            subtitle: 'Ambang tutup: < ${Thresholds.earClosed}',
             icon: Icons.remove_red_eye_outlined,
             iconColor: Colors.blue,
             dimmed: !_isMonitoring,
           ),
           _MetricCard(
-            label: 'FREKUENSI KEDIP.',
-            value: '$_blinkFrequency',
-            subtitle: _isMonitoring ? '/mnt' : '—',
+            label: 'FREKUENSI KEDIP',
+            value: '${_result.blinkCount}',
+            subtitle: _isMonitoring ? '/mnt  (limit: ${Thresholds.highBlinkRate})' : '—',
             icon: Icons.visibility_rounded,
             iconColor: AppColors.accent,
             dimmed: !_isMonitoring,
           ),
           _MetricCard(
-            label: 'SKOR KELELAHAN.',
-            value: '$_fatigueScore%',
-            subtitle: _isMonitoring ? _fatigueLabel : '—',
+            label: 'SKOR KELELAHAN',
+            value: '${_fatigueScore(_result.status)}%',
+            subtitle: _isMonitoring ? _fatigueLabel(_result.status) : '—',
             icon: Icons.battery_charging_full_rounded,
             iconColor: AppColors.success,
             dimmed: !_isMonitoring,
@@ -1741,13 +1969,13 @@ class MonitorScreenState extends State<MonitorScreen> {
       ),
       child: Row(
         children: [
-          Icon(Icons.local_cafe_rounded,
+          Icon(Icons.memory_rounded,
               color: AppColors.primary.withOpacity(0.7), size: 20),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
-              'Terhubung ke server $_currentServerIp:$kServerPort\n'
-              'Data EAR & status diproses secara real-time.',
+              '🤖 ML Kit Face Mesh Aktif (On-Device)\n'
+              'Menguap ${_result.yawnCount}x · Kedip ${_result.blinkCount}/mnt · MAR ${_result.mar.toStringAsFixed(2)}',
               style: const TextStyle(
                 fontSize: 11,
                 color: AppColors.textSecondary,
@@ -1765,107 +1993,96 @@ class MonitorScreenState extends State<MonitorScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 16),
       child: Column(
         children: [
-          if (!_isMonitoring) ...[
-            SizedBox(
-              width: double.infinity,
-              child: ElevatedButton.icon(
-                onPressed: _startMonitoring,
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: AppColors.primary,
-                  padding: const EdgeInsets.symmetric(vertical: 18),
-                  shape: RoundedRectangleBorder(
-                    borderRadius: BorderRadius.circular(16),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () {
+                ScaffoldMessenger.of(context).showSnackBar(
+                  const SnackBar(
+                    content: Text('Mencari Rest Area terdekat...'),
+                    behavior: SnackBarBehavior.floating,
                   ),
-                  elevation: 4,
-                  shadowColor: AppColors.primary.withOpacity(0.35),
-                ),
-                icon: const Icon(Icons.play_arrow_rounded, size: 24),
-                label: const Text(
-                  'Mulai Sesi Monitoring',
-                  style: TextStyle(fontSize: 17, fontWeight: FontWeight.w900),
-                ),
-              ),
+                );
+              },
+              icon: const Icon(Icons.local_parking_rounded, size: 18),
+              label: const Text('Cari Rest Area Terdekat (4.2 km)'),
             ),
-          ] else ...[
-            SizedBox(
-              width: double.infinity,
-              child: OutlinedButton.icon(
-                onPressed: () {
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    const SnackBar(
-                      content: Text('Mencari Rest Area terdekat...'),
-                      behavior: SnackBarBehavior.floating,
-                    ),
-                  );
-                },
-                icon: const Icon(Icons.local_parking_rounded, size: 18),
-                label: const Text('Cari Rest Area Terdekat (4.2 km)'),
-              ),
-            ),
-            const SizedBox(height: 10),
-            Row(
-              children: [
-                Expanded(
-                  child: OutlinedButton.icon(
-                    onPressed: _togglePauseResume,
-                    icon: Icon(
-                      (_drivingTimer?.isActive ?? false)
-                          ? Icons.pause_rounded
-                          : Icons.play_arrow_rounded,
-                      size: 20,
-                    ),
-                    label: Text(
+          ),
+          const SizedBox(height: 10),
+          Row(
+            children: [
+              Expanded(
+                flex: 2,
+                child: OutlinedButton.icon(
+                  onPressed: _togglePauseResume,
+                  style: OutlinedButton.styleFrom(
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 14),
+                  ),
+                  icon: Icon(
+                    (_drivingTimer?.isActive ?? false)
+                        ? Icons.pause_rounded
+                        : Icons.play_arrow_rounded,
+                    size: 18,
+                  ),
+                  label: FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
                       (_drivingTimer?.isActive ?? false) ? 'Jeda' : 'Lanjut',
                       style: const TextStyle(fontWeight: FontWeight.w800),
                     ),
                   ),
                 ),
-                const SizedBox(width: 10),
-                Expanded(
-                  flex: 2,
-                  child: ElevatedButton.icon(
-                    onPressed: () {
-                      showDialog(
-                        context: context,
-                        builder: (ctx) => AlertDialog(
-                          shape: RoundedRectangleBorder(
-                            borderRadius: BorderRadius.circular(16),
-                          ),
-                          title: const Text('Selesai Perjalanan?'),
-                          content: Text(
-                            'Durasi: ${_formatDuration(_elapsedSeconds)}\nSesi monitoring akan dihentikan.',
-                          ),
-                          actions: [
-                            TextButton(
-                              onPressed: () => Navigator.pop(ctx),
-                              child: const Text('Batal'),
-                            ),
-                            ElevatedButton(
-                              onPressed: () {
-                                Navigator.pop(ctx);
-                                _stopMonitoring();
-                              },
-                              child: const Text('Ya, Selesai'),
-                            ),
-                          ],
+              ),
+              const SizedBox(width: 10),
+              Expanded(
+                flex: 3,
+                child: ElevatedButton.icon(
+                  onPressed: () {
+                    showDialog(
+                      context: context,
+                      builder: (ctx) => AlertDialog(
+                        shape: RoundedRectangleBorder(
+                          borderRadius: BorderRadius.circular(16),
                         ),
-                      );
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppColors.danger,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                    ),
-                    icon: const Icon(Icons.stop_rounded, size: 20),
-                    label: const Text(
+                        title: const Text('Selesai Perjalanan?'),
+                        content: Text(
+                          'Durasi: ${_formatDuration(_elapsedSeconds)}\nSesi monitoring akan dihentikan.',
+                        ),
+                        actions: [
+                          TextButton(
+                            onPressed: () => Navigator.pop(ctx),
+                            child: const Text('Batal'),
+                          ),
+                          ElevatedButton(
+                            onPressed: () {
+                              Navigator.pop(ctx);
+                              _stopMonitoring();
+                            },
+                            child: const Text('Ya, Selesai'),
+                          ),
+                        ],
+                      ),
+                    );
+                  },
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: AppColors.danger,
+                    padding: const EdgeInsets.symmetric(
+                        horizontal: 8, vertical: 14),
+                  ),
+                  icon: const Icon(Icons.stop_rounded, size: 20),
+                  label: const FittedBox(
+                    fit: BoxFit.scaleDown,
+                    child: Text(
                       'Selesai Perjalanan',
                       style:
                           TextStyle(fontSize: 14, fontWeight: FontWeight.w800),
                     ),
                   ),
                 ),
-              ],
-            ),
-          ],
+              ),
+            ],
+          ),
         ],
       ),
     );
@@ -2006,7 +2223,20 @@ class _MetricCard extends StatelessWidget {
 // ============================================================================
 
 class MicrosleepAlertDialog extends StatefulWidget {
-  const MicrosleepAlertDialog({super.key});
+  final String title;
+  final String subtitle;
+  final String reason;
+  final VoidCallback? onDismiss;
+  final VoidCallback? onRestArea;
+
+  const MicrosleepAlertDialog({
+    super.key,
+    this.title = 'ISTIRAHAT\nSEKARANG',
+    this.subtitle = '⚡ SISTEM KESELAMATAN AKTIF',
+    this.reason = 'Microsleep terdeteksi. Segera cari tempat aman untuk berhenti.',
+    this.onDismiss,
+    this.onRestArea,
+  });
 
   @override
   State<MicrosleepAlertDialog> createState() => _MicrosleepAlertDialogState();
@@ -2016,7 +2246,6 @@ class _MicrosleepAlertDialogState extends State<MicrosleepAlertDialog>
     with SingleTickerProviderStateMixin {
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
-  final AudioPlayer _audioPlayer = AudioPlayer();
 
   @override
   void initState() {
@@ -2029,15 +2258,11 @@ class _MicrosleepAlertDialogState extends State<MicrosleepAlertDialog>
       CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
     );
     HapticFeedback.heavyImpact();
-    
-    // Putar suara alarm SATU KALI saja
-    _audioPlayer.play(AssetSource('audio/alarm.mp3'));
   }
 
   @override
   void dispose() {
     _pulseController.dispose();
-    _audioPlayer.dispose();
     super.dispose();
   }
 
@@ -2072,7 +2297,7 @@ class _MicrosleepAlertDialogState extends State<MicrosleepAlertDialog>
                 _buildAlertActions(),
                 const SizedBox(height: 16),
                 Text(
-                  'Alarm audio berterapi aktif • Ketuk tombol saat aman',
+                  'Alarm audio keselamatan aktif • Ketuk tombol saat aman',
                   textAlign: TextAlign.center,
                   style: TextStyle(
                     fontSize: 11,
@@ -2193,9 +2418,9 @@ class _MicrosleepAlertDialogState extends State<MicrosleepAlertDialog>
             color: AppColors.primary.withOpacity(0.1),
             borderRadius: BorderRadius.circular(20),
           ),
-          child: const Text(
-            '⚡ SISTEM KESELAMATAN AKTIF',
-            style: TextStyle(
+          child: Text(
+            widget.subtitle,
+            style: const TextStyle(
               fontSize: 11,
               fontWeight: FontWeight.w700,
               color: AppColors.primaryDark,
@@ -2204,10 +2429,10 @@ class _MicrosleepAlertDialogState extends State<MicrosleepAlertDialog>
           ),
         ),
         const SizedBox(height: 16),
-        const Text(
-          'ISTIRAHAT\nSEKARANG',
+        Text(
+          widget.title,
           textAlign: TextAlign.center,
-          style: TextStyle(
+          style: const TextStyle(
             fontSize: 34,
             fontWeight: FontWeight.w900,
             color: AppColors.textPrimary,
@@ -2216,25 +2441,14 @@ class _MicrosleepAlertDialogState extends State<MicrosleepAlertDialog>
           ),
         ),
         const SizedBox(height: 12),
-        RichText(
+        Text(
+          widget.reason,
           textAlign: TextAlign.center,
-          text: const TextSpan(
-            style: TextStyle(
-              fontSize: 13,
-              color: AppColors.textSecondary,
-              height: 1.5,
-            ),
-            children: [
-              TextSpan(text: 'Microsleep terdeteksi (mata terpejam ≥ '),
-              TextSpan(
-                text: '5 detik',
-                style: TextStyle(
-                  fontWeight: FontWeight.w700,
-                  color: AppColors.danger,
-                ),
-              ),
-              TextSpan(text: ').\nSegera cari tempat aman untuk berhenti.'),
-            ],
+          style: const TextStyle(
+            fontSize: 13,
+            color: AppColors.textSecondary,
+            height: 1.5,
+            fontWeight: FontWeight.w600,
           ),
         ),
       ],
@@ -2370,7 +2584,10 @@ class _MicrosleepAlertDialogState extends State<MicrosleepAlertDialog>
         SizedBox(
           width: double.infinity,
           child: ElevatedButton.icon(
-            onPressed: () => Navigator.of(context).pop(),
+            onPressed: () {
+              widget.onDismiss?.call();
+              Navigator.of(context).pop();
+            },
             style: ElevatedButton.styleFrom(
               backgroundColor: AppColors.primary,
               padding: const EdgeInsets.symmetric(vertical: 16),
@@ -2387,6 +2604,7 @@ class _MicrosleepAlertDialogState extends State<MicrosleepAlertDialog>
           width: double.infinity,
           child: OutlinedButton.icon(
             onPressed: () {
+              widget.onRestArea?.call();
               Navigator.of(context).pop();
             },
             icon: const Icon(Icons.navigation_rounded, size: 20),
@@ -2413,73 +2631,166 @@ class HistoryScreen extends StatefulWidget {
 }
 
 class _HistoryScreenState extends State<HistoryScreen> {
-  int _selectedFilter = 0;
-  final List<String> _filters = [
-    'Semua (${dummyTripRecords.length})',
-    'Catatan Kantuk (3)',
-    'Malam Hari (5)',
-  ];
+  List<Map<String, dynamic>> _sessions = [];
+  bool _isLoading = true;
+  String? _userName;
+
+  @override
+  void initState() {
+    super.initState();
+    _loadData();
+  }
+
+  Future<void> _loadData() async {
+    setState(() => _isLoading = true);
+    try {
+      final sessions = await SessionService.getUserSessions();
+      final name = await AuthService.getUserName();
+      if (mounted) {
+        setState(() {
+          _sessions = sessions;
+          _userName = name;
+          _isLoading = false;
+        });
+      }
+    } catch (e) {
+      debugPrint('Error load history: $e');
+      if (mounted) setState(() => _isLoading = false);
+    }
+  }
+
+  String _formatDuration(int seconds) {
+    if (seconds == 0) return '0 mnt';
+    final h = seconds ~/ 3600;
+    final m = (seconds % 3600) ~/ 60;
+    if (h > 0) return '${h}j ${m}m';
+    return '${m}m';
+  }
+
+  String _formatDate(String? isoDate) {
+    if (isoDate == null) return '-';
+    final dt = DateTime.tryParse(isoDate)?.toLocal();
+    if (dt == null) return '-';
+    final now = DateTime.now();
+    final diff = now.difference(dt).inDays;
+    if (diff == 0) return 'Hari ini';
+    if (diff == 1) return 'Kemarin';
+    return '${dt.day}/${dt.month}/${dt.year}';
+  }
+
+  Color _scoreColor(int score) {
+    if (score >= 80) return AppColors.success;
+    if (score >= 50) return AppColors.warning;
+    return AppColors.danger;
+  }
+
+  // Hitung total waktu semua sesi dalam detik
+  int get _totalSeconds => _sessions.fold(0, (sum, s) => sum + ((s['duration_seconds'] as num?)?.toInt() ?? 0));
+
+  // Rata-rata skor semua sesi
+  int get _avgScore {
+    if (_sessions.isEmpty) return 100;
+    final total = _sessions.fold(0, (sum, s) => sum + ((s['driving_score'] as num?)?.toInt() ?? 100));
+    return (total / _sessions.length).round();
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
       body: SafeArea(
-        child: CustomScrollView(
-          physics: const BouncingScrollPhysics(),
-          slivers: [
-            SliverToBoxAdapter(
-              child: DrivingBuddyAppBar(
-                trailing: [
-                  const SizedBox(width: 8),
-                  GestureDetector(
-                    onTap: () {},
-                    child: const CircleAvatar(
-                      radius: 18,
-                      backgroundColor: AppColors.primary,
-                      child: Icon(Icons.person_rounded,
-                          color: Colors.white, size: 20),
-                    ),
-                  ),
-                ],
+        child: RefreshIndicator(
+          onRefresh: _loadData,
+          color: AppColors.primary,
+          child: CustomScrollView(
+            physics: const AlwaysScrollableScrollPhysics(),
+            slivers: [
+              SliverToBoxAdapter(
+                child: const DrivingBuddyAppBar(),
               ),
-            ),
-            SliverToBoxAdapter(child: _buildWeeklySummary()),
-            SliverToBoxAdapter(child: _buildFilterChips()),
-            SliverPadding(
-              padding: const EdgeInsets.fromLTRB(16, 8, 16, 24),
-              sliver: SliverList.builder(
-                itemCount: dummyTripRecords.length,
-                itemBuilder: (context, index) {
-                  return Padding(
-                    padding: const EdgeInsets.only(bottom: 12),
-                    child: _TripCard(trip: dummyTripRecords[index]),
-                  );
-                },
-              ),
-            ),
-            SliverToBoxAdapter(
-              child: Padding(
-                padding: const EdgeInsets.only(bottom: 24),
-                child: Text(
-                  'Semua rekaman tersimpan lokal dan terenkripsi\nuntuk privasi pengemudi.',
-                  textAlign: TextAlign.center,
-                  style: TextStyle(
-                    fontSize: 11,
-                    color: AppColors.textSecondary.withOpacity(0.6),
-                    height: 1.5,
+
+              // Summary card
+              SliverToBoxAdapter(child: _buildSummaryCard()),
+
+              // List header
+              SliverToBoxAdapter(
+                child: Padding(
+                  padding: const EdgeInsets.fromLTRB(16, 16, 16, 8),
+                  child: Row(
+                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                    children: [
+                      Text(
+                        'Riwayat Perjalanan (${_sessions.length})',
+                        style: const TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: AppColors.textPrimary,
+                        ),
+                      ),
+                      IconButton(
+                        icon: const Icon(Icons.refresh_rounded,
+                            color: AppColors.primary, size: 20),
+                        onPressed: _loadData,
+                        tooltip: 'Refresh',
+                      ),
+                    ],
                   ),
                 ),
               ),
-            ),
-          ],
+
+              // Loading / empty / list
+              if (_isLoading)
+                const SliverFillRemaining(
+                  child: Center(
+                    child: CircularProgressIndicator(color: AppColors.primary),
+                  ),
+                )
+              else if (_sessions.isEmpty)
+                SliverFillRemaining(
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Icon(Icons.directions_car_outlined,
+                            size: 64, color: AppColors.textSecondary.withOpacity(0.3)),
+                        const SizedBox(height: 16),
+                        const Text(
+                          'Belum ada sesi perjalanan',
+                          style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w600,
+                              color: AppColors.textSecondary),
+                        ),
+                        const SizedBox(height: 8),
+                        const Text(
+                          'Mulai sesi monitoring untuk\nmenyimpan data perjalananmu',
+                          textAlign: TextAlign.center,
+                          style: TextStyle(
+                              fontSize: 13, color: AppColors.textSecondary),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              else
+                SliverPadding(
+                  padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                  sliver: SliverList.builder(
+                    itemCount: _sessions.length,
+                    itemBuilder: (context, index) {
+                      final s = _sessions[index];
+                      return _buildSessionCard(s);
+                    },
+                  ),
+                ),
+            ],
+          ),
         ),
       ),
     );
   }
 
-  Widget _buildWeeklySummary() {
-    final summary = dummyWeeklySummary;
+  Widget _buildSummaryCard() {
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 12, 16, 8),
       padding: const EdgeInsets.all(18),
@@ -2498,113 +2809,47 @@ class _HistoryScreenState extends State<HistoryScreen> {
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                '📊  Ringkasan Pekan Ini',
-                style: TextStyle(
-                  fontSize: 15,
-                  fontWeight: FontWeight.w800,
-                  color: AppColors.textPrimary,
-                ),
-              ),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppColors.primaryLight,
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: const Text(
-                  '1 - 16 Okt',
+              const Text('📊  Ringkasan Semua Sesi',
                   style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.primaryDark,
-                  ),
-                ),
-              ),
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      color: AppColors.textPrimary)),
+              const Spacer(),
+              if (_userName != null)
+                Text('👤 $_userName',
+                    style: const TextStyle(
+                        fontSize: 12, color: AppColors.textSecondary)),
             ],
           ),
           const SizedBox(height: 16),
           Row(
             children: [
               _SummaryStatItem(
-                value: '${summary.totalSessions}',
-                label: 'Sesi Nyetir',
+                value: '${_sessions.length}',
+                label: 'Sesi Total',
               ),
-              _buildVerticalDivider(),
+              Container(width: 1, height: 40, color: Colors.grey.shade200),
               _SummaryStatItem(
-                value: summary.totalDuration,
+                value: _formatDuration(_totalSeconds),
                 label: 'Total Waktu',
               ),
-              _buildVerticalDivider(),
+              Container(width: 1, height: 40, color: Colors.grey.shade200),
               Expanded(
                 child: Column(
                   children: [
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      crossAxisAlignment: CrossAxisAlignment.end,
-                      children: [
-                        Text(
-                          '${summary.safetyScore}',
-                          style: const TextStyle(
-                            fontSize: 28,
-                            fontWeight: FontWeight.w900,
-                            color: AppColors.success,
-                          ),
-                        ),
-                        const Padding(
-                          padding: EdgeInsets.only(bottom: 4),
-                          child: Text(
-                            '%',
-                            style: TextStyle(
-                              fontSize: 14,
-                              fontWeight: FontWeight.w700,
-                              color: AppColors.success,
-                            ),
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 2),
-                    const Text(
-                      'Skor Aman',
+                    Text(
+                      '$_avgScore',
                       style: TextStyle(
-                          fontSize: 11, color: AppColors.textSecondary),
+                        fontSize: 28,
+                        fontWeight: FontWeight.w900,
+                        color: _scoreColor(_avgScore),
+                      ),
                     ),
+                    const Text('Rata-rata Skor',
+                        style: TextStyle(
+                            fontSize: 11, color: AppColors.textSecondary)),
                   ],
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 12),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              const Icon(Icons.trending_down_rounded,
-                  size: 14, color: AppColors.textSecondary),
-              const SizedBox(width: 4),
-              Text(
-                summary.comparisonText,
-                style: const TextStyle(
-                    fontSize: 11, color: AppColors.textSecondary),
-              ),
-              const SizedBox(width: 8),
-              Container(
-                padding:
-                    const EdgeInsets.symmetric(horizontal: 8, vertical: 2),
-                decoration: BoxDecoration(
-                  color: AppColors.success.withOpacity(0.1),
-                  borderRadius: BorderRadius.circular(8),
-                ),
-                child: const Text(
-                  'Konsisten',
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w700,
-                    color: AppColors.success,
-                  ),
                 ),
               ),
             ],
@@ -2614,61 +2859,197 @@ class _HistoryScreenState extends State<HistoryScreen> {
     );
   }
 
-  Widget _buildVerticalDivider() {
-    return Container(
-      width: 1,
-      height: 40,
-      color: Colors.grey.shade200,
-      margin: const EdgeInsets.symmetric(horizontal: 4),
-    );
-  }
+  Widget _buildSessionCard(Map<String, dynamic> session) {
+    final score = (session['driving_score'] as num?)?.toInt() ?? 100;
+    final duration = (session['duration_seconds'] as num?)?.toInt() ?? 0;
+    final drowsy = (session['total_drowsy_events'] as num?)?.toInt() ?? 0;
+    final yawn = (session['total_yawns'] as num?)?.toInt() ?? 0;
+    final micro = (session['total_microsleeps'] as num?)?.toInt() ?? 0;
+    final date = _formatDate(session['started_at'] as String?);
+    final startedAt = session['started_at'] as String?;
+    String timeStr = '-';
+    if (startedAt != null) {
+      final dt = DateTime.tryParse(startedAt)?.toLocal();
+      if (dt != null) {
+        timeStr =
+            '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+      }
+    }
 
-  Widget _buildFilterChips() {
-    return SizedBox(
-      height: 42,
-      child: ListView.builder(
-        scrollDirection: Axis.horizontal,
-        padding: const EdgeInsets.symmetric(horizontal: 16),
-        itemCount: _filters.length,
-        itemBuilder: (context, index) {
-          final isSelected = _selectedFilter == index;
-          return Padding(
-            padding: const EdgeInsets.only(right: 8),
-            child: GestureDetector(
-              onTap: () => setState(() => _selectedFilter = index),
-              child: Container(
+    final scoreColor = _scoreColor(score);
+    final totalEvents = drowsy + yawn + micro;
+
+    return Container(
+      margin: const EdgeInsets.only(bottom: 12),
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.04),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Container(
                 padding:
-                    const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                    const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
-                  color: isSelected ? AppColors.primary : Colors.white,
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(
-                    color: isSelected
-                        ? AppColors.primary
-                        : Colors.grey.shade300,
-                  ),
+                  color: scoreColor.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(8),
                 ),
-                child: Center(
-                  child: Text(
-                    _filters[index],
-                    style: TextStyle(
-                      fontSize: 12,
-                      fontWeight: FontWeight.w700,
-                      color:
-                          isSelected ? Colors.white : AppColors.textSecondary,
-                    ),
+                child: Text(
+                  'Skor $score',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w700,
+                    color: scoreColor,
                   ),
                 ),
               ),
+              const Spacer(),
+              Text(
+                '$date  $timeStr',
+                style: const TextStyle(
+                    fontSize: 12, color: AppColors.textSecondary),
+              ),
+            ],
+          ),
+          const SizedBox(height: 12),
+          Row(
+            children: [
+              _MiniStat(
+                  icon: Icons.timer_outlined,
+                  value: _formatDuration(duration),
+                  label: 'Durasi'),
+              const SizedBox(width: 16),
+              _MiniStat(
+                  icon: Icons.warning_amber_rounded,
+                  value: '$totalEvents',
+                  label: 'Event',
+                  color: totalEvents > 0 ? AppColors.warning : AppColors.success),
+              const SizedBox(width: 16),
+              _MiniStat(
+                  icon: Icons.bedtime_outlined,
+                  value: '$micro',
+                  label: 'Microsleep',
+                  color: micro > 0 ? AppColors.danger : AppColors.success),
+            ],
+          ),
+          if (totalEvents > 0) ...[
+            const SizedBox(height: 10),
+            Container(
+              padding: const EdgeInsets.all(10),
+              decoration: BoxDecoration(
+                color: AppColors.danger.withOpacity(0.05),
+                borderRadius: BorderRadius.circular(10),
+              ),
+              child: Row(
+                children: [
+                  const Icon(Icons.info_outline,
+                      size: 14, color: AppColors.danger),
+                  const SizedBox(width: 6),
+                  Text(
+                    '${drowsy}x kantuk · ${yawn}x menguap · ${micro}x microsleep',
+                    style: const TextStyle(
+                        fontSize: 12, color: AppColors.danger),
+                  ),
+                ],
+              ),
             ),
-          );
-        },
+          ],
+          const SizedBox(height: 10),
+          SizedBox(
+            width: double.infinity,
+            child: OutlinedButton.icon(
+              onPressed: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (_) => DrivingCardScreen(
+                      durationSeconds: duration,
+                      drivingScore: score,
+                      totalMicrosleeps: micro,
+                      totalDrowsy: drowsy,
+                      totalYawns: yawn,
+                      startedAt: session['started_at'] != null
+                          ? DateTime.tryParse(session['started_at'] as String)
+                          : null,
+                    ),
+                  ),
+                );
+              },
+              icon: const Icon(Icons.workspace_premium_rounded,
+                  size: 16, color: Color(0xFFFF6D00)),
+              label: const Text(
+                'Lihat Kartu Berkendara',
+                style: TextStyle(
+                    color: Color(0xFFFF6D00),
+                    fontSize: 13,
+                    fontWeight: FontWeight.w600),
+              ),
+              style: OutlinedButton.styleFrom(
+                side: const BorderSide(color: Color(0xFFFF6D00), width: 1),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(10)),
+                padding: const EdgeInsets.symmetric(vertical: 8),
+              ),
+            ),
+          ),
+        ],
       ),
     );
   }
 }
 
+class _MiniStat extends StatelessWidget {
+  final IconData icon;
+  final String value;
+  final String label;
+  final Color color;
+
+  const _MiniStat({
+    required this.icon,
+    required this.value,
+    required this.label,
+    this.color = AppColors.textPrimary,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Row(
+      children: [
+        Icon(icon, size: 16, color: color),
+        const SizedBox(width: 4),
+        Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Text(value,
+                style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w700,
+                    color: color)),
+            Text(label,
+                style: const TextStyle(
+                    fontSize: 10, color: AppColors.textSecondary)),
+          ],
+        ),
+      ],
+    );
+  }
+}
+
+
+
 // ---- Summary Stat Item ----
+
 class _SummaryStatItem extends StatelessWidget {
   final String value;
   final String label;
@@ -3040,76 +3421,70 @@ class _EarLinePainter extends CustomPainter {
 // SETTINGS SCREEN — Konfigurasi IP Server
 // ============================================================================
 
-class ServerSettingsScreen extends StatefulWidget {
-  const ServerSettingsScreen({super.key});
+class AccountSettingsScreen extends StatefulWidget {
+  const AccountSettingsScreen({super.key});
 
   @override
-  State<ServerSettingsScreen> createState() => _ServerSettingsScreenState();
+  State<AccountSettingsScreen> createState() => _AccountSettingsScreenState();
 }
 
-class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
-  final _controller = TextEditingController();
-  String _savedIp = '';
+class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
+  final _nameController = TextEditingController();
+  final _emailController = TextEditingController();
   bool _isSaving = false;
-  bool _isTesting = false;
-  String? _testResult;
-  bool? _testSuccess;
+  bool _isLoggedIn = false;
 
   @override
   void initState() {
     super.initState();
-    _loadCurrentIp();
+    _loadProfile();
   }
 
-  Future<void> _loadCurrentIp() async {
-    final ip = await ServerConfig.getIp();
-    if (mounted) {
-      setState(() {
-        _savedIp = ip;
-        _controller.text = ip;
-      });
+  Future<void> _loadProfile() async {
+    if (AuthService.isLoggedIn) {
+      final user = AuthService.currentUser;
+      final name = AuthService.currentUserName ?? '';
+      final email = user?.email ?? '';
+      if (mounted) {
+        setState(() {
+          _nameController.text = name;
+          _emailController.text = email;
+          _isLoggedIn = true;
+        });
+      }
+    } else {
+      final profile = await AccountConfig.getProfile();
+      if (mounted) {
+        setState(() {
+          _nameController.text = profile['name'] ?? '';
+          _emailController.text = profile['email'] ?? '';
+          _isLoggedIn =
+              _nameController.text.isNotEmpty || _emailController.text.isNotEmpty;
+        });
+      }
     }
   }
 
   @override
   void dispose() {
-    _controller.dispose();
+    _nameController.dispose();
+    _emailController.dispose();
     super.dispose();
   }
 
-  bool _isValidIp(String ip) {
-    final ipRegex = RegExp(r'^(\d{1,3}\.){3}\d{1,3}$');
-    if (ipRegex.hasMatch(ip)) {
-      final parts = ip.split('.');
-      return parts.every((p) => int.parse(p) <= 255);
-    }
-    return ip.isNotEmpty && ip.contains('.');
-  }
-
-  Future<void> _saveIp() async {
-    final ip = _controller.text.trim();
-    if (!_isValidIp(ip)) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Format IP tidak valid. Contoh: 192.168.1.5'),
-          backgroundColor: AppColors.danger,
-          behavior: SnackBarBehavior.floating,
-        ),
-      );
-      return;
-    }
+  Future<void> _saveProfile() async {
+    final name = _nameController.text.trim();
+    final email = _emailController.text.trim();
     setState(() => _isSaving = true);
-    await ServerConfig.saveIp(ip);
+    await AccountConfig.saveProfile(name, email);
     setState(() {
       _isSaving = false;
-      _savedIp = ip;
-      _testResult = null;
-      _testSuccess = null;
+      _isLoggedIn = name.isNotEmpty || email.isNotEmpty;
     });
     if (mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('✅ IP tersimpan: $ip'),
+        const SnackBar(
+          content: Text('✅ Profil tersimpan'),
           backgroundColor: AppColors.success,
           behavior: SnackBarBehavior.floating,
         ),
@@ -3117,42 +3492,28 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
     }
   }
 
-  Future<void> _testConnection() async {
-    final ip = _controller.text.trim();
-    if (!_isValidIp(ip)) return;
-
-    setState(() {
-      _isTesting = true;
-      _testResult = 'Menguji koneksi ke $ip:$kServerPort...';
-      _testSuccess = null;
-    });
-
-    try {
-      final wsUrl = ServerConfig.buildWsUrl(ip);
-      final channel = WebSocketChannel.connect(Uri.parse(wsUrl));
-
-      await channel.ready.timeout(
-        const Duration(seconds: 3),
-        onTimeout: () => throw Exception('Timeout: server tidak merespon'),
-      );
-
-      await channel.sink.close();
-      setState(() {
-        _testResult = '✅ Berhasil terhubung ke $ip:$kServerPort\n'
-            'Server Python aktif dan siap menerima frame kamera.';
-        _testSuccess = true;
-        _isTesting = false;
-      });
-    } catch (e) {
-      setState(() {
-        _testResult = '❌ Gagal: Tidak bisa reach $ip:$kServerPort\n'
-            'Pastikan:\n'
-            '• server.py sudah dijalankan di laptop\n'
-            '• HP & laptop di WiFi yang sama\n'
-            '• Firewall laptop tidak memblokir port $kServerPort';
-        _testSuccess = false;
-        _isTesting = false;
-      });
+  Future<void> _signOut() async {
+    if (AuthService.isLoggedIn) {
+      await AuthService.logout();
+      if (mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const LoginScreen()),
+          (route) => false,
+        );
+      }
+    } else {
+      await AccountConfig.clearProfile();
+      _nameController.clear();
+      _emailController.clear();
+      setState(() => _isLoggedIn = false);
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('Berhasil keluar'),
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
     }
   }
 
@@ -3162,7 +3523,7 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
       backgroundColor: AppColors.background,
       appBar: AppBar(
         title: const Text(
-          'Pengaturan Server',
+          'Akun & Pengaturan',
           style: TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
         ),
         backgroundColor: Colors.white,
@@ -3176,48 +3537,104 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          // ---- Info Card ----
+          Center(
+            child: Column(
+              children: [
+                Container(
+                  width: 80,
+                  height: 80,
+                  decoration: BoxDecoration(
+                    gradient: const LinearGradient(
+                      colors: [AppColors.primary, AppColors.accent],
+                    ),
+                    shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppColors.primary.withOpacity(0.3),
+                        blurRadius: 16,
+                        offset: const Offset(0, 6),
+                      ),
+                    ],
+                  ),
+                  child: Center(
+                    child: Text(
+                      _nameController.text.isNotEmpty
+                          ? _nameController.text[0].toUpperCase()
+                          : '?',
+                      style: const TextStyle(
+                        fontSize: 32,
+                        fontWeight: FontWeight.w900,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 12),
+                Text(
+                  _isLoggedIn
+                      ? (_nameController.text.isNotEmpty
+                          ? _nameController.text
+                          : 'Pengemudi')
+                      : 'Tamu / Offline',
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: AppColors.textPrimary,
+                  ),
+                ),
+                const SizedBox(height: 4),
+                Container(
+                  padding:
+                      const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
+                  decoration: BoxDecoration(
+                    color: _isLoggedIn
+                        ? AppColors.success.withOpacity(0.1)
+                        : Colors.grey.shade100,
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: Text(
+                    _isLoggedIn ? '● Supabase Terhubung' : '○ Mode Tamu (Offline)',
+                    style: TextStyle(
+                      fontSize: 12,
+                      fontWeight: FontWeight.w700,
+                      color: _isLoggedIn
+                          ? AppColors.success
+                          : AppColors.textSecondary,
+                    ),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 28),
           Container(
             padding: const EdgeInsets.all(16),
             decoration: BoxDecoration(
               color: const Color(0xFF1A1A2E),
               borderRadius: BorderRadius.circular(16),
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
+            child: Row(
               children: [
-                const Row(
-                  children: [
-                    Icon(Icons.info_outline_rounded,
-                        color: AppColors.accent, size: 18),
-                    SizedBox(width: 8),
-                    Text(
-                      'Cara Kerja Koneksi',
-                      style: TextStyle(
-                        color: Colors.white,
-                        fontWeight: FontWeight.w800,
-                        fontSize: 14,
-                      ),
+                const Icon(Icons.psychology_rounded,
+                    color: AppColors.accent, size: 22),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'DrivingBuddy berjalan sepenuhnya On-Device (Google ML Kit Face Mesh). '
+                    'Deteksi wajah & kantuk tidak butuh internet.',
+                    style: TextStyle(
+                      fontSize: 12,
+                      color: Colors.white.withOpacity(0.85),
+                      height: 1.4,
                     ),
-                  ],
+                  ),
                 ),
-                const SizedBox(height: 10),
-                _infoRow('📱', 'HP dan laptop harus terhubung ke WiFi yang sama'),
-                const SizedBox(height: 6),
-                _infoRow('💻', 'Jalankan server.py di laptop terlebih dahulu:\n   python server.py'),
-                const SizedBox(height: 6),
-                _infoRow('🔍', 'Cek IP laptop: buka CMD → ketik ipconfig → lihat "IPv4 Address"'),
-                const SizedBox(height: 6),
-                _infoRow('🔮', 'Masa depan: cloud deployment tidak perlu ganti IP'),
               ],
             ),
           ),
-
           const SizedBox(height: 24),
-
-          // ---- IP Input ----
           const Text(
-            'IP Laptop / Server',
+            'Nama Pengemudi',
             style: TextStyle(
               fontSize: 13,
               fontWeight: FontWeight.w800,
@@ -3225,145 +3642,53 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
             ),
           ),
           const SizedBox(height: 8),
-          Container(
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: Colors.grey.shade200),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
-                  blurRadius: 8,
-                  offset: const Offset(0, 2),
-                ),
-              ],
-            ),
-            child: TextField(
-              controller: _controller,
-              keyboardType:
-                  const TextInputType.numberWithOptions(decimal: true),
-              style: const TextStyle(
-                fontSize: 18,
-                fontWeight: FontWeight.w700,
-                color: AppColors.textPrimary,
-                letterSpacing: 1,
-              ),
-              decoration: InputDecoration(
-                hintText: 'Contoh: 192.168.1.5',
-                hintStyle: TextStyle(
-                  color: Colors.grey.shade400,
-                  fontWeight: FontWeight.w400,
-                  fontSize: 16,
-                  letterSpacing: 0,
-                ),
-                prefixIcon:
-                    const Icon(Icons.dns_rounded, color: AppColors.primary),
-                suffixIcon: IconButton(
-                  icon: const Icon(Icons.clear_rounded,
-                      color: AppColors.textSecondary),
-                  onPressed: () => _controller.clear(),
-                ),
-                border: InputBorder.none,
-                contentPadding: const EdgeInsets.symmetric(
-                    horizontal: 16, vertical: 16),
-              ),
-            ),
+          _buildTextField(
+            controller: _nameController,
+            hint: 'Masukkan nama kamu',
+            icon: Icons.person_rounded,
           ),
-
-          const SizedBox(height: 6),
-          Text(
-            'Tersimpan sekarang: $_savedIp',
-            style: TextStyle(
-              fontSize: 11,
-              color: AppColors.textSecondary.withOpacity(0.7),
-            ),
-          ),
-
           const SizedBox(height: 16),
-
-          // ---- Tombol Test + Simpan ----
-          Row(
-            children: [
-              Expanded(
-                child: OutlinedButton.icon(
-                  onPressed: _isTesting ? null : _testConnection,
-                  icon: _isTesting
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: AppColors.primary,
-                          ),
-                        )
-                      : const Icon(Icons.wifi_tethering_rounded, size: 18),
-                  label: Text(_isTesting ? 'Menguji...' : 'Test Ping'),
-                  style: OutlinedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                  ),
-                ),
-              ),
-              const SizedBox(width: 12),
-              Expanded(
-                flex: 2,
-                child: ElevatedButton.icon(
-                  onPressed: _isSaving ? null : _saveIp,
-                  icon: _isSaving
-                      ? const SizedBox(
-                          width: 16,
-                          height: 16,
-                          child: CircularProgressIndicator(
-                            strokeWidth: 2,
-                            color: Colors.white,
-                          ),
-                        )
-                      : const Icon(Icons.save_rounded, size: 18),
-                  label: Text(_isSaving ? 'Menyimpan...' : 'Simpan IP'),
-                  style: ElevatedButton.styleFrom(
-                    padding: const EdgeInsets.symmetric(vertical: 14),
-                  ),
-                ),
-              ),
-            ],
+          const Text(
+            'Email',
+            style: TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w800,
+              color: AppColors.textPrimary,
+            ),
           ),
-
-          // ---- Hasil Test ----
-          if (_testResult != null) ...[
-            const SizedBox(height: 16),
-            Container(
-              padding: const EdgeInsets.all(14),
-              decoration: BoxDecoration(
-                color: _testSuccess == true
-                    ? AppColors.success.withOpacity(0.08)
-                    : AppColors.danger.withOpacity(0.08),
-                borderRadius: BorderRadius.circular(12),
-                border: Border.all(
-                  color: _testSuccess == true
-                      ? AppColors.success.withOpacity(0.3)
-                      : AppColors.danger.withOpacity(0.3),
-                ),
-              ),
-              child: Text(
-                _testResult!,
-                style: TextStyle(
-                  fontSize: 13,
-                  color: _testSuccess == true
-                      ? AppColors.success
-                      : AppColors.danger,
-                  height: 1.5,
-                  fontWeight: FontWeight.w600,
-                ),
+          const SizedBox(height: 8),
+          _buildTextField(
+            controller: _emailController,
+            hint: 'email@contoh.com',
+            icon: Icons.email_rounded,
+            keyboardType: TextInputType.emailAddress,
+          ),
+          const SizedBox(height: 20),
+          SizedBox(
+            width: double.infinity,
+            child: ElevatedButton.icon(
+              onPressed: _isSaving ? null : _saveProfile,
+              icon: _isSaving
+                  ? const SizedBox(
+                      width: 16,
+                      height: 16,
+                      child: CircularProgressIndicator(
+                        strokeWidth: 2,
+                        color: Colors.white,
+                      ),
+                    )
+                  : const Icon(Icons.save_rounded, size: 18),
+              label: Text(_isSaving ? 'Menyimpan...' : 'Simpan Profil'),
+              style: ElevatedButton.styleFrom(
+                padding: const EdgeInsets.symmetric(vertical: 14),
               ),
             ),
-          ],
-
+          ),
           const SizedBox(height: 32),
-
-          // ---- Roadmap Section ----
           const Divider(),
           const SizedBox(height: 16),
           const Text(
-            '🗺️ Roadmap Koneksi',
+            'Informasi Sistem',
             style: TextStyle(
               fontSize: 14,
               fontWeight: FontWeight.w800,
@@ -3371,91 +3696,53 @@ class _ServerSettingsScreenState extends State<ServerSettingsScreen> {
             ),
           ),
           const SizedBox(height: 12),
-          _RoadmapCard(
-            phase: 'Sekarang (Dev)',
-            icon: Icons.laptop_rounded,
-            color: AppColors.primary,
-            title: 'WiFi Lokal — IP Laptop',
-            desc: 'Laptop & HP di jaringan WiFi yang sama. '
-                'Server Python berjalan di laptop.',
-            done: true,
-          ),
+          _buildInfoRow(Icons.memory_rounded, 'AI Engine',
+              'Google ML Kit Face Mesh 468 (On-Device Offline)'),
           const SizedBox(height: 8),
-          _RoadmapCard(
-            phase: 'Berikutnya',
-            icon: Icons.cloud_rounded,
-            color: Colors.blue,
-            title: 'Cloud Server (GCP / AWS / VPS)',
-            desc: 'Deploy server ke cloud. URL menjadi tetap '
-                '(misal wss://api.drivingbuddy.app/ws). '
-                'Tidak perlu ganti IP lagi.',
-            done: false,
-          ),
+          _buildInfoRow(Icons.cloud_done_rounded, 'Database Cloud',
+              'Supabase PostgreSQL (Sinkronisasi Riwayat)'),
           const SizedBox(height: 8),
-          _RoadmapCard(
-            phase: 'Produksi',
-            icon: Icons.security_rounded,
-            color: AppColors.success,
-            title: 'On-device AI (tanpa server)',
-            desc: 'Model MediaPipe / TFLite jalan langsung di HP. '
-                'Tidak butuh internet sama sekali.',
-            done: false,
-          ),
-
-          const SizedBox(height: 32),
+          _buildInfoRow(Icons.security_rounded, 'Privasi',
+              'Kamera diproses lokal 100%, frame video tidak dikirim'),
+          const SizedBox(height: 8),
+          _buildInfoRow(Icons.info_outline_rounded, 'Versi',
+              'DrivingBuddy v1.0.0 — Capstone UIUX'),
+          const SizedBox(height: 24),
+          if (_isLoggedIn) ...[
+            SizedBox(
+              width: double.infinity,
+              child: OutlinedButton.icon(
+                onPressed: _signOut,
+                icon: const Icon(Icons.logout_rounded,
+                    size: 18, color: AppColors.danger),
+                label: const Text(
+                  'Keluar dari Akun',
+                  style: TextStyle(color: AppColors.danger),
+                ),
+                style: OutlinedButton.styleFrom(
+                  side: const BorderSide(color: AppColors.danger),
+                  padding: const EdgeInsets.symmetric(vertical: 14),
+                ),
+              ),
+            ),
+            const SizedBox(height: 32),
+          ],
         ],
       ),
     );
   }
 
-  Widget _infoRow(String emoji, String text) {
-    return Row(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(emoji, style: const TextStyle(fontSize: 14)),
-        const SizedBox(width: 8),
-        Expanded(
-          child: Text(
-            text,
-            style: TextStyle(
-              fontSize: 12,
-              color: Colors.white.withOpacity(0.65),
-              height: 1.4,
-            ),
-          ),
-        ),
-      ],
-    );
-  }
-}
-
-class _RoadmapCard extends StatelessWidget {
-  final String phase;
-  final IconData icon;
-  final Color color;
-  final String title;
-  final String desc;
-  final bool done;
-
-  const _RoadmapCard({
-    required this.phase,
-    required this.icon,
-    required this.color,
-    required this.title,
-    required this.desc,
-    required this.done,
-  });
-
-  @override
-  Widget build(BuildContext context) {
+  Widget _buildTextField({
+    required TextEditingController controller,
+    required String hint,
+    required IconData icon,
+    TextInputType? keyboardType,
+  }) {
     return Container(
-      padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(
-          color: done ? color.withOpacity(0.3) : Colors.grey.shade200,
-        ),
+        border: Border.all(color: Colors.grey.shade200),
         boxShadow: [
           BoxShadow(
             color: Colors.black.withOpacity(0.03),
@@ -3464,65 +3751,67 @@ class _RoadmapCard extends StatelessWidget {
           ),
         ],
       ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Container(
-            width: 40,
-            height: 40,
-            decoration: BoxDecoration(
-              color: color.withOpacity(0.1),
-              borderRadius: BorderRadius.circular(10),
-            ),
-            child: Icon(icon, color: color, size: 22),
+      child: TextField(
+        controller: controller,
+        keyboardType: keyboardType,
+        style: const TextStyle(
+          fontSize: 15,
+          fontWeight: FontWeight.w600,
+          color: AppColors.textPrimary,
+        ),
+        decoration: InputDecoration(
+          hintText: hint,
+          hintStyle: TextStyle(
+            color: Colors.grey.shade400,
+            fontWeight: FontWeight.w400,
           ),
+          prefixIcon: Icon(icon, color: AppColors.primary),
+          border: InputBorder.none,
+          contentPadding:
+              const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+        ),
+        onChanged: (_) => setState(() {}),
+      ),
+    );
+  }
+
+  Widget _buildInfoRow(IconData icon, String label, String value) {
+    return Container(
+      padding: const EdgeInsets.all(14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.03),
+            blurRadius: 4,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Icon(icon, size: 18, color: AppColors.primary),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Row(
-                  children: [
-                    Container(
-                      padding: const EdgeInsets.symmetric(
-                          horizontal: 8, vertical: 2),
-                      decoration: BoxDecoration(
-                        color: done
-                            ? color.withOpacity(0.1)
-                            : Colors.grey.shade100,
-                        borderRadius: BorderRadius.circular(8),
-                      ),
-                      child: Text(
-                        phase,
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.w700,
-                          color: done ? color : AppColors.textSecondary,
-                        ),
-                      ),
-                    ),
-                    if (done) ...[
-                      const SizedBox(width: 6),
-                      Icon(Icons.check_circle_rounded, size: 14, color: color),
-                    ],
-                  ],
-                ),
-                const SizedBox(height: 4),
                 Text(
-                  title,
+                  label,
+                  style: const TextStyle(
+                    fontSize: 11,
+                    color: AppColors.textSecondary,
+                    fontWeight: FontWeight.w600,
+                  ),
+                ),
+                const SizedBox(height: 2),
+                Text(
+                  value,
                   style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
                     color: AppColors.textPrimary,
-                  ),
-                ),
-                const SizedBox(height: 3),
-                Text(
-                  desc,
-                  style: const TextStyle(
-                    fontSize: 11,
-                    color: AppColors.textSecondary,
-                    height: 1.4,
                   ),
                 ),
               ],
