@@ -2,7 +2,10 @@
 *.class
 *.log
 *.pyc
+*.pyo
+*.pyd
 *.swp
+*.html
 .DS_Store
 .atom/
 .build/
@@ -18,10 +21,8 @@ migrate_working_dir/
 *.iws
 .idea/
 
-# The .vscode folder contains launch configuration and tasks you configure in
-# VS Code which you may wish to be included in version control, so this line
-# is commented out by default.
-#.vscode/
+# Visual Studio Code
+.vscode/
 
 # Flutter/Dart/Pub related
 **/doc/api/
@@ -46,3 +47,44 @@ app.*.map.json
 
 # Widget Preview related
 .widget_preview/
+
+# ============================================================================
+# API Keys, Environment Variables, & Secrets
+# ============================================================================
+.env
+.env.*
+!.env.example
+*.env
+env.json
+secrets.json
+
+# Private Dart Config & API Key files
+lib/supabase_config.dart
+lib/api_keys.dart
+lib/env.dart
+lib/*_secret.dart
+lib/*_secrets.dart
+lib/config/secrets.dart
+
+# Android signing keys, credentials, and local SDK paths
+android/key.properties
+android/app/key.properties
+android/local.properties
+local.properties
+*.keystore
+*.jks
+
+# Google & Firebase service files
+google-services.json
+android/app/google-services.json
+GoogleService-Info.plist
+ios/Runner/GoogleService-Info.plist
+macos/Runner/GoogleService-Info.plist
+*.p8
+*.p12
+*.mobileprovision
+
+# Temporary scratch and Python cache directories
+scratch/
+__pycache__/
+.pytest_cache/

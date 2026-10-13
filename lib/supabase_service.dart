@@ -1,12 +1,8 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
+import 'supabase_config.dart';
 
-// ============================================================================
-// SUPABASE CONFIG
-// ============================================================================
-
-const String supabaseUrl = 'https://qyccrcaxtazljcfhyasc.supabase.co';
-const String supabaseAnonKey =
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InF5Y2NyY2F4dGF6bGpjZmh5YXNjIiwicm9sZSI6ImFub24iLCJpYXQiOjE3OTE4MTExNzIsImV4cCI6MjEwNzM4NzE3Mn0.rhamy65I5VwE97BDHCVyMzzrSz2YYVHQezjBz2gEL5A';
+// Re-export agar main.dart tetap dapat mengakses supabaseUrl & supabaseAnonKey
+export 'supabase_config.dart';
 
 SupabaseClient get supabase => Supabase.instance.client;
 
