@@ -1,8 +1,10 @@
+import 'dart:io';
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/services.dart';
 
 import '../core/thresholds.dart';
 import '../models/detection_result.dart';
+import 'alert_config.dart';
 
 /// Alarm suara + getar saat status Sleep atau Drowsy.
 class AlertService {
@@ -31,6 +33,20 @@ class AlertService {
     if (!_playing) {
       _playing = true;
       await _player.setReleaseMode(ReleaseMode.loop);
+      final audioType = await AlertConfig.getAudioType();
+      if (audioType == AlertAudioType.customFile) {
+        final path = await AlertConfig.getCustomAudioPath();
+        if (path != null && File(path).existsSync()) {
+          await _player.play(DeviceFileSource(path));
+          return;
+        }
+      } else if (audioType == AlertAudioType.loudBeep) {
+        await _player.play(AssetSource('sounds/beep.wav'));
+        return;
+      } else if (audioType == AlertAudioType.buzzer) {
+        await _player.play(AssetSource('sounds/buzzer.wav'));
+        return;
+      }
       await _player.play(AssetSource('sounds/alarm.mp3'));
     }
   }
