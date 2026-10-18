@@ -1,6 +1,4 @@
 import 'package:supabase_flutter/supabase_flutter.dart';
-import 'supabase_config.dart';
-
 // Re-export agar main.dart tetap dapat mengakses supabaseUrl & supabaseAnonKey
 export 'supabase_config.dart';
 
