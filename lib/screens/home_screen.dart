@@ -260,10 +260,21 @@ class _CockpitScreenState extends State<CockpitScreen> {
                   clipBehavior: Clip.antiAlias,
                   child: Stack(
                     children: [
-                      // Face Mesh wireframe painter
-                      Positioned.fill(
-                        child: CustomPaint(
-                          painter: _FaceMeshSimulationPainter(),
+                      // Small camera icon in the center
+                      Center(
+                        child: Container(
+                          width: 48,
+                          height: 48,
+                          decoration: BoxDecoration(
+                            color: const Color(0xFFE57A38).withOpacity(0.12),
+                            shape: BoxShape.circle,
+                            border: Border.all(color: const Color(0xFFFED7AA)),
+                          ),
+                          child: const Icon(
+                            Icons.videocam_rounded,
+                            color: Color(0xFFE57A38),
+                            size: 24,
+                          ),
                         ),
                       ),
                       // Top-left PERCLOS chip
@@ -1165,68 +1176,4 @@ class _RouteSparklinePainter extends CustomPainter {
 
   @override
   bool shouldRepaint(_RouteSparklinePainter old) => old.color != color;
-}
-
-// ────────────────────────────────────────────────────────────────────────────
-// CUSTOM PAINTER: Face Mesh Wireframe Simulation
-// ────────────────────────────────────────────────────────────────────────────
-class _FaceMeshSimulationPainter extends CustomPainter {
-  @override
-  void paint(Canvas canvas, Size size) {
-    final cx = size.width / 2;
-    final cy = size.height / 2;
-
-    // Face oval dashed polygon
-    final polyPaint = Paint()
-      ..color = const Color(0xFF64748B).withOpacity(0.4)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.2;
-
-    final polyPath = Path();
-    polyPath.moveTo(cx, cy - 50);
-    polyPath.lineTo(cx + 35, cy - 35);
-    polyPath.lineTo(cx + 50, cy);
-    polyPath.lineTo(cx + 40, cy + 40);
-    polyPath.lineTo(cx, cy + 55);
-    polyPath.lineTo(cx - 40, cy + 40);
-    polyPath.lineTo(cx - 50, cy);
-    polyPath.lineTo(cx - 35, cy - 35);
-    polyPath.close();
-    canvas.drawPath(polyPath, polyPaint);
-
-    // Left Eye Box & Target (Green)
-    final eyePaint = Paint()
-      ..color = const Color(0xFF059669)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.4;
-    final eyeFill = Paint()..color = const Color(0xFF10B981).withOpacity(0.15);
-
-    final leftEyeRect = RRect.fromRectAndRadius(
-      Rect.fromCenter(center: Offset(cx - 24, cy - 6), width: 28, height: 16),
-      const Radius.circular(3),
-    );
-    canvas.drawRRect(leftEyeRect, eyeFill);
-    canvas.drawRRect(leftEyeRect, eyePaint);
-    canvas.drawCircle(Offset(cx - 24, cy - 6), 2.5, Paint()..color = const Color(0xFF059669));
-
-    // Right Eye Box & Target (Green)
-    final rightEyeRect = RRect.fromRectAndRadius(
-      Rect.fromCenter(center: Offset(cx + 24, cy - 6), width: 28, height: 16),
-      const Radius.circular(3),
-    );
-    canvas.drawRRect(rightEyeRect, eyeFill);
-    canvas.drawRRect(rightEyeRect, eyePaint);
-    canvas.drawCircle(Offset(cx + 24, cy - 6), 2.5, Paint()..color = const Color(0xFF059669));
-
-    // Nose vector line (Orange)
-    final nosePaint = Paint()
-      ..color = const Color(0xFFEA580C)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.8
-      ..strokeCap = StrokeCap.round;
-    canvas.drawLine(Offset(cx, cy + 6), Offset(cx, cy + 22), nosePaint);
-  }
-
-  @override
-  bool shouldRepaint(_FaceMeshSimulationPainter old) => false;
 }

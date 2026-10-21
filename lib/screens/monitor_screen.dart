@@ -21,6 +21,7 @@ import '../supabase_service.dart';
 import '../auth_screen.dart';
 import '../driving_card_screen.dart';
 import '../widgets/driving_buddy_app_bar.dart';
+import '../features/nearby_places/nearby_places.dart';
 
 // ============================================================================
 // MONITOR SCREEN (Active HUD Berkendara Telemetri — Luxury GT)
@@ -54,6 +55,9 @@ class MonitorScreenState extends State<MonitorScreen> {
   final DrowsinessDetector _detector = DrowsinessDetector();
   final AlertService _alert = AlertService();
 
+  // Tempat terdekat (Maps API lewat server.py): kartu rekomendasi pitstop & tombol rest area
+  final NearbyPlacesController _nearby = NearbyPlacesController();
+
   // Hasil deteksi real-time
   DetectionResult _result = DetectionResult.initial;
   bool _eyeDetected = false;
@@ -76,6 +80,15 @@ class MonitorScreenState extends State<MonitorScreen> {
   int _microsleepCount = 0;
 
   @override
+  void initState() {
+    super.initState();
+    // Otomatis aktifkan pencarian tempat terdekat saat aplikasi dibuka:
+    // - Jika lokasi (GPS) di HP sudah menyala & izin ada -> langsung otomatis mencari tempat terdekat.
+    // - Jika lokasi (GPS) belum dinyalakan -> diam/tidak mencari apa pun sampai pengguna menyalakan GPS.
+    _nearby.start(askPermission: false);
+  }
+
+  @override
   void didUpdateWidget(covariant MonitorScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
     if (widget.isActive && !oldWidget.isActive && _isMonitoring) _resumeTimer();
@@ -88,6 +101,7 @@ class MonitorScreenState extends State<MonitorScreen> {
     _cameraController?.dispose();
     _mesh.dispose();
     _alert.dispose();
+    _nearby.dispose();
     WakelockPlus.disable();
     super.dispose();
   }
@@ -177,6 +191,9 @@ class MonitorScreenState extends State<MonitorScreen> {
       });
       _resumeTimer();
 
+      // Tempat terdekat: ikuti posisi selama sesi berjalan. Semua error ditangani di dalam
+      // controller dan tidak pernah mengganggu deteksi kantuk.
+      unawaited(_nearby.start());
     } catch (e) {
       debugPrint('Init kamera gagal: $e');
       if (mounted) {
@@ -347,6 +364,8 @@ class MonitorScreenState extends State<MonitorScreen> {
     await _cameraController?.dispose();
     _cameraController = null;
     await _alert.stop();
+    _nearby.stop();
+    _nearby.start(askPermission: false);
     await WakelockPlus.disable();
 
     setState(() {
@@ -444,6 +463,9 @@ class MonitorScreenState extends State<MonitorScreen> {
     if (_isAlertShowing) return;
     _isAlertShowing = true;
 
+    // Alarm bunyi: langsung cari tempat berhenti terdekat (apa pun jenisnya) untuk kartu di dialog.
+    unawaited(_nearby.requestUrgent());
+
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -452,6 +474,7 @@ class MonitorScreenState extends State<MonitorScreen> {
         title: title,
         subtitle: subtitle,
         reason: reason,
+        nearby: _nearby,
         onDismiss: () async {
           await _alert.stop();
           if (resetYawnsOnDismiss) {
@@ -459,14 +482,22 @@ class MonitorScreenState extends State<MonitorScreen> {
           }
         },
         onRestArea: () async {
+          // Ambil tempat yang sedang tampil di kartu SEKARANG, sebelum dialog ditutup dan
+          // mode darurat dimatikan (kalau tidak, pilihannya bisa berubah di tengah jalan).
+          final target = _nearby.best;
           await _alert.stop();
           if (resetYawnsOnDismiss) {
             _detector.resetYawns();
           }
-          if (mounted) {
+          // Buka Google Maps (mode mobil) ke tempat berhenti terdekat dari server.
+          final opened = target != null
+              ? await _nearby.navigateTo(target)
+              : await _nearby.navigateToBest();
+          if (!opened && mounted) {
             ScaffoldMessenger.of(context).showSnackBar(
               const SnackBar(
-                content: Text('Mengarahkan ke rest area terdekat...'),
+                content: Text(
+                    'Belum ada tempat berhenti yang ditemukan. Menepi di tempat yang aman ya.'),
                 behavior: SnackBarBehavior.floating,
               ),
             );
@@ -475,6 +506,7 @@ class MonitorScreenState extends State<MonitorScreen> {
       ),
     ).then((_) {
       _isAlertShowing = false;
+      _nearby.clearUrgent();
     });
   }
 
@@ -746,171 +778,239 @@ class MonitorScreenState extends State<MonitorScreen> {
             child: Stack(
               fit: StackFit.expand,
               children: [
-                // Live camera preview or standby illustration
+                // 1. Live camera preview with proper Aspect Ratio (wajah proporsional, tidak melebar)
                 if (_cameraController != null && _cameraController!.value.isInitialized)
-                  CameraPreview(_cameraController!)
+                  ClipRect(
+                    child: SizedBox(
+                      width: double.infinity,
+                      height: 240,
+                      child: FittedBox(
+                        fit: BoxFit.cover,
+                        child: SizedBox(
+                          width: _cameraController!.value.previewSize?.height.toDouble() ?? 360,
+                          height: _cameraController!.value.previewSize?.width.toDouble() ?? 480,
+                          child: CameraPreview(_cameraController!),
+                        ),
+                      ),
+                    ),
+                  )
                 else
+                  // 2. Standby / Loading state in the center (bersih, rapi, dan tombol bisa langsung diklik)
                   Center(
-                    child: Column(
-                      mainAxisAlignment: MainAxisAlignment.center,
-                      children: [
-                        Icon(
-                          Icons.videocam_rounded,
-                          size: 48,
-                          color: const Color(0xFFE57A38).withOpacity(0.3),
+                    child: Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 16),
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          if (_isMonitoring) ...[
+                            const CircularProgressIndicator(color: Color(0xFFE57A38)),
+                            const SizedBox(height: 12),
+                            const Text(
+                              'Memuat Kamera Live...',
+                              style: TextStyle(
+                                fontSize: 13,
+                                fontWeight: FontWeight.w700,
+                                color: Color(0xFF64748B),
+                              ),
+                            ),
+                          ] else ...[
+                            Container(
+                              width: 50,
+                              height: 50,
+                              decoration: BoxDecoration(
+                                color: const Color(0xFFE57A38).withOpacity(0.12),
+                                shape: BoxShape.circle,
+                              ),
+                              child: const Icon(
+                                Icons.videocam_rounded,
+                                size: 26,
+                                color: Color(0xFFE57A38),
+                              ),
+                            ),
+                            const SizedBox(height: 10),
+                            const Text(
+                              'Kamera Standby',
+                              style: TextStyle(
+                                fontSize: 14,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFF334155),
+                              ),
+                            ),
+                            const SizedBox(height: 4),
+                            const Text(
+                              'Tekan tombol untuk mulai deteksi',
+                              style: TextStyle(
+                                fontSize: 11,
+                                color: Color(0xFF94A3B8),
+                              ),
+                            ),
+                            const SizedBox(height: 14),
+                            SizedBox(
+                              width: double.infinity,
+                              height: 48,
+                              child: ElevatedButton.icon(
+                                onPressed: _startMonitoring,
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: const Color(0xFFE57A38),
+                                  foregroundColor: Colors.white,
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(14),
+                                  ),
+                                  elevation: 3,
+                                  shadowColor: const Color(0xFFE57A38).withOpacity(0.35),
+                                ),
+                                icon: const Icon(Icons.play_arrow_rounded, size: 24),
+                                label: const Text(
+                                  'MULAI PERJALANAN',
+                                  style: TextStyle(
+                                    fontSize: 14,
+                                    fontWeight: FontWeight.w800,
+                                    letterSpacing: 0.5,
+                                  ),
+                                ),
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    ),
+                  ),
+
+                // 3. Live HUD Overlays (HANYA MUNCUL SAAT MONITORING AKTIF, AGAR FRAME STANDBY BERSIH)
+                if (_isMonitoring) ...[
+                  IgnorePointer(
+                    child: CustomPaint(
+                      painter: _CockpitHudOverlayPainter(
+                        isMonitoring: _isMonitoring,
+                        isDanger: isDanger,
+                        leftEyePct: (100 - (_result.ear < 0.2 ? 50 : 2)).toInt(),
+                        rightEyePct: (100 - (_result.ear < 0.2 ? 50 : 1)).toInt(),
+                      ),
+                    ),
+                  ),
+
+                  // Top-Left Status Badge
+                  Positioned(
+                    top: 10,
+                    left: 10,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.95),
+                        borderRadius: BorderRadius.circular(10),
+                        border: Border.all(
+                          color: isDanger ? const Color(0xFFFECACA) : const Color(0xFFA7F3D0),
                         ),
-                        const SizedBox(height: 8),
-                        Text(
-                          _isMonitoring ? 'Memuat Kamera Live...' : 'Kamera Standby',
-                          style: const TextStyle(
-                            fontSize: 13,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFF64748B),
-                          ),
-                        ),
-                        if (!_isMonitoring)
-                          const Text(
-                            'Tekan "Mulai Perjalanan" di bawah',
-                            style: TextStyle(
-                              fontSize: 11,
-                              color: Color(0xFF94A3B8),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.04),
+                            blurRadius: 6,
+                          )
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Container(
+                            width: 7,
+                            height: 7,
+                            decoration: BoxDecoration(
+                              color: isDanger ? const Color(0xFFD94126) : const Color(0xFF10B981),
+                              shape: BoxShape.circle,
                             ),
                           ),
-                      ],
-                    ),
-                  ),
-
-                // Decorative / Interactive Face Mesh Overlay
-                CustomPaint(
-                  painter: _CockpitHudOverlayPainter(
-                    isMonitoring: _isMonitoring,
-                    isDanger: isDanger,
-                    leftEyePct: (100 - (_result.ear < 0.2 ? 50 : 2)).toInt(),
-                    rightEyePct: (100 - (_result.ear < 0.2 ? 50 : 1)).toInt(),
-                  ),
-                ),
-
-                // Top-Left Status Badge
-                Positioned(
-                  top: 10,
-                  left: 10,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.95),
-                      borderRadius: BorderRadius.circular(10),
-                      border: Border.all(
-                        color: isDanger ? const Color(0xFFFECACA) : const Color(0xFFA7F3D0),
+                          const SizedBox(width: 6),
+                          Text(
+                            isDanger
+                                ? 'STATUS: PERINGATAN KANTUK'
+                                : (_eyeDetected ? 'STATUS: FOKUS & WASPADA' : 'STATUS: MENUNGGU WAJAH'),
+                            style: TextStyle(
+                              fontSize: 9.5,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.5,
+                              color: isDanger ? const Color(0xFFD94126) : const Color(0xFF0F172A),
+                            ),
+                          ),
+                        ],
                       ),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.04),
-                          blurRadius: 6,
-                        )
-                      ],
-                    ),
-                    child: Row(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        Container(
-                          width: 7,
-                          height: 7,
-                          decoration: BoxDecoration(
-                            color: isDanger ? const Color(0xFFD94126) : const Color(0xFF10B981),
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        Text(
-                          isDanger
-                              ? 'STATUS: PERINGATAN KANTUK'
-                              : (_eyeDetected ? 'STATUS: FOKUS & WASPADA' : 'STATUS: MENUNGGU WAJAH'),
-                          style: TextStyle(
-                            fontSize: 9.5,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 0.5,
-                            color: isDanger ? const Color(0xFFD94126) : const Color(0xFF0F172A),
-                          ),
-                        ),
-                      ],
                     ),
                   ),
-                ),
 
-                // Top-Right IR FPS Badge
-                Positioned(
-                  top: 10,
-                  right: 10,
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.95),
-                      borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: const Color(0xFFFED7AA)),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withOpacity(0.04),
-                          blurRadius: 6,
-                        )
-                      ],
+                  // Top-Right IR FPS Badge
+                  Positioned(
+                    top: 10,
+                    right: 10,
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.95),
+                        borderRadius: BorderRadius.circular(8),
+                        border: Border.all(color: const Color(0xFFFED7AA)),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.04),
+                            blurRadius: 6,
+                          )
+                        ],
+                      ),
+                      child: const Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(Icons.bolt_rounded, size: 12, color: Color(0xFFE57A38)),
+                          SizedBox(width: 3),
+                          Text(
+                            'NEURAL IR 60FPS',
+                            style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w800,
+                              letterSpacing: 0.5,
+                              color: Color(0xFFC25E21),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                    child: const Row(
-                      mainAxisSize: MainAxisSize.min,
+                  ),
+
+                  // Bottom Pose Telemetry Line
+                  Positioned(
+                    bottom: 8,
+                    left: 14,
+                    right: 14,
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Icon(Icons.bolt_rounded, size: 12, color: Color(0xFFE57A38)),
-                        SizedBox(width: 3),
                         Text(
-                          'NEURAL IR 60FPS',
+                          'YAW: ${_isMonitoring ? "+0.4°" : "0.0°"}',
+                          style: const TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF334155),
+                            fontFamily: 'monospace',
+                          ),
+                        ),
+                        Text(
+                          'PITCH: ${_isMonitoring ? "-1.2°" : "0.0°"}',
+                          style: const TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w800,
+                            color: Color(0xFF334155),
+                            fontFamily: 'monospace',
+                          ),
+                        ),
+                        Text(
+                          isDanger ? 'DISTRAKSI: WASPADA' : 'DISTRAKSI: NIHIL',
                           style: TextStyle(
                             fontSize: 9,
                             fontWeight: FontWeight.w800,
-                            letterSpacing: 0.5,
-                            color: Color(0xFFC25E21),
+                            color: isDanger ? const Color(0xFFD94126) : const Color(0xFF334155),
+                            fontFamily: 'monospace',
                           ),
                         ),
                       ],
                     ),
                   ),
-                ),
-
-                // Bottom Pose Telemetry Line
-                Positioned(
-                  bottom: 8,
-                  left: 12,
-                  right: 12,
-                  child: Row(
-                    mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                    children: [
-                      Text(
-                        'YAW: ${_isMonitoring ? "+0.4°" : "0.0°"}',
-                        style: const TextStyle(
-                          fontSize: 9,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF334155),
-                          fontFamily: 'monospace',
-                        ),
-                      ),
-                      Text(
-                        'PITCH: ${_isMonitoring ? "-1.2°" : "0.0°"}',
-                        style: const TextStyle(
-                          fontSize: 9,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF334155),
-                          fontFamily: 'monospace',
-                        ),
-                      ),
-                      Text(
-                        isDanger ? 'DISTRAKSI: WASPADA' : 'DISTRAKSI: NIHIL',
-                        style: TextStyle(
-                          fontSize: 9,
-                          fontWeight: FontWeight.w800,
-                          color: isDanger ? const Color(0xFFD94126) : const Color(0xFF334155),
-                          fontFamily: 'monospace',
-                        ),
-                      ),
-                    ],
-                  ),
-                ),
+                ],
               ],
             ),
           ),
@@ -1150,103 +1250,9 @@ class MonitorScreenState extends State<MonitorScreen> {
   // 3. REKOMENDASI PITSTOP ASSISTANT CARD
   // ──────────────────────────────────────────────────────────────────────────
   Widget _buildPitstopAssistantCard() {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFFFF7ED), Color(0xFFFFEDD5), Color(0xFFFFFBF8)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFFED7AA)),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFE57A38).withOpacity(0.08),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFFED7AA)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
-                  blurRadius: 6,
-                ),
-              ],
-            ),
-            child: const Icon(
-              Icons.local_cafe_rounded,
-              color: Color(0xFFE57A38),
-              size: 24,
-            ),
-          ),
-          const SizedBox(width: 12),
-          const Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'REKOMENDASI PITSTOP',
-                  style: TextStyle(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.8,
-                    color: Color(0xFFC25E21),
-                  ),
-                ),
-                SizedBox(height: 2),
-                Text(
-                  'Rest Area KM 57 Tol Japek',
-                  style: TextStyle(
-                    fontSize: 14,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF0F172A),
-                  ),
-                ),
-                Text(
-                  '4.2 km lagi • Fasilitas Kopi & SPBU 24 Jam',
-                  style: TextStyle(
-                    fontSize: 10.5,
-                    fontWeight: FontWeight.w500,
-                    color: Color(0xFF475569),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Mengarahkan rute ke Rest Area KM 57...'),
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFE57A38),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(12),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              elevation: 2,
-            ),
-            child: const Icon(Icons.navigation_rounded, size: 20),
-          ),
-        ],
-      ),
-    );
+    // Rekomendasi pitstop dari Maps API (desain Stitch yang sama): tombol kanan = buka
+    // Google Maps, ketuk kartu = daftar rest area / minimarket / hotel-motel / SPBU terdekat.
+    return PitstopCard(controller: _nearby);
   }
 
   // ──────────────────────────────────────────────────────────────────────────
@@ -1314,15 +1320,13 @@ class MonitorScreenState extends State<MonitorScreen> {
         ),
         const SizedBox(height: 12),
 
-        // Primary Big Drive Button (Mulai / Selesaikan)
-        SizedBox(
-          width: double.infinity,
-          height: 56,
-          child: ElevatedButton(
-            onPressed: () {
-              if (!_isMonitoring) {
-                _startMonitoring();
-              } else {
+        // Tombol Selesaikan Perjalanan (hanya tampil saat monitoring aktif, tombol mulai sudah di tengah)
+        if (_isMonitoring)
+          SizedBox(
+            width: double.infinity,
+            height: 54,
+            child: ElevatedButton(
+              onPressed: () {
                 showDialog(
                   context: context,
                   builder: (ctx) => AlertDialog(
@@ -1350,34 +1354,33 @@ class MonitorScreenState extends State<MonitorScreen> {
                     ],
                   ),
                 );
-              }
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFE57A38),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
-              ),
-              elevation: 4,
-              shadowColor: const Color(0xFFE57A38).withOpacity(0.35),
-            ),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(_isMonitoring ? Icons.flag_rounded : Icons.play_arrow_rounded, size: 24),
-                const SizedBox(width: 8),
-                Text(
-                  _isMonitoring ? 'SELESAIKAN PERJALANAN' : 'MULAI PERJALANAN',
-                  style: const TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.5,
-                  ),
+              },
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFE57A38),
+                foregroundColor: Colors.white,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
                 ),
-              ],
+                elevation: 4,
+                shadowColor: const Color(0xFFE57A38).withOpacity(0.35),
+              ),
+              child: const Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  Icon(Icons.flag_rounded, size: 22),
+                  SizedBox(width: 8),
+                  Text(
+                    'SELESAIKAN PERJALANAN',
+                    style: TextStyle(
+                      fontSize: 15,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
-        ),
       ],
     );
   }
@@ -1401,8 +1404,7 @@ class _CockpitHudOverlayPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final cx = size.width / 2;
-    final cy = size.height / 2;
+// Center HUD brackets
 
     // Corner HUD brackets
     final bracketPaint = Paint()
@@ -1426,58 +1428,8 @@ class _CockpitHudOverlayPainter extends CustomPainter {
     canvas.drawLine(Offset(size.width - pad - cornerLen, size.height - pad), Offset(size.width - pad, size.height - pad), bracketPaint);
     canvas.drawLine(Offset(size.width - pad, size.height - pad - cornerLen), Offset(size.width - pad, size.height - pad), bracketPaint);
 
+// Wireframe wajah dihilangkan sesuai permintaan pengguna
     if (!isMonitoring) return;
-
-    // Face mesh polygon
-    final polyPaint = Paint()
-      ..color = (isDanger ? const Color(0xFFD94126) : const Color(0xFF059669)).withOpacity(0.5)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.2;
-
-    final polyPath = Path();
-    polyPath.moveTo(cx, cy - 60);
-    polyPath.lineTo(cx + 42, cy - 38);
-    polyPath.lineTo(cx + 60, cy);
-    polyPath.lineTo(cx + 48, cy + 48);
-    polyPath.lineTo(cx, cy + 66);
-    polyPath.lineTo(cx - 48, cy + 48);
-    polyPath.lineTo(cx - 60, cy);
-    polyPath.lineTo(cx - 42, cy - 38);
-    polyPath.close();
-    canvas.drawPath(polyPath, polyPaint);
-
-    // Left Eye Box
-    final eyeColor = isDanger ? const Color(0xFFD94126) : const Color(0xFF059669);
-    final eyePaint = Paint()
-      ..color = eyeColor
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 1.4;
-    final eyeFill = Paint()..color = eyeColor.withOpacity(0.15);
-
-    final leftEyeRect = RRect.fromRectAndRadius(
-      Rect.fromCenter(center: Offset(cx - 30, cy - 6), width: 34, height: 20),
-      const Radius.circular(4),
-    );
-    canvas.drawRRect(leftEyeRect, eyeFill);
-    canvas.drawRRect(leftEyeRect, eyePaint);
-    canvas.drawCircle(Offset(cx - 30, cy - 6), 3, Paint()..color = eyeColor);
-
-    // Right Eye Box
-    final rightEyeRect = RRect.fromRectAndRadius(
-      Rect.fromCenter(center: Offset(cx + 30, cy - 6), width: 34, height: 20),
-      const Radius.circular(4),
-    );
-    canvas.drawRRect(rightEyeRect, eyeFill);
-    canvas.drawRRect(rightEyeRect, eyePaint);
-    canvas.drawCircle(Offset(cx + 30, cy - 6), 3, Paint()..color = eyeColor);
-
-    // Nose line
-    final nosePaint = Paint()
-      ..color = const Color(0xFFEA580C)
-      ..style = PaintingStyle.stroke
-      ..strokeWidth = 2
-      ..strokeCap = StrokeCap.round;
-    canvas.drawLine(Offset(cx, cy + 8), Offset(cx, cy + 24), nosePaint);
   }
 
   @override
@@ -1553,6 +1505,9 @@ class MicrosleepAlertDialog extends StatefulWidget {
   final VoidCallback? onDismiss;
   final VoidCallback? onRestArea;
 
+  /// Sumber tempat berhenti terdekat (Maps API). `null` = kartu contoh bawaan.
+  final NearbyPlacesController? nearby;
+
   const MicrosleepAlertDialog({
     super.key,
     this.title = 'MATA TERPEJAM!\nISTIRAHAT SEKARANG',
@@ -1560,6 +1515,7 @@ class MicrosleepAlertDialog extends StatefulWidget {
     this.reason = 'Microsleep terdeteksi. Segera cari tempat aman untuk berhenti.',
     this.onDismiss,
     this.onRestArea,
+    this.nearby,
   });
 
   @override
@@ -1817,6 +1773,35 @@ class _MicrosleepAlertDialogState extends State<MicrosleepAlertDialog>
   }
 
   Widget _buildRecommendationCard() {
+    final nearby = widget.nearby;
+    if (nearby == null) {
+      return _buildRecommendationBox(
+        icon: Icons.local_cafe_rounded,
+        title: 'Rest Area KM 57 (4.2 km lagi)',
+      );
+    }
+    // Tempat berhenti terdekat dari server (mode darurat), dengan desain kartu yang sama.
+    // Navigasinya lewat tombol "ARAHKAN KE REST AREA TERDEKAT" di bawah.
+    return ListenableBuilder(
+      listenable: nearby,
+      builder: (context, _) {
+        final view = PitstopView.from(nearby, urgent: true);
+        return _buildRecommendationBox(
+          icon: view.icon,
+          title: view.title,
+          subtitle: view.subtitle,
+          busy: view.busy,
+        );
+      },
+    );
+  }
+
+  Widget _buildRecommendationBox({
+    required IconData icon,
+    required String title,
+    String? subtitle,
+    bool busy = false,
+  }) {
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
@@ -1833,14 +1818,22 @@ class _MicrosleepAlertDialogState extends State<MicrosleepAlertDialog>
               color: const Color(0xFFE57A38).withOpacity(0.18),
               borderRadius: BorderRadius.circular(10),
             ),
-            child: const Icon(Icons.local_cafe_rounded, color: Color(0xFFE57A38), size: 20),
+            child: busy
+                ? const Padding(
+                    padding: EdgeInsets.all(10),
+                    child: CircularProgressIndicator(
+                      strokeWidth: 2,
+                      color: Color(0xFFE57A38),
+                    ),
+                  )
+                : Icon(icon, color: const Color(0xFFE57A38), size: 20),
           ),
           const SizedBox(width: 12),
-          const Expanded(
+          Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(
+                const Text(
                   'REKOMENDASI PITSTOP AMAN',
                   style: TextStyle(
                     fontSize: 9,
@@ -1849,15 +1842,28 @@ class _MicrosleepAlertDialogState extends State<MicrosleepAlertDialog>
                     letterSpacing: 0.6,
                   ),
                 ),
-                SizedBox(height: 2),
+                const SizedBox(height: 2),
                 Text(
-                  'Rest Area KM 57 (4.2 km lagi)',
-                  style: TextStyle(
+                  title,
+                  maxLines: 2,
+                  overflow: TextOverflow.ellipsis,
+                  style: const TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w800,
                     color: Color(0xFFEAE0DD),
                   ),
                 ),
+                if (subtitle != null && subtitle.isNotEmpty)
+                  Text(
+                    subtitle,
+                    maxLines: 2,
+                    overflow: TextOverflow.ellipsis,
+                    style: const TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.w500,
+                      color: Color(0xFFB8A9A2),
+                    ),
+                  ),
               ],
             ),
           ),
