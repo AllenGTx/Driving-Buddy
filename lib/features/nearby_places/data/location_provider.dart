@@ -112,7 +112,13 @@ class GeolocatorLocationProvider implements LocationProvider {
       return LocationAccess.serviceDisabled;
     }
     var permission = await Geolocator.checkPermission();
-    if (permission == LocationPermission.denied) {
+
+    // Samsung One UI sering langsung mengembalikan deniedForever meskipun
+    // belum pernah diminta, sehingga popup tidak muncul kalau kita hanya
+    // periksa == denied.  Solusi: coba requestPermission() untuk keduanya;
+    // sistem akan tetap menampilkan popup jika OS masih mengizinkannya.
+    if (permission == LocationPermission.denied ||
+        permission == LocationPermission.deniedForever) {
       permission = await Geolocator.requestPermission();
     }
     return _fromPermission(permission);

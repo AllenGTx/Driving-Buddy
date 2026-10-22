@@ -228,47 +228,58 @@ class _HistoryScreenState extends State<HistoryScreen> {
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
             children: [
-              const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'TELEMETRI KUMULATIF',
-                    style: TextStyle(
-                      fontSize: 9.5,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.1,
-                      color: Color(0xFFC25E21),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: const [
+                    Text(
+                      'TELEMETRI KUMULATIF',
+                      style: TextStyle(
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 1.1,
+                        color: Color(0xFFC25E21),
+                      ),
                     ),
-                  ),
-                  SizedBox(height: 2),
-                  Text(
-                    'Ringkasan Keseluruhan Sesi',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF0F172A),
+                    SizedBox(height: 2),
+                    Text(
+                      'Ringkasan Keseluruhan Sesi',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF0F172A),
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
-                  ),
-                ],
+                  ],
+                ),
               ),
-              if (_userName != null)
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFFF7ED),
-                    borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: const Color(0xFFFED7AA)),
-                  ),
-                  child: Text(
-                    _userName!,
-                    style: const TextStyle(
-                      fontSize: 11,
-                      fontWeight: FontWeight.w700,
-                      color: Color(0xFFC25E21),
+              if (_userName != null) ...[
+                const SizedBox(width: 8),
+                ConstrainedBox(
+                  constraints: const BoxConstraints(maxWidth: 120),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFF7ED),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFFFED7AA)),
+                    ),
+                    child: Text(
+                      _userName!,
+                      style: const TextStyle(
+                        fontSize: 11,
+                        fontWeight: FontWeight.w700,
+                        color: Color(0xFFC25E21),
+                      ),
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
                 ),
+              ],
             ],
           ),
           const SizedBox(height: 16),
@@ -291,9 +302,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: Color(0xFF64748B)),
                       ),
                       const SizedBox(height: 2),
-                      Text(
-                        '${_sessions.length}',
-                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          '${_sessions.length}',
+                          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
+                        ),
                       ),
                       const Text('perjalanan', style: TextStyle(fontSize: 10, color: Color(0xFF64748B))),
                     ],
@@ -308,9 +322,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: Color(0xFF64748B)),
                       ),
                       const SizedBox(height: 2),
-                      Text(
-                        _formatDuration(_totalSeconds),
-                        style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          _formatDuration(_totalSeconds),
+                          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
+                        ),
                       ),
                       const Text('kemudi', style: TextStyle(fontSize: 10, color: Color(0xFF64748B))),
                     ],
@@ -325,9 +342,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         style: TextStyle(fontSize: 9, fontWeight: FontWeight.w800, color: Color(0xFF64748B)),
                       ),
                       const SizedBox(height: 2),
-                      Text(
-                        '$_avgScore%',
-                        style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: _scoreColor(_avgScore)),
+                      FittedBox(
+                        fit: BoxFit.scaleDown,
+                        child: Text(
+                          '$_avgScore%',
+                          style: TextStyle(fontSize: 20, fontWeight: FontWeight.w800, color: _scoreColor(_avgScore)),
+                        ),
                       ),
                       const Text('kewaspadaan', style: TextStyle(fontSize: 10, color: Color(0xFF059669))),
                     ],
@@ -492,7 +512,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
           SizedBox(
             width: double.infinity,
             height: 38,
-            child: OutlinedButton.icon(
+            child: OutlinedButton(
               onPressed: () {
                 Navigator.push(
                   context,
@@ -510,19 +530,30 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   ),
                 );
               },
-              icon: const Icon(Icons.workspace_premium_rounded, size: 16, color: Color(0xFFE57A38)),
-              label: const Text(
-                'Lihat Kartu Pencapaian',
-                style: TextStyle(
-                  color: Color(0xFFE57A38),
-                  fontSize: 12,
-                  fontWeight: FontWeight.w800,
-                ),
-              ),
               style: OutlinedButton.styleFrom(
                 side: const BorderSide(color: Color(0xFFFED7AA)),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                 backgroundColor: const Color(0xFFFFF7ED),
+                padding: const EdgeInsets.symmetric(horizontal: 12),
+              ),
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.workspace_premium_rounded, size: 16, color: Color(0xFFE57A38)),
+                  const SizedBox(width: 6),
+                  Flexible(
+                    child: Text(
+                      'Lihat Kartu Pencapaian',
+                      style: const TextStyle(
+                        color: Color(0xFFE57A38),
+                        fontSize: 12,
+                        fontWeight: FontWeight.w800,
+                      ),
+                      overflow: TextOverflow.ellipsis,
+                    ),
+                  ),
+                ],
               ),
             ),
           ),

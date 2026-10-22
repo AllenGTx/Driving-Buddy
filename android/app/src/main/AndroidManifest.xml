@@ -5,6 +5,10 @@
     <uses-permission android:name="android.permission.INTERNET"/>
     <!-- Izin akses jaringan lokal (WiFi) -->
     <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
+    <!-- Izin lokasi presisi tinggi (GPS) untuk fitur pitstop terdekat -->
+    <uses-permission android:name="android.permission.ACCESS_FINE_LOCATION"/>
+    <!-- Izin lokasi kasar (network/WiFi) sebagai fallback -->
+    <uses-permission android:name="android.permission.ACCESS_COARSE_LOCATION"/>
     <!-- Deklarasi fitur kamera (opsional: tidak wajib ada kamera) -->
     <uses-feature android:name="android.hardware.camera" android:required="false"/>
     <uses-feature android:name="android.hardware.camera.front" android:required="false"/>
