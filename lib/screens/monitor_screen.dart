@@ -31,8 +31,13 @@ typedef MonitoringScreen = MonitorScreen;
 
 class MonitorScreen extends StatefulWidget {
   final bool isActive;
+  final NearbyPlacesController? nearbyController;
 
-  const MonitorScreen({super.key, this.isActive = true});
+  const MonitorScreen({
+    super.key,
+    this.isActive = true,
+    this.nearbyController,
+  });
 
   @override
   MonitorScreenState createState() => MonitorScreenState();
@@ -55,8 +60,9 @@ class MonitorScreenState extends State<MonitorScreen> {
   final DrowsinessDetector _detector = DrowsinessDetector();
   final AlertService _alert = AlertService();
 
-  // Tempat terdekat (Maps API lewat server.py): kartu rekomendasi pitstop & tombol rest area
-  final NearbyPlacesController _nearby = NearbyPlacesController();
+  // Tempat terdekat (Maps API): kartu rekomendasi pitstop & tombol rest area
+  late final NearbyPlacesController _nearby;
+  late final bool _ownsNearby;
 
   // Hasil deteksi real-time
   DetectionResult _result = DetectionResult.initial;
@@ -82,10 +88,11 @@ class MonitorScreenState extends State<MonitorScreen> {
   @override
   void initState() {
     super.initState();
-    // Otomatis aktifkan pencarian tempat terdekat saat aplikasi dibuka:
-    // - Jika lokasi (GPS) di HP sudah menyala & izin ada -> langsung otomatis mencari tempat terdekat.
-    // - Jika lokasi (GPS) belum dinyalakan -> diam/tidak mencari apa pun sampai pengguna menyalakan GPS.
-    _nearby.start(askPermission: false);
+    _ownsNearby = widget.nearbyController == null;
+    _nearby = widget.nearbyController ?? NearbyPlacesController();
+    if (_ownsNearby) {
+      _nearby.start(askPermission: false);
+    }
   }
 
   @override
@@ -101,7 +108,9 @@ class MonitorScreenState extends State<MonitorScreen> {
     _cameraController?.dispose();
     _mesh.dispose();
     _alert.dispose();
-    _nearby.dispose();
+    if (_ownsNearby) {
+      _nearby.dispose();
+    }
     WakelockPlus.disable();
     super.dispose();
   }
@@ -364,8 +373,10 @@ class MonitorScreenState extends State<MonitorScreen> {
     await _cameraController?.dispose();
     _cameraController = null;
     await _alert.stop();
-    _nearby.stop();
-    _nearby.start(askPermission: false);
+    if (_ownsNearby) {
+      _nearby.stop();
+      _nearby.start(askPermission: false);
+    }
     await WakelockPlus.disable();
 
     setState(() {

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/app_colors.dart';
+import '../features/nearby_places/nearby_places.dart';
 import 'home_screen.dart';
 import 'monitor_screen.dart';
 import 'history_screen.dart';
@@ -21,11 +22,22 @@ class MainShell extends StatefulWidget {
 class _MainShellState extends State<MainShell> {
   late int _currentIndex;
   final GlobalKey<MonitorScreenState> _monitorKey = GlobalKey();
+  final NearbyPlacesController _nearbyController = NearbyPlacesController();
 
   @override
   void initState() {
     super.initState();
     _currentIndex = widget.initialIndex;
+    // Otomatis aktifkan pencarian tempat terdekat saat aplikasi dibuka.
+    // Jika lokasi (GPS) nyala & izin ada -> langsung cari tempat terdekat.
+    // Jika lokasi belum nyala -> diam/siaga sampai pengguna menyalakan GPS.
+    _nearbyController.start(askPermission: false);
+  }
+
+  @override
+  void dispose() {
+    _nearbyController.dispose();
+    super.dispose();
   }
 
   void _switchToTab(int index) => setState(() => _currentIndex = index);
@@ -37,8 +49,15 @@ class _MainShellState extends State<MainShell> {
       body: IndexedStack(
         index: _currentIndex,
         children: [
-          CockpitScreen(onStartMonitoring: () => _switchToTab(1)),
-          MonitorScreen(key: _monitorKey, isActive: _currentIndex == 1),
+          CockpitScreen(
+            onStartMonitoring: () => _switchToTab(1),
+            nearbyController: _nearbyController,
+          ),
+          MonitorScreen(
+            key: _monitorKey,
+            isActive: _currentIndex == 1,
+            nearbyController: _nearbyController,
+          ),
           const HistoryScreen(),
         ],
       ),

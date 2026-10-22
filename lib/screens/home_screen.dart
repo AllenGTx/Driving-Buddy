@@ -5,6 +5,7 @@ import '../core/app_colors.dart';
 import '../routes/app_routes.dart';
 import '../supabase_service.dart';
 import '../widgets/driving_buddy_app_bar.dart';
+import '../features/nearby_places/nearby_places.dart';
 
 // ============================================================================
 // HOME SCREEN / COCKPIT (Beranda Telemetri Amber Accent — Luxury GT)
@@ -14,8 +15,13 @@ typedef HomeScreen = CockpitScreen;
 
 class CockpitScreen extends StatefulWidget {
   final VoidCallback? onStartMonitoring;
+  final NearbyPlacesController? nearbyController;
 
-  const CockpitScreen({super.key, this.onStartMonitoring});
+  const CockpitScreen({
+    super.key,
+    this.onStartMonitoring,
+    this.nearbyController,
+  });
 
   @override
   State<CockpitScreen> createState() => _CockpitScreenState();
@@ -23,11 +29,26 @@ class CockpitScreen extends StatefulWidget {
 
 class _CockpitScreenState extends State<CockpitScreen> {
   String _driverName = 'Pengemudi';
+  late final NearbyPlacesController _nearby;
+  late final bool _ownsNearby;
 
   @override
   void initState() {
     super.initState();
+    _ownsNearby = widget.nearbyController == null;
+    _nearby = widget.nearbyController ?? NearbyPlacesController();
+    if (_ownsNearby) {
+      _nearby.start(askPermission: false);
+    }
     _loadDriverName();
+  }
+
+  @override
+  void dispose() {
+    if (_ownsNearby) {
+      _nearby.dispose();
+    }
+    super.dispose();
   }
 
   Future<void> _loadDriverName() async {
@@ -200,35 +221,42 @@ class _CockpitScreenState extends State<CockpitScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 32,
-                          height: 32,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFFF7ED),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: const Color(0xFFFED7AA)),
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 32,
+                            height: 32,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFFF7ED),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: const Color(0xFFFED7AA)),
+                            ),
+                            child: const Icon(
+                              Icons.videocam_rounded,
+                              color: Color(0xFFE57A38),
+                              size: 18,
+                            ),
                           ),
-                          child: const Icon(
-                            Icons.videocam_rounded,
-                            color: Color(0xFFE57A38),
-                            size: 18,
+                          const SizedBox(width: 8),
+                          const Flexible(
+                            child: Text(
+                              'Guardian Mesh Ready',
+                              style: TextStyle(
+                                fontSize: 13.5,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFF0F172A),
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                              maxLines: 1,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 10),
-                        const Text(
-                          'Guardian Mesh Ready',
-                          style: TextStyle(
-                            fontSize: 14,
-                            fontWeight: FontWeight.w800,
-                            color: Color(0xFF0F172A),
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
+                    const SizedBox(width: 8),
                     Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
                       decoration: BoxDecoration(
                         color: const Color(0xFFECFDF5),
                         borderRadius: BorderRadius.circular(20),
@@ -237,10 +265,10 @@ class _CockpitScreenState extends State<CockpitScreen> {
                       child: const Text(
                         'EYE-TRACKING OK',
                         style: TextStyle(
-                          fontSize: 10,
+                          fontSize: 9.5,
                           fontWeight: FontWeight.w800,
                           color: Color(0xFF059669),
-                          letterSpacing: 0.6,
+                          letterSpacing: 0.5,
                         ),
                       ),
                     ),
@@ -975,106 +1003,10 @@ class _CockpitScreenState extends State<CockpitScreen> {
   }
 
   // ──────────────────────────────────────────────────────────────────────────
-  // 5. REST AREA QUICK ACTION CARD
+  // 5. REST AREA QUICK ACTION CARD (Terkoneksi langsung dengan nearby controller)
   // ──────────────────────────────────────────────────────────────────────────
   Widget _buildRestAreaQuickCard(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.all(14),
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFFFF7ED), Color(0xFFFFEDD5), Color(0xFFFFFBF8)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFFED7AA)),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFE57A38).withOpacity(0.06),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      child: Row(
-        children: [
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(12),
-              border: Border.all(color: const Color(0xFFFED7AA)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.04),
-                  blurRadius: 6,
-                ),
-              ],
-            ),
-            child: const Icon(
-              Icons.local_cafe_rounded,
-              color: Color(0xFFE57A38),
-              size: 22,
-            ),
-          ),
-          const SizedBox(width: 12),
-          const Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  'REKOMENDASI PITSTOP',
-                  style: TextStyle(
-                    fontSize: 9,
-                    fontWeight: FontWeight.w800,
-                    letterSpacing: 0.8,
-                    color: Color(0xFFC25E21),
-                  ),
-                ),
-                SizedBox(height: 2),
-                Text(
-                  'Rest Area KM 57 Tol Japek',
-                  style: TextStyle(
-                    fontSize: 13,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF0F172A),
-                  ),
-                ),
-                Text(
-                  '4.2 km lagi • Fasilitas Kopi & SPBU 24 Jam',
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.w500,
-                    color: Color(0xFF64748B),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          ElevatedButton(
-            onPressed: () {
-              ScaffoldMessenger.of(context).showSnackBar(
-                const SnackBar(
-                  content: Text('Membuka rute ke Rest Area KM 57...'),
-                  behavior: SnackBarBehavior.floating,
-                ),
-              );
-            },
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFE57A38),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(10),
-              ),
-              padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-              elevation: 2,
-            ),
-            child: const Icon(Icons.navigation_rounded, size: 18),
-          ),
-        ],
-      ),
-    );
+    return PitstopCard(controller: _nearby);
   }
 }
 
