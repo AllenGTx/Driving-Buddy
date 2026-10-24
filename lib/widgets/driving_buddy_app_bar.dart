@@ -1,11 +1,14 @@
+import 'dart:io';
 import 'package:flutter/material.dart';
+import '../models/account_config.dart';
+import '../services/firebase_service.dart';
 import '../routes/app_routes.dart';
 
 // ============================================================================
-// LUXURY GT APP BAR WIDGET (Obsidian Telemetry Header)
+// LUXURY GT APP BAR WIDGET — Perfectly Centered Title, Edge-to-Edge Gradient
 // ============================================================================
 
-class DrivingBuddyAppBar extends StatelessWidget implements PreferredSizeWidget {
+class DrivingBuddyAppBar extends StatefulWidget implements PreferredSizeWidget {
   final String title;
   final bool showBackButton;
   final bool showProfileButton;
@@ -22,180 +25,154 @@ class DrivingBuddyAppBar extends StatelessWidget implements PreferredSizeWidget 
   });
 
   @override
-  Size get preferredSize => const Size.fromHeight(68);
+  Size get preferredSize => const Size.fromHeight(kToolbarHeight + 8);
+
+  @override
+  State<DrivingBuddyAppBar> createState() => _DrivingBuddyAppBarState();
+}
+
+class _DrivingBuddyAppBarState extends State<DrivingBuddyAppBar> {
+  @override
+  void initState() {
+    super.initState();
+    final curEmail = AuthService.currentUser?.email;
+    AccountConfig.getPhotoUrl(userEmail: curEmail);
+  }
 
   @override
   Widget build(BuildContext context) {
     final canPop = Navigator.canPop(context);
-    final shouldShowBack = showBackButton || (canPop && onBack != null);
+    final shouldShowBack = widget.showBackButton || (canPop && widget.onBack != null);
 
-    return Container(
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFFE57A38), Color(0xFFC25E21)],
-          begin: Alignment.topLeft,
-          end: Alignment.bottomRight,
-        ),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFC25E21).withOpacity(0.35),
-            blurRadius: 14,
-            offset: const Offset(0, 4),
+    // Use native AppBar so gradient stretches edge-to-edge automatically
+    return AppBar(
+      toolbarHeight: kToolbarHeight + 8,
+      backgroundColor: Colors.transparent,
+      elevation: 0,
+      automaticallyImplyLeading: false,
+      flexibleSpace: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            colors: [Color(0xFFE57A38), Color(0xFFC25E21)],
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
           ),
-        ],
-        border: Border(
-          bottom: BorderSide(
-            color: const Color(0xFF9A3412).withOpacity(0.3),
-            width: 1,
-          ),
+          boxShadow: [
+            BoxShadow(
+              color: Color(0x55C25E21),
+              blurRadius: 16,
+              offset: Offset(0, 5),
+            ),
+          ],
         ),
       ),
-      child: SafeArea(
-        bottom: false,
-        child: Padding(
-          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-          child: Row(
-            children: [
-              // Back button or Brand Logo
-              if (shouldShowBack) ...[
-                GestureDetector(
-                  onTap: onBack ?? () => Navigator.of(context).pop(),
-                  child: Container(
-                    width: 38,
-                    height: 38,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.white.withOpacity(0.3)),
-                    ),
-                    child: const Icon(
-                      Icons.arrow_back_ios_new_rounded,
-                      color: Colors.white,
-                      size: 18,
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 10),
-              ] else ...[
-                Container(
-                  width: 38,
-                  height: 38,
-                  decoration: BoxDecoration(
-                    color: Colors.white.withOpacity(0.2),
-                    borderRadius: BorderRadius.circular(12),
-                    border: Border.all(color: Colors.white.withOpacity(0.3)),
-                  ),
-                  child: const Icon(
-                    Icons.directions_car_rounded,
-                    color: Colors.white,
-                    size: 22,
-                  ),
-                ),
-                const SizedBox(width: 10),
-              ],
-
-              // Title block
-              Expanded(
-                child: Column(
-                  mainAxisSize: MainAxisSize.min,
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Row(
-                      children: [
-                        Text(
-                          'DRIVING BUDDY',
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 1.2,
-                            color: Colors.white.withOpacity(0.9),
-                          ),
-                        ),
-                        const SizedBox(width: 6),
-                        Container(
-                          width: 6,
-                          height: 6,
-                          decoration: const BoxDecoration(
-                            color: Color(0xFF6EE7B7),
-                            shape: BoxShape.circle,
-                          ),
-                        ),
-                      ],
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      title,
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.w800,
-                        color: Colors.white,
-                        letterSpacing: -0.3,
-                      ),
-                      overflow: TextOverflow.ellipsis,
-                    ),
-                  ],
-                ),
-              ),
-
-              // Sensor Siap pill badge
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+      title: Text(
+        widget.title,
+        textAlign: TextAlign.center,
+        style: const TextStyle(
+          fontSize: 18,
+          fontWeight: FontWeight.w800,
+          color: Colors.white,
+          letterSpacing: -0.3,
+        ),
+        maxLines: 1,
+        overflow: TextOverflow.ellipsis,
+      ),
+      centerTitle: true,
+      leading: shouldShowBack
+          ? GestureDetector(
+              onTap: widget.onBack ?? () => Navigator.of(context).pop(),
+              child: Container(
+                margin: const EdgeInsets.only(left: 10),
+                width: 38,
+                height: 38,
                 decoration: BoxDecoration(
-                  color: Colors.black.withOpacity(0.22),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: Colors.white.withOpacity(0.25)),
+                  color: Colors.white.withValues(alpha: 0.2),
+                  borderRadius: BorderRadius.circular(12),
+                  border: Border.all(color: Colors.white.withValues(alpha: 0.35)),
                 ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      Icons.verified_user_rounded,
-                      color: Colors.white,
-                      size: 14,
-                    ),
-                    SizedBox(width: 5),
-                    Text(
-                      'SENSOR SIAP',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.8,
-                        color: Colors.white,
-                      ),
-                    ),
-                  ],
+                child: const Icon(
+                  Icons.arrow_back_ios_new_rounded,
+                  color: Colors.white,
+                  size: 18,
                 ),
               ),
-
-              ...?trailing,
-
-              // Profile Avatar / Settings Trigger (hidden on Profile page to prevent looping)
-              if (showProfileButton) ...[
-                const SizedBox(width: 8),
-                Builder(
-                  builder: (ctx) => GestureDetector(
-                    onTap: () => Navigator.pushNamed(ctx, AppRoutes.settings),
-                    child: Container(
-                      width: 36,
-                      height: 36,
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.25),
-                        shape: BoxShape.circle,
-                        border: Border.all(color: Colors.white.withOpacity(0.6), width: 1.5),
-                      ),
-                      child: const Icon(
-                        Icons.person_rounded,
-                        color: Colors.white,
-                        size: 20,
-                      ),
-                    ),
-                  ),
+            )
+          : Padding(
+              padding: const EdgeInsets.only(left: 14),
+              child: SizedBox(
+                height: 40,
+                width: 40,
+                child: Image.asset(
+                  'assets/images/DrivingBuddyLogo_white_tight.png',
+                  fit: BoxFit.contain,
+                  alignment: Alignment.centerLeft,
                 ),
-              ],
-            ],
+              ),
+            ),
+      actions: [
+        if (widget.trailing != null) ...widget.trailing!,
+        if (widget.showProfileButton)
+          Padding(
+            padding: const EdgeInsets.only(right: 12),
+            child: Builder(
+              builder: (ctx) => GestureDetector(
+                onTap: () async {
+                  await Navigator.pushNamed(ctx, AppRoutes.settings);
+                  if (mounted) setState(() {});
+                },
+                child: ValueListenableBuilder<String?>(
+                  valueListenable: AccountConfig.photoNotifier,
+                  builder: (context, photoUrl, _) {
+                    String? authPhoto;
+                    try {
+                      authPhoto = AuthService.currentUser?.photoURL;
+                    } catch (_) {}
+                    final effectivePhoto = (photoUrl != null && photoUrl.isNotEmpty)
+                        ? photoUrl
+                        : authPhoto;
+
+                    Widget imageWidget = const Icon(Icons.person_rounded, color: Colors.white, size: 20);
+
+                    if (effectivePhoto != null && effectivePhoto.isNotEmpty) {
+                      if (effectivePhoto.startsWith('http')) {
+                        imageWidget = Image.network(
+                          effectivePhoto,
+                          fit: BoxFit.cover,
+                          width: 38,
+                          height: 38,
+                          errorBuilder: (_, __, ___) => const Icon(Icons.person_rounded, color: Colors.white, size: 20),
+                        );
+                      } else {
+                        final file = File(effectivePhoto);
+                        if (file.existsSync()) {
+                          imageWidget = Image.file(
+                            file,
+                            fit: BoxFit.cover,
+                            width: 38,
+                            height: 38,
+                            errorBuilder: (_, __, ___) => const Icon(Icons.person_rounded, color: Colors.white, size: 20),
+                          );
+                        }
+                      }
+                    }
+
+                    return Container(
+                      width: 38,
+                      height: 38,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withValues(alpha: 0.25),
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white.withValues(alpha: 0.6), width: 1.5),
+                      ),
+                      child: ClipOval(child: imageWidget),
+                    );
+                  },
+                ),
+              ),
+            ),
           ),
-        ),
-      ),
+      ],
     );
   }
 }

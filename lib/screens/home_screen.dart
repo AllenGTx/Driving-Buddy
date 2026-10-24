@@ -3,7 +3,11 @@ import 'package:flutter/material.dart';
 
 import '../core/app_colors.dart';
 import '../routes/app_routes.dart';
-import '../supabase_service.dart';
+import 'dart:async';
+import 'package:camera/camera.dart';
+import 'package:flutter/foundation.dart';
+import '../services/firebase_service.dart';
+import '../models/account_config.dart';
 import '../widgets/driving_buddy_app_bar.dart';
 import '../features/nearby_places/nearby_places.dart';
 
@@ -14,11 +18,13 @@ import '../features/nearby_places/nearby_places.dart';
 typedef HomeScreen = CockpitScreen;
 
 class CockpitScreen extends StatefulWidget {
+  final bool isActive;
   final VoidCallback? onStartMonitoring;
   final NearbyPlacesController? nearbyController;
 
   const CockpitScreen({
     super.key,
+    this.isActive = true,
     this.onStartMonitoring,
     this.nearbyController,
   });
@@ -27,10 +33,27 @@ class CockpitScreen extends StatefulWidget {
   State<CockpitScreen> createState() => _CockpitScreenState();
 }
 
-class _CockpitScreenState extends State<CockpitScreen> {
+class _CockpitScreenState extends State<CockpitScreen>
+    with SingleTickerProviderStateMixin {
   String _driverName = 'Pengemudi';
   late final NearbyPlacesController _nearby;
   late final bool _ownsNearby;
+
+  // Realtime Sessions from Firestore
+  List<Map<String, dynamic>> _userSessions = [];
+  bool _isLoadingSessions = true;
+  StreamSubscription? _sessionsSub;
+
+  // Animation Controller for Gauge & Stats
+  late AnimationController _animController;
+  late Animation<double> _gaugeAnimation;
+
+  // Camera Preview in Cockpit
+  CameraController? _previewCamera;
+  bool _isPreviewReady = false;
+  bool _faceDetected = false;
+  String _previewStatus = 'Menghubungkan sensor optik...';
+  bool _isCameraExpanded = false;
 
   @override
   void initState() {
@@ -40,24 +63,161 @@ class _CockpitScreenState extends State<CockpitScreen> {
     if (_ownsNearby) {
       _nearby.start(askPermission: false);
     }
+
+    _animController = AnimationController(
+      vsync: this,
+      duration: const Duration(milliseconds: 1400),
+    );
+    _gaugeAnimation = CurvedAnimation(
+      parent: _animController,
+      curve: Curves.easeOutCubic,
+    );
+
     _loadDriverName();
+    _listenSessions();
+    if (widget.isActive) {
+      _initPreviewCamera();
+    }
+    AccountConfig.nameNotifier.addListener(_onProfileNameChanged);
+  }
+
+  void _onProfileNameChanged() {
+    if (mounted && AccountConfig.nameNotifier.value.isNotEmpty) {
+      setState(() => _driverName = AccountConfig.nameNotifier.value);
+    }
+  }
+
+  @override
+  void didUpdateWidget(covariant CockpitScreen oldWidget) {
+    super.didUpdateWidget(oldWidget);
+    if (widget.isActive && !oldWidget.isActive) {
+      _loadDriverName();
+      if (_previewCamera == null || !_previewCamera!.value.isInitialized) {
+        _initPreviewCamera();
+      }
+    } else if (!widget.isActive && oldWidget.isActive) {
+      _previewCamera?.dispose();
+      _previewCamera = null;
+      if (mounted) {
+        setState(() {
+          _isPreviewReady = false;
+          _previewStatus = 'Kamera siaga';
+        });
+      }
+    }
   }
 
   @override
   void dispose() {
+    AccountConfig.nameNotifier.removeListener(_onProfileNameChanged);
+    _animController.dispose();
+    _sessionsSub?.cancel();
+    _previewCamera?.dispose();
     if (_ownsNearby) {
       _nearby.dispose();
     }
     super.dispose();
   }
 
+  Future<void> _initPreviewCamera() async {
+    try {
+      final cameras = await availableCameras();
+      if (cameras.isEmpty) {
+        if (mounted) setState(() => _previewStatus = 'Kamera tidak ditemukan');
+        return;
+      }
+      final front = cameras.firstWhere(
+        (c) => c.lensDirection == CameraLensDirection.front,
+        orElse: () => cameras.first,
+      );
+
+      _previewCamera = CameraController(
+        front,
+        ResolutionPreset.low,
+        enableAudio: false,
+        imageFormatGroup: kIsWeb ? null : ImageFormatGroup.nv21,
+      );
+      await _previewCamera!.initialize();
+      if (mounted) {
+        setState(() {
+          _isPreviewReady = true;
+          _faceDetected = false;
+          _previewStatus = 'Kamera siaga • Arahkan wajah ke lensa untuk kalibrasi';
+        });
+      }
+    } catch (e) {
+      if (mounted) {
+        setState(() {
+          _isPreviewReady = false;
+          _previewStatus = 'Wajah tidak terdeteksi / Kamera belum diizinkan';
+        });
+      }
+    }
+  }
+
+  void _listenSessions() {
+    _sessionsSub = SessionService.getUserSessionsStream().listen((sessions) {
+      if (mounted) {
+        setState(() {
+          _userSessions = sessions;
+          _isLoadingSessions = false;
+        });
+        _animController.forward(from: 0.0);
+      }
+    }, onError: (_) {
+      if (mounted) setState(() => _isLoadingSessions = false);
+    });
+  }
+
   Future<void> _loadDriverName() async {
     try {
+      if (AccountConfig.nameNotifier.value.isNotEmpty) {
+        if (mounted) setState(() => _driverName = AccountConfig.nameNotifier.value);
+        return;
+      }
+      final profile = await AccountConfig.getProfile();
+      final localName = profile['name'];
+      if (localName != null && localName.trim().isNotEmpty) {
+        if (mounted) setState(() => _driverName = localName.trim());
+        return;
+      }
       final name = await AuthService.getUserName();
       if (mounted && name.isNotEmpty) {
         setState(() => _driverName = name);
       }
     } catch (_) {}
+  }
+
+  int get _avgScore {
+    if (_userSessions.isEmpty) return 0;
+    final total = _userSessions.fold<int>(
+      0,
+      (sum, s) => sum + ((s['driving_score'] ?? s['drivingScore'] ?? 100) as num).toInt(),
+    );
+    return (total / _userSessions.length).round();
+  }
+
+  double get _totalDurationHours {
+    final totalSec = _userSessions.fold<int>(
+      0,
+      (sum, s) => sum + ((s['duration_seconds'] ?? s['durationSeconds'] ?? 0) as num).toInt(),
+    );
+    return double.parse((totalSec / 3600.0).toStringAsFixed(1));
+  }
+
+  double get _totalDistanceKm {
+    final totalKm = _userSessions.fold<double>(
+      0.0,
+      (sum, s) => sum + ((s['distance_km'] ?? s['distanceKm'] ?? 0.0) as num).toDouble(),
+    );
+    return double.parse(totalKm.toStringAsFixed(1));
+  }
+
+  int get _totalMicrosleeps {
+    return _userSessions.fold<int>(
+      0,
+      (sum, s) => sum + ((s['total_microsleeps'] ?? s['totalMicrosleeps'] ?? 0) as num).toInt(),
+    );
   }
 
   String _greetingText() {
@@ -72,31 +232,25 @@ class _CockpitScreenState extends State<CockpitScreen> {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: Column(
-        children: [
-          const DrivingBuddyAppBar(title: 'Beranda'),
-          Expanded(
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  _buildDriverGreetingBar(),
-                  const SizedBox(height: 16),
-                  _buildGuardianMeshLaunchCard(context),
-                  const SizedBox(height: 20),
-                  _buildWeeklyTelemetryDialCard(),
-                  const SizedBox(height: 20),
-                  _buildRecentActivitiesSection(context),
-                  const SizedBox(height: 20),
-                  _buildRestAreaQuickCard(context),
-                  const SizedBox(height: 16),
-                ],
-              ),
-            ),
-          ),
-        ],
+      appBar: const DrivingBuddyAppBar(title: 'Beranda'),
+      body: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            _buildDriverGreetingBar(),
+            const SizedBox(height: 16),
+            _buildGuardianMeshLaunchCard(context),
+            const SizedBox(height: 20),
+            _buildWeeklyTelemetryDialCard(),
+            const SizedBox(height: 20),
+            _buildRecentActivitiesSection(context),
+            const SizedBox(height: 20),
+            _buildRestAreaQuickCard(context),
+            const SizedBox(height: 16),
+          ],
+        ),
       ),
     );
   }
@@ -105,85 +259,111 @@ class _CockpitScreenState extends State<CockpitScreen> {
   // 1. DRIVER GREETING & LIVE STATUS BAR
   // ──────────────────────────────────────────────────────────────────────────
   Widget _buildDriverGreetingBar() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-      children: [
-        Expanded(
-          child: Padding(
-            padding: const EdgeInsets.only(right: 8.0),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Row(
-                  children: [
-                    const Text(
-                      'GT TELEMETRI KABIN',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 1.2,
-                        color: Color(0xFFC25E21),
-                      ),
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(color: const Color(0xFFFFEDD5)),
+        boxShadow: [
+          BoxShadow(
+            color: const Color(0xFFE57A38).withValues(alpha: 0.05),
+            blurRadius: 10,
+            offset: const Offset(0, 3),
+          ),
+        ],
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 7,
+                    height: 7,
+                    decoration: const BoxDecoration(
+                      color: Color(0xFF10B981),
+                      shape: BoxShape.circle,
                     ),
-                    const SizedBox(width: 6),
-                    Container(
-                      width: 6,
-                      height: 6,
-                      decoration: const BoxDecoration(
-                        color: Color(0xFF10B981),
-                        shape: BoxShape.circle,
+                  ),
+                  const SizedBox(width: 6),
+                  const Text(
+                    'GT TELEMETRI KABIN',
+                    style: TextStyle(
+                      fontSize: 10.5,
+                      fontWeight: FontWeight.w800,
+                      letterSpacing: 1.2,
+                      color: Color(0xFFC25E21),
+                    ),
+                  ),
+                ],
+              ),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+                decoration: BoxDecoration(
+                  color: const Color(0xFFECFDF5),
+                  borderRadius: BorderRadius.circular(10),
+                  border: Border.all(color: const Color(0xFFA7F3D0)),
+                ),
+                child: const Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.radar_rounded, color: Color(0xFF059669), size: 14),
+                    SizedBox(width: 4),
+                    Text(
+                      'ONLINE',
+                      style: TextStyle(
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF065F46),
+                        letterSpacing: 0.8,
                       ),
                     ),
                   ],
                 ),
-                const SizedBox(height: 2),
-                Text(
-                  '${_greetingText()}, $_driverName',
-                  maxLines: 1,
-                  overflow: TextOverflow.ellipsis,
-                  style: const TextStyle(
-                    fontSize: 17,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF0F172A),
-                    letterSpacing: -0.3,
-                  ),
-                ),
-              ],
-            ),
-          ),
-        ),
-        Container(
-          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-          decoration: BoxDecoration(
-            color: const Color(0xFFECFDF5),
-            borderRadius: BorderRadius.circular(12),
-            border: Border.all(color: const Color(0xFFA7F3D0)),
-          ),
-          child: const Row(
-            mainAxisSize: MainAxisSize.min,
-            children: [
-              Icon(Icons.radar_rounded, color: Color(0xFF059669), size: 16),
-              SizedBox(width: 4),
-              Text(
-                'ONLINE',
-                style: TextStyle(
-                  fontSize: 10,
-                  fontWeight: FontWeight.w800,
-                  color: Color(0xFF065F46),
-                  letterSpacing: 0.8,
-                ),
               ),
             ],
           ),
-        ),
-      ],
+          const SizedBox(height: 8),
+          Text(
+            _greetingText(),
+            style: const TextStyle(
+              fontSize: 13,
+              fontWeight: FontWeight.w600,
+              color: Color(0xFF64748B),
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            _driverName,
+            style: const TextStyle(
+              fontSize: 20,
+              fontWeight: FontWeight.w900,
+              color: Color(0xFF0F172A),
+              letterSpacing: -0.4,
+              height: 1.2,
+            ),
+          ),
+        ],
+      ),
     );
   }
 
   // ──────────────────────────────────────────────────────────────────────────
   // 2. GUARDIAN MESH READY LAUNCH CARD
   // ──────────────────────────────────────────────────────────────────────────
+  // ──────────────────────────────────────────────────────────────────────────
+  // 2. GUARDIAN MESH READY LAUNCH CARD (With Real Camera Preview & Detection Test)
+  // ──────────────────────────────────────────────────────────────────────────
   Widget _buildGuardianMeshLaunchCard(BuildContext context) {
+    final statusColor = _faceDetected ? const Color(0xFF059669) : const Color(0xFFD94126);
+    final statusBg = _faceDetected ? const Color(0xFFECFDF5) : const Color(0xFFFEF2F2);
+    final statusBorder = _faceDetected ? const Color(0xFFA7F3D0) : const Color(0xFFFECACA);
+
     return Container(
       decoration: BoxDecoration(
         gradient: const LinearGradient(
@@ -203,7 +383,6 @@ class _CockpitScreenState extends State<CockpitScreen> {
       ),
       child: Column(
         children: [
-          // Top subtle copper ambient highlight line
           Container(
             height: 3,
             decoration: const BoxDecoration(
@@ -217,7 +396,6 @@ class _CockpitScreenState extends State<CockpitScreen> {
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                // Header
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
@@ -241,7 +419,7 @@ class _CockpitScreenState extends State<CockpitScreen> {
                           const SizedBox(width: 8),
                           const Flexible(
                             child: Text(
-                              'Guardian Mesh Ready',
+                              'Guardian Mesh Status',
                               style: TextStyle(
                                 fontSize: 13.5,
                                 fontWeight: FontWeight.w800,
@@ -258,16 +436,16 @@ class _CockpitScreenState extends State<CockpitScreen> {
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
                       decoration: BoxDecoration(
-                        color: const Color(0xFFECFDF5),
+                        color: statusBg,
                         borderRadius: BorderRadius.circular(20),
-                        border: Border.all(color: const Color(0xFFA7F3D0)),
+                        border: Border.all(color: statusBorder),
                       ),
-                      child: const Text(
-                        'EYE-TRACKING OK',
+                      child: Text(
+                        _faceDetected ? 'SENSOR AKTIF' : 'SENSOR SIAGA',
                         style: TextStyle(
                           fontSize: 9.5,
                           fontWeight: FontWeight.w800,
-                          color: Color(0xFF059669),
+                          color: statusColor,
                           letterSpacing: 0.5,
                         ),
                       ),
@@ -276,137 +454,133 @@ class _CockpitScreenState extends State<CockpitScreen> {
                 ),
                 const SizedBox(height: 14),
 
-                // Simulated Live Camera Glass Cockpit
-                Container(
-                  height: 160,
-                  width: double.infinity,
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFEDF2F7),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: const Color(0xFFFFEDD5)),
-                  ),
-                  clipBehavior: Clip.antiAlias,
-                  child: Stack(
-                    children: [
-                      // Small camera icon in the center
-                      Center(
-                        child: Container(
-                          width: 48,
-                          height: 48,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFE57A38).withOpacity(0.12),
-                            shape: BoxShape.circle,
-                            border: Border.all(color: const Color(0xFFFED7AA)),
-                          ),
-                          child: const Icon(
-                            Icons.videocam_rounded,
-                            color: Color(0xFFE57A38),
-                            size: 24,
-                          ),
-                        ),
+                // Live Camera Preview — expandable on tap
+                GestureDetector(
+                  onTap: () => setState(() => _isCameraExpanded = !_isCameraExpanded),
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeInOut,
+                    height: _isCameraExpanded ? 300 : 180,
+                    width: double.infinity,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0F172A),
+                      borderRadius: BorderRadius.circular(16),
+                      border: Border.all(
+                        color: _isCameraExpanded
+                            ? const Color(0xFFE57A38)
+                            : const Color(0xFFFFEDD5),
+                        width: _isCameraExpanded ? 1.5 : 1.0,
                       ),
-                      // Top-left PERCLOS chip
-                      Positioned(
-                        top: 10,
-                        left: 10,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.95),
-                            borderRadius: BorderRadius.circular(20),
-                            border: Border.all(color: const Color(0xFFFED7AA)),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.04),
-                                blurRadius: 6,
-                              )
-                            ],
-                          ),
-                          child: Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Container(
-                                width: 6,
-                                height: 6,
-                                decoration: const BoxDecoration(
-                                  color: Color(0xFFE57A38),
-                                  shape: BoxShape.circle,
-                                ),
-                              ),
-                              const SizedBox(width: 5),
-                              const Text(
-                                'PERCLOS 0.02',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w800,
-                                  color: Color(0xFFC25E21),
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ),
-                      // Bottom status bar
-                      Positioned(
-                        bottom: 8,
-                        left: 8,
-                        right: 8,
-                        child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withOpacity(0.95),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(color: const Color(0xFFFED7AA)),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withOpacity(0.04),
-                                blurRadius: 6,
-                              )
-                            ],
-                          ),
-                          child: Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: [
-                              Row(
-                                children: [
-                                  Container(
-                                    width: 6,
-                                    height: 6,
-                                    decoration: const BoxDecoration(
-                                      color: Color(0xFF10B981),
-                                      shape: BoxShape.circle,
-                                    ),
+                    ),
+                    clipBehavior: Clip.antiAlias,
+                    child: Stack(
+                      fit: StackFit.expand,
+                      children: [
+                        if (_isPreviewReady && _previewCamera != null && _previewCamera!.value.isInitialized)
+                          Center(
+                            child: AspectRatio(
+                              aspectRatio: _previewCamera!.value.aspectRatio,
+                              child: CameraPreview(_previewCamera!),
+                            ),
+                          )
+                        else
+                          Center(
+                            child: Column(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                Container(
+                                  width: 50,
+                                  height: 50,
+                                  decoration: BoxDecoration(
+                                    color: Colors.white.withOpacity(0.08),
+                                    shape: BoxShape.circle,
                                   ),
-                                  const SizedBox(width: 6),
-                                  const Text(
-                                    'Kalibrasi Lensa 60 FPS',
+                                  child: const Icon(Icons.videocam_off_rounded, color: Colors.white70, size: 26),
+                                ),
+                                const SizedBox(height: 10),
+                                const Text(
+                                  'Pratinjau Sensor Kamera',
+                                  style: TextStyle(color: Colors.white70, fontSize: 13, fontWeight: FontWeight.w700),
+                                ),
+                                const SizedBox(height: 6),
+                                Text(
+                                  'Ketuk untuk memperbesar',
+                                  style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 11),
+                                ),
+                              ],
+                            ),
+                          ),
+
+                        // ── Expand / collapse hint icon ──────────────
+                        Positioned(
+                          top: 8,
+                          right: 10,
+                          child: Container(
+                            padding: const EdgeInsets.all(5),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.5),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: Icon(
+                              _isCameraExpanded
+                                  ? Icons.fullscreen_exit_rounded
+                                  : Icons.fullscreen_rounded,
+                              color: Colors.white70,
+                              size: 16,
+                            ),
+                          ),
+                        ),
+
+                        // ── Status bar at bottom ─────────────────────
+                        Positioned(
+                          bottom: 10,
+                          left: 12,
+                          right: 12,
+                          child: Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                            decoration: BoxDecoration(
+                              color: Colors.black.withOpacity(0.7),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(color: statusColor.withOpacity(0.5)),
+                            ),
+                            child: Row(
+                              children: [
+                                Icon(
+                                  _faceDetected ? Icons.check_circle_rounded : Icons.info_outline_rounded,
+                                  color: statusColor,
+                                  size: 16,
+                                ),
+                                const SizedBox(width: 8),
+                                Expanded(
+                                  child: Text(
+                                    _previewStatus,
                                     style: TextStyle(
-                                      fontSize: 10,
-                                      fontWeight: FontWeight.w800,
-                                      color: Color(0xFF0F172A),
+                                      color: _faceDetected ? Colors.white : const Color(0xFFFCA5A5),
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w700,
                                     ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                ],
-                              ),
-                              const Text(
-                                'FOV 120° Wide',
-                                style: TextStyle(
-                                  fontSize: 10,
-                                  fontWeight: FontWeight.w600,
-                                  color: Color(0xFF64748B),
-                                  fontFamily: 'monospace',
                                 ),
-                              ),
-                            ],
+                                const SizedBox(width: 6),
+                                Text(
+                                  _isCameraExpanded ? 'Ketuk untuk kecilkan' : 'Ketuk untuk perbesar',
+                                  style: TextStyle(
+                                    color: Colors.white.withOpacity(0.45),
+                                    fontSize: 9,
+                                  ),
+                                ),
+                              ],
+                            ),
                           ),
                         ),
-                      ),
-                    ],
+                      ],
+                    ),
                   ),
                 ),
                 const SizedBox(height: 14),
 
-                // MULAI PERJALANAN Primary Button
                 SizedBox(
                   width: double.infinity,
                   height: 54,
@@ -453,197 +627,206 @@ class _CockpitScreenState extends State<CockpitScreen> {
   }
 
   // ──────────────────────────────────────────────────────────────────────────
-  // 3. WEEKLY TELEMETRY DIAL & STRAVA PERFORMANCE METRICS
+  // 3. WEEKLY TELEMETRY DIAL & REALTIME PERFORMANCE METRICS (Animated Dial & Stats)
   // ──────────────────────────────────────────────────────────────────────────
   Widget _buildWeeklyTelemetryDialCard() {
-    return Container(
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFFFFFFFF), Color(0xFFFFFBF8)],
-        ),
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFFED7AA)),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFFE57A38).withOpacity(0.06),
-            blurRadius: 14,
-            offset: const Offset(0, 3),
-          ),
-        ],
-      ),
-      padding: const EdgeInsets.all(16),
-      child: Column(
-        children: [
-          // Header
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              const Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Text(
-                    'ANALISIS MINGGU INI',
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.1,
-                      color: Color(0xFFC25E21),
-                    ),
-                  ),
-                  SizedBox(height: 2),
-                  Text(
-                    'Skor Kewaspadaan Rata-rata',
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF0F172A),
-                    ),
-                  ),
-                ],
-              ),
-              Container(
-                width: 32,
-                height: 32,
-                decoration: BoxDecoration(
-                  color: const Color(0xFFFFF7ED),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: const Color(0xFFFED7AA)),
-                ),
-                child: const Icon(
-                  Icons.insights_rounded,
-                  color: Color(0xFFE57A38),
-                  size: 18,
-                ),
+    return AnimatedBuilder(
+      animation: _gaugeAnimation,
+      builder: (context, _) {
+        final animatedScore = (_avgScore * _gaugeAnimation.value).round();
+        final animatedScoreFraction = (_avgScore / 100.0) * _gaugeAnimation.value;
+        final animatedDuration = (_totalDurationHours * _gaugeAnimation.value).toStringAsFixed(1);
+        final animatedDistance = (_totalDistanceKm * _gaugeAnimation.value).toStringAsFixed(0);
+
+        return Container(
+          decoration: BoxDecoration(
+            gradient: const LinearGradient(
+              begin: Alignment.topCenter,
+              end: Alignment.bottomCenter,
+              colors: [Color(0xFFFFFFFF), Color(0xFFFFFBF8)],
+            ),
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: const Color(0xFFFED7AA)),
+            boxShadow: [
+              BoxShadow(
+                color: const Color(0xFFE57A38).withOpacity(0.06),
+                blurRadius: 14,
+                offset: const Offset(0, 3),
               ),
             ],
           ),
-          const SizedBox(height: 18),
-
-          // Circular Dial Gauge
-          Center(
-            child: SizedBox(
-              width: 170,
-              height: 170,
-              child: Stack(
-                alignment: Alignment.center,
+          padding: const EdgeInsets.all(16),
+          child: Column(
+            children: [
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
                 children: [
-                  CustomPaint(
-                    size: const Size(170, 170),
-                    painter: _CircularGaugePainter(
-                      score: 0.96,
-                      trackColor: const Color(0xFFFFEDD5),
-                      activeColor: const Color(0xFFE57A38),
-                    ),
-                  ),
-                  Column(
-                    mainAxisSize: MainAxisSize.min,
+                  const Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Icon(
-                        Icons.visibility_rounded,
-                        color: Color(0xFF059669),
-                        size: 22,
-                      ),
-                      const SizedBox(height: 2),
-                      Row(
-                        mainAxisSize: MainAxisSize.min,
-                        crossAxisAlignment: CrossAxisAlignment.baseline,
-                        textBaseline: TextBaseline.alphabetic,
-                        children: const [
-                          Text(
-                            '96',
-                            style: TextStyle(
-                              fontSize: 38,
-                              fontWeight: FontWeight.w900,
-                              color: Color(0xFF0F172A),
-                              letterSpacing: -1.5,
-                            ),
-                          ),
-                          Text(
-                            '%',
-                            style: TextStyle(
-                              fontSize: 18,
-                              fontWeight: FontWeight.w800,
-                              color: Color(0xFFE57A38),
-                            ),
-                          ),
-                        ],
-                      ),
-                      const SizedBox(height: 4),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                        decoration: BoxDecoration(
-                          color: const Color(0xFFECFDF5),
-                          borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xFFA7F3D0)),
+                      Text(
+                        'ANALISIS TELEMETRI REALTIME',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 1.1,
+                          color: Color(0xFFC25E21),
                         ),
-                        child: const Text(
-                          'STATUS PRIMA',
-                          style: TextStyle(
-                            fontSize: 9,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 0.6,
-                            color: Color(0xFF065F46),
-                          ),
+                      ),
+                      SizedBox(height: 2),
+                      Text(
+                        'Skor Kewaspadaan Rata-rata',
+                        style: TextStyle(
+                          fontSize: 15,
+                          fontWeight: FontWeight.w800,
+                          color: Color(0xFF0F172A),
                         ),
                       ),
                     ],
                   ),
+                  Container(
+                    width: 32,
+                    height: 32,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFF7ED),
+                      borderRadius: BorderRadius.circular(10),
+                      border: Border.all(color: const Color(0xFFFED7AA)),
+                    ),
+                    child: const Icon(
+                      Icons.insights_rounded,
+                      color: Color(0xFFE57A38),
+                      size: 18,
+                    ),
+                  ),
                 ],
               ),
-            ),
-          ),
-          const SizedBox(height: 18),
+              const SizedBox(height: 18),
 
-          // 3-Column Strava-like Performance Metrics
-          Container(
-            padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
-            decoration: BoxDecoration(
-              color: Colors.white,
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(color: const Color(0xFFFFEDD5)),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.02),
-                  blurRadius: 6,
-                )
-              ],
-            ),
-            child: Row(
-              children: [
-                Expanded(
-                  child: _buildStravaMetricCol(
-                    label: 'DURASI TOTAL',
-                    value: '14.2',
-                    unit: 'jam',
-                    valueColor: const Color(0xFF0F172A),
+              Center(
+                child: SizedBox(
+                  width: 170,
+                  height: 170,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      CustomPaint(
+                        size: const Size(170, 170),
+                        painter: _CircularGaugePainter(
+                          score: animatedScoreFraction.clamp(0.0, 1.0),
+                          trackColor: const Color(0xFFFFEDD5),
+                          activeColor: const Color(0xFFE57A38),
+                        ),
+                      ),
+                      Column(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Icon(
+                            animatedScore >= 80 ? Icons.visibility_rounded : Icons.warning_amber_rounded,
+                            color: animatedScore >= 80 ? const Color(0xFF059669) : const Color(0xFFE57A38),
+                            size: 22,
+                          ),
+                          const SizedBox(height: 2),
+                          Row(
+                            mainAxisSize: MainAxisSize.min,
+                            crossAxisAlignment: CrossAxisAlignment.baseline,
+                            textBaseline: TextBaseline.alphabetic,
+                            children: [
+                              Text(
+                                '$animatedScore',
+                                style: const TextStyle(
+                                  fontSize: 30,
+                                  fontWeight: FontWeight.w900,
+                                  color: Color(0xFF0F172A),
+                                  letterSpacing: -1.0,
+                                ),
+                              ),
+                              const Text(
+                                '%',
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: FontWeight.w800,
+                                  color: Color(0xFFE57A38),
+                                ),
+                              ),
+                            ],
+                          ),
+                          const SizedBox(height: 4),
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                            decoration: BoxDecoration(
+                              color: animatedScore >= 80 ? const Color(0xFFECFDF5) : const Color(0xFFFFF7ED),
+                              borderRadius: BorderRadius.circular(10),
+                              border: Border.all(
+                                color: animatedScore >= 80 ? const Color(0xFFA7F3D0) : const Color(0xFFFED7AA),
+                              ),
+                            ),
+                            child: Text(
+                              _userSessions.isEmpty ? 'BELUM ADA DATA' : (animatedScore >= 80 ? 'STATUS PRIMA' : 'PERLU ISTIRAHAT'),
+                              style: TextStyle(
+                                fontSize: 7.5,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.3,
+                                color: _userSessions.isEmpty ? const Color(0xFF64748B) : (animatedScore >= 80 ? const Color(0xFF065F46) : const Color(0xFFC25E21)),
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ],
                   ),
                 ),
-                Container(height: 36, width: 1, color: const Color(0xFFFFEDD5)),
-                Expanded(
-                  child: _buildStravaMetricCol(
-                    label: 'JARAK TEMPUH',
-                    value: '842',
-                    unit: 'km',
-                    valueColor: const Color(0xFF0F172A),
-                  ),
+              ),
+              const SizedBox(height: 18),
+
+              Container(
+                padding: const EdgeInsets.symmetric(vertical: 12, horizontal: 8),
+                decoration: BoxDecoration(
+                  color: Colors.white,
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: const Color(0xFFFFEDD5)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withOpacity(0.02),
+                      blurRadius: 6,
+                    )
+                  ],
                 ),
-                Container(height: 36, width: 1, color: const Color(0xFFFFEDD5)),
-                Expanded(
-                  child: _buildStravaMetricCol(
-                    label: 'MICROSLEEP',
-                    value: '0',
-                    unit: 'insiden',
-                    valueColor: const Color(0xFF059669),
-                    unitColor: const Color(0xFF059669),
-                  ),
+                child: Row(
+                  children: [
+                    Expanded(
+                      child: _buildStravaMetricCol(
+                        label: 'DURASI TOTAL',
+                        value: animatedDuration,
+                        unit: 'jam',
+                        valueColor: const Color(0xFF0F172A),
+                      ),
+                    ),
+                    Container(height: 36, width: 1, color: const Color(0xFFFFEDD5)),
+                    Expanded(
+                      child: _buildStravaMetricCol(
+                        label: 'JARAK TEMPUH',
+                        value: animatedDistance,
+                        unit: 'km',
+                        valueColor: const Color(0xFF0F172A),
+                      ),
+                    ),
+                    Container(height: 36, width: 1, color: const Color(0xFFFFEDD5)),
+                    Expanded(
+                      child: _buildStravaMetricCol(
+                        label: 'MICROSLEEP',
+                        value: '$_totalMicrosleeps',
+                        unit: 'insiden',
+                        valueColor: _totalMicrosleeps == 0 ? const Color(0xFF059669) : const Color(0xFFD94126),
+                        unitColor: _totalMicrosleeps == 0 ? const Color(0xFF059669) : const Color(0xFFD94126),
+                      ),
+                    ),
+                  ],
                 ),
-              ],
-            ),
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -688,47 +871,63 @@ class _CockpitScreenState extends State<CockpitScreen> {
   }
 
   // ──────────────────────────────────────────────────────────────────────────
-  // 4. AKTIVITAS TERAKHIR (Strava Style Ivory Cards)
+  // 4. AKTIVITAS TERAKHIR (Realtime Firestore Sessions — Animated Waves)
   // ──────────────────────────────────────────────────────────────────────────
   Widget _buildRecentActivitiesSection(BuildContext context) {
+    if (_isLoadingSessions) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(20),
+          child: CircularProgressIndicator(color: Color(0xFFE57A38), strokeWidth: 2),
+        ),
+      );
+    }
+
+    final recentList = _userSessions.take(4).toList();
+
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Row(
-              children: [
-                const Text(
-                  'Aktivitas Terakhir',
-                  style: TextStyle(
-                    fontSize: 16,
-                    fontWeight: FontWeight.w800,
-                    color: Color(0xFF0F172A),
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
-                  decoration: BoxDecoration(
-                    color: const Color(0xFFFFF7ED),
-                    borderRadius: BorderRadius.circular(10),
-                    border: Border.all(color: const Color(0xFFFED7AA)),
-                  ),
-                  child: const Text(
-                    '2 Selesai',
-                    style: TextStyle(
-                      fontSize: 10,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFFC25E21),
+            Expanded(
+              child: Row(
+                children: [
+                  const Flexible(
+                    child: Text(
+                      'Aktivitas Terakhir',
+                      style: TextStyle(
+                        fontSize: 16,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF0F172A),
+                      ),
+                      overflow: TextOverflow.ellipsis,
                     ),
                   ),
-                ),
-              ],
+                  const SizedBox(width: 6),
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFFFF7ED),
+                      borderRadius: BorderRadius.circular(8),
+                      border: Border.all(color: const Color(0xFFFED7AA)),
+                    ),
+                    child: Text(
+                      '${_userSessions.length} Selesai',
+                      style: const TextStyle(
+                        fontSize: 9.5,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFFC25E21),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
             ),
             GestureDetector(
               onTap: () => Navigator.pushNamed(context, AppRoutes.history),
               child: const Row(
+                mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
                     'Lihat Semua',
@@ -746,50 +945,93 @@ class _CockpitScreenState extends State<CockpitScreen> {
         ),
         const SizedBox(height: 12),
 
-        // Trip 1: Bandung - Jakarta
-        _buildTripCard(
-          tag: 'Malam Hari • Tol Cipularang',
-          date: 'Kemarin',
-          title: 'Bandung → Jakarta',
-          score: '94%',
-          distance: '142',
-          duration: '2j 15m',
-          warningText: '1 Istirahat',
-          warningIcon: Icons.coffee_rounded,
-          warningColor: const Color(0xFFE57A38),
-          sparklineColor: const Color(0xFFE57A38),
-        ),
-        const SizedBox(height: 12),
+        if (recentList.isEmpty)
+          Container(
+            padding: const EdgeInsets.all(24),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(16),
+              border: Border.all(color: const Color(0xFFFED7AA)),
+            ),
+            child: const Center(
+              child: Column(
+                children: [
+                  Icon(Icons.route_rounded, color: Color(0xFFE57A38), size: 36),
+                  SizedBox(height: 8),
+                  Text(
+                    'Belum Ada Riwayat Perjalanan',
+                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 14, color: Color(0xFF0F172A)),
+                  ),
+                  SizedBox(height: 4),
+                  Text(
+                    'Mulai sesi berkendara pertamamu dengan menekan tombol di atas!',
+                    textAlign: TextAlign.center,
+                    style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+                  ),
+                ],
+              ),
+            ),
+          )
+        else
+          ...recentList.asMap().entries.map((entry) {
+            final idx = entry.key;
+            final s = entry.value;
 
-        // Trip 2: SCBD - BSD
-        _buildTripCard(
-          tag: 'Sore Hari • JORR II',
-          date: '2 Hari Lalu',
-          title: 'SCBD → BSD Grand City',
-          score: '98%',
-          distance: '28',
-          duration: '52m',
-          warningText: '0 Bersih',
-          warningIcon: Icons.check_circle_rounded,
-          warningColor: const Color(0xFF059669),
-          sparklineColor: const Color(0xFF10B981),
-        ),
+            final score = ((s['driving_score'] ?? s['drivingScore'] ?? 100) as num).toInt();
+            final durSec = ((s['duration_seconds'] ?? s['durationSeconds'] ?? 0) as num).toInt();
+            final distKm = ((s['distance_km'] ?? s['distanceKm'] ?? 0.0) as num).toDouble();
+            final avgSpd = ((s['avg_speed_kmh'] ?? s['avgSpeedKmh'] ?? 0.0) as num).toDouble();
+            final avgEar = ((s['avg_ear'] ?? s['avgEar'] ?? 0.28) as num).toDouble();
+            final micro = ((s['total_microsleeps'] ?? s['totalMicrosleeps'] ?? 0) as num).toInt();
+            final yawns = ((s['total_yawns'] ?? s['totalYawns'] ?? 0) as num).toInt();
+
+            final min = (durSec % 3600) ~/ 60;
+            final hr = durSec ~/ 3600;
+            final durStr = hr > 0 ? '${hr}j ${min}m' : '${min}m';
+
+            return Padding(
+              padding: const EdgeInsets.only(bottom: 12),
+              child: _buildRealTripCard(
+                tripIndex: idx + 1,
+                dateStr: _formatSessionDate(s['started_at']?.toString()),
+                score: score,
+                distanceKm: distKm,
+                durationStr: durStr,
+                avgSpeedKmh: avgSpd,
+                avgEar: avgEar,
+                microsleeps: micro,
+                yawns: yawns,
+              ),
+            );
+          }),
       ],
     );
   }
 
-  Widget _buildTripCard({
-    required String tag,
-    required String date,
-    required String title,
-    required String score,
-    required String distance,
-    required String duration,
-    required String warningText,
-    required IconData warningIcon,
-    required Color warningColor,
-    required Color sparklineColor,
+  String _formatSessionDate(String? iso) {
+    if (iso == null) return 'Baru Saja';
+    final dt = DateTime.tryParse(iso)?.toLocal();
+    if (dt == null) return 'Baru Saja';
+    final now = DateTime.now();
+    if (now.difference(dt).inDays == 0) return 'Hari ini';
+    if (now.difference(dt).inDays == 1) return 'Kemarin';
+    return '${dt.day}/${dt.month}/${dt.year}';
+  }
+
+  Widget _buildRealTripCard({
+    required int tripIndex,
+    required String dateStr,
+    required int score,
+    required double distanceKm,
+    required String durationStr,
+    required double avgSpeedKmh,
+    required double avgEar,
+    required int microsleeps,
+    required int yawns,
   }) {
+    final isGood = score >= 80;
+    final scoreColor = isGood ? const Color(0xFF059669) : const Color(0xFFE57A38);
+
     return Container(
       decoration: BoxDecoration(
         gradient: const LinearGradient(
@@ -814,148 +1056,50 @@ class _CockpitScreenState extends State<CockpitScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  Row(
-                    children: [
-                      Text(
-                        tag.toUpperCase(),
-                        style: const TextStyle(
-                          fontSize: 9,
-                          fontWeight: FontWeight.w800,
-                          letterSpacing: 0.8,
-                          color: Color(0xFFC25E21),
-                        ),
-                      ),
-                      const SizedBox(width: 5),
-                      Container(
-                        width: 4,
-                        height: 4,
-                        decoration: const BoxDecoration(
-                          color: Color(0xFFCBD5E1),
-                          shape: BoxShape.circle,
-                        ),
-                      ),
-                      const SizedBox(width: 5),
-                      Text(
-                        date,
-                        style: const TextStyle(
-                          fontSize: 9,
-                          fontWeight: FontWeight.w600,
-                          color: Color(0xFF64748B),
-                        ),
-                      ),
-                    ],
-                  ),
-                  const SizedBox(height: 4),
-                  Text(
-                    title,
-                    style: const TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF0F172A),
-                    ),
-                  ),
-                ],
-              ),
-              Column(
-                crossAxisAlignment: CrossAxisAlignment.end,
-                children: [
-                  Text(
-                    score,
-                    style: const TextStyle(
-                      fontSize: 17,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF059669),
-                    ),
-                  ),
-                  const Text(
-                    'KEWASPADAAN',
-                    style: TextStyle(
-                      fontSize: 8,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.6,
-                      color: Color(0xFF64748B),
-                    ),
-                  ),
-                ],
-              ),
-            ],
-          ),
-          const SizedBox(height: 10),
-
-          // Sparkline Route Wave
-          Container(
-            height: 36,
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
-              borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: const Color(0xFFFFEDD5)),
-            ),
-            child: CustomPaint(
-              painter: _RouteSparklinePainter(color: sparklineColor),
-            ),
-          ),
-          const SizedBox(height: 10),
-
-          // Stats 3-column
-          Row(
-            children: [
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'JARAK',
-                      style: TextStyle(
-                        fontSize: 9,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFF64748B),
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text.rich(
-                      TextSpan(
-                        children: [
-                          TextSpan(
-                            text: distance,
-                            style: const TextStyle(
-                              fontSize: 13,
-                              fontWeight: FontWeight.w800,
-                              color: Color(0xFF0F172A),
-                            ),
+                    Row(
+                      children: [
+                        Text(
+                          'SESI PERJALANAN #$tripIndex',
+                          style: const TextStyle(
+                            fontSize: 9.5,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.8,
+                            color: Color(0xFFC25E21),
                           ),
-                          const TextSpan(
-                            text: ' km',
-                            style: TextStyle(
-                              fontSize: 10,
+                        ),
+                        const SizedBox(width: 5),
+                        Container(
+                          width: 4,
+                          height: 4,
+                          decoration: const BoxDecoration(
+                            color: Color(0xFFCBD5E1),
+                            shape: BoxShape.circle,
+                          ),
+                        ),
+                        const SizedBox(width: 5),
+                        Expanded(
+                          child: Text(
+                            dateStr,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 9.5,
                               fontWeight: FontWeight.w600,
                               color: Color(0xFF64748B),
                             ),
                           ),
-                        ],
-                      ),
+                        ),
+                      ],
                     ),
-                  ],
-                ),
-              ),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'DURASI',
-                      style: TextStyle(
-                        fontSize: 9,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFF64748B),
-                      ),
-                    ),
-                    const SizedBox(height: 2),
+                    const SizedBox(height: 4),
                     Text(
-                      duration,
+                      'Telemetri: EAR ${avgEar.toStringAsFixed(2)} · ${avgSpeedKmh.toStringAsFixed(0)} km/jam',
+                      maxLines: 1,
+                      overflow: TextOverflow.ellipsis,
                       style: const TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w800,
@@ -965,46 +1109,81 @@ class _CockpitScreenState extends State<CockpitScreen> {
                   ],
                 ),
               ),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    const Text(
-                      'PERINGATAN',
-                      style: TextStyle(
-                        fontSize: 9,
-                        fontWeight: FontWeight.w800,
-                        color: Color(0xFF64748B),
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Row(
-                      children: [
-                        Icon(warningIcon, size: 13, color: warningColor),
-                        const SizedBox(width: 4),
-                        Text(
-                          warningText,
-                          style: TextStyle(
-                            fontSize: 12,
-                            fontWeight: FontWeight.w800,
-                            color: warningColor,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ],
+              const SizedBox(width: 8),
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
+                decoration: BoxDecoration(
+                  color: isGood ? const Color(0xFFECFDF5) : const Color(0xFFFFF7ED),
+                  borderRadius: BorderRadius.circular(8),
+                  border: Border.all(color: isGood ? const Color(0xFFA7F3D0) : const Color(0xFFFED7AA)),
+                ),
+                child: Text(
+                  '$score%',
+                  style: TextStyle(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w900,
+                    color: scoreColor,
+                  ),
                 ),
               ),
             ],
+          ),
+          const SizedBox(height: 10),
+
+          Row(
+            children: [
+              _buildTripStatCol('JARAK', '${distanceKm.toStringAsFixed(1)} km'),
+              _buildTripStatCol('WAKTU', durationStr),
+              _buildTripStatCol('KECEPATAN', '${avgSpeedKmh.toStringAsFixed(0)} km/h'),
+              _buildTripStatCol(
+                'STATUS',
+                microsleeps > 0 ? '$microsleeps Sleep' : (yawns > 0 ? '$yawns Menguap' : 'Aman'),
+                color: microsleeps > 0 ? const Color(0xFFD94126) : (yawns > 0 ? const Color(0xFFE57A38) : const Color(0xFF059669)),
+              ),
+            ],
+          ),
+          const SizedBox(height: 10),
+
+          SizedBox(
+            height: 28,
+            width: double.infinity,
+            child: CustomPaint(
+              painter: _RouteSparklinePainter(color: scoreColor, animationValue: _gaugeAnimation.value),
+            ),
           ),
         ],
       ),
     );
   }
 
-  // ──────────────────────────────────────────────────────────────────────────
-  // 5. REST AREA QUICK ACTION CARD (Terkoneksi langsung dengan nearby controller)
-  // ──────────────────────────────────────────────────────────────────────────
+  Widget _buildTripStatCol(String label, String value, {Color? color}) {
+    return Expanded(
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Text(
+            label,
+            style: const TextStyle(
+              fontSize: 8.5,
+              fontWeight: FontWeight.w700,
+              color: Color(0xFF94A3B8),
+            ),
+          ),
+          const SizedBox(height: 2),
+          Text(
+            value,
+            style: TextStyle(
+              fontSize: 11.5,
+              fontWeight: FontWeight.w800,
+              color: color ?? const Color(0xFF0F172A),
+            ),
+            maxLines: 1,
+            overflow: TextOverflow.ellipsis,
+          ),
+        ],
+      ),
+    );
+  }
   Widget _buildRestAreaQuickCard(BuildContext context) {
     return PitstopCard(controller: _nearby);
   }
@@ -1064,11 +1243,13 @@ class _CircularGaugePainter extends CustomPainter {
 // ────────────────────────────────────────────────────────────────────────────
 class _RouteSparklinePainter extends CustomPainter {
   final Color color;
+  final double animationValue;
 
-  _RouteSparklinePainter({required this.color});
+  _RouteSparklinePainter({required this.color, this.animationValue = 1.0});
 
   @override
   void paint(Canvas canvas, Size size) {
+    final progress = animationValue.clamp(0.0, 1.0);
     final path = Path();
     path.moveTo(0, size.height * 0.75);
     path.cubicTo(
@@ -1109,3 +1290,5 @@ class _RouteSparklinePainter extends CustomPainter {
   @override
   bool shouldRepaint(_RouteSparklinePainter old) => old.color != color;
 }
+
+

@@ -31,6 +31,11 @@ HEAD_DROP_THRESH      = 0.68   # Ambang kepala menunduk ke bawah
 EYE_CLOSED_TIME_LIMIT = 1.5   # Mata terpejam >= 1.6s -> Trigger SLEEP / MICROSLEEP
 YAWN_TIME_LIMIT       = 1.20   # Mulut terbuka >= 1.2s -> Status YAWN DETECTED
 HEAD_DROP_TIME_LIMIT  = 2.00   # Kepala menunduk >= 2.0s -> Peringatan DROWSY
+HEAD_TILT_ROLL_ANGLE   = 18.0   # Ambang kemiringan kepala (derajat)
+HEAD_TILT_TIME_LIMIT   = 1.80   # Kepala miring >= 1.8s -> Peringatan DROWSY / SLEEP
+HEAD_BOB_DELTA         = 0.14   # Lonjakan pitch menunduk cepat
+HEAD_BOB_ALERT_FREQ    = 3      # 3x Head Bob dalam 5 menit
+HEAD_BOB_WINDOW_SEC    = 300    # Jendela 5 menit
 YAWN_COOLDOWN_SEC     = 3.5    # Jeda antar menguap agar tidak terhitung ganda
 YAWN_WINDOW_SEC       = 300    # Jendela pantau 5 menit (300 detik)
 YAWN_ALERT_FREQ       = 4      # >= 4x Yawn dalam 5 menit -> Masuk Status DROWSY
@@ -116,6 +121,14 @@ async def websocket_endpoint(websocket: WebSocket):
     eye_closed_start_time   = None
     yawn_start_time         = None
     head_drop_start_time    = None
+    head_tilt_start_time    = None
+    head_bob_history        = deque()
+    last_pitch_ratio        = 0.5
+    last_pitch_time         = 0.0
+    bob_peak_detected       = False
+    bob_cooldown_until      = 0.0
+    enable_head_tilt        = True
+    enable_head_bob         = True
     last_yawn_time          = 0
     last_blink_time         = 0     # Waktu kedipan terakhir dicatat (untuk debounce)
     yawn_display_until      = 0
@@ -226,12 +239,51 @@ async def websocket_endpoint(websocket: WebSocket):
                     else:
                         head_drop_start_time = None
 
+                    # --- Deteksi Head Tilt (Kemiringan Kepala ke Kiri/Kanan) ---
+                    is_head_tilt_alert = False
+                    if enable_head_tilt and abs(roll_angle) >= HEAD_TILT_ROLL_ANGLE:
+                        if head_tilt_start_time is None:
+                            head_tilt_start_time = current_time
+                        elif current_time - head_tilt_start_time >= HEAD_TILT_TIME_LIMIT:
+                            is_head_tilt_alert = True
+                    else:
+                        head_tilt_start_time = None
+
+                    # --- Deteksi Head Bobbing (Sentakan Kepala Cepat) ---
+                    while head_bob_history and current_time - head_bob_history[0] > HEAD_BOB_WINDOW_SEC:
+                        head_bob_history.popleft()
+
+                    is_head_bob_alert = False
+                    if enable_head_bob:
+                        if last_pitch_time > 0:
+                            dt = current_time - last_pitch_time
+                            dp = pitch_ratio - last_pitch_ratio
+                            if dt <= 0.65 and dp >= HEAD_BOB_DELTA:
+                                bob_peak_detected = True
+                            if bob_peak_detected and dp <= -HEAD_BOB_DELTA * 0.7:
+                                if current_time >= bob_cooldown_until:
+                                    head_bob_history.append(current_time)
+                                    bob_cooldown_until = current_time + 1.5
+                                bob_peak_detected = False
+                            if dt > 1.2:
+                                bob_peak_detected = False
+                        last_pitch_ratio = pitch_ratio
+                        last_pitch_time  = current_time
+                        if len(head_bob_history) >= HEAD_BOB_ALERT_FREQ:
+                            is_head_bob_alert = True
+
                     # --- PENENTUAN STATUS (Prioritas Bertingkat) ---
 
                     # Prioritas 1: Mata terpejam lama -> SLEEP / MICROSLEEP
                     if eye_close_dur >= EYE_CLOSED_TIME_LIMIT:
                         status     = "Sleep"
                         sub_status = f"BAHAYA: MATA TERPEJAM ({eye_close_dur:.1f}s)!"
+                    elif is_head_tilt_alert:
+                        status     = "Sleep"
+                        sub_status = f"BAHAYA: KEPALA MIRING ({abs(roll_angle):.0f} deg > {HEAD_TILT_TIME_LIMIT}s)!"
+                    elif is_head_bob_alert:
+                        status     = "Sleep"
+                        sub_status = f"BAHAYA: HEAD BOBBING ({len(head_bob_history)}x dalam 5 Menit)!"
                         # Alarm ditangani oleh HP (Flutter HapticFeedback / audio)
 
                     # Prioritas 2: Sedang menguap

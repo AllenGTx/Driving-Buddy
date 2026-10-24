@@ -1,4 +1,4 @@
-package com.example.driving_buddy
+package com.drivingbuddy
 
 import io.flutter.embedding.android.FlutterActivity
 

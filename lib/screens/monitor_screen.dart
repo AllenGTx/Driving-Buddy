@@ -7,12 +7,15 @@ import 'package:flutter/services.dart';
 import 'package:camera/camera.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:wakelock_plus/wakelock_plus.dart';
+import 'package:screen_brightness/screen_brightness.dart';
 
 import '../core/app_colors.dart';
 import '../core/thresholds.dart';
 import '../models/detection_result.dart';
 import '../models/trip_model.dart';
 import '../services/alert_config.dart';
+import '../services/firebase_service.dart';
+import '../services/sos_service.dart';
 import '../services/alert_service.dart';
 import '../services/camera_image_converter.dart';
 import '../services/drowsiness_detector.dart';
@@ -44,6 +47,8 @@ class MonitorScreen extends StatefulWidget {
 }
 
 class MonitorScreenState extends State<MonitorScreen> {
+  bool get isMonitoring => _isMonitoring;
+
   // Timer kemudi
   Timer? _drivingTimer;
   int _elapsedSeconds = 0;
@@ -64,6 +69,10 @@ class MonitorScreenState extends State<MonitorScreen> {
   late final NearbyPlacesController _nearby;
   late final bool _ownsNearby;
 
+  // Posture Detection Toggle Preferences
+  bool _enableHeadTilt = true;
+  bool _enableHeadBob = true;
+
   // Hasil deteksi real-time
   DetectionResult _result = DetectionResult.initial;
   bool _eyeDetected = false;
@@ -72,11 +81,22 @@ class MonitorScreenState extends State<MonitorScreen> {
   // EAR rolling history untuk waveform graph
   final List<double> _earHistory = [0.32, 0.31, 0.33, 0.30, 0.32, 0.34, 0.32, 0.31, 0.33, 0.32];
 
+  // GPS Telemetry (Realtime)
+  double _totalDistanceMeters = 0.0;
+  double _currentSpeedKmh = 0.0;
+  DriverFix? _lastDriverFix;
+
   // Snooze alert state
   DateTime? _snoozeUntil;
 
   // Alert guard
   bool _isAlertShowing = false;
+  bool _isNightVisionEnabled = false;
+  double? _previousBrightness;
+  Timer? _sosTimer;
+  double? _startLat;
+  double? _startLng;
+  final List<Map<String, double>> _routeBreadcrumbs = [];
 
   // === Supabase Session Tracking ===
   String? _currentSessionId;
@@ -93,17 +113,83 @@ class MonitorScreenState extends State<MonitorScreen> {
     if (_ownsNearby) {
       _nearby.start(askPermission: false);
     }
+    _nearby.addListener(_onNearbyUpdate);
+    _loadPostureSettings();
   }
+
+  void _onNearbyUpdate() {
+    if (!mounted) return;
+    final fix = _nearby.fix;
+    if (fix != null) {
+      if (_lastDriverFix != null && _isMonitoring) {
+        final dMeters = haversineM(_lastDriverFix!.lat, _lastDriverFix!.lng, fix.lat, fix.lng);
+        // Filter out GPS jitter if stationary (< 2 meters)
+        if (dMeters >= 2.0 && dMeters < 500.0) {
+          _totalDistanceMeters += dMeters;
+          // Rekam breadcrumb jika berpindah minimal 8 meter atau interval wajar
+          if (_routeBreadcrumbs.isEmpty ||
+              haversineM(_routeBreadcrumbs.last['lat']!, _routeBreadcrumbs.last['lng']!, fix.lat, fix.lng) >= 8.0) {
+            _routeBreadcrumbs.add({'lat': fix.lat, 'lng': fix.lng});
+          }
+        }
+      } else if (_isMonitoring && _routeBreadcrumbs.isEmpty && fix.lat != 0.0) {
+        _routeBreadcrumbs.add({'lat': fix.lat, 'lng': fix.lng});
+      }
+      _lastDriverFix = fix;
+      
+      final mps = fix.speedMps;
+      if (mps != null && mps >= 0) {
+        _currentSpeedKmh = mps * 3.6;
+      }
+      if (_isMonitoring) {
+        setState(() {});
+      }
+    }
+  }
+
+
 
   @override
   void didUpdateWidget(covariant MonitorScreen oldWidget) {
     super.didUpdateWidget(oldWidget);
-    if (widget.isActive && !oldWidget.isActive && _isMonitoring) _resumeTimer();
-    if (!widget.isActive && oldWidget.isActive) _pauseTimer();
+    if (widget.isActive && !oldWidget.isActive) {
+      _loadPostureSettings();
+      if (_isMonitoring) _resumeTimer();
+    }
+    if (!widget.isActive && oldWidget.isActive) {
+      _pauseTimer();
+      if (_isNightVisionEnabled) {
+        try {
+          ScreenBrightness.instance.resetScreenBrightness();
+        } catch (_) {}
+      }
+    } else if (widget.isActive && !oldWidget.isActive && _isNightVisionEnabled) {
+      try {
+        ScreenBrightness.instance.setScreenBrightness(1.0);
+      } catch (_) {}
+    }
+  }
+
+  Future<void> _loadPostureSettings() async {
+    final tilt = await AlertConfig.isHeadTiltEnabled();
+    final bob = await AlertConfig.isHeadBobEnabled();
+    if (mounted) {
+      setState(() {
+        _enableHeadTilt = tilt;
+        _enableHeadBob = bob;
+      });
+    }
   }
 
   @override
   void dispose() {
+    if (_isNightVisionEnabled) {
+      try {
+        ScreenBrightness.instance.resetScreenBrightness();
+      } catch (_) {}
+    }
+    _sosTimer?.cancel();
+    _nearby.removeListener(_onNearbyUpdate);
     _drivingTimer?.cancel();
     _cameraController?.dispose();
     _mesh.dispose();
@@ -113,6 +199,13 @@ class MonitorScreenState extends State<MonitorScreen> {
     }
     WakelockPlus.disable();
     super.dispose();
+  }
+
+  // Public method to trigger monitoring from external button (e.g. CockpitScreen)
+  void startFromExternal() {
+    if (!_isMonitoring && mounted) {
+      _startMonitoring();
+    }
   }
 
   // ---------- Runtime Camera Permission ----------
@@ -144,6 +237,9 @@ class MonitorScreenState extends State<MonitorScreen> {
   Future<void> _startMonitoring() async {
     setState(() {
       _isMonitoring = true;
+      _totalDistanceMeters = 0.0;
+      _currentSpeedKmh = 0.0;
+      _lastDriverFix = _nearby.fix;
       _elapsedSeconds = 0;
       _cameraMode = 'Memuat AI...';
       _result = DetectionResult.initial;
@@ -158,6 +254,14 @@ class MonitorScreenState extends State<MonitorScreen> {
     if (!hasPermission) {
       if (mounted) setState(() { _isMonitoring = false; _cameraMode = 'Standby'; });
       return;
+    }
+
+    // Simpan titik awal GPS perjalanan & inisialisasi breadcrumbs rute
+    _startLat = _nearby.fix?.lat;
+    _startLng = _nearby.fix?.lng;
+    _routeBreadcrumbs.clear();
+    if (_startLat != null && _startLng != null) {
+      _routeBreadcrumbs.add({'lat': _startLat!, 'lng': _startLng!});
     }
 
     // Mulai sesi di Supabase (jika login)
@@ -239,7 +343,11 @@ class MonitorScreenState extends State<MonitorScreen> {
       if (input == null) return;
 
       final points = await _mesh.detect(input);
-      final result = _detector.update(points);
+      final result = _detector.update(
+        points,
+        enableHeadTilt: _enableHeadTilt,
+        enableHeadBob: _enableHeadBob,
+      );
 
       // Catat riwayat EAR untuk waveform
       if (result.ear > 0.05) {
@@ -255,7 +363,18 @@ class MonitorScreenState extends State<MonitorScreen> {
       final isExcessiveYawn = result.yawnCount >= Thresholds.yawnAlertFreq;
       final isDrowsy = result.status == DriverStatus.drowsy;
 
-      if (isSleep) {
+      // Catat event hanya saat terjadi kenaikan diskrit (bukan setiap frame)
+      if (result.yawnCount > _yawnCount) {
+        _yawnCount = result.yawnCount;
+        if (AuthService.isLoggedIn && _currentSessionId != null) {
+          SessionService.logEvent(
+            sessionId: _currentSessionId!,
+            eventType: 'yawn',
+          );
+        }
+      }
+
+      if (isSleep && !_isAlertShowing) {
         _microsleepCount++;
         if (AuthService.isLoggedIn && _currentSessionId != null) {
           SessionService.logEvent(
@@ -263,15 +382,7 @@ class MonitorScreenState extends State<MonitorScreen> {
             eventType: 'microsleep',
           );
         }
-      } else if (isExcessiveYawn) {
-        _yawnCount++;
-        if (AuthService.isLoggedIn && _currentSessionId != null) {
-          SessionService.logEvent(
-            sessionId: _currentSessionId!,
-            eventType: 'yawn',
-          );
-        }
-      } else if (isDrowsy) {
+      } else if (isDrowsy && !_isAlertShowing) {
         _drowsyCount++;
         if (AuthService.isLoggedIn && _currentSessionId != null) {
           SessionService.logEvent(
@@ -284,12 +395,28 @@ class MonitorScreenState extends State<MonitorScreen> {
       if (!isSnoozed && (isSleep || isExcessiveYawn) && !_isAlertShowing) {
         await _alert.playAlert();
         if (isSleep) {
+          String alertTitle = 'MATA TERPEJAM!\nISTIRAHAT SEKARANG';
+          String alertSub = 'PERINGATAN MICROSLEEP';
+          String alertReason =
+              'Mata terpejam melebihi ${Thresholds.eyeClosedLimit} detik. Segera cari tempat aman untuk berhenti.';
+
+          if (_enableHeadTilt && result.isHeadTiltAlert) {
+            alertTitle = 'KEPALA MIRING!\nISTIRAHAT SEKARANG';
+            alertSub = 'PERINGATAN HEAD TILT';
+            alertReason =
+                'Kepala miring ${result.rollAngle.abs().toStringAsFixed(0)}° lebih dari ${Thresholds.headTiltDurationLimit}s. Otot leher kehilangan kendali!';
+          } else if (_enableHeadBob && result.isHeadBobAlert) {
+            alertTitle = 'KEPALA TERSENTAK!\nBAHAYA MICROSLEEP';
+            alertSub = 'PERINGATAN HEAD BOBBING';
+            alertReason =
+                'Terdeteksi ${result.headBobCount}x sentakan kepala jatuh dalam 5 menit. Segera menepi dan istirahat!';
+          }
+
           _triggerSafetyAlert(
-            title: 'MATA TERPEJAM!\nISTIRAHAT SEKARANG',
-            subtitle: 'PERINGATAN MICROSLEEP',
-            reason:
-                'Mata terpejam melebihi ${Thresholds.eyeClosedLimit} detik. Segera cari tempat aman untuk berhenti.',
-            resetYawnsOnDismiss: false,
+            title: alertTitle,
+            subtitle: alertSub,
+            reason: alertReason,
+            resetYawnsOnDismiss: true,
           );
         } else {
           _triggerSafetyAlert(
@@ -339,6 +466,15 @@ class MonitorScreenState extends State<MonitorScreen> {
     final double avgBlink = _result.blinkCount.toDouble();
     final DateTime sessionStart = _sessionStartTime ?? DateTime.now();
 
+    // Hitung kecepatan rata-rata: jika ada pergerakan jarak, hitung distance / time
+    double calculatedAvgSpeed = _currentSpeedKmh;
+    if (_totalDistanceMeters > 5.0 && finalDuration > 2) {
+      final speedFromDistance = (_totalDistanceMeters / 1000.0) / (finalDuration / 3600.0);
+      if (calculatedAvgSpeed <= 1.0 || speedFromDistance > calculatedAvgSpeed) {
+        calculatedAvgSpeed = speedFromDistance;
+      }
+    }
+
     // Hitung driving score (0-100)
     int score = 100;
     score -= (finalDrowsy * 5).clamp(0, 40);
@@ -352,14 +488,19 @@ class MonitorScreenState extends State<MonitorScreen> {
         await SessionService.endSession(
           sessionId: _currentSessionId!,
           durationSeconds: finalDuration,
-          avgSpeedKmh: 84,
-          maxSpeedKmh: 110,
-          distanceKm: (_elapsedSeconds * 0.02).clamp(0.0, 999.0),
+          avgSpeedKmh: calculatedAvgSpeed,
+          maxSpeedKmh: calculatedAvgSpeed * 1.2,
+          distanceKm: (_totalDistanceMeters / 1000.0).clamp(0.0, 9999.0),
           drivingScore: score,
           avgBlinkRate: avgBlink,
           totalYawns: finalYawn,
           totalDrowsyEvents: finalDrowsy,
           totalMicrosleeps: finalMicro,
+          startLat: _startLat,
+          startLng: _startLng,
+          endLat: _nearby.fix?.lat ?? _startLat,
+          endLng: _nearby.fix?.lng ?? _startLng,
+          routePoints: List.from(_routeBreadcrumbs),
         );
         debugPrint('✅ Sesi tersimpan ke Supabase! Score: $score');
       } catch (e) {
@@ -378,6 +519,11 @@ class MonitorScreenState extends State<MonitorScreen> {
       _nearby.start(askPermission: false);
     }
     await WakelockPlus.disable();
+    if (_isNightVisionEnabled) {
+      try {
+        await ScreenBrightness.instance.resetScreenBrightness();
+      } catch (_) {}
+    }
 
     setState(() {
       _isMonitoring = false;
@@ -390,22 +536,25 @@ class MonitorScreenState extends State<MonitorScreen> {
       _currentSessionId = null;
     });
 
-    // Tampilkan opsi buka Driving Card jika sesi berjalan minimal 5 detik
-    if (mounted && finalDuration >= 5) {
+    // Dialog konfirmasi selesai perjalanan: Pilihan Lihat Kartu Sekarang atau Nanti Saja
+    if (mounted) {
       final wantCard = await showDialog<bool>(
         context: context,
+        barrierDismissible: false,
         builder: (ctx) => AlertDialog(
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-          title: const Text('🎉 Sesi Selesai!', style: TextStyle(fontWeight: FontWeight.w800)),
+          title: const Text('Sesi Selesai!', style: TextStyle(fontWeight: FontWeight.w800)),
           content: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              Text('Skor Keselamatan Anda: $score/100',
-                  style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFFE57A38))),
+              Text(
+                'Skor Keselamatan Anda: ' + score.toString() + '/100',
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFFE57A38)),
+              ),
               const SizedBox(height: 8),
-              Text('Durasi: ${_formatDuration(finalDuration)}'),
-              Text('Kantuk: ${finalDrowsy}x  ·  Menguap: ${finalYawn}x  ·  Microsleep: ${finalMicro}x'),
+              Text('Durasi: ' + _formatDuration(finalDuration)),
+              Text('Kantuk: ' + finalDrowsy.toString() + 'x  ·  Menguap: ' + finalYawn.toString() + 'x  ·  Microsleep: ' + finalMicro.toString() + 'x'),
               const SizedBox(height: 12),
               const Text('Buka Kartu Pencapaian untuk dibagikan ke teman?'),
             ],
@@ -428,7 +577,40 @@ class MonitorScreenState extends State<MonitorScreen> {
       );
 
       if (wantCard == true && mounted) {
-        Navigator.push(
+        final hasNet = await SessionService.hasInternetConnection();
+        if (!hasNet && mounted) {
+          showDialog(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
+              title: const Row(
+                children: [
+                  Icon(Icons.wifi_off_rounded, color: Color(0xFFE57A38)),
+                  SizedBox(width: 8),
+                  Text('Koneksi Diperlukan', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+                ],
+              ),
+              content: const Text(
+                'Kartu Berkendara membutuhkan koneksi internet (WiFi atau Data Seluler) untuk memuat citra peta OpenStreetMap.\n\nSesi Anda sudah tersimpan aman di HP dan akan otomatis disinkronkan saat online.',
+                style: TextStyle(fontSize: 13, height: 1.4),
+              ),
+              actions: [
+                ElevatedButton(
+                  style: ElevatedButton.styleFrom(
+                    backgroundColor: const Color(0xFFE57A38),
+                    foregroundColor: Colors.white,
+                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
+                  ),
+                  onPressed: () => Navigator.pop(ctx),
+                  child: const Text('Mengerti', style: TextStyle(fontWeight: FontWeight.bold)),
+                ),
+              ],
+            ),
+          );
+          return;
+        }
+
+        await Navigator.push(
           context,
           MaterialPageRoute(
             builder: (_) => DrivingCardScreen(
@@ -438,6 +620,13 @@ class MonitorScreenState extends State<MonitorScreen> {
               totalDrowsy: finalDrowsy,
               totalYawns: finalYawn,
               startedAt: sessionStart,
+              distanceKm: (_totalDistanceMeters / 1000.0),
+              avgSpeedKmh: calculatedAvgSpeed,
+              lastLat: _nearby.fix?.lat,
+              lastLng: _nearby.fix?.lng,
+              startLat: _startLat,
+              startLng: _startLng,
+              routePoints: List.from(_routeBreadcrumbs),
             ),
           ),
         );
@@ -471,11 +660,19 @@ class MonitorScreenState extends State<MonitorScreen> {
     required String reason,
     required bool resetYawnsOnDismiss,
   }) {
-    if (_isAlertShowing) return;
+    if (!_isMonitoring || _isAlertShowing) return;
     _isAlertShowing = true;
 
     // Alarm bunyi: langsung cari tempat berhenti terdekat (apa pun jenisnya) untuk kartu di dialog.
     unawaited(_nearby.requestUrgent());
+
+    // Otomatis picu SOS WhatsApp jika pengemudi tidak menekan 'Saya Sudah Bangun' dalam 1 menit penuh
+    _sosTimer?.cancel();
+    _sosTimer = Timer(const Duration(seconds: 60), () {
+      if (_isAlertShowing && mounted) {
+        _dispatchSosEmergency();
+      }
+    });
 
     showDialog(
       context: context,
@@ -487,19 +684,17 @@ class MonitorScreenState extends State<MonitorScreen> {
         reason: reason,
         nearby: _nearby,
         onDismiss: () async {
+          _sosTimer?.cancel();
           await _alert.stop();
-          if (resetYawnsOnDismiss) {
-            _detector.resetYawns();
-          }
+          _detector.resetAllAlerts();
+          _snoozeUntil = DateTime.now().add(const Duration(seconds: 5));
         },
         onRestArea: () async {
-          // Ambil tempat yang sedang tampil di kartu SEKARANG, sebelum dialog ditutup dan
-          // mode darurat dimatikan (kalau tidak, pilihannya bisa berubah di tengah jalan).
+          _sosTimer?.cancel();
           final target = _nearby.best;
           await _alert.stop();
-          if (resetYawnsOnDismiss) {
-            _detector.resetYawns();
-          }
+          _detector.resetAllAlerts();
+          _snoozeUntil = DateTime.now().add(const Duration(seconds: 10));
           // Buka Google Maps (mode mobil) ke tempat berhenti terdekat dari server.
           final opened = target != null
               ? await _nearby.navigateTo(target)
@@ -516,6 +711,7 @@ class MonitorScreenState extends State<MonitorScreen> {
         },
       ),
     ).then((_) {
+      _sosTimer?.cancel();
       _isAlertShowing = false;
       _nearby.clearUrgent();
     });
@@ -538,36 +734,37 @@ class MonitorScreenState extends State<MonitorScreen> {
 
     return Scaffold(
       backgroundColor: AppColors.background,
-      body: Column(
-        children: [
-          const DrivingBuddyAppBar(title: 'Berkendara'),
-          Expanded(
-            child: SingleChildScrollView(
-              physics: const BouncingScrollPhysics(),
-              padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                children: [
-                  // 1. Top Live HUD Bar (3-column telemetry cards)
-                  _buildTopLiveHudBar(fatigueIndex),
-                  const SizedBox(height: 14),
+      appBar: DrivingBuddyAppBar(
+        title: 'Berkendara',
+        showProfileButton: !_isMonitoring,
+      ),
+      body: SingleChildScrollView(
+        physics: const BouncingScrollPhysics(),
+        padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            // 1. Top Live HUD Bar (3-column telemetry cards)
+            _buildTopLiveHudBar(fatigueIndex),
+            const SizedBox(height: 10),
 
-                  // 2. AI Face Monitoring Glass Cockpit Card
-                  _buildGlassCockpitCameraCard(),
-                  const SizedBox(height: 14),
+            // Toggle Night Vision / Flash Penerangan Wajah (Di atas Kamera Standby & Di bawah HUD Telemetri)
+            _buildNightVisionToggleBar(),
+            const SizedBox(height: 10),
 
-                  // 3. Rekomendasi Pitstop Assistant Card
-                  _buildPitstopAssistantCard(),
-                  const SizedBox(height: 14),
+            // 2. AI Face Monitoring Glass Cockpit Card
+            _buildGlassCockpitCameraCard(),
+            const SizedBox(height: 14),
 
-                  // 4. Cockpit Drive Control Action Buttons
-                  _buildCockpitDriveControls(),
-                  const SizedBox(height: 16),
-                ],
-              ),
-            ),
-          ),
-        ],
+            // 3. Rekomendasi Pitstop Assistant Card
+            _buildPitstopAssistantCard(),
+            const SizedBox(height: 14),
+
+            // 4. Cockpit Drive Control Action Buttons
+            _buildCockpitDriveControls(),
+            const SizedBox(height: 16),
+          ],
+        ),
       ),
     );
   }
@@ -576,8 +773,9 @@ class MonitorScreenState extends State<MonitorScreen> {
   // 1. TOP LIVE HUD BAR (3 Columns: Kecepatan, Jarak, Index Lelah)
   // ──────────────────────────────────────────────────────────────────────────
   Widget _buildTopLiveHudBar(int fatigueIndex) {
-    final distanceKm = (_elapsedSeconds * 0.023).toStringAsFixed(1);
-    final speed = _isMonitoring ? 84 : 0;
+    final distanceKm = (_totalDistanceMeters / 1000.0).toStringAsFixed(1);
+    final speedStr = _isMonitoring ? _currentSpeedKmh.toStringAsFixed(0) : '0';
+    final speed = int.tryParse(speedStr) ?? 0;
 
     String fatigueLabel = 'RENDAH';
     Color fatigueColor = const Color(0xFF059669);
@@ -595,7 +793,7 @@ class MonitorScreenState extends State<MonitorScreen> {
         Expanded(
           child: _buildHudCell(
             label: 'KECEPATAN',
-            value: '$speed',
+            value: speedStr,
             unit: 'km/j',
             bottomWidget: Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -620,7 +818,7 @@ class MonitorScreenState extends State<MonitorScreen> {
         ),
         const SizedBox(width: 8),
 
-        // Jarak
+        // Jarak (Realtime GPS)
         Expanded(
           child: _buildHudCell(
             label: 'JARAK',
@@ -633,14 +831,14 @@ class MonitorScreenState extends State<MonitorScreen> {
                 borderRadius: BorderRadius.circular(6),
                 border: Border.all(color: const Color(0xFFCBD5E1)),
               ),
-              child: const Row(
+              child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.alt_route_rounded, size: 12, color: Color(0xFFE57A38)),
-                  SizedBox(width: 2),
+                  const Icon(Icons.gps_fixed_rounded, size: 10, color: Color(0xFFE57A38)),
+                  const SizedBox(width: 2),
                   Text(
-                    'CIPULARANG',
-                    style: TextStyle(fontSize: 8.5, fontWeight: FontWeight.w700, color: Color(0xFF64748B)),
+                    _totalDistanceMeters > 0 ? '${speedStr} km/j' : 'GPS SIAGA',
+                    style: const TextStyle(fontSize: 8.5, fontWeight: FontWeight.w700, color: Color(0xFF64748B)),
                   ),
                 ],
               ),
@@ -789,7 +987,28 @@ class MonitorScreenState extends State<MonitorScreen> {
             child: Stack(
               fit: StackFit.expand,
               children: [
-                // 1. Live camera preview with proper Aspect Ratio (wajah proporsional, tidak melebar)
+                // Soft Illumination Glow Border when Night Vision is enabled
+                if (_isNightVisionEnabled)
+                  Positioned.fill(
+                    child: IgnorePointer(
+                      child: Container(
+                        decoration: BoxDecoration(
+                          border: Border.all(
+                            color: const Color(0xFFFFFFFF),
+                            width: 18,
+                          ),
+                          boxShadow: [
+                            BoxShadow(
+                              color: Colors.white.withValues(alpha: 0.95),
+                              blurRadius: 36,
+                              spreadRadius: 10,
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+                // 1. Live camera preview with proper Aspect Ratio & Night Vision Phosphor / Flash Boost
                 if (_cameraController != null && _cameraController!.value.isInitialized)
                   ClipRect(
                     child: SizedBox(
@@ -800,7 +1019,18 @@ class MonitorScreenState extends State<MonitorScreen> {
                         child: SizedBox(
                           width: _cameraController!.value.previewSize?.height.toDouble() ?? 360,
                           height: _cameraController!.value.previewSize?.width.toDouble() ?? 480,
-                          child: CameraPreview(_cameraController!),
+                          child: _isNightVisionEnabled
+                              ? ColorFiltered(
+                                  // Matrix pencerah sensor malam: menguatkan kanal hijau & gamma pencahayaan wajah
+                                  colorFilter: const ColorFilter.matrix(<double>[
+                                    0.45, 0.65, 0.15, 0, 45,  // Red channel boosted
+                                    0.35, 1.35, 0.25, 0, 70,  // Green phosphor sensitivity (night vision glow)
+                                    0.15, 0.45, 0.55, 0, 35,  // Blue channel lifted
+                                    0,    0,    0,    1, 0,   // Alpha
+                                  ]),
+                                  child: CameraPreview(_cameraController!),
+                                )
+                              : CameraPreview(_cameraController!),
                         ),
                       ),
                     ),
@@ -933,8 +1163,8 @@ class MonitorScreenState extends State<MonitorScreen> {
                           const SizedBox(width: 6),
                           Text(
                             isDanger
-                                ? 'STATUS: PERINGATAN KANTUK'
-                                : (_eyeDetected ? 'STATUS: FOKUS & WASPADA' : 'STATUS: MENUNGGU WAJAH'),
+                                ? 'Peringatan Kantuk!'
+                                : (_eyeDetected ? 'Wajah Terdeteksi' : 'Wajah Tidak Terdeteksi'),
                             style: TextStyle(
                               fontSize: 9.5,
                               fontWeight: FontWeight.w800,
@@ -947,41 +1177,7 @@ class MonitorScreenState extends State<MonitorScreen> {
                     ),
                   ),
 
-                  // Top-Right IR FPS Badge
-                  Positioned(
-                    top: 10,
-                    right: 10,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.95),
-                        borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: const Color(0xFFFED7AA)),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withOpacity(0.04),
-                            blurRadius: 6,
-                          )
-                        ],
-                      ),
-                      child: const Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(Icons.bolt_rounded, size: 12, color: Color(0xFFE57A38)),
-                          SizedBox(width: 3),
-                          Text(
-                            'NEURAL IR 60FPS',
-                            style: TextStyle(
-                              fontSize: 9,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 0.5,
-                              color: Color(0xFFC25E21),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+
 
                   // Bottom Pose Telemetry Line
                   Positioned(
@@ -992,29 +1188,33 @@ class MonitorScreenState extends State<MonitorScreen> {
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Text(
-                          'YAW: ${_isMonitoring ? "+0.4°" : "0.0°"}',
-                          style: const TextStyle(
-                            fontSize: 9,
-                            fontWeight: FontWeight.w800,
-                            color: Color(0xFF334155),
-                            fontFamily: 'monospace',
-                          ),
-                        ),
-                        Text(
-                          'PITCH: ${_isMonitoring ? "-1.2°" : "0.0°"}',
-                          style: const TextStyle(
-                            fontSize: 9,
-                            fontWeight: FontWeight.w800,
-                            color: Color(0xFF334155),
-                            fontFamily: 'monospace',
-                          ),
-                        ),
-                        Text(
-                          isDanger ? 'DISTRAKSI: WASPADA' : 'DISTRAKSI: NIHIL',
+                          'TILT: ${_isMonitoring ? "${_result.rollAngle.toStringAsFixed(1)}°" : "0.0°"}',
                           style: TextStyle(
                             fontSize: 9,
                             fontWeight: FontWeight.w800,
-                            color: isDanger ? const Color(0xFFD94126) : const Color(0xFF334155),
+                            color: (_enableHeadTilt && _result.rollAngle.abs() >= Thresholds.headTiltRollAngle)
+                                ? const Color(0xFFD94126)
+                                : const Color(0xFF334155),
+                            fontFamily: 'monospace',
+                          ),
+                        ),
+                        Text(
+                          'BOB: ${_result.headBobCount}x / 5m',
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w800,
+                            color: (_enableHeadBob && _result.headBobCount >= 2)
+                                ? const Color(0xFFD94126)
+                                : const Color(0xFF334155),
+                            fontFamily: 'monospace',
+                          ),
+                        ),
+                        Text(
+                          isDanger ? 'STATUS: WASPADA' : 'STATUS: AMAN',
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w800,
+                            color: isDanger ? const Color(0xFFD94126) : const Color(0xFF059669),
                             fontFamily: 'monospace',
                           ),
                         ),
@@ -1035,34 +1235,40 @@ class MonitorScreenState extends State<MonitorScreen> {
                 Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
-                    Row(
-                      children: [
-                        Container(
-                          width: 28,
-                          height: 28,
-                          decoration: BoxDecoration(
-                            color: const Color(0xFFFFF7ED),
-                            borderRadius: BorderRadius.circular(8),
-                            border: Border.all(color: const Color(0xFFFED7AA)),
+                    Expanded(
+                      child: Row(
+                        children: [
+                          Container(
+                            width: 28,
+                            height: 28,
+                            decoration: BoxDecoration(
+                              color: const Color(0xFFFFF7ED),
+                              borderRadius: BorderRadius.circular(8),
+                              border: Border.all(color: const Color(0xFFFED7AA)),
+                            ),
+                            child: const Icon(
+                              Icons.visibility_rounded,
+                              size: 16,
+                              color: Color(0xFFE57A38),
+                            ),
                           ),
-                          child: const Icon(
-                            Icons.visibility_rounded,
-                            size: 16,
-                            color: Color(0xFFE57A38),
+                          const SizedBox(width: 8),
+                          const Flexible(
+                            child: Text(
+                              'EYE ASPECT RATIO (EAR)',
+                              style: TextStyle(
+                                fontSize: 10,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.8,
+                                color: Color(0xFF64748B),
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
                           ),
-                        ),
-                        const SizedBox(width: 8),
-                        const Text(
-                          'EYE ASPECT RATIO (EAR)',
-                          style: TextStyle(
-                            fontSize: 10,
-                            fontWeight: FontWeight.w800,
-                            letterSpacing: 0.8,
-                            color: Color(0xFF64748B),
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
+                    const SizedBox(width: 6),
                     Container(
                       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                       decoration: BoxDecoration(
@@ -1118,7 +1324,7 @@ class MonitorScreenState extends State<MonitorScreen> {
                     // Frekuensi Kedip
                     Expanded(
                       child: Container(
-                        padding: const EdgeInsets.all(10),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(10),
@@ -1127,8 +1333,8 @@ class MonitorScreenState extends State<MonitorScreen> {
                         child: Row(
                           children: [
                             Container(
-                              width: 32,
-                              height: 32,
+                              width: 28,
+                              height: 28,
                               decoration: BoxDecoration(
                                 color: const Color(0xFFFFF7ED),
                                 borderRadius: BorderRadius.circular(8),
@@ -1136,45 +1342,52 @@ class MonitorScreenState extends State<MonitorScreen> {
                               ),
                               child: const Icon(
                                 Icons.lens_blur_rounded,
-                                size: 16,
+                                size: 15,
                                 color: Color(0xFFE57A38),
                               ),
                             ),
-                            const SizedBox(width: 8),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'FREKUENSI KEDIP',
-                                  style: TextStyle(
-                                    fontSize: 8.5,
-                                    fontWeight: FontWeight.w800,
-                                    color: Color(0xFF64748B),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Text(
+                                    'FREKUENSI KEDIP',
+                                    style: TextStyle(
+                                      fontSize: 7.5,
+                                      fontWeight: FontWeight.w800,
+                                      color: Color(0xFF64748B),
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                ),
-                                Text.rich(
-                                  TextSpan(
-                                    children: [
-                                      TextSpan(
-                                        text: '${_result.blinkCount}',
-                                        style: const TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w800,
-                                          color: Color(0xFF0F172A),
+                                  Text.rich(
+                                    TextSpan(
+                                      children: [
+                                        TextSpan(
+                                          text: '${_result.blinkCount}',
+                                          style: const TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w800,
+                                            color: Color(0xFF0F172A),
+                                          ),
                                         ),
-                                      ),
-                                      const TextSpan(
-                                        text: ' / mnt',
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w600,
-                                          color: Color(0xFF64748B),
+                                        const TextSpan(
+                                          text: ' / mnt',
+                                          style: TextStyle(
+                                            fontSize: 9.5,
+                                            fontWeight: FontWeight.w600,
+                                            color: Color(0xFF64748B),
+                                          ),
                                         ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ],
                         ),
@@ -1185,7 +1398,7 @@ class MonitorScreenState extends State<MonitorScreen> {
                     // Deteksi Menguap
                     Expanded(
                       child: Container(
-                        padding: const EdgeInsets.all(10),
+                        padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(10),
@@ -1194,8 +1407,8 @@ class MonitorScreenState extends State<MonitorScreen> {
                         child: Row(
                           children: [
                             Container(
-                              width: 32,
-                              height: 32,
+                              width: 28,
+                              height: 28,
                               decoration: BoxDecoration(
                                 color: const Color(0xFFECFDF5),
                                 borderRadius: BorderRadius.circular(8),
@@ -1203,45 +1416,162 @@ class MonitorScreenState extends State<MonitorScreen> {
                               ),
                               child: const Icon(
                                 Icons.sentiment_satisfied_rounded,
-                                size: 16,
+                                size: 15,
                                 color: Color(0xFF059669),
                               ),
                             ),
-                            const SizedBox(width: 8),
-                            Column(
-                              crossAxisAlignment: CrossAxisAlignment.start,
-                              children: [
-                                const Text(
-                                  'DETEKSI MENGUAP',
-                                  style: TextStyle(
-                                    fontSize: 8.5,
-                                    fontWeight: FontWeight.w800,
-                                    color: Color(0xFF64748B),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  const Text(
+                                    'DETEKSI MENGUAP',
+                                    style: TextStyle(
+                                      fontSize: 7.5,
+                                      fontWeight: FontWeight.w800,
+                                      color: Color(0xFF64748B),
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                ),
-                                Text.rich(
-                                  TextSpan(
-                                    children: [
-                                      TextSpan(
-                                        text: '${_result.yawnCount}',
-                                        style: const TextStyle(
-                                          fontSize: 14,
-                                          fontWeight: FontWeight.w800,
-                                          color: Color(0xFF059669),
+                                  Text.rich(
+                                    TextSpan(
+                                      children: [
+                                        TextSpan(
+                                          text: '${_result.yawnCount}',
+                                          style: const TextStyle(
+                                            fontSize: 13,
+                                            fontWeight: FontWeight.w800,
+                                            color: Color(0xFF059669),
+                                          ),
                                         ),
-                                      ),
-                                      const TextSpan(
-                                        text: ' dlm 30m',
-                                        style: TextStyle(
-                                          fontSize: 10,
-                                          fontWeight: FontWeight.w600,
-                                          color: Color(0xFF64748B),
+                                        const TextSpan(
+                                          text: ' dlm 30m',
+                                          style: TextStyle(
+                                            fontSize: 9.5,
+                                            fontWeight: FontWeight.w600,
+                                            color: Color(0xFF64748B),
+                                          ),
                                         ),
-                                      ),
-                                    ],
+                                      ],
+                                    ),
+                                    maxLines: 1,
+                                    overflow: TextOverflow.ellipsis,
                                   ),
-                                ),
-                              ],
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 8),
+
+                // Posture Indicators Bar (Head Tilt & Head Bob Status)
+                Row(
+                  children: [
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: (_enableHeadTilt && _result.rollAngle.abs() >= Thresholds.headTiltRollAngle)
+                                ? const Color(0xFFFECACA)
+                                : const Color(0xFFFFEDD5),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.screen_rotation_rounded,
+                              size: 15,
+                              color: _enableHeadTilt ? const Color(0xFFE57A38) : const Color(0xFF94A3B8),
+                            ),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'HEAD TILT (${_enableHeadTilt ? "ON" : "OFF"})',
+                                    style: TextStyle(
+                                      fontSize: 8,
+                                      fontWeight: FontWeight.w800,
+                                      color: _enableHeadTilt ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                                    ),
+                                  ),
+                                  Text(
+                                    _isMonitoring
+                                        ? '${_result.rollAngle.abs().toStringAsFixed(1)}°'
+                                        : 'Siaga',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w800,
+                                      color: (_enableHeadTilt && _result.rollAngle.abs() >= Thresholds.headTiltRollAngle)
+                                          ? const Color(0xFFD94126)
+                                          : const Color(0xFF0F172A),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    Expanded(
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
+                        decoration: BoxDecoration(
+                          color: Colors.white,
+                          borderRadius: BorderRadius.circular(10),
+                          border: Border.all(
+                            color: (_enableHeadBob && _result.headBobCount >= 2)
+                                ? const Color(0xFFFECACA)
+                                : const Color(0xFFFFEDD5),
+                          ),
+                        ),
+                        child: Row(
+                          children: [
+                            Icon(
+                              Icons.airline_seat_recline_extra_rounded,
+                              size: 15,
+                              color: _enableHeadBob ? const Color(0xFFE57A38) : const Color(0xFF94A3B8),
+                            ),
+                            const SizedBox(width: 6),
+                            Expanded(
+                              child: Column(
+                                crossAxisAlignment: CrossAxisAlignment.start,
+                                children: [
+                                  Text(
+                                    'HEAD BOB (${_enableHeadBob ? "ON" : "OFF"})',
+                                    style: TextStyle(
+                                      fontSize: 8,
+                                      fontWeight: FontWeight.w800,
+                                      color: _enableHeadBob ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                                    ),
+                                  ),
+                                  Text(
+                                    _isMonitoring
+                                        ? '${_result.headBobCount}x / 5 mnt'
+                                        : 'Siaga',
+                                    style: TextStyle(
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w800,
+                                      color: (_enableHeadBob && _result.headBobCount >= 2)
+                                          ? const Color(0xFFD94126)
+                                          : const Color(0xFF0F172A),
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ],
                         ),
@@ -1297,36 +1627,7 @@ class MonitorScreenState extends State<MonitorScreen> {
                 ),
               ),
             ),
-            Container(
-              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
-              decoration: BoxDecoration(
-                color: Colors.white,
-                borderRadius: BorderRadius.circular(10),
-                border: Border.all(color: const Color(0xFFA7F3D0)),
-                boxShadow: [
-                  BoxShadow(
-                    color: Colors.black.withOpacity(0.02),
-                    blurRadius: 4,
-                  )
-                ],
-              ),
-              child: const Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  Icon(Icons.circle, size: 8, color: Color(0xFF10B981)),
-                  SizedBox(width: 5),
-                  Text(
-                    'AUTO PILOT ON',
-                    style: TextStyle(
-                      fontSize: 9.5,
-                      fontWeight: FontWeight.w800,
-                      color: Color(0xFF475569),
-                      letterSpacing: 0.6,
-                    ),
-                  ),
-                ],
-              ),
-            ),
+
           ],
         ),
         const SizedBox(height: 12),
@@ -1337,34 +1638,8 @@ class MonitorScreenState extends State<MonitorScreen> {
             width: double.infinity,
             height: 54,
             child: ElevatedButton(
-              onPressed: () {
-                showDialog(
-                  context: context,
-                  builder: (ctx) => AlertDialog(
-                    shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                    title: const Text('Selesaikan Perjalanan?', style: TextStyle(fontWeight: FontWeight.w800)),
-                    content: Text(
-                      'Durasi kemudi: ${_formatDuration(_elapsedSeconds)}\nSesi perekaman telemetri akan disimpan.',
-                    ),
-                    actions: [
-                      TextButton(
-                        onPressed: () => Navigator.pop(ctx),
-                        child: const Text('Lanjutkan Kemudi', style: TextStyle(color: Color(0xFF64748B))),
-                      ),
-                      ElevatedButton(
-                        style: ElevatedButton.styleFrom(
-                          backgroundColor: const Color(0xFFE57A38),
-                          foregroundColor: Colors.white,
-                        ),
-                        onPressed: () {
-                          Navigator.pop(ctx);
-                          _stopMonitoring();
-                        },
-                        child: const Text('Ya, Selesaikan', style: TextStyle(fontWeight: FontWeight.bold)),
-                      ),
-                    ],
-                  ),
-                );
+              onPressed: () async {
+                await _stopMonitoring();
               },
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFE57A38),
@@ -1394,6 +1669,167 @@ class MonitorScreenState extends State<MonitorScreen> {
           ),
       ],
     );
+  }
+
+Future<void> _toggleNightVision() async {
+    final nextState = !_isNightVisionEnabled;
+    setState(() => _isNightVisionEnabled = nextState);
+
+    // 1. Hardware Screen Brightness Flashlight (100% max brightness)
+    try {
+      if (nextState) {
+        try {
+          _previousBrightness = await ScreenBrightness.instance.system;
+        } catch (_) {}
+        await ScreenBrightness.instance.setScreenBrightness(1.0);
+      } else {
+        if (_previousBrightness != null) {
+          await ScreenBrightness.instance.setScreenBrightness(_previousBrightness!);
+        } else {
+          await ScreenBrightness.instance.resetScreenBrightness();
+        }
+      }
+    } catch (e) {
+      debugPrint('ScreenBrightness error: ');
+    }
+
+    // 2. Hardware Camera Flash & Sensor Exposure Boost (Kompensasi Pencahayaan Lensa Kamera Depan)
+    if (_cameraController != null && _cameraController!.value.isInitialized) {
+      try {
+        await _cameraController!.setFlashMode(
+          nextState ? FlashMode.torch : FlashMode.off,
+        );
+      } catch (_) {}
+
+      try {
+        if (nextState) {
+          final maxExp = await _cameraController!.getMaxExposureOffset();
+          await _cameraController!.setExposureOffset(maxExp.clamp(0.0, 2.0));
+        } else {
+          await _cameraController!.setExposureOffset(0.0);
+        }
+      } catch (_) {}
+    }
+  }
+
+  Widget _buildNightVisionToggleBar() {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+      decoration: BoxDecoration(
+        color: _isNightVisionEnabled ? const Color(0xFF1E293B) : Colors.white,
+        borderRadius: BorderRadius.circular(14),
+        border: Border.all(
+          color: _isNightVisionEnabled ? const Color(0xFFF59E0B) : const Color(0xFFFED7AA),
+          width: _isNightVisionEnabled ? 1.5 : 1.0,
+        ),
+        boxShadow: [
+          BoxShadow(
+            color: _isNightVisionEnabled
+                ? const Color(0xFFF59E0B).withValues(alpha: 0.25)
+                : Colors.black.withValues(alpha: 0.03),
+            blurRadius: 8,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Container(
+            padding: const EdgeInsets.all(7),
+            decoration: BoxDecoration(
+              color: _isNightVisionEnabled
+                  ? const Color(0xFFFEF3C7)
+                  : const Color(0xFFFFF7ED),
+              borderRadius: BorderRadius.circular(10),
+            ),
+            child: Icon(
+              _isNightVisionEnabled
+                  ? Icons.flashlight_on_rounded
+                  : Icons.nightlight_round,
+              size: 20,
+              color: _isNightVisionEnabled
+                  ? const Color(0xFFD97706)
+                  : const Color(0xFFE57A38),
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Text(
+                  'Penerangan Wajah Malam / Night Glow',
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w800,
+                    color: _isNightVisionEnabled ? Colors.white : const Color(0xFF0F172A),
+                  ),
+                ),
+                const SizedBox(height: 1),
+                Text(
+                  _isNightVisionEnabled
+                      ? 'Lampu aktif · Wajah terang di kabin gelap'
+                      : 'Bantu deteksi sensor AI di kondisi gelap',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w500,
+                    color: _isNightVisionEnabled ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                  ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          OrangeSlidingToggle(
+            value: _isNightVisionEnabled,
+            onChanged: (val) {
+              if (val != _isNightVisionEnabled) {
+                _toggleNightVision();
+              }
+            },
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _dispatchSosEmergency() async {
+    try {
+      final user = AuthService.currentUser;
+      final email = user?.email ?? 'buzzerbeater006@gmail.com';
+      final name = AuthService.currentUserName ?? 'Pengemudi DrivingBuddy';
+      final phone = await SosService.getSosPhone(userEmail: email);
+
+      if (phone.isNotEmpty) {
+        final lat = _nearby.fix?.lat ?? -6.2088;
+        final lng = _nearby.fix?.lng ?? 106.8456;
+
+        await SosService.sendEmergencySos(
+          rawPhone: phone,
+          driverName: name,
+          email: email,
+          lat: lat,
+          lng: lng,
+          speedKmh: _currentSpeedKmh,
+        );
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('🚨 Darurat SOS terkirim otomatis ke WhatsApp $phone!'),
+              backgroundColor: const Color(0xFFD94126),
+              behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 8),
+            ),
+          );
+        }
+      }
+    } catch (e) {
+      debugPrint('Error dispatching automated SOS: $e');
+    }
   }
 }
 
@@ -1564,6 +2000,7 @@ class _MicrosleepAlertDialogState extends State<MicrosleepAlertDialog>
       });
     }
   }
+
 
   @override
   void dispose() {
@@ -1933,6 +2370,98 @@ class _MicrosleepAlertDialogState extends State<MicrosleepAlertDialog>
           ),
         ),
       ],
+    );
+  }
+}
+
+// ────────────────────────────────────────────────────────────────────────────
+// CUSTOM ORANGE SLIDING CAPSULE TOGGLE SWITCH (Tap & Drag Geser Kanan/Kiri)
+// ────────────────────────────────────────────────────────────────────────────
+class OrangeSlidingToggle extends StatelessWidget {
+  final bool value;
+  final ValueChanged<bool> onChanged;
+
+  const OrangeSlidingToggle({
+    super.key,
+    required this.value,
+    required this.onChanged,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    const width = 56.0;
+    const height = 28.0;
+    const thumbSize = 22.0;
+    const padding = 3.0;
+
+    return GestureDetector(
+      onTap: () => onChanged(!value),
+      onHorizontalDragEnd: (details) {
+        if (details.primaryVelocity != null) {
+          if (details.primaryVelocity! > 50 && !value) {
+            onChanged(true); // Geser ke kanan: Nyalakan
+          } else if (details.primaryVelocity! < -50 && value) {
+            onChanged(false); // Geser ke kiri: Matikan
+          }
+        }
+      },
+      child: AnimatedContainer(
+        duration: const Duration(milliseconds: 250),
+        curve: Curves.easeInOut,
+        width: width,
+        height: height,
+        decoration: BoxDecoration(
+          borderRadius: BorderRadius.circular(20),
+          gradient: value
+              ? const LinearGradient(
+                  colors: [Color(0xFFE57A38), Color(0xFFF97316)],
+                  begin: Alignment.centerLeft,
+                  end: Alignment.centerRight,
+                )
+              : null,
+          color: value ? null : const Color(0xFFCBD5E1),
+          boxShadow: value
+              ? [
+                  BoxShadow(
+                    color: const Color(0xFFE57A38).withValues(alpha: 0.45),
+                    blurRadius: 8,
+                    offset: const Offset(0, 2),
+                  ),
+                ]
+              : [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.08),
+                    blurRadius: 4,
+                    offset: const Offset(0, 1),
+                  ),
+                ],
+        ),
+        child: Stack(
+          alignment: Alignment.center,
+          children: [
+            AnimatedPositioned(
+              duration: const Duration(milliseconds: 250),
+              curve: Curves.easeInOut,
+              left: value ? (width - thumbSize - padding) : padding,
+              child: Container(
+                width: thumbSize,
+                height: thumbSize,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.white,
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.black.withValues(alpha: 0.25),
+                      blurRadius: 4,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 }

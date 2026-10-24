@@ -5,6 +5,8 @@ import '../features/nearby_places/nearby_places.dart';
 import 'home_screen.dart';
 import 'monitor_screen.dart';
 import 'history_screen.dart';
+import '../models/account_config.dart';
+import '../services/firebase_service.dart';
 
 // ============================================================================
 // MAIN SHELL — Luxury GT Navigation Bar
@@ -29,9 +31,12 @@ class _MainShellState extends State<MainShell> {
     super.initState();
     _currentIndex = widget.initialIndex;
     // Otomatis aktifkan pencarian tempat terdekat saat aplikasi dibuka.
-    // Jika lokasi (GPS) nyala & izin ada -> langsung cari tempat terdekat.
-    // Jika lokasi belum nyala -> diam/siaga sampai pengguna menyalakan GPS.
     _nearbyController.start(askPermission: false);
+    // Muat foto profil awal agar tersinkron di semua tab spesifik user aktif
+    final curEmail = AuthService.currentUser?.email;
+    AccountConfig.getPhotoUrl(userEmail: curEmail);
+    // Auto-sync sesi offline ke Firestore jika internet aktif
+    SessionService.syncPendingOfflineSessions();
   }
 
   @override
@@ -40,7 +45,20 @@ class _MainShellState extends State<MainShell> {
     super.dispose();
   }
 
-  void _switchToTab(int index) => setState(() => _currentIndex = index);
+  void _switchToTab(int index) {
+    if (_currentIndex == 1 && index != 1 && _monitorKey.currentState?.isMonitoring == true) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        const SnackBar(
+          content: Text('⚠️ Selesaikan perjalanan terlebih dahulu sebelum berpindah halaman/pengaturan.'),
+          backgroundColor: Color(0xFFE57A38),
+          behavior: SnackBarBehavior.floating,
+          duration: Duration(seconds: 2),
+        ),
+      );
+      return;
+    }
+    setState(() => _currentIndex = index);
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -50,7 +68,13 @@ class _MainShellState extends State<MainShell> {
         index: _currentIndex,
         children: [
           CockpitScreen(
-            onStartMonitoring: () => _switchToTab(1),
+            isActive: _currentIndex == 0,
+            onStartMonitoring: () {
+              _switchToTab(1);
+              WidgetsBinding.instance.addPostFrameCallback((_) {
+                _monitorKey.currentState?.startFromExternal();
+              });
+            },
             nearbyController: _nearbyController,
           ),
           MonitorScreen(
@@ -183,3 +207,4 @@ class _NavItem extends StatelessWidget {
     );
   }
 }
+

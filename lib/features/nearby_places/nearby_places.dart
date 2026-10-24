@@ -17,7 +17,7 @@
 export 'data/location_provider.dart';
 export 'data/places_api.dart';
 export 'data/places_config.dart';
-export 'logic/geo_math.dart' show GeoPoint, formatDistance;
+export 'logic/geo_math.dart' show GeoPoint, formatDistance, haversineM;
 export 'logic/nearby_controller.dart';
 export 'logic/place_launcher.dart';
 export 'models/nearby_place.dart';

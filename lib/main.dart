@@ -1,8 +1,9 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:firebase_core/firebase_core.dart';
 
-import 'supabase_service.dart';
+import 'firebase_options.dart';
+import 'services/firebase_service.dart';
 import 'core/app_colors.dart';
 import 'routes/app_routes.dart';
 
@@ -24,10 +25,12 @@ export 'widgets/driving_buddy_app_bar.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
-  await Supabase.initialize(
-    url: supabaseUrl,
-    anonKey: supabaseAnonKey,
+  
+  // Inisialisasi Firebase
+  await Firebase.initializeApp(
+    options: DefaultFirebaseOptions.currentPlatform,
   );
+
   SystemChrome.setSystemUIOverlayStyle(
     const SystemUiOverlayStyle(
       statusBarColor: Colors.transparent,
@@ -51,26 +54,18 @@ class DrivingBuddyApp extends StatelessWidget {
       debugShowCheckedModeBanner: false,
       theme: ThemeData(
         useMaterial3: true,
-        brightness: Brightness.light,
-        primaryColor: AppColors.primary,
         scaffoldBackgroundColor: AppColors.background,
         colorScheme: ColorScheme.fromSeed(
           seedColor: AppColors.primary,
-          brightness: Brightness.light,
           primary: AppColors.primary,
           surface: AppColors.surface,
-        ),
-        appBarTheme: const AppBarTheme(
-          backgroundColor: Colors.transparent,
-          foregroundColor: AppColors.textPrimary,
-          elevation: 0,
-          centerTitle: false,
         ),
         cardTheme: CardThemeData(
           color: AppColors.cardBg,
           elevation: 0,
           shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(20),
+            borderRadius: BorderRadius.circular(16),
+            side: const BorderSide(color: Color(0xFFE2E8F0)),
           ),
         ),
         elevatedButtonTheme: ElevatedButtonThemeData(
@@ -79,52 +74,19 @@ class DrivingBuddyApp extends StatelessWidget {
             foregroundColor: Colors.white,
             elevation: 0,
             shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
+              borderRadius: BorderRadius.circular(12),
             ),
-            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
             textStyle: const TextStyle(
-              fontWeight: FontWeight.w700,
-              fontSize: 15,
-              letterSpacing: 0.3,
+              fontWeight: FontWeight.w600,
+              fontSize: 14,
             ),
           ),
-        ),
-        outlinedButtonTheme: OutlinedButtonThemeData(
-          style: OutlinedButton.styleFrom(
-            foregroundColor: AppColors.primary,
-            side: const BorderSide(color: AppColors.primary, width: 1.5),
-            shape: RoundedRectangleBorder(
-              borderRadius: BorderRadius.circular(16),
-            ),
-            padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 24),
-            textStyle: const TextStyle(
-              fontWeight: FontWeight.w700,
-              fontSize: 15,
-            ),
-          ),
-        ),
-        inputDecorationTheme: InputDecorationTheme(
-          filled: true,
-          fillColor: Colors.white,
-          border: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-          ),
-          enabledBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: Color(0xFFE5E7EB)),
-          ),
-          focusedBorder: OutlineInputBorder(
-            borderRadius: BorderRadius.circular(14),
-            borderSide: const BorderSide(color: AppColors.primary, width: 1.5),
-          ),
-          contentPadding:
-              const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
         ),
       ),
-      initialRoute: AuthService.isLoggedIn ? AppRoutes.main : AppRoutes.login,
+      initialRoute: AppRoutes.initial,
       routes: AppRoutes.routes,
       onGenerateRoute: AppRoutes.onGenerateRoute,
     );
   }
 }
+

@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
-import 'package:supabase_flutter/supabase_flutter.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'supabase_service.dart';
+import 'models/account_config.dart';
 import 'screens/main_shell.dart';
 
 // ============================================================================
@@ -68,24 +69,354 @@ class _LoginScreenState extends State<LoginScreen>
     super.dispose();
   }
 
+  // ── lupa password ────────────────────────
+  Future<void> _showForgotPasswordDialog() async {
+    final emailCtrl = TextEditingController(text: _loginEmail.text.trim());
+    String? dialogError;
+    String? dialogSuccess;
+    bool dialogLoading = false;
+
+    await showDialog(
+      context: context,
+      builder: (ctx) => StatefulBuilder(
+        builder: (context, setDState) => AlertDialog(
+          shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
+          title: const Row(
+            children: [
+              Icon(Icons.lock_reset_rounded, color: Color(0xFFE57A38)),
+              SizedBox(width: 10),
+              Text('Reset Kata Sandi', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
+            ],
+          ),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              const Text(
+                'Masukkan email kamu untuk menerima tautan pemulihan kata sandi.',
+                style: TextStyle(fontSize: 13, color: Color(0xFF64748B)),
+              ),
+              const SizedBox(height: 14),
+              if (dialogError != null) ...[
+                _buildAlertBox(dialogError!, isError: true),
+                const SizedBox(height: 12),
+              ],
+              if (dialogSuccess != null) ...[
+                _buildAlertBox(dialogSuccess!, isError: false),
+                const SizedBox(height: 12),
+              ],
+              TextField(
+                controller: emailCtrl,
+                keyboardType: TextInputType.emailAddress,
+                decoration: InputDecoration(
+                  hintText: 'nama@email.com',
+                  prefixIcon: const Icon(Icons.alternate_email_rounded, color: Color(0xFF64748B), size: 19),
+                  filled: true,
+                  fillColor: const Color(0xFFF8FAFC),
+                  border: OutlineInputBorder(
+                    borderRadius: BorderRadius.circular(12),
+                    borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+                  ),
+                ),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: () => Navigator.pop(ctx),
+              child: const Text('Tutup', style: TextStyle(color: Color(0xFF64748B))),
+            ),
+            ElevatedButton(
+              style: ElevatedButton.styleFrom(
+                backgroundColor: const Color(0xFFE57A38),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+              ),
+              onPressed: dialogLoading
+                  ? null
+                  : () async {
+                      final email = emailCtrl.text.trim();
+                      if (email.isEmpty) {
+                        setDState(() => dialogError = 'Email tidak boleh kosong.');
+                        return;
+                      }
+                      setDState(() {
+                        dialogLoading = true;
+                        dialogError = null;
+                        dialogSuccess = null;
+                      });
+                      try {
+                        await AuthService.resetPassword(email);
+                        setDState(() {
+                          dialogLoading = false;
+                          dialogSuccess = 'Tautan reset telah dikirim ke email kamu! Silakan cek kotak masuk.';
+                        });
+                      } on FirebaseAuthException catch (e) {
+                        setDState(() {
+                          dialogLoading = false;
+                          dialogError = _xlErr(e.message ?? 'user-not-found');
+                        });
+                      } catch (_) {
+                        setDState(() {
+                          dialogLoading = false;
+                          dialogError = 'Gagal mengirim email reset. Pastikan email benar.';
+                        });
+                      }
+                    },
+              child: dialogLoading
+                  ? const SizedBox(width: 18, height: 18, child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2))
+                  : const Text('Kirim Link', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  // ── validasi pendaftaran ──────────────────
+  String? _validateEmailAddress(String email) {
+    if (email.isEmpty) return 'Email tidak boleh kosong.';
+    // Validasi format email standar RFC 5322 regex yang ketat untuk domain nyata
+    final emailRegex = RegExp(
+      r'^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+$',
+    );
+    if (!emailRegex.hasMatch(email)) {
+      return 'Format email tidak valid (contoh: nama@domain.com).';
+    }
+    // Cek domain memiliki ekstensi yang valid (minimal 2 huruf, misal .com, .id, .org)
+    final parts = email.split('@');
+    if (parts.length != 2) return 'Format email tidak valid.';
+    final domain = parts[1].toLowerCase();
+    if (!domain.contains('.')) return 'Domain email tidak lengkap.';
+    final tld = domain.split('.').last;
+    if (tld.length < 2) return 'Domain email tidak valid.';
+
+    return null;
+  }
+
+  String? _validatePasswordFormat(String password) {
+    if (password.length < 8) {
+      return 'Kata sandi minimal 8 karakter.';
+    }
+    if (!password.contains(RegExp(r'[A-Z]'))) {
+      return 'Kata sandi harus mengandung minimal 1 huruf besar (A-Z).';
+    }
+    if (!password.contains(RegExp(r'[a-z]'))) {
+      return 'Kata sandi harus mengandung minimal 1 huruf kecil (a-z).';
+    }
+    if (!password.contains(RegExp(r'[0-9]'))) {
+      return 'Kata sandi harus mengandung minimal 1 angka (0-9).';
+    }
+    if (!password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'))) {
+      return 'Kata sandi harus mengandung minimal 1 simbol (!@#\$%^&* dll).';
+    }
+    return null;
+  }
+
+  // ── dialog verifikasi email ───────────────
+  void _showVerificationDialog(String email) {
+    showDialog(
+      context: context,
+      barrierDismissible: false,
+      builder: (ctx) {
+        bool resending = false;
+        String? resendMsg;
+        return StatefulBuilder(
+          builder: (context, setDState) => AlertDialog(
+            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
+            title: const Row(
+              children: [
+                Icon(Icons.mark_email_read_rounded, color: Color(0xFFE57A38), size: 28),
+                SizedBox(width: 12),
+                Expanded(
+                  child: Text(
+                    'Verifikasi Email Dikirim',
+                    style: TextStyle(fontWeight: FontWeight.w800, fontSize: 17),
+                  ),
+                ),
+              ],
+            ),
+            content: Column(
+              mainAxisSize: MainAxisSize.min,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Tautan verifikasi telah kami kirimkan ke:',
+                  style: TextStyle(fontSize: 13, color: Colors.blueGrey.shade700),
+                ),
+                const SizedBox(height: 4),
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFFF7ED),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(color: const Color(0xFFFED7AA)),
+                  ),
+                  child: Text(
+                    email,
+                    style: const TextStyle(
+                      fontWeight: FontWeight.bold,
+                      color: Color(0xFFC2410C),
+                      fontSize: 13.5,
+                    ),
+                  ),
+                ),
+                const SizedBox(height: 14),
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFFFEF3C7),
+                    borderRadius: BorderRadius.circular(12),
+                    border: Border.all(color: const Color(0xFFFCD34D)),
+                  ),
+                  child: Row(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Icon(Icons.info_outline_rounded, color: Color(0xFFB45309), size: 20),
+                      const SizedBox(width: 10),
+                      Expanded(
+                        child: Text(
+                          'PENTING: Jika tidak muncul di Kotak Masuk, silakan periksa Folder Spam atau Promosi dan pilih "Bukan Spam".',
+                          style: TextStyle(
+                            fontSize: 12,
+                            fontWeight: FontWeight.w600,
+                            color: Colors.amber.shade900,
+                            height: 1.35,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                if (resendMsg != null) ...[
+                  const SizedBox(height: 10),
+                  Text(
+                    resendMsg!,
+                    style: const TextStyle(fontSize: 12, color: Color(0xFF059669), fontWeight: FontWeight.bold),
+                  ),
+                ],
+              ],
+            ),
+            actions: [
+              TextButton(
+                onPressed: resending
+                    ? null
+                    : () async {
+                        setDState(() => resending = true);
+                        try {
+                          final user = AuthService.currentUser;
+                          if (user != null) {
+                            await user.sendEmailVerification();
+                          }
+                          setDState(() {
+                            resending = false;
+                            resendMsg = 'Link verifikasi berhasil dikirim ulang!';
+                          });
+                        } catch (e) {
+                          setDState(() {
+                            resending = false;
+                            resendMsg = 'Gagal kirim ulang. Tunggu 1 menit.';
+                          });
+                        }
+                      },
+                child: resending
+                    ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
+                    : const Text('Kirim Ulang Link', style: TextStyle(color: Color(0xFF64748B), fontWeight: FontWeight.w600)),
+              ),
+              ElevatedButton(
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: const Color(0xFFE57A38),
+                  shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
+                  elevation: 2,
+                ),
+                onPressed: () {
+                  Navigator.pop(ctx);
+                  // Pindahkan tab langsung ke Halaman Masuk & isi email
+                  _loginEmail.text = email;
+                  _tab.animateTo(0);
+                  setState(() {
+                    _loginError = null;
+                  });
+                },
+                child: const Text(
+                  'Kembali ke Masuk',
+                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+                ),
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
   // ── login ───────────────────────────────
   Future<void> _doLogin() async {
+    final email = _loginEmail.text.trim();
+    final password = _loginPassword.text;
+
+    if (email.isEmpty) {
+      setState(() => _loginError = 'Email tidak boleh kosong.');
+      return;
+    }
+    if (password.isEmpty) {
+      setState(() => _loginError = 'Kata sandi tidak boleh kosong.');
+      return;
+    }
+
     setState(() {
       _loginLoading = true;
       _loginError = null;
     });
+
     try {
       await AuthService.login(
-        email: _loginEmail.text.trim(),
-        password: _loginPassword.text,
+        email: email,
+        password: password,
       );
+      // Reset & ambil foto spesifik akun yang baru masuk
+      await AccountConfig.getPhotoUrl(userEmail: email);
       if (mounted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => const MainShell()),
         );
       }
-    } on AuthException catch (e) {
-      setState(() => _loginError = _xlErr(e.message));
+    } on FirebaseAuthException catch (e) {
+      String errMsg = 'Kata sandi salah. Silakan periksa kembali.';
+      final code = e.code.toLowerCase();
+
+      if (code == 'user-not-found') {
+        errMsg = 'Email tidak terdaftar di Driving Buddy.';
+      } else if (code == 'wrong-password') {
+        errMsg = 'Kata sandi salah. Silakan periksa kembali.';
+      } else if (code == 'invalid-email') {
+        errMsg = 'Format email tidak valid.';
+      } else if (code == 'user-disabled') {
+        errMsg = 'Akun ini telah dinonaktifkan.';
+      } else if (code == 'network-request-failed') {
+        errMsg = 'Koneksi internet bermasalah. Periksa jaringan Anda.';
+      } else if (code == 'too-many-requests') {
+        errMsg = 'Terlalu banyak percobaan gagal. Silakan tunggu beberapa saat.';
+      } else if (code == 'invalid-credential') {
+        // Firebase Auth terbaru sering mengembalikan 'invalid-credential' untuk menyamarkan error.
+        // Coba periksa apakah email terdaftar menggunakan query users di Firestore:
+        try {
+          final snapshot = await firestore
+              .collection('users')
+              .where('email', isEqualTo: email)
+              .limit(1)
+              .get();
+          if (snapshot.docs.isEmpty) {
+            errMsg = 'Email tidak terdaftar di Driving Buddy.';
+          } else {
+            errMsg = 'Kata sandi salah. Silakan periksa kembali.';
+          }
+        } catch (_) {
+          errMsg = 'Email tidak terdaftar atau kata sandi salah.';
+        }
+      } else {
+        errMsg = _xlErr(e.code);
+      }
+      setState(() => _loginError = errMsg);
     } catch (_) {
       setState(() => _loginError = 'Terjadi kesalahan saat masuk. Coba lagi.');
     } finally {
@@ -95,28 +426,65 @@ class _LoginScreenState extends State<LoginScreen>
 
   // ── register ────────────────────────────
   Future<void> _doRegister() async {
-    if (_regName.text.trim().isEmpty) {
-      return setState(() => _regError = 'Nama tidak boleh kosong.');
+    final name = _regName.text.trim();
+    final email = _regEmail.text.trim();
+    final password = _regPassword.text;
+    final confirm = _regConfirm.text;
+
+    if (name.isEmpty) {
+      return setState(() => _regError = 'Nama lengkap tidak boleh kosong.');
     }
-    if (_regPassword.text != _regConfirm.text) {
-      return setState(() => _regError = 'Konfirmasi password tidak cocok.');
+
+    final emailErr = _validateEmailAddress(email);
+    if (emailErr != null) {
+      return setState(() => _regError = emailErr);
     }
+
+    final passErr = _validatePasswordFormat(password);
+    if (passErr != null) {
+      return setState(() => _regError = passErr);
+    }
+
+    if (password != confirm) {
+      return setState(() => _regError = 'Konfirmasi kata sandi tidak cocok.');
+    }
+
     setState(() {
       _regLoading = true;
       _regError = null;
       _regSuccess = null;
     });
+
     try {
       await AuthService.register(
-        email: _regEmail.text.trim(),
-        password: _regPassword.text,
-        fullName: _regName.text.trim(),
+        email: email,
+        password: password,
+        fullName: name,
       );
-      setState(() => _regSuccess =
-          'Akun berhasil dibuat! Silakan cek email kamu untuk konfirmasi, lalu masuk.');
-    } on AuthException catch (e) {
-      setState(() => _regError = _xlErr(e.message));
-    } catch (_) {
+
+      setState(() {
+        _regSuccess = 'Pendaftaran berhasil! Silakan periksa email verifikasi Anda.';
+      });
+
+      if (mounted) {
+        _showVerificationDialog(email);
+      }
+    } on FirebaseAuthException catch (e) {
+      String msg = 'Terjadi kesalahan pendaftaran.';
+      final code = e.code.toLowerCase();
+      if (code == 'email-already-in-use') {
+        msg = 'Email ini sudah terdaftar. Silakan masuk menggunakan kata sandi Anda.';
+      } else if (code == 'invalid-email') {
+        msg = 'Format email tidak valid atau domain tidak dikenali.';
+      } else if (code == 'weak-password') {
+        msg = 'Kata sandi terlalu lemah. Ikuti kriteria kombinasi karakter.';
+      } else if (code == 'network-request-failed') {
+        msg = 'Koneksi internet bermasalah. Periksa jaringan Anda.';
+      } else {
+        msg = _xlErr(e.code);
+      }
+      setState(() => _regError = msg);
+    } catch (e) {
       setState(() => _regError = 'Terjadi kesalahan pendaftaran. Coba lagi.');
     } finally {
       if (mounted) setState(() => _regLoading = false);
@@ -124,12 +492,26 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   String _xlErr(String m) {
-    if (m.contains('Invalid login')) return 'Email atau password salah.';
-    if (m.contains('Email not confirmed')) return 'Email belum dikonfirmasi. Cek kotak masuk email kamu.';
-    if (m.contains('User not found')) return 'Akun tidak ditemukan.';
-    if (m.contains('already registered')) return 'Email sudah terdaftar.';
-    if (m.contains('weak password')) return 'Password terlalu lemah (min. 6 karakter).';
-    return m;
+    final lower = m.toLowerCase();
+    if (lower.contains('invalid-credential') || lower.contains('invalid login') || lower.contains('wrong-password')) {
+      return 'Kata sandi salah. Silakan periksa kembali.';
+    }
+    if (lower.contains('user-not-found') || lower.contains('user not found')) {
+      return 'Email tidak terdaftar di Driving Buddy.';
+    }
+    if (lower.contains('email-already-in-use') || lower.contains('already registered')) {
+      return 'Email ini sudah terdaftar. Silakan langsung masuk.';
+    }
+    if (lower.contains('weak-password') || lower.contains('weak password')) {
+      return 'Kata sandi terlalu lemah. Minimal 8 karakter dengan kombinasi lengkap.';
+    }
+    if (lower.contains('invalid-email') || lower.contains('badly formatted')) {
+      return 'Format email tidak valid. Pastikan penulisan benar.';
+    }
+    if (lower.contains('network') || lower.contains('connection')) {
+      return 'Koneksi internet bermasalah. Coba periksa koneksi kamu.';
+    }
+    return 'Terjadi kendala. Silakan coba beberapa saat lagi.';
   }
 
   @override
@@ -189,65 +571,12 @@ class _LoginScreenState extends State<LoginScreen>
   Widget _buildBrandHeader() {
     return Column(
       children: [
-        Container(
-          width: 68,
-          height: 68,
-          decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              colors: [Color(0xFFE57A38), Color(0xFFC25E21)],
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-            ),
-            borderRadius: BorderRadius.circular(20),
-            boxShadow: [
-              BoxShadow(
-                color: const Color(0xFFE57A38).withOpacity(0.35),
-                blurRadius: 20,
-                offset: const Offset(0, 6),
-              ),
-            ],
-          ),
-          child: const Icon(
-            Icons.directions_car_rounded,
-            color: Colors.white,
-            size: 36,
-          ),
+        Image.asset(
+          'assets/images/DrivingBuddyLogo_tight.png',
+          height: 80,
+          fit: BoxFit.contain,
         ),
-        const SizedBox(height: 14),
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            const Text(
-              'DRIVING',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 2,
-                color: Color(0xFF0F172A),
-              ),
-            ),
-            const SizedBox(width: 6),
-            const Text(
-              'BUDDY',
-              style: TextStyle(
-                fontSize: 22,
-                fontWeight: FontWeight.w900,
-                letterSpacing: 2,
-                color: Color(0xFFE57A38),
-              ),
-            ),
-            const SizedBox(width: 6),
-            Container(
-              width: 7,
-              height: 7,
-              decoration: const BoxDecoration(
-                color: Color(0xFF10B981),
-                shape: BoxShape.circle,
-              ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 4),
+        const SizedBox(height: 6),
         const Text(
           'GT Telemetri Kabin & Monitoring Kelelahan',
           style: TextStyle(
@@ -297,6 +626,123 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
+  // ── google login ────────────────────────
+  bool _googleLoading = false;
+
+  Future<void> _doGoogleLogin() async {
+    setState(() {
+      _googleLoading = true;
+      _loginError = null;
+      _regError = null;
+    });
+    try {
+      // Timeout guard agar jika popup ditutup di background tanpa trigger event, loading otomatis mati
+      await AuthService.signInWithGoogle().timeout(
+        const Duration(seconds: 45),
+        onTimeout: () {
+          throw 'Popup login Google ditutup atau waktu habis.';
+        },
+      );
+      final gEmail = AuthService.currentUser?.email;
+      await AccountConfig.getPhotoUrl(userEmail: gEmail);
+      if (mounted) {
+        Navigator.of(context).pushReplacement(
+          MaterialPageRoute(builder: (_) => const MainShell()),
+        );
+      }
+    } on FirebaseAuthException catch (e) {
+      if (mounted) {
+        if (e.code == 'popup-closed-by-user' || e.code == 'cancelled') {
+          // User sengaja menutup popup, jangan tampilkan error merah menakutkan, cukup batalkan loading
+          setState(() => _loginError = null);
+        } else {
+          setState(() => _loginError = _xlErr(e.message ?? 'Login Google dibatalkan'));
+        }
+      }
+    } catch (e) {
+      if (mounted) {
+        final errStr = e.toString().toLowerCase();
+        if (errStr.contains('popup-closed-by-user') || errStr.contains('closed by user') || errStr.contains('cancel')) {
+          setState(() => _loginError = null);
+        } else {
+          setState(() => _loginError = 'Login Google dibatalkan atau waktu habis.');
+        }
+      }
+    } finally {
+      if (mounted) {
+        setState(() => _googleLoading = false);
+      }
+    }
+  }
+
+  Widget _buildGoogleSignInButton() {
+    return Column(
+      children: [
+        Row(
+          children: [
+            Expanded(child: Container(height: 1, color: const Color(0xFFE2E8F0))),
+            const Padding(
+              padding: EdgeInsets.symmetric(horizontal: 12),
+              child: Text(
+                'atau',
+                style: TextStyle(
+                  color: Color(0xFF94A3B8),
+                  fontSize: 12,
+                  fontWeight: FontWeight.w600,
+                ),
+              ),
+            ),
+            Expanded(child: Container(height: 1, color: const Color(0xFFE2E8F0))),
+          ],
+        ),
+        const SizedBox(height: 16),
+        SizedBox(
+          width: double.infinity,
+          height: 52,
+          child: OutlinedButton(
+            onPressed: _googleLoading ? null : _doGoogleLogin,
+            style: OutlinedButton.styleFrom(
+              backgroundColor: Colors.white,
+              side: const BorderSide(color: Color(0xFFCBD5E1), width: 1.2),
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(14),
+              ),
+              elevation: 1,
+              shadowColor: Colors.black.withOpacity(0.04),
+            ),
+            child: _googleLoading
+                ? const SizedBox(
+                    width: 22,
+                    height: 22,
+                    child: CircularProgressIndicator(color: Color(0xFFE57A38), strokeWidth: 2.5),
+                  )
+                : Row(
+                    mainAxisAlignment: MainAxisAlignment.center,
+                    children: [
+                      Image.asset(
+                        'assets/images/google_logo.png',
+                        height: 22,
+                        width: 22,
+                        fit: BoxFit.contain,
+                      ),
+                      const SizedBox(width: 12),
+                      const Text(
+                        'Masuk dengan Google',
+                        style: TextStyle(
+                          color: Color(0xFF0F172A),
+                          fontSize: 14.5,
+                          fontWeight: FontWeight.w800,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                    ],
+                  ),
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildLoginForm() {
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -332,7 +778,27 @@ class _LoginScreenState extends State<LoginScreen>
             onPressed: () => setState(() => _loginObscure = !_loginObscure),
           ),
         ),
-        const SizedBox(height: 22),
+        const SizedBox(height: 8),
+        Align(
+          alignment: Alignment.centerRight,
+          child: TextButton(
+            onPressed: _showForgotPasswordDialog,
+            style: TextButton.styleFrom(
+              padding: EdgeInsets.zero,
+              minimumSize: const Size(50, 30),
+              tapTargetSize: MaterialTapTargetSize.shrinkWrap,
+            ),
+            child: const Text(
+              'Lupa Kata Sandi?',
+              style: TextStyle(
+                color: Color(0xFFE57A38),
+                fontSize: 12.5,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ),
+        ),
+        const SizedBox(height: 16),
 
         SizedBox(
           width: double.infinity,
@@ -362,6 +828,8 @@ class _LoginScreenState extends State<LoginScreen>
         ),
         const SizedBox(height: 18),
 
+        _buildGoogleSignInButton(),
+        const SizedBox(height: 18),
         Center(
           child: GestureDetector(
             onTap: () {
@@ -428,7 +896,7 @@ class _LoginScreenState extends State<LoginScreen>
         const SizedBox(height: 6),
         _buildInputField(
           controller: _regPassword,
-          hint: 'Minimal 6 karakter',
+          hint: 'Min. 8 karakter (Besar, Kecil, Angka, Simbol)',
           icon: Icons.lock_outline_rounded,
           obscureText: _regObscure,
           suffix: IconButton(
@@ -440,6 +908,11 @@ class _LoginScreenState extends State<LoginScreen>
             onPressed: () => setState(() => _regObscure = !_regObscure),
           ),
         ),
+        const SizedBox(height: 6),
+        const Text(
+          '* Minimal 8 karakter, wajib ada huruf besar, huruf kecil, angka, dan simbol unik (!@#\$%^&* dll)',
+          style: TextStyle(fontSize: 11, color: Color(0xFF64748B), fontStyle: FontStyle.italic),
+        ),
         const SizedBox(height: 14),
 
         _buildLabel('Konfirmasi Kata Sandi'),
@@ -448,7 +921,15 @@ class _LoginScreenState extends State<LoginScreen>
           controller: _regConfirm,
           hint: 'Ulangi kata sandi',
           icon: Icons.lock_outline_rounded,
-          obscureText: true,
+          obscureText: _regObscure,
+          suffix: IconButton(
+            icon: Icon(
+              _regObscure ? Icons.visibility_off_outlined : Icons.visibility_outlined,
+              color: const Color(0xFF64748B),
+              size: 20,
+            ),
+            onPressed: () => setState(() => _regObscure = !_regObscure),
+          ),
         ),
         const SizedBox(height: 22),
 
@@ -480,6 +961,8 @@ class _LoginScreenState extends State<LoginScreen>
         ),
         const SizedBox(height: 18),
 
+        _buildGoogleSignInButton(),
+        const SizedBox(height: 18),
         Center(
           child: GestureDetector(
             onTap: () {
@@ -605,3 +1088,7 @@ class RegisterScreen extends StatelessWidget {
     return const LoginScreen();
   }
 }
+
+
+
+

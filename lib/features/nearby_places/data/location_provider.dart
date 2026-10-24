@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:io';
 
 import 'package:geolocator/geolocator.dart';
 
@@ -149,7 +150,8 @@ class GeolocatorLocationProvider implements LocationProvider {
   }) async {
     try {
       final position = await Geolocator.getCurrentPosition(
-        desiredAccuracy: LocationAccuracy.high,
+        desiredAccuracy: LocationAccuracy.bestForNavigation,
+        forceAndroidLocationManager: true,
         timeLimit: timeout,
       );
       return _toFix(position);
@@ -162,10 +164,17 @@ class GeolocatorLocationProvider implements LocationProvider {
   @override
   Stream<DriverFix> fixes() {
     return Geolocator.getPositionStream(
-      locationSettings: LocationSettings(
-        accuracy: LocationAccuracy.high,
-        distanceFilter: distanceFilterM,
-      ),
+      locationSettings: Platform.isAndroid
+          ? AndroidSettings(
+              accuracy: LocationAccuracy.bestForNavigation,
+              distanceFilter: 0,
+              forceLocationManager: true,
+              intervalDuration: const Duration(seconds: 1),
+            )
+          : LocationSettings(
+              accuracy: LocationAccuracy.high,
+              distanceFilter: distanceFilterM,
+            ),
     ).map(_toFix);
   }
 
