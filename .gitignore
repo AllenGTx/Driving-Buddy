@@ -94,3 +94,8 @@ graphify-out/
 0
 WF/
 
+
+# Firebase and MLKit generated credentials
+mlkit.html
+lib/firebase_options.dart
+
