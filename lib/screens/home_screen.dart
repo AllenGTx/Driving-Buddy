@@ -477,10 +477,18 @@ class _CockpitScreenState extends State<CockpitScreen>
                       fit: StackFit.expand,
                       children: [
                         if (_isPreviewReady && _previewCamera != null && _previewCamera!.value.isInitialized)
-                          Center(
-                            child: AspectRatio(
-                              aspectRatio: _previewCamera!.value.aspectRatio,
-                              child: CameraPreview(_previewCamera!),
+                          ClipRect(
+                            child: FittedBox(
+                              fit: BoxFit.cover,
+                              child: SizedBox(
+                                width: _previewCamera!.value.previewSize != null
+                                    ? _previewCamera!.value.previewSize!.height.toDouble()
+                                    : 360,
+                                height: _previewCamera!.value.previewSize != null
+                                    ? _previewCamera!.value.previewSize!.width.toDouble()
+                                    : 480,
+                                child: CameraPreview(_previewCamera!),
+                              ),
                             ),
                           )
                         else

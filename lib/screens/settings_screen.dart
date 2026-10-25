@@ -1,3 +1,4 @@
+import 'package:flutter/services.dart';
 import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:audioplayers/audioplayers.dart';
@@ -123,170 +124,38 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
   }
 
   Future<void> _pickCustomAudio() async {
-    final controller = TextEditingController(text: _customAudioPath ?? '');
-    List<File> foundAudios = [];
+    const platform = MethodChannel('com.drivingbuddy/audio_picker');
     try {
-      final dirs = [
-        Directory('/storage/emulated/0/Download'),
-        Directory('/storage/emulated/0/Music'),
-        Directory('/storage/emulated/0/Ringtones'),
-        Directory('/sdcard/Download'),
-      ];
-      for (final dir in dirs) {
-        if (dir.existsSync()) {
-          final list = dir.listSync();
-          for (final item in list) {
-            if (item is File) {
-              final ext = item.path.split('.').last.toLowerCase();
-              if (['mp3', 'wav', 'm4a', 'aac', 'ogg'].contains(ext)) {
-                foundAudios.add(item);
-              }
-            }
-          }
+      final result = await platform.invokeMethod<Map<dynamic, dynamic>>('pickAudio');
+      if (result != null && result['path'] != null) {
+        final filePath = result['path'] as String;
+        final fileName = (result['name'] as String?) ?? 'Audio Kustom';
+
+        if (_isPlayingPreview) await _previewPlayer.stop();
+        await AlertConfig.setCustomAudio(filePath, fileName);
+        await _loadAlertSettings();
+
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('✅ Suara alarm berhasil diganti: $fileName'),
+              backgroundColor: AppColors.success,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
         }
       }
-    } catch (_) {}
-
-    if (!mounted) return;
-
-    await showModalBottomSheet(
-      context: context,
-      isScrollControlled: true,
-      shape: const RoundedRectangleBorder(
-        borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
-      ),
-      builder: (ctx) => Padding(
-        padding: EdgeInsets.fromLTRB(
-            20, 20, 20, MediaQuery.of(ctx).viewInsets.bottom + 20),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            const Row(
-              children: [
-                Icon(Icons.audiotrack_rounded, color: Color(0xFFE57A38)),
-                SizedBox(width: 10),
-                Text(
-                  'Pilih Audio Kustom dari HP',
-                  style: TextStyle(fontSize: 16, fontWeight: FontWeight.w800, color: Color(0xFF0F172A)),
-                ),
-              ],
-            ),
-            const SizedBox(height: 12),
-            if (foundAudios.isNotEmpty) ...[
-              const Text(
-                'File Audio Terdeteksi di Memori HP:',
-                style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF64748B)),
-              ),
-              const SizedBox(height: 8),
-              ConstrainedBox(
-                constraints: const BoxConstraints(maxHeight: 180),
-                child: ListView.builder(
-                  shrinkWrap: true,
-                  itemCount: foundAudios.length,
-                  itemBuilder: (context, i) {
-                    final f = foundAudios[i];
-                    final fname = f.path.split(Platform.pathSeparator).last;
-                    return ListTile(
-                      dense: true,
-                      contentPadding: EdgeInsets.zero,
-                      leading: const Icon(Icons.music_note_rounded,
-                          color: Color(0xFFE57A38), size: 20),
-                      title: Text(
-                        fname,
-                        style: const TextStyle(
-                            fontSize: 13, fontWeight: FontWeight.w600),
-                        overflow: TextOverflow.ellipsis,
-                      ),
-                      trailing: const Icon(Icons.check_circle_outline_rounded,
-                          size: 18),
-                      onTap: () async {
-                        final messenger = ScaffoldMessenger.of(context);
-                        Navigator.pop(ctx);
-                        if (_isPlayingPreview) await _previewPlayer.stop();
-                        await AlertConfig.setCustomAudio(f.path, fname);
-                        await _loadAlertSettings();
-                        if (mounted) {
-                          messenger.showSnackBar(
-                            SnackBar(
-                              content:
-                                  Text('✅ Suara alarm berhasil diganti: $fname'),
-                              backgroundColor: AppColors.success,
-                              behavior: SnackBarBehavior.floating,
-                            ),
-                          );
-                        }
-                      },
-                    );
-                  },
-                ),
-              ),
-              const SizedBox(height: 16),
-            ],
-            const Text(
-              'Atau Masukkan Path File Audio:',
-              style: TextStyle(fontSize: 12, fontWeight: FontWeight.w700, color: Color(0xFF64748B)),
-            ),
-            const SizedBox(height: 6),
-            TextField(
-              controller: controller,
-              decoration: InputDecoration(
-                hintText: '/storage/emulated/0/Download/alarm.mp3',
-                hintStyle: TextStyle(fontSize: 12, color: Colors.grey.shade400),
-                border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                contentPadding:
-                    const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-              ),
-            ),
-            const SizedBox(height: 14),
-            SizedBox(
-              width: double.infinity,
-              height: 48,
-              child: ElevatedButton(
-                onPressed: () async {
-                  final text = controller.text.trim();
-                  if (text.isNotEmpty) {
-                    final f = File(text);
-                    if (f.existsSync()) {
-                      Navigator.pop(ctx);
-                      if (_isPlayingPreview) await _previewPlayer.stop();
-                      final fname = text.split(Platform.pathSeparator).last;
-                      await AlertConfig.setCustomAudio(text, fname);
-                      await _loadAlertSettings();
-                      if (mounted) {
-                        ScaffoldMessenger.of(context).showSnackBar(
-                          SnackBar(
-                            content:
-                                Text('✅ Suara alarm berhasil diganti: $fname'),
-                            backgroundColor: AppColors.success,
-                            behavior: SnackBarBehavior.floating,
-                          ),
-                        );
-                      }
-                    } else {
-                      ScaffoldMessenger.of(context).showSnackBar(
-                        const SnackBar(
-                          content: Text(
-                              'File tidak ditemukan di path tersebut. Pastikan path benar.'),
-                          backgroundColor: AppColors.danger,
-                          behavior: SnackBarBehavior.floating,
-                        ),
-                      );
-                    }
-                  }
-                },
-                style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFE57A38),
-                ),
-                child: const Text('Terapkan File Audio'),
-              ),
-            ),
-          ],
-        ),
-      ),
-    );
+    } catch (e) {
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('Gagal memilih audio: $e'),
+            backgroundColor: AppColors.danger,
+            behavior: SnackBarBehavior.floating,
+          ),
+        );
+      }
+    }
   }
 
   Future<void> _pickCustomImage() async {
@@ -655,7 +524,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                     'Kamera diproses lokal 100%, frame video tidak dikirim'),
                 const SizedBox(height: 8),
                 _buildInfoRow(Icons.info_outline_rounded, 'Versi',
-                    'DrivingBuddy v2.0 — Luxury GT Telemetry'),
+                    'v1.0.0'),
                 const SizedBox(height: 24),
                 if (_isLoggedIn) ...[
                   SizedBox(
