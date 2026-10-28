@@ -17,7 +17,7 @@
 ### 🌟 Fitur Utama
 
 1. **AI Face Mesh Drowsiness & Microsleep Detection (Real-Time)**
-   - **Mata (EAR - Eye Aspect Ratio):** Mendeteksi mata terpejam $\ge 1.7$ detik sebagai potensi bahaya fatal microsleep.
+   - **Mata (EAR - Eye Aspect Ratio):** Mendeteksi mata terpejam minimal 1.7 detik (≥ 1.7 detik) sebagai potensi bahaya fatal microsleep.
    - **Mulut (MAR - Mouth Aspect Ratio):** Mendeteksi frekuensi menguap dan pola kelelahan beruntun.
    - **Orientasi Kepala (Head Tilt & Head Bobbing):** Mendeteksi kepala miring atau tersentak lemas akibat kehilangan kontrol otot leher. Opsi deteksi postur kepala dapat disetel hidup/mati di menu Pengaturan.
 
