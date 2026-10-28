@@ -1515,7 +1515,30 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
             'Jika alarm kantuk berbunyi selama 1 menit penuh tanpa respon tombol "Saya Sudah Bangun", sistem otomatis mengirimkan pesan darurat beserta tautan titik peta GPS ke seluruh kontak darurat di bawah ini.',
             style: TextStyle(fontSize: 11, color: Color(0xFF475569), height: 1.4),
           ),
-          const SizedBox(height: 14),
+          const SizedBox(height: 12),
+          if (_sosController1.text.trim().isEmpty)
+            Container(
+              margin: const EdgeInsets.only(bottom: 12),
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              decoration: BoxDecoration(
+                color: const Color(0xFFFEF2F2),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(color: const Color(0xFFFECACA)),
+              ),
+              child: const Row(
+                children: [
+                  Icon(Icons.warning_amber_rounded, color: Color(0xFFD94126), size: 18),
+                  SizedBox(width: 8),
+                  Expanded(
+                    child: Text(
+                      'Kontak SOS belum diisi! Masukkan nomor darurat agar keluarga/rekan dapat menerima lokasi Anda saat darurat.',
+                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFFB91C1C)),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          const SizedBox(height: 2),
 
           // Kontak 1 (Utama)
           _buildPhoneInputRow('Kontak 1 (Utama)', _sosController1, hint: 'Contoh: 0895321647135'),

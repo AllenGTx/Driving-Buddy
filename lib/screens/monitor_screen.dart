@@ -261,6 +261,34 @@ class MonitorScreenState extends State<MonitorScreen> {
       return;
     }
 
+    // Cek status GPS / Lokasi dan Kontak SOS
+    Future.microtask(() async {
+      if (!mounted) return;
+      if (_nearby.fix == null) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('📍 Sinyal GPS / Lokasi belum aktif. Telemetri kecepatan & rute peta mungkin terbatas.'),
+            backgroundColor: Color(0xFFD97706),
+            behavior: SnackBarBehavior.floating,
+            duration: Duration(seconds: 5),
+          ),
+        );
+      }
+
+      final curEmail = AuthService.currentUser?.email;
+      final savedPhone = await SosService.getSosPhone(userEmail: curEmail);
+      if (savedPhone.isEmpty && mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          const SnackBar(
+            content: Text('⚠️ Kontak Darurat SOS belum diisi di Pengaturan! Atur sekarang demi keselamatan Anda.'),
+            backgroundColor: Color(0xFFD94126),
+            behavior: SnackBarBehavior.floating,
+            duration: Duration(seconds: 6),
+          ),
+        );
+      }
+    });
+
     // Simpan titik awal GPS perjalanan & inisialisasi breadcrumbs rute
     _startLat = _nearby.fix?.lat;
     _startLng = _nearby.fix?.lng;
@@ -1808,29 +1836,42 @@ Future<void> _toggleNightVision() async {
       final name = AuthService.currentUserName ?? 'Pengemudi DrivingBuddy';
       final phone = await SosService.getSosPhone(userEmail: email);
 
-      if (phone.isNotEmpty) {
-        final lat = _nearby.fix?.lat ?? -6.2088;
-        final lng = _nearby.fix?.lng ?? 106.8456;
-
-        await SosService.sendEmergencySos(
-          rawPhone: phone,
-          driverName: name,
-          email: email,
-          lat: lat,
-          lng: lng,
-          speedKmh: _currentSpeedKmh,
-        );
-
+      if (phone.isEmpty) {
         if (mounted) {
           ScaffoldMessenger.of(context).showSnackBar(
-            SnackBar(
-              content: Text('🚨 Darurat SOS terkirim otomatis ke WhatsApp $phone!'),
-              backgroundColor: const Color(0xFFD94126),
+            const SnackBar(
+              content: Text('⚠️ Kontak Darurat SOS belum diatur di Pengaturan! Pesan darurat tidak dapat dikirim.'),
+              backgroundColor: Color(0xFFD94126),
               behavior: SnackBarBehavior.floating,
-              duration: const Duration(seconds: 8),
+              duration: Duration(seconds: 8),
             ),
           );
         }
+        return;
+      }
+
+      final fix = _nearby.fix;
+      final lat = fix?.lat ?? -6.2088;
+      final lng = fix?.lng ?? 106.8456;
+
+      await SosService.sendEmergencySos(
+        rawPhone: phone,
+        driverName: name,
+        email: email,
+        lat: lat,
+        lng: lng,
+        speedKmh: _currentSpeedKmh,
+      );
+
+      if (mounted) {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text('🚨 Darurat SOS terkirim otomatis ke WhatsApp $phone!'),
+            backgroundColor: const Color(0xFFD94126),
+            behavior: SnackBarBehavior.floating,
+            duration: const Duration(seconds: 8),
+          ),
+        );
       }
     } catch (e) {
       debugPrint('Error dispatching automated SOS: $e');
