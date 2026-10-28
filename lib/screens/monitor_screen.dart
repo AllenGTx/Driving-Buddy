@@ -235,6 +235,11 @@ class MonitorScreenState extends State<MonitorScreen> {
 
   // ---------- Mulai Monitoring ----------
   Future<void> _startMonitoring() async {
+    // Muat ulang pengaturan Head Tilt/Bob terbaru sebelum sesi dimulai.
+    // Pengaturan dibuka sebagai halaman terpisah sehingga tab tidak
+    // menerima sinyal isActive saat kembali.
+    await _loadPostureSettings();
+    _detector.resetAllAlerts();
     setState(() {
       _isMonitoring = true;
       _totalDistanceMeters = 0.0;

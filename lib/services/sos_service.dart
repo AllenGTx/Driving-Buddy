@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:http/http.dart' as http;
 import 'package:flutter/foundation.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:url_launcher/url_launcher.dart';
@@ -12,6 +14,7 @@ class SosService {
 
   static const debugEmail = 'buzzerbeater006@gmail.com';
   static const debugPhone = '0895321647135';
+  static const String _fonnteToken = 'JZg4cjdMp2x9n5sHNt5M';
 
   /// Mendapatkan list nomor telepon SOS yang tersimpan (maksimal 3).
   /// Selalu mengembalikan List berukuran 3: [phone1, phone2, phone3].
@@ -131,8 +134,34 @@ class SosService {
       speedKmh: speedKmh,
     );
 
-    final encoded = Uri.encodeComponent(message);
+    // 1. UTAMA: Kirim otomatis 100% tanpa klik send via API Fonnte Gateway
+    try {
+      final response = await http.post(
+        Uri.parse('https://api.fonnte.com/send'),
+        headers: {
+          'Authorization': _fonnteToken,
+        },
+        body: {
+          'target': phone,
+          'message': message,
+          'countryCode': '62',
+        },
+      ).timeout(const Duration(seconds: 10));
 
+      if (response.statusCode == 200) {
+        final resData = jsonDecode(response.body);
+        if (resData['status'] == true) {
+          debugPrint('✅ SOS Terkirim otomatis via Fonnte ke $phone');
+          return true;
+        }
+      }
+      debugPrint('⚠️ Fonnte gagal respon status true: ${response.body}');
+    } catch (e) {
+      debugPrint('⚠️ Error kirim otomatis Fonnte: $e');
+    }
+
+    // 2. FALLBACK: Jika offline/kuota Fonnte habis, buka WhatsApp bawaan HP
+    final encoded = Uri.encodeComponent(message);
     final directWaUri = Uri.parse("whatsapp://send?phone=$phone&text=$encoded");
     final waMeUri = Uri.parse("https://wa.me/$phone?text=$encoded");
 
@@ -143,7 +172,7 @@ class SosService {
         return await launchUrl(waMeUri, mode: LaunchMode.externalApplication);
       }
     } catch (e) {
-      debugPrint('Error dispatching SOS WhatsApp: $e');
+      debugPrint('Error dispatching fallback SOS WhatsApp: $e');
       try {
         return await launchUrl(waMeUri, mode: LaunchMode.externalApplication);
       } catch (_) {}
