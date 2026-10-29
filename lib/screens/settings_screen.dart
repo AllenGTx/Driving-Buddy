@@ -9,6 +9,7 @@ import '../models/account_config.dart';
 import '../services/alert_config.dart';
 import '../services/firebase_service.dart';
 import '../services/sos_service.dart';
+import '../services/theme_service.dart';
 import '../routes/app_routes.dart';
 
 // ============================================================================
@@ -374,29 +375,34 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: ListView(
-        physics: const BouncingScrollPhysics(),
-        padding: EdgeInsets.zero,
-        children: [
-          // 1. HERO COVER ROAD BANNER DARI ATAS HINGGA TEPAT DI ATAS NAMA PENGEMUDI
-          _buildHeroProfileHeader(),
+    return ListenableBuilder(
+      listenable: ThemeService.instance,
+      builder: (context, _) {
+        final isDark = ThemeService.instance.isDarkMode;
 
-          Padding(
-            padding: const EdgeInsets.all(20),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
+        return Scaffold(
+          backgroundColor: isDark ? AppColors.darkBackground : AppColors.background,
+          body: ListView(
+            physics: const BouncingScrollPhysics(),
+            padding: EdgeInsets.zero,
+            children: [
+              // 1. HERO COVER ROAD BANNER DARI ATAS HINGGA TEPAT DI ATAS NAMA PENGEMUDI
+              _buildHeroProfileHeader(),
 
-                      const Text(
-                        'Nama Pengemudi',
-                        style: TextStyle(
-                          fontSize: 13,
-                          fontWeight: FontWeight.w800,
-                          color: Color(0xFF0F172A),
-                        ),
-                      ),
+              Padding(
+                padding: const EdgeInsets.all(20),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+
+                          Text(
+                            'Nama Pengemudi',
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w800,
+                              color: isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A),
+                            ),
+                          ),
                       const SizedBox(height: 8),
                       _buildTextField(
                         controller: _nameController,
@@ -496,27 +502,33 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                         ),
                       ),
                       const SizedBox(height: 28),
-                      const Divider(color: Color(0xFFFED7AA)),
+                      Divider(color: isDark ? AppColors.darkBorderLight : const Color(0xFFFED7AA)),
+                const SizedBox(height: 20),
+
+                // Tampilan & Tema Kabin (Otomatis Waktu / Terang / Abu-abu Gelap)
+                _buildThemeSettingsSection(),
+                const SizedBox(height: 28),
+                Divider(color: isDark ? AppColors.darkBorderLight : const Color(0xFFFED7AA)),
                 const SizedBox(height: 20),
 
                 // Pengaturan Deteksi Postur Kepala (Head Tilt & Head Bob)
                 _buildPostureSettingsSection(),
                 const SizedBox(height: 28),
-                const Divider(color: Color(0xFFFED7AA)),
+                Divider(color: isDark ? AppColors.darkBorderLight : const Color(0xFFFED7AA)),
                 const SizedBox(height: 20),
 
                 // Kustomisasi Alert & Alarm
                 _buildAlertSettingsSection(),
                 const SizedBox(height: 28),
-                const Divider(color: Color(0xFFFED7AA)),
+                Divider(color: isDark ? AppColors.darkBorderLight : const Color(0xFFFED7AA)),
                 const SizedBox(height: 20),
 
-                const Text(
+                Text(
                   'Informasi Sistem',
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w800,
-                    color: Color(0xFF0F172A),
+                    color: isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A),
                   ),
                 ),
                 const SizedBox(height: 12),
@@ -554,6 +566,269 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
         ],
       ),
     );
+  },
+);
+  }
+
+  Widget _buildThemeSettingsSection() {
+    final themeService = ThemeService.instance;
+    final currentMode = themeService.currentMode;
+    final isDark = themeService.isDarkMode;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Text(
+              'Tampilan & Tema Kabin',
+              style: TextStyle(
+                fontSize: 15,
+                fontWeight: FontWeight.w800,
+                color: isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A),
+              ),
+            ),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.darkChipBg : const Color(0xFFFFF7ED),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: isDark ? AppColors.darkCardBorder : const Color(0xFFFED7AA),
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    isDark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
+                    size: 13,
+                    color: const Color(0xFFE57A38),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    isDark ? 'Mode Gelap Aktif' : 'Mode Terang Aktif',
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFFE57A38),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          'Pilih preferensi tema antarmuka atau biarkan otomatis beralih mengikuti waktu',
+          style: TextStyle(
+            fontSize: 12,
+            color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
+          ),
+        ),
+        const SizedBox(height: 14),
+
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.darkCardBg : Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isDark ? AppColors.darkCardBorder : const Color(0xFFFED7AA),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: isDark
+                    ? Colors.black.withValues(alpha: 0.3)
+                    : const Color(0xFFE57A38).withValues(alpha: 0.04),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              // 1. Opsi Otomatis Waktu (16:00 - 04:00)
+              _buildThemeOptionTile(
+                mode: AppThemeMode.autoTime,
+                currentMode: currentMode,
+                icon: Icons.access_time_filled_rounded,
+                title: 'Otomatis Sesuai Waktu (16:00 - 04:00)',
+                subtitle:
+                    'Mode Abu-abu Gelap aktif jam 16:00–04:00 (malam). Jam 04:00–16:00 (siang) kembali ke Mode Terang.',
+                badge: 'Disarankan',
+                badgeColor: const Color(0xFF10B981),
+                isDark: isDark,
+                onTap: () => themeService.setThemeMode(AppThemeMode.autoTime),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: Divider(
+                  color: isDark ? AppColors.darkBorderLight : const Color(0xFFFFEDD5),
+                  height: 1,
+                ),
+              ),
+
+              // 2. Opsi Mode Terang
+              _buildThemeOptionTile(
+                mode: AppThemeMode.light,
+                currentMode: currentMode,
+                icon: Icons.light_mode_rounded,
+                title: 'Mode Terang (Daylight)',
+                subtitle: 'Latar gading bersih dengan kartu putih jernih setiap saat.',
+                isDark: isDark,
+                onTap: () => themeService.setThemeMode(AppThemeMode.light),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: Divider(
+                  color: isDark ? AppColors.darkBorderLight : const Color(0xFFFFEDD5),
+                  height: 1,
+                ),
+              ),
+
+              // 3. Opsi Mode Abu-abu Gelap
+              _buildThemeOptionTile(
+                mode: AppThemeMode.dark,
+                currentMode: currentMode,
+                icon: Icons.dark_mode_rounded,
+                title: 'Mode Abu-abu Gelap (Night Cockpit)',
+                subtitle:
+                    'Warna charcoal dark gray teduh dan ramah mata pengemudi (bukan hitam pekat).',
+                isDark: isDark,
+                onTap: () => themeService.setThemeMode(AppThemeMode.dark),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildThemeOptionTile({
+    required AppThemeMode mode,
+    required AppThemeMode currentMode,
+    required IconData icon,
+    required String title,
+    required String subtitle,
+    String? badge,
+    Color? badgeColor,
+    required bool isDark,
+    required VoidCallback onTap,
+  }) {
+    final isSelected = currentMode == mode;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 4),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? (isDark ? const Color(0xFF382A22) : const Color(0xFFFFF7ED))
+                    : (isDark ? AppColors.darkCardBgSoft : const Color(0xFFF8FAFC)),
+                borderRadius: BorderRadius.circular(10),
+                border: Border.all(
+                  color: isSelected
+                      ? const Color(0xFFE57A38)
+                      : (isDark ? AppColors.darkCardBorder : const Color(0xFFE2E8F0)),
+                  width: isSelected ? 1.5 : 1.0,
+                ),
+              ),
+              child: Icon(
+                icon,
+                color: isSelected
+                    ? const Color(0xFFE57A38)
+                    : (isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B)),
+                size: 20,
+              ),
+            ),
+            const SizedBox(width: 12),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Row(
+                    children: [
+                      Flexible(
+                        child: Text(
+                          title,
+                          style: TextStyle(
+                            fontSize: 13.5,
+                            fontWeight: FontWeight.w800,
+                            color: isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A),
+                          ),
+                        ),
+                      ),
+                      if (badge != null) ...[
+                        const SizedBox(width: 6),
+                        Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                          decoration: BoxDecoration(
+                            color: isDark
+                                ? AppColors.darkSuccessBg
+                                : const Color(0xFFECFDF5),
+                            borderRadius: BorderRadius.circular(6),
+                            border: Border.all(
+                              color: isDark
+                                  ? const Color(0xFF059669)
+                                  : const Color(0xFFA7F3D0),
+                            ),
+                          ),
+                          child: Text(
+                            badge,
+                            style: TextStyle(
+                              fontSize: 9,
+                              fontWeight: FontWeight.w800,
+                              color: badgeColor ?? const Color(0xFF059669),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ],
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 11,
+                      color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
+                      height: 1.35,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              width: 22,
+              height: 22,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: isSelected
+                      ? const Color(0xFFE57A38)
+                      : (isDark ? AppColors.darkCardBorder : const Color(0xFFCBD5E1)),
+                  width: 2,
+                ),
+                color: isSelected ? const Color(0xFFE57A38) : Colors.transparent,
+              ),
+              child: isSelected
+                  ? const Icon(Icons.check, size: 14, color: Colors.white)
+                  : null,
+            ),
+          ],
+        ),
+      ),
+    );
   }
 
   Widget _buildTextField({
@@ -562,14 +837,17 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     required IconData icon,
     TextInputType? keyboardType,
   }) {
+    final isDark = ThemeService.instance.isDarkMode;
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? AppColors.darkCardBgSoft : Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFFED7AA)),
+        border: Border.all(
+          color: isDark ? AppColors.darkCardBorder : const Color(0xFFFED7AA),
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withOpacity(isDark ? 0.2 : 0.02),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -578,15 +856,15 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
       child: TextField(
         controller: controller,
         keyboardType: keyboardType,
-        style: const TextStyle(
+        style: TextStyle(
           fontSize: 15,
           fontWeight: FontWeight.w600,
-          color: Color(0xFF0F172A),
+          color: isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A),
         ),
         decoration: InputDecoration(
           hintText: hint,
           hintStyle: TextStyle(
-            color: Colors.grey.shade400,
+            color: isDark ? AppColors.darkTextMuted : Colors.grey.shade400,
             fontWeight: FontWeight.w400,
           ),
           prefixIcon: Icon(icon, color: const Color(0xFFE57A38)),
@@ -600,15 +878,18 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
   }
 
   Widget _buildInfoRow(IconData icon, String label, String value) {
+    final isDark = ThemeService.instance.isDarkMode;
     return Container(
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? AppColors.darkCardBg : Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFFFEDD5)),
+        border: Border.all(
+          color: isDark ? AppColors.darkCardBorder : const Color(0xFFFFEDD5),
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withOpacity(isDark ? 0.2 : 0.02),
             blurRadius: 4,
             offset: const Offset(0, 1),
           ),
@@ -624,19 +905,19 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
               children: [
                 Text(
                   label,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 10,
-                    color: Color(0xFF64748B),
+                    color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
                     fontWeight: FontWeight.w700,
                   ),
                 ),
                 const SizedBox(height: 2),
                 Text(
                   value,
-                  style: const TextStyle(
+                  style: TextStyle(
                     fontSize: 13,
                     fontWeight: FontWeight.w700,
-                    color: Color(0xFF0F172A),
+                    color: isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A),
                   ),
                 ),
               ],
@@ -989,16 +1270,21 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     required VoidCallback onTap,
     IconData? trailingIcon,
   }) {
+    final isDark = ThemeService.instance.isDarkMode;
     return GestureDetector(
       onTap: onTap,
       child: AnimatedContainer(
         duration: const Duration(milliseconds: 200),
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
-          color: isSelected ? const Color(0xFFFFF7ED) : Colors.transparent,
+          color: isSelected
+              ? (isDark ? const Color(0xFF382A22) : const Color(0xFFFFF7ED))
+              : Colors.transparent,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
-            color: isSelected ? const Color(0xFFFED7AA) : Colors.transparent,
+            color: isSelected
+                ? (isDark ? const Color(0xFFE57A38) : const Color(0xFFFED7AA))
+                : Colors.transparent,
           ),
         ),
         child: Row(
@@ -1008,7 +1294,9 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                   ? Icons.radio_button_checked_rounded
                   : Icons.radio_button_off_rounded,
               size: 18,
-              color: isSelected ? const Color(0xFFE57A38) : const Color(0xFF94A3B8),
+              color: isSelected
+                  ? const Color(0xFFE57A38)
+                  : (isDark ? AppColors.darkTextSecondary : const Color(0xFF94A3B8)),
             ),
             const SizedBox(width: 10),
             Expanded(
@@ -1021,8 +1309,9 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                       fontSize: 13,
                       fontWeight:
                           isSelected ? FontWeight.w800 : FontWeight.w600,
-                      color:
-                          isSelected ? const Color(0xFF0F172A) : const Color(0xFF475569),
+                      color: isDark
+                          ? AppColors.darkTextPrimary
+                          : (isSelected ? const Color(0xFF0F172A) : const Color(0xFF475569)),
                     ),
                   ),
                   Text(
@@ -1030,8 +1319,8 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                     style: TextStyle(
                       fontSize: 10.5,
                       color: isSelected
-                          ? const Color(0xFFC25E21)
-                          : const Color(0xFF94A3B8),
+                          ? const Color(0xFFE57A38)
+                          : (isDark ? AppColors.darkTextSecondary : const Color(0xFF94A3B8)),
                     ),
                   ),
                 ],
@@ -1541,7 +1830,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
           const SizedBox(height: 2),
 
           // Kontak 1 (Utama)
-          _buildPhoneInputRow('Kontak 1 (Utama)', _sosController1, hint: 'Contoh: 0895321647135'),
+          _buildPhoneInputRow('Kontak 1 (Utama)', _sosController1, hint: 'Contoh: 089876543210'),
           const SizedBox(height: 10),
 
           // Kontak 2 (Cadangan)
@@ -1549,7 +1838,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
           const SizedBox(height: 10),
 
           // Kontak 3 (Cadangan)
-          _buildPhoneInputRow('Kontak 3 (Cadangan Opsional)', _sosController3, hint: 'Contoh: 089876543210'),
+          _buildPhoneInputRow('Kontak 3 (Cadangan Opsional)', _sosController3, hint: 'Contoh: 088888888888'),
           const SizedBox(height: 14),
 
           // Single Clean Full-Width Button (Tidak Nabrak Box)
@@ -1582,32 +1871,49 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
   }
 
   Widget _buildPhoneInputRow(String label, TextEditingController controller, {required String hint}) {
+    final isDark = ThemeService.instance.isDarkMode;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
           label,
-          style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFF475569)),
+          style: TextStyle(
+            fontSize: 11,
+            fontWeight: FontWeight.w700,
+            color: isDark ? AppColors.darkTextSecondary : const Color(0xFF475569),
+          ),
         ),
         const SizedBox(height: 4),
         TextField(
           controller: controller,
           keyboardType: TextInputType.phone,
-          style: const TextStyle(fontSize: 13.5, fontWeight: FontWeight.w700, color: Color(0xFF0F172A)),
+          style: TextStyle(
+            fontSize: 13.5,
+            fontWeight: FontWeight.w700,
+            color: isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A),
+          ),
           decoration: InputDecoration(
             hintText: hint,
+            hintStyle: TextStyle(
+              color: isDark ? AppColors.darkTextMuted : Colors.grey.shade400,
+              fontSize: 12,
+            ),
             prefixIcon: const Icon(Icons.phone_rounded, color: Color(0xFF25D366), size: 18),
             filled: true,
-            fillColor: const Color(0xFFF8FAFC),
+            fillColor: isDark ? AppColors.darkCardBgSoft : const Color(0xFFF8FAFC),
             isDense: true,
             contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
             border: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+              borderSide: BorderSide(
+                color: isDark ? AppColors.darkCardBorder : const Color(0xFFE2E8F0),
+              ),
             ),
             enabledBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Color(0xFFE2E8F0)),
+              borderSide: BorderSide(
+                color: isDark ? AppColors.darkCardBorder : const Color(0xFFE2E8F0),
+              ),
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
