@@ -245,7 +245,7 @@ class _PolaroidMapCard extends StatelessWidget {
           ClipRRect(
             borderRadius: BorderRadius.circular(6),
             child: AspectRatio(
-              aspectRatio: 1.55,
+              aspectRatio: 1.38,
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
@@ -279,41 +279,7 @@ class _PolaroidMapCard extends StatelessWidget {
                       z: zoom,
                     ),
 
-                    // Top-right Live GPS Pill
-                    Positioned(
-                      top: 10,
-                      right: 10,
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 5),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withValues(alpha: 0.94),
-                          borderRadius: BorderRadius.circular(20),
-                          boxShadow: [
-                            BoxShadow(
-                              color: Colors.black.withValues(alpha: 0.12),
-                              blurRadius: 6,
-                              offset: const Offset(0, 2),
-                            ),
-                          ],
-                        ),
-                        child: const Row(
-                          mainAxisSize: MainAxisSize.min,
-                          children: [
-                            Icon(Icons.gps_fixed_rounded, size: 11, color: _orange),
-                            SizedBox(width: 4),
-                            Text(
-                              'GPS TERVERIFIKASI',
-                              style: TextStyle(
-                                fontSize: 9.5,
-                                fontWeight: FontWeight.w800,
-                                color: Color(0xFF0F172A),
-                                letterSpacing: 0.6,
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    ),
+
                   ],
                 ),
               ),
@@ -328,18 +294,18 @@ class _PolaroidMapCard extends StatelessWidget {
                 Expanded(
                   child: Row(
                     children: [
-                      const Icon(Icons.location_on_rounded, size: 13, color: _orange),
-                      const SizedBox(width: 4),
+                      const Icon(Icons.location_on_rounded, size: 12, color: _orange),
+                      const SizedBox(width: 3.5),
                       Flexible(
                         child: Text(
                           '${fLat.toStringAsFixed(4)}, ${fLng.toStringAsFixed(4)}',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: GoogleFonts.plusJakartaSans(
-                            fontSize: 11.5,
+                            fontSize: 10.5,
                             fontWeight: FontWeight.w700,
                             color: const Color(0xFF64748B),
-                            letterSpacing: 0.3,
+                            letterSpacing: 0.2,
                           ),
                         ),
                       ),
@@ -347,14 +313,21 @@ class _PolaroidMapCard extends StatelessWidget {
                   ),
                 ),
                 const SizedBox(width: 6),
-                Text(
-                  'RUTE TELEMETRI GPS',
-                  style: GoogleFonts.plusJakartaSans(
-                    fontSize: 9.5,
-                    fontWeight: FontWeight.w800,
-                    color: const Color(0xFF94A3B8),
-                    letterSpacing: 0.6,
-                  ),
+                Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.gps_fixed_rounded, size: 11, color: _orange),
+                    const SizedBox(width: 3.5),
+                    Text(
+                      'RUTE PERJALANAN',
+                      style: GoogleFonts.plusJakartaSans(
+                        fontSize: 9,
+                        fontWeight: FontWeight.w800,
+                        color: const Color(0xFF0F172A),
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                  ],
                 ),
               ],
             ),
@@ -1039,10 +1012,10 @@ class _DrivingCardScreenState extends State<DrivingCardScreen>
 
                             // ── SCORE & PENCAPAIAN ROW (Compact Luxury) ───
                             Container(
-                              padding: const EdgeInsets.all(10),
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                               decoration: BoxDecoration(
                                 color: const Color(0xFF1E293B).withValues(alpha: 0.88),
-                                borderRadius: BorderRadius.circular(14),
+                                borderRadius: BorderRadius.circular(12),
                                 border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
                               ),
                               child: Row(
@@ -1056,20 +1029,20 @@ class _DrivingCardScreenState extends State<DrivingCardScreen>
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
                                           SizedBox(
-                                            width: 66,
-                                            height: 66,
+                                            width: 52,
+                                            height: 52,
                                             child: Stack(
                                               alignment: Alignment.center,
                                               children: [
                                                 CustomPaint(
-                                                  size: const Size(66, 66),
+                                                  size: const Size(52, 52),
                                                   painter: _ScoreRingPainter(progress, _scoreColor),
                                                 ),
                                                 Text(
                                                   '${(widget.drivingScore * _scoreAnim.value).round()}',
                                                   style: TextStyle(
                                                     color: _scoreColor,
-                                                    fontSize: 15,
+                                                    fontSize: 13.5,
                                                     fontWeight: FontWeight.w900,
                                                     height: 1.0,
                                                   ),
@@ -1077,12 +1050,12 @@ class _DrivingCardScreenState extends State<DrivingCardScreen>
                                               ],
                                             ),
                                           ),
-                                          const SizedBox(height: 5),
+                                          const SizedBox(height: 4),
                                           Container(
-                                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                            padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 1.5),
                                             decoration: BoxDecoration(
                                               color: _scoreColor.withValues(alpha: 0.15),
-                                              borderRadius: BorderRadius.circular(6),
+                                              borderRadius: BorderRadius.circular(5),
                                               border: Border.all(
                                                 color: _scoreColor.withValues(alpha: 0.35),
                                               ),
@@ -1091,9 +1064,9 @@ class _DrivingCardScreenState extends State<DrivingCardScreen>
                                               _scoreLabel,
                                               style: TextStyle(
                                                 color: _scoreColor,
-                                                fontSize: 7.5,
+                                                fontSize: 7,
                                                 fontWeight: FontWeight.w900,
-                                                letterSpacing: 0.3,
+                                                letterSpacing: 0.2,
                                               ),
                                             ),
                                           ),
@@ -1101,7 +1074,7 @@ class _DrivingCardScreenState extends State<DrivingCardScreen>
                                       );
                                     },
                                   ),
-                                  const SizedBox(width: 12),
+                                  const SizedBox(width: 10),
 
                                   // Achievements List
                                   Expanded(
@@ -1111,16 +1084,16 @@ class _DrivingCardScreenState extends State<DrivingCardScreen>
                                         const Text(
                                           'PENCAPAIAN PENGEMUDI',
                                           style: TextStyle(
-                                            fontSize: 9,
+                                            fontSize: 8,
                                             fontWeight: FontWeight.w800,
-                                            letterSpacing: 0.8,
+                                            letterSpacing: 0.6,
                                             color: _grey,
                                           ),
                                         ),
-                                        const SizedBox(height: 5),
+                                        const SizedBox(height: 4),
                                         Wrap(
-                                          spacing: 5,
-                                          runSpacing: 4,
+                                          spacing: 4,
+                                          runSpacing: 3,
                                           children: achievements.map((a) => _BadgeChip(a)).toList(),
                                         ),
                                       ],
@@ -1215,54 +1188,60 @@ class _DrivingCardScreenState extends State<DrivingCardScreen>
     required IconData icon,
   }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 2),
+      padding: const EdgeInsets.symmetric(horizontal: 1.5),
       child: Column(
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            children: [
-              Icon(icon, size: 10, color: _grey),
-              const SizedBox(width: 3),
-              Text(
-                label,
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 8.5,
-                  fontWeight: FontWeight.w700,
-                  color: _grey,
-                  letterSpacing: 0.5,
-                ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 3),
-          Row(
-            mainAxisAlignment: MainAxisAlignment.center,
-            crossAxisAlignment: CrossAxisAlignment.baseline,
-            textBaseline: TextBaseline.alphabetic,
-            children: [
-              Text(
-                value,
-                textAlign: TextAlign.center,
-                style: GoogleFonts.plusJakartaSans(
-                  fontSize: 13.5,
-                  fontWeight: FontWeight.w900,
-                  color: _orange,
-                ),
-              ),
-              if (unit.isNotEmpty) ...[
-                const SizedBox(width: 2),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, size: 9, color: _grey),
+                const SizedBox(width: 2.5),
                 Text(
-                  unit,
+                  label,
                   style: GoogleFonts.plusJakartaSans(
-                    fontSize: 9.5,
+                    fontSize: 7.5,
                     fontWeight: FontWeight.w700,
-                    color: _orange.withValues(alpha: 0.85),
+                    color: _grey,
+                    letterSpacing: 0.2,
                   ),
                 ),
               ],
-            ],
+            ),
+          ),
+          const SizedBox(height: 2.5),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              crossAxisAlignment: CrossAxisAlignment.baseline,
+              textBaseline: TextBaseline.alphabetic,
+              children: [
+                Text(
+                  value,
+                  textAlign: TextAlign.center,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 13,
+                    fontWeight: FontWeight.w900,
+                    color: _orange,
+                  ),
+                ),
+                if (unit.isNotEmpty) ...[
+                  const SizedBox(width: 2),
+                  Text(
+                    unit,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w700,
+                      color: _orange.withValues(alpha: 0.85),
+                    ),
+                  ),
+                ],
+              ],
+            ),
           ),
         ],
       ),
@@ -1377,19 +1356,19 @@ class _BadgeChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
       decoration: BoxDecoration(
         color: a.color.withValues(alpha: 0.14),
-        borderRadius: BorderRadius.circular(20),
+        borderRadius: BorderRadius.circular(16),
         border: Border.all(color: a.color.withValues(alpha: 0.45), width: 1),
       ),
       child: Text(
         a.tag,
         style: TextStyle(
           color: a.color,
-          fontSize: 10,
+          fontSize: 8.5,
           fontWeight: FontWeight.w800,
-          letterSpacing: 0.3,
+          letterSpacing: 0.2,
         ),
       ),
     );

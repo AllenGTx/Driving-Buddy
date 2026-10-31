@@ -178,7 +178,8 @@ class _CockpitScreenState extends State<CockpitScreen>
         if (mounted) setState(() => _driverName = AccountConfig.nameNotifier.value);
         return;
       }
-      final profile = await AccountConfig.getProfile();
+      final curEmail = AuthService.currentUser?.email;
+      final profile = await AccountConfig.getProfile(userEmail: curEmail);
       final localName = profile['name'];
       if (localName != null && localName.trim().isNotEmpty) {
         if (mounted) setState(() => _driverName = localName.trim());
