@@ -493,7 +493,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                               : const Icon(Icons.save_rounded, size: 18),
                           label: Text(_isSaving ? 'Menyimpan...' : 'Simpan Profil & Kontak SOS'),
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFE57A38),
+                            backgroundColor: const Color(0xFFF26B1D),
                             foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(
                               borderRadius: BorderRadius.circular(12),
@@ -502,25 +502,25 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                         ),
                       ),
                       const SizedBox(height: 28),
-                      Divider(color: isDark ? AppColors.darkBorderLight : const Color(0xFFFED7AA)),
+                      Divider(color: isDark ? AppColors.darkBorderLight : const Color(0xFFECEEF2)),
                 const SizedBox(height: 20),
 
                 // Tampilan & Tema Kabin (Otomatis Waktu / Terang / Abu-abu Gelap)
                 _buildThemeSettingsSection(),
                 const SizedBox(height: 28),
-                Divider(color: isDark ? AppColors.darkBorderLight : const Color(0xFFFED7AA)),
+                Divider(color: isDark ? AppColors.darkBorderLight : const Color(0xFFECEEF2)),
                 const SizedBox(height: 20),
 
                 // Pengaturan Deteksi Postur Kepala (Head Tilt & Head Bob)
                 _buildPostureSettingsSection(),
                 const SizedBox(height: 28),
-                Divider(color: isDark ? AppColors.darkBorderLight : const Color(0xFFFED7AA)),
+                Divider(color: isDark ? AppColors.darkBorderLight : const Color(0xFFECEEF2)),
                 const SizedBox(height: 20),
 
                 // Kustomisasi Alert & Alarm
                 _buildAlertSettingsSection(),
                 const SizedBox(height: 28),
-                Divider(color: isDark ? AppColors.darkBorderLight : const Color(0xFFFED7AA)),
+                Divider(color: isDark ? AppColors.darkBorderLight : const Color(0xFFECEEF2)),
                 const SizedBox(height: 20),
 
                 Text(
@@ -592,10 +592,10 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
               decoration: BoxDecoration(
-                color: isDark ? AppColors.darkChipBg : const Color(0xFFFFF7ED),
+                color: isDark ? AppColors.darkChipBg : const Color(0xFFFFF1E8),
                 borderRadius: BorderRadius.circular(8),
                 border: Border.all(
-                  color: isDark ? AppColors.darkCardBorder : const Color(0xFFFED7AA),
+                  color: isDark ? AppColors.darkCardBorder : const Color(0xFFECEEF2),
                 ),
               ),
               child: Row(
@@ -604,7 +604,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                   Icon(
                     isDark ? Icons.dark_mode_rounded : Icons.light_mode_rounded,
                     size: 13,
-                    color: const Color(0xFFE57A38),
+                    color: const Color(0xFFF26B1D),
                   ),
                   const SizedBox(width: 4),
                   Text(
@@ -612,7 +612,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                     style: const TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w800,
-                      color: Color(0xFFE57A38),
+                      color: Color(0xFFF26B1D),
                     ),
                   ),
                 ],
@@ -636,13 +636,13 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
             color: isDark ? AppColors.darkCardBg : Colors.white,
             borderRadius: BorderRadius.circular(16),
             border: Border.all(
-              color: isDark ? AppColors.darkCardBorder : const Color(0xFFFED7AA),
+              color: isDark ? AppColors.darkCardBorder : const Color(0xFFECEEF2),
             ),
             boxShadow: [
               BoxShadow(
                 color: isDark
                     ? Colors.black.withValues(alpha: 0.3)
-                    : const Color(0xFFE57A38).withValues(alpha: 0.04),
+                    : const Color(0xFFF26B1D).withValues(alpha: 0.04),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -666,7 +666,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 child: Divider(
-                  color: isDark ? AppColors.darkBorderLight : const Color(0xFFFFEDD5),
+                  color: isDark ? AppColors.darkBorderLight : const Color(0xFFFFF1E8),
                   height: 1,
                 ),
               ),
@@ -684,7 +684,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
               Padding(
                 padding: const EdgeInsets.symmetric(vertical: 10),
                 child: Divider(
-                  color: isDark ? AppColors.darkBorderLight : const Color(0xFFFFEDD5),
+                  color: isDark ? AppColors.darkBorderLight : const Color(0xFFFFF1E8),
                   height: 1,
                 ),
               ),
@@ -733,12 +733,12 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
               height: 38,
               decoration: BoxDecoration(
                 color: isSelected
-                    ? (isDark ? const Color(0xFF382A22) : const Color(0xFFFFF7ED))
+                    ? (isDark ? const Color(0xFF382A22) : const Color(0xFFFFF1E8))
                     : (isDark ? AppColors.darkCardBgSoft : const Color(0xFFF8FAFC)),
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(
                   color: isSelected
-                      ? const Color(0xFFE57A38)
+                      ? const Color(0xFFF26B1D)
                       : (isDark ? AppColors.darkCardBorder : const Color(0xFFE2E8F0)),
                   width: isSelected ? 1.5 : 1.0,
                 ),
@@ -746,7 +746,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
               child: Icon(
                 icon,
                 color: isSelected
-                    ? const Color(0xFFE57A38)
+                    ? const Color(0xFFF26B1D)
                     : (isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B)),
                 size: 20,
               ),
@@ -815,11 +815,11 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                 shape: BoxShape.circle,
                 border: Border.all(
                   color: isSelected
-                      ? const Color(0xFFE57A38)
+                      ? const Color(0xFFF26B1D)
                       : (isDark ? AppColors.darkCardBorder : const Color(0xFFCBD5E1)),
                   width: 2,
                 ),
-                color: isSelected ? const Color(0xFFE57A38) : Colors.transparent,
+                color: isSelected ? const Color(0xFFF26B1D) : Colors.transparent,
               ),
               child: isSelected
                   ? const Icon(Icons.check, size: 14, color: Colors.white)
@@ -843,11 +843,11 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
         color: isDark ? AppColors.darkCardBgSoft : Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isDark ? AppColors.darkCardBorder : const Color(0xFFFED7AA),
+          color: isDark ? AppColors.darkCardBorder : const Color(0xFFECEEF2),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.2 : 0.02),
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.02),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -867,7 +867,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
             color: isDark ? AppColors.darkTextMuted : Colors.grey.shade400,
             fontWeight: FontWeight.w400,
           ),
-          prefixIcon: Icon(icon, color: const Color(0xFFE57A38)),
+          prefixIcon: Icon(icon, color: const Color(0xFFF26B1D)),
           border: InputBorder.none,
           contentPadding:
               const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
@@ -885,11 +885,11 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
         color: isDark ? AppColors.darkCardBg : Colors.white,
         borderRadius: BorderRadius.circular(12),
         border: Border.all(
-          color: isDark ? AppColors.darkCardBorder : const Color(0xFFFFEDD5),
+          color: isDark ? AppColors.darkCardBorder : const Color(0xFFFFF1E8),
         ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(isDark ? 0.2 : 0.02),
+            color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.02),
             blurRadius: 4,
             offset: const Offset(0, 1),
           ),
@@ -897,7 +897,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
       ),
       child: Row(
         children: [
-          Icon(icon, size: 18, color: const Color(0xFFE57A38)),
+          Icon(icon, size: 18, color: const Color(0xFFF26B1D)),
           const SizedBox(width: 12),
           Expanded(
             child: Column(
@@ -954,13 +954,13 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
             gradient: const LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [Color(0xFFFFFFFF), Color(0xFFFFFBF8)],
+              colors: [Color(0xFFFFFFFF), Color(0xFFFFFFFF)],
             ),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFFED7AA)),
+            border: Border.all(color: const Color(0xFFECEEF2)),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFFE57A38).withOpacity(0.04),
+                color: const Color(0xFFF26B1D).withValues(alpha: 0.04),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -975,12 +975,12 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                     width: 36,
                     height: 36,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFFF7ED),
+                      color: const Color(0xFFFFF1E8),
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: const Color(0xFFFED7AA)),
+                      border: Border.all(color: const Color(0xFFECEEF2)),
                     ),
                     child: const Icon(Icons.volume_up_rounded,
-                        color: Color(0xFFE57A38), size: 20),
+                        color: Color(0xFFF26B1D), size: 20),
                   ),
                   const SizedBox(width: 12),
                   const Expanded(
@@ -1051,14 +1051,14 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                         size: 18,
                         color: _isPlayingPreview
                             ? const Color(0xFFD94126)
-                            : const Color(0xFFE57A38),
+                            : const Color(0xFFF26B1D),
                       ),
                       label: Text(
                         _isPlayingPreview ? 'Hentikan Contoh' : 'Tes Bunyi Alarm',
                         style: TextStyle(
                           color: _isPlayingPreview
                               ? const Color(0xFFD94126)
-                              : const Color(0xFFE57A38),
+                              : const Color(0xFFF26B1D),
                           fontWeight: FontWeight.w800,
                         ),
                       ),
@@ -1066,7 +1066,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                         side: BorderSide(
                           color: _isPlayingPreview
                               ? const Color(0xFFD94126)
-                              : const Color(0xFFE57A38),
+                              : const Color(0xFFF26B1D),
                         ),
                         padding: const EdgeInsets.symmetric(vertical: 10),
                       ),
@@ -1079,7 +1079,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                       onPressed: () =>
                           _selectAudioPreset(AlertAudioType.defaultSiren),
                       icon: const Icon(Icons.refresh_rounded,
-                          color: Color(0xFFE57A38)),
+                          color: Color(0xFFF26B1D)),
                     ),
                   ],
                 ],
@@ -1097,13 +1097,13 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
             gradient: const LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [Color(0xFFFFFFFF), Color(0xFFFFFBF8)],
+              colors: [Color(0xFFFFFFFF), Color(0xFFFFFFFF)],
             ),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFFED7AA)),
+            border: Border.all(color: const Color(0xFFECEEF2)),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFFE57A38).withOpacity(0.04),
+                color: const Color(0xFFF26B1D).withValues(alpha: 0.04),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -1118,12 +1118,12 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                     width: 36,
                     height: 36,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFFF7ED),
+                      color: const Color(0xFFFFF1E8),
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: const Color(0xFFFED7AA)),
+                      border: Border.all(color: const Color(0xFFECEEF2)),
                     ),
                     child: const Icon(Icons.image_rounded,
-                        color: Color(0xFFE57A38), size: 20),
+                        color: Color(0xFFF26B1D), size: 20),
                   ),
                   const SizedBox(width: 12),
                   const Expanded(
@@ -1158,7 +1158,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                   decoration: BoxDecoration(
                     color: const Color(0xFFF9FAFB),
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: const Color(0xFFFFEDD5)),
+                    border: Border.all(color: const Color(0xFFFFF1E8)),
                   ),
                   clipBehavior: Clip.antiAlias,
                   child: _buildImagePreviewWidget(),
@@ -1181,7 +1181,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                       ),
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 11),
-                        backgroundColor: const Color(0xFFE57A38),
+                        backgroundColor: const Color(0xFFF26B1D),
                         foregroundColor: Colors.white,
                       ),
                     ),
@@ -1225,7 +1225,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
               decoration: BoxDecoration(
-                color: Colors.black.withOpacity(0.65),
+                color: Colors.black.withValues(alpha: 0.65),
                 borderRadius: BorderRadius.circular(8),
               ),
               child: const Text(
@@ -1245,7 +1245,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     return const Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(Icons.shield_outlined, size: 40, color: Color(0xFFE57A38)),
+        Icon(Icons.shield_outlined, size: 40, color: Color(0xFFF26B1D)),
         SizedBox(height: 6),
         Text(
           'Ikon Peringatan Standar Aktif',
@@ -1278,12 +1278,12 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
         padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
         decoration: BoxDecoration(
           color: isSelected
-              ? (isDark ? const Color(0xFF382A22) : const Color(0xFFFFF7ED))
+              ? (isDark ? const Color(0xFF382A22) : const Color(0xFFFFF1E8))
               : Colors.transparent,
           borderRadius: BorderRadius.circular(10),
           border: Border.all(
             color: isSelected
-                ? (isDark ? const Color(0xFFE57A38) : const Color(0xFFFED7AA))
+                ? (isDark ? const Color(0xFFF26B1D) : const Color(0xFFECEEF2))
                 : Colors.transparent,
           ),
         ),
@@ -1295,7 +1295,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                   : Icons.radio_button_off_rounded,
               size: 18,
               color: isSelected
-                  ? const Color(0xFFE57A38)
+                  ? const Color(0xFFF26B1D)
                   : (isDark ? AppColors.darkTextSecondary : const Color(0xFF94A3B8)),
             ),
             const SizedBox(width: 10),
@@ -1319,7 +1319,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                     style: TextStyle(
                       fontSize: 10.5,
                       color: isSelected
-                          ? const Color(0xFFE57A38)
+                          ? const Color(0xFFF26B1D)
                           : (isDark ? AppColors.darkTextSecondary : const Color(0xFF94A3B8)),
                     ),
                   ),
@@ -1327,7 +1327,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
               ),
             ),
             if (trailingIcon != null)
-              Icon(trailingIcon, size: 18, color: const Color(0xFFE57A38)),
+              Icon(trailingIcon, size: 18, color: const Color(0xFFF26B1D)),
           ],
         ),
       ),
@@ -1359,13 +1359,13 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
             gradient: const LinearGradient(
               begin: Alignment.topCenter,
               end: Alignment.bottomCenter,
-              colors: [Color(0xFFFFFFFF), Color(0xFFFFFBF8)],
+              colors: [Color(0xFFFFFFFF), Color(0xFFFFFFFF)],
             ),
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFFED7AA)),
+            border: Border.all(color: const Color(0xFFECEEF2)),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFFE57A38).withOpacity(0.04),
+                color: const Color(0xFFF26B1D).withValues(alpha: 0.04),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -1381,13 +1381,13 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                     width: 36,
                     height: 36,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFFF7ED),
+                      color: const Color(0xFFFFF1E8),
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: const Color(0xFFFED7AA)),
+                      border: Border.all(color: const Color(0xFFECEEF2)),
                     ),
                     child: const Icon(
                       Icons.screen_rotation_rounded,
-                      color: Color(0xFFE57A38),
+                      color: Color(0xFFF26B1D),
                       size: 20,
                     ),
                   ),
@@ -1419,7 +1419,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                   const SizedBox(width: 8),
                   Switch(
                     value: _enableHeadTilt,
-                    activeColor: const Color(0xFFE57A38),
+                    activeColor: const Color(0xFFF26B1D),
                     onChanged: (val) async {
                       setState(() => _enableHeadTilt = val);
                       await AlertConfig.setHeadTiltEnabled(val);
@@ -1429,7 +1429,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
               ),
               const Padding(
                 padding: EdgeInsets.symmetric(vertical: 12),
-                child: Divider(color: Color(0xFFFFEDD5), height: 1),
+                child: Divider(color: Color(0xFFFFF1E8), height: 1),
               ),
 
               // 2. Head Bob Switch
@@ -1440,13 +1440,13 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                     width: 36,
                     height: 36,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFFF7ED),
+                      color: const Color(0xFFFFF1E8),
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: const Color(0xFFFED7AA)),
+                      border: Border.all(color: const Color(0xFFECEEF2)),
                     ),
                     child: const Icon(
                       Icons.airline_seat_recline_extra_rounded,
-                      color: Color(0xFFE57A38),
+                      color: Color(0xFFF26B1D),
                       size: 20,
                     ),
                   ),
@@ -1478,7 +1478,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                   const SizedBox(width: 8),
                   Switch(
                     value: _enableHeadBob,
-                    activeColor: const Color(0xFFE57A38),
+                    activeColor: const Color(0xFFF26B1D),
                     onChanged: (val) async {
                       setState(() => _enableHeadBob = val);
                       await AlertConfig.setHeadBobEnabled(val);
@@ -1580,7 +1580,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                         height: 88,
                         decoration: BoxDecoration(
                           gradient: const LinearGradient(
-                            colors: [Color(0xFFE57A38), Color(0xFFC25E21)],
+                            colors: [Color(0xFFF26B1D), Color(0xFFD9560F)],
                             begin: Alignment.topLeft,
                             end: Alignment.bottomRight,
                           ),
@@ -1632,7 +1632,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                           width: 28,
                           height: 28,
                           decoration: BoxDecoration(
-                            color: const Color(0xFFE57A38),
+                            color: const Color(0xFFF26B1D),
                             shape: BoxShape.circle,
                             border: Border.all(color: Colors.white, width: 2),
                             boxShadow: [
@@ -1705,7 +1705,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                   child: const Row(
                     children: [
                       Icon(Icons.psychology_rounded,
-                          color: Color(0xFFE57A38), size: 22),
+                          color: Color(0xFFF26B1D), size: 22),
                       SizedBox(width: 12),
                       Expanded(
                         child: Text(
@@ -1730,7 +1730,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
         Container(
           height: 3.5,
           width: double.infinity,
-          color: const Color(0xFFE57A38),
+          color: const Color(0xFFF26B1D),
         ),
       ],
     );
@@ -1742,10 +1742,10 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFFED7AA)),
+        border: Border.all(color: const Color(0xFFECEEF2)),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFE57A38).withValues(alpha: 0.08),
+            color: const Color(0xFFF26B1D).withValues(alpha: 0.08),
             blurRadius: 10,
             offset: const Offset(0, 3),
           ),
@@ -1859,7 +1859,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                 style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
               ),
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFE57A38),
+                backgroundColor: const Color(0xFFF26B1D),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
               ),
@@ -1917,7 +1917,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
             ),
             focusedBorder: OutlineInputBorder(
               borderRadius: BorderRadius.circular(10),
-              borderSide: const BorderSide(color: Color(0xFFE57A38), width: 1.6),
+              borderSide: const BorderSide(color: Color(0xFFF26B1D), width: 1.6),
             ),
           ),
         ),

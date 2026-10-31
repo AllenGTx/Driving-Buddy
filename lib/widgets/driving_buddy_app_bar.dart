@@ -53,7 +53,7 @@ class _DrivingBuddyAppBarState extends State<DrivingBuddyAppBar> {
       flexibleSpace: Container(
         decoration: const BoxDecoration(
           gradient: LinearGradient(
-            colors: [Color(0xFFE57A38), Color(0xFFC25E21)],
+            colors: [Color(0xFFF26B1D), Color(0xFFD9560F)],
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
           ),

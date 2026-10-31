@@ -13,7 +13,6 @@ class AccountConfig {
   static const _keyName = 'account_name';
   static const _keyEmail = 'account_email';
   static const _keyPhotoUrlPrefix = 'account_photo_url_';
-  static const _keyLegacyPhotoUrl = 'account_photo_url';
 
   static Future<String> getSosPhone({String? userEmail}) => SosService.getSosPhone(userEmail: userEmail);
   static Future<void> setSosPhone(String phone) => SosService.saveSosPhone(phone);

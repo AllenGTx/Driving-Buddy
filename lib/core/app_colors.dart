@@ -5,20 +5,20 @@ class AppColors {
   // ============================================================================
   // BRAND ACCENTS (Luxury Copper — Cocok & Elegan di Mode Terang maupun Abu Gelap)
   // ============================================================================
-  static const Color primary = Color(0xFFE57A38); // Burnished Copper
-  static const Color primaryDark = Color(0xFFC25E21);
-  static const Color primaryLight = Color(0xFFFFEDD5); // Soft Orange Tint
-  static const Color primaryContainer = Color(0xFFFFF7ED);
-  static const Color accent = Color(0xFFFF8C42); // Warm Copper Accent
+  static const Color primary = Color(0xFFF26B1D); // Burnished Copper
+  static const Color primaryDark = Color(0xFFD9560F);
+  static const Color primaryLight = Color(0xFFFFF1E8); // Soft Orange Tint
+  static const Color primaryContainer = Color(0xFFFFF1E8);
+  static const Color accent = Color(0xFFFF7A2E); // Warm Copper Accent
 
   // ============================================================================
   // LIGHT PALETTE (Gading Bersih & Kartu Putih)
   // ============================================================================
-  static const Color background = Color(0xFFF8F9FA); // Light Ivory
+  static const Color background = Color(0xFFFFFFFF); // Light Ivory
   static const Color surface = Colors.white;
   static const Color cardBg = Colors.white;
-  static const Color cardBgSoft = Color(0xFFFFFBF8);
-  static const Color cardBorder = Color(0xFFFED7AA); // orange-200 subtle border
+  static const Color cardBgSoft = Color(0xFFFFFFFF);
+  static const Color cardBorder = Color(0xFFECEEF2); // orange-200 subtle border
   static const Color borderLight = Color(0xFFE2E8F0);
 
   static const Color textPrimary = Color(0xFF0F172A); // Deep Obsidian Slate
@@ -28,19 +28,19 @@ class AppColors {
   // ============================================================================
   // DARK GRAY PALETTE (Abu-abu Gelap Nyaman, Bukan Hitam Pekat #000000)
   // ============================================================================
-  static const Color darkBackground = Color(0xFF181B20); // Slate Charcoal Gelap
-  static const Color darkSurface = Color(0xFF222731); // Elevated Dark Gray
-  static const Color darkCardBg = Color(0xFF222731); // Dark Gray Card
-  static const Color darkCardBgSoft = Color(0xFF2A313E); // Inner Sub-card Soft Gray
-  static const Color darkCardBorder = Color(0xFF333B4A); // Muted Dark Gray Border
-  static const Color darkBorderLight = Color(0xFF2B3342); // Subtle Divider Border
+  static const Color darkBackground = Color(0xFF0B0F17); // Slate Charcoal Gelap
+  static const Color darkSurface = Color(0xFF141A24); // Elevated Dark Gray
+  static const Color darkCardBg = Color(0xFF141A24); // Dark Gray Card
+  static const Color darkCardBgSoft = Color(0xFF1B2230); // Inner Sub-card Soft Gray
+  static const Color darkCardBorder = Color(0xFF253042); // Muted Dark Gray Border
+  static const Color darkBorderLight = Color(0xFF253042); // Subtle Divider Border
 
   static const Color darkTextPrimary = Color(0xFFF1F5F9); // Crisp Slate 100
   static const Color darkTextSecondary = Color(0xFF94A3B8); // Slate 400
   static const Color darkTextMuted = Color(0xFF64748B); // Slate 500
 
-  static const Color darkPrimaryContainer = Color(0xFF2E241E); // Warm Copper Slate
-  static const Color darkChipBg = Color(0xFF2A313E); // Dark Gray Chip
+  static const Color darkPrimaryContainer = Color(0xFF2A1A10); // Warm Copper Slate
+  static const Color darkChipBg = Color(0xFF1B2230); // Dark Gray Chip
 
   // ============================================================================
   // COCKPIT & CAMERA ELEMENTS
@@ -68,7 +68,7 @@ class AppColors {
   static const Color dangerBorder = Color(0xFFFECACA);
   static const Color darkDangerBg = Color(0xFF2F1714);
 
-  static const Color chipBg = Color(0xFFFFF7ED);
+  static const Color chipBg = Color(0xFFFFF1E8);
 
   // ============================================================================
   // DYNAMIC HELPERS (Mengikuti status ThemeService secara instan)

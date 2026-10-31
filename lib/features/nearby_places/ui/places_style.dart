@@ -13,8 +13,8 @@ class PlacesStyle {
   // ------------------------------------------------------------------ warna
 
   /// Warna utama desain (tembaga).
-  static const Color copper = Color(0xFFE57A38);
-  static const Color copperDark = Color(0xFFC25E21);
+  static const Color copper = Color(0xFFF26B1D);
+  static const Color copperDark = Color(0xFFD9560F);
 
   /// Teks utama (dinamis mengikuti tema terang / gelap).
   static Color get ink => AppColors.isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A);
@@ -26,12 +26,12 @@ class PlacesStyle {
   static Color get slate100 => AppColors.isDark ? AppColors.darkCardBgSoft : const Color(0xFFF1F5F9);
 
   /// Latar halaman / sheet.
-  static Color get pageBg => AppColors.isDark ? AppColors.darkBackground : const Color(0xFFF8F9FA);
+  static Color get pageBg => AppColors.isDark ? AppColors.darkBackground : const Color(0xFFFFFFFF);
   static Color get cardBg => AppColors.isDark ? AppColors.darkCardBg : Colors.white;
-  static Color get ivory => AppColors.isDark ? AppColors.darkCardBg : const Color(0xFFFFFBF8);
-  static Color get orange50 => AppColors.isDark ? const Color(0xFF2E241E) : const Color(0xFFFFF7ED);
-  static Color get orange100 => AppColors.isDark ? const Color(0xFF382A22) : const Color(0xFFFFEDD5);
-  static Color get orange200 => AppColors.isDark ? const Color(0xFF4A3427) : const Color(0xFFFED7AA);
+  static Color get ivory => AppColors.isDark ? AppColors.darkCardBg : const Color(0xFFFFFFFF);
+  static Color get orange50 => AppColors.isDark ? const Color(0xFF2A1A10) : const Color(0xFFFFF1E8);
+  static Color get orange100 => AppColors.isDark ? const Color(0xFF382A22) : const Color(0xFFFFF1E8);
+  static Color get orange200 => AppColors.isDark ? const Color(0xFF4A3427) : const Color(0xFFECEEF2);
   static Color get orange300 => AppColors.isDark ? const Color(0xFF5E3F2E) : const Color(0xFFFDBA74);
 
   static const Color emerald = Color(0xFF059669);
@@ -106,13 +106,13 @@ class PlacesStyle {
       ? const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: <Color>[Color(0xFF282F3D), Color(0xFF222731)],
+          colors: <Color>[Color(0xFF282F3D), Color(0xFF141A24)],
           stops: <double>[0.0, 1.0],
         )
       : const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: <Color>[Color(0xFFFFF7ED), Color(0xFFFFEDD5), Color(0xFFFFFBF8)],
+          colors: <Color>[Color(0xFFFFF1E8), Color(0xFFFFF1E8), Color(0xFFFFFFFF)],
           stops: <double>[0.0, 0.6, 1.0],
         );
 
@@ -121,13 +121,13 @@ class PlacesStyle {
       ? const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: <Color>[Color(0xFF381B18), Color(0xFF222731)],
+          colors: <Color>[Color(0xFF381B18), Color(0xFF141A24)],
           stops: <double>[0.0, 1.0],
         )
       : const LinearGradient(
           begin: Alignment.topLeft,
           end: Alignment.bottomRight,
-          colors: <Color>[Color(0xFFFFF1EE), Color(0xFFFFE0D9), Color(0xFFFFFBF8)],
+          colors: <Color>[Color(0xFFFFF1EE), Color(0xFFFFE0D9), Color(0xFFFFFFFF)],
           stops: <double>[0.0, 0.6, 1.0],
         );
 

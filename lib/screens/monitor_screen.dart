@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:io';
-import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -12,7 +11,6 @@ import 'package:screen_brightness/screen_brightness.dart';
 import '../core/app_colors.dart';
 import '../core/thresholds.dart';
 import '../models/detection_result.dart';
-import '../models/trip_model.dart';
 import '../services/alert_config.dart';
 import '../services/firebase_service.dart';
 import '../services/sos_service.dart';
@@ -21,7 +19,6 @@ import '../services/camera_image_converter.dart';
 import '../services/drowsiness_detector.dart';
 import '../services/face_mesh_service.dart';
 import '../supabase_service.dart';
-import '../auth_screen.dart';
 import '../driving_card_screen.dart';
 import '../widgets/driving_buddy_app_bar.dart';
 import '../features/nearby_places/nearby_places.dart';
@@ -583,7 +580,7 @@ class MonitorScreenState extends State<MonitorScreen> {
             children: [
               Text(
                 'Skor Keselamatan Anda: ' + score.toString() + '/100',
-                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFFE57A38)),
+                style: const TextStyle(fontWeight: FontWeight.bold, fontSize: 16, color: Color(0xFFF26B1D)),
               ),
               const SizedBox(height: 8),
               Text('Durasi: ' + _formatDuration(finalDuration)),
@@ -599,7 +596,7 @@ class MonitorScreenState extends State<MonitorScreen> {
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFE57A38),
+                backgroundColor: const Color(0xFFF26B1D),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
               onPressed: () => Navigator.pop(ctx, true),
@@ -618,7 +615,7 @@ class MonitorScreenState extends State<MonitorScreen> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
               title: const Row(
                 children: [
-                  Icon(Icons.wifi_off_rounded, color: Color(0xFFE57A38)),
+                  Icon(Icons.wifi_off_rounded, color: Color(0xFFF26B1D)),
                   SizedBox(width: 8),
                   Text('Koneksi Diperlukan', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
                 ],
@@ -630,7 +627,7 @@ class MonitorScreenState extends State<MonitorScreen> {
               actions: [
                 ElevatedButton(
                   style: ElevatedButton.styleFrom(
-                    backgroundColor: const Color(0xFFE57A38),
+                    backgroundColor: const Color(0xFFF26B1D),
                     foregroundColor: Colors.white,
                     shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                   ),
@@ -860,14 +857,14 @@ class MonitorScreenState extends State<MonitorScreen> {
             bottomWidget: Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                color: const Color(0xFFF8F9FA),
+                color: const Color(0xFFFFFFFF),
                 borderRadius: BorderRadius.circular(6),
                 border: Border.all(color: const Color(0xFFCBD5E1)),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.gps_fixed_rounded, size: 10, color: Color(0xFFE57A38)),
+                  const Icon(Icons.gps_fixed_rounded, size: 10, color: Color(0xFFF26B1D)),
                   const SizedBox(width: 2),
                   Text(
                     _totalDistanceMeters > 0 ? '${speedStr} km/j' : 'GPS SIAGA',
@@ -886,7 +883,7 @@ class MonitorScreenState extends State<MonitorScreen> {
             label: 'INDEX LELAH',
             value: '$fatigueIndex',
             unit: '%',
-            valueColor: const Color(0xFFE57A38),
+            valueColor: const Color(0xFFF26B1D),
             bottomWidget: Text(
               '$fatigueLabel · AMBANG 65%',
               style: TextStyle(
@@ -913,10 +910,10 @@ class MonitorScreenState extends State<MonitorScreen> {
       decoration: BoxDecoration(
         color: Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFFED7AA)),
+        border: Border.all(color: const Color(0xFFECEEF2)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -930,7 +927,7 @@ class MonitorScreenState extends State<MonitorScreen> {
             width: double.infinity,
             margin: const EdgeInsets.only(bottom: 6),
             decoration: BoxDecoration(
-              color: const Color(0xFFE57A38),
+              color: const Color(0xFFF26B1D),
               borderRadius: BorderRadius.circular(2),
             ),
           ),
@@ -987,13 +984,13 @@ class MonitorScreenState extends State<MonitorScreen> {
         gradient: const LinearGradient(
           begin: Alignment.topCenter,
           end: Alignment.bottomCenter,
-          colors: [Color(0xFFFFFFFF), Color(0xFFFFFBF8)],
+          colors: [Color(0xFFFFFFFF), Color(0xFFFFFFFF)],
         ),
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFFED7AA)),
+        border: Border.all(color: const Color(0xFFECEEF2)),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFE57A38).withOpacity(0.08),
+            color: const Color(0xFFF26B1D).withValues(alpha: 0.08),
             blurRadius: 14,
             offset: const Offset(0, 4),
           ),
@@ -1007,7 +1004,7 @@ class MonitorScreenState extends State<MonitorScreen> {
             height: 3,
             decoration: const BoxDecoration(
               gradient: LinearGradient(
-                colors: [Colors.transparent, Color(0xFFE57A38), Colors.transparent],
+                colors: [Colors.transparent, Color(0xFFF26B1D), Colors.transparent],
               ),
             ),
           ),
@@ -1077,7 +1074,7 @@ class MonitorScreenState extends State<MonitorScreen> {
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           if (_isMonitoring) ...[
-                            const CircularProgressIndicator(color: Color(0xFFE57A38)),
+                            const CircularProgressIndicator(color: Color(0xFFF26B1D)),
                             const SizedBox(height: 12),
                             const Text(
                               'Memuat Kamera Live...',
@@ -1092,13 +1089,13 @@ class MonitorScreenState extends State<MonitorScreen> {
                               width: 50,
                               height: 50,
                               decoration: BoxDecoration(
-                                color: const Color(0xFFE57A38).withOpacity(0.12),
+                                color: const Color(0xFFF26B1D).withValues(alpha: 0.12),
                                 shape: BoxShape.circle,
                               ),
                               child: const Icon(
                                 Icons.videocam_rounded,
                                 size: 26,
-                                color: Color(0xFFE57A38),
+                                color: Color(0xFFF26B1D),
                               ),
                             ),
                             const SizedBox(height: 10),
@@ -1125,13 +1122,13 @@ class MonitorScreenState extends State<MonitorScreen> {
                               child: ElevatedButton.icon(
                                 onPressed: _startMonitoring,
                                 style: ElevatedButton.styleFrom(
-                                  backgroundColor: const Color(0xFFE57A38),
+                                  backgroundColor: const Color(0xFFF26B1D),
                                   foregroundColor: Colors.white,
                                   shape: RoundedRectangleBorder(
                                     borderRadius: BorderRadius.circular(14),
                                   ),
                                   elevation: 3,
-                                  shadowColor: const Color(0xFFE57A38).withOpacity(0.35),
+                                  shadowColor: const Color(0xFFF26B1D).withValues(alpha: 0.35),
                                 ),
                                 icon: const Icon(Icons.play_arrow_rounded, size: 24),
                                 label: const Text(
@@ -1170,14 +1167,14 @@ class MonitorScreenState extends State<MonitorScreen> {
                     child: Container(
                       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
                       decoration: BoxDecoration(
-                        color: Colors.white.withOpacity(0.95),
+                        color: Colors.white.withValues(alpha: 0.95),
                         borderRadius: BorderRadius.circular(10),
                         border: Border.all(
                           color: isDanger ? const Color(0xFFFECACA) : const Color(0xFFA7F3D0),
                         ),
                         boxShadow: [
                           BoxShadow(
-                            color: Colors.black.withOpacity(0.04),
+                            color: Colors.black.withValues(alpha: 0.04),
                             blurRadius: 6,
                           )
                         ],
@@ -1275,14 +1272,14 @@ class MonitorScreenState extends State<MonitorScreen> {
                             width: 28,
                             height: 28,
                             decoration: BoxDecoration(
-                              color: const Color(0xFFFFF7ED),
+                              color: const Color(0xFFFFF1E8),
                               borderRadius: BorderRadius.circular(8),
-                              border: Border.all(color: const Color(0xFFFED7AA)),
+                              border: Border.all(color: const Color(0xFFECEEF2)),
                             ),
                             child: const Icon(
                               Icons.visibility_rounded,
                               size: 16,
-                              color: Color(0xFFE57A38),
+                              color: Color(0xFFF26B1D),
                             ),
                           ),
                           const SizedBox(width: 8),
@@ -1343,7 +1340,7 @@ class MonitorScreenState extends State<MonitorScreen> {
                   decoration: BoxDecoration(
                     color: Colors.white,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: const Color(0xFFFFEDD5)),
+                    border: Border.all(color: const Color(0xFFFFF1E8)),
                   ),
                   child: CustomPaint(
                     painter: _EarWaveformPainter(history: _earHistory),
@@ -1361,7 +1358,7 @@ class MonitorScreenState extends State<MonitorScreen> {
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: const Color(0xFFFFEDD5)),
+                          border: Border.all(color: const Color(0xFFFFF1E8)),
                         ),
                         child: Row(
                           children: [
@@ -1369,14 +1366,14 @@ class MonitorScreenState extends State<MonitorScreen> {
                               width: 28,
                               height: 28,
                               decoration: BoxDecoration(
-                                color: const Color(0xFFFFF7ED),
+                                color: const Color(0xFFFFF1E8),
                                 borderRadius: BorderRadius.circular(8),
-                                border: Border.all(color: const Color(0xFFFED7AA)),
+                                border: Border.all(color: const Color(0xFFECEEF2)),
                               ),
                               child: const Icon(
                                 Icons.lens_blur_rounded,
                                 size: 15,
-                                color: Color(0xFFE57A38),
+                                color: Color(0xFFF26B1D),
                               ),
                             ),
                             const SizedBox(width: 6),
@@ -1435,7 +1432,7 @@ class MonitorScreenState extends State<MonitorScreen> {
                         decoration: BoxDecoration(
                           color: Colors.white,
                           borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: const Color(0xFFFFEDD5)),
+                          border: Border.all(color: const Color(0xFFFFF1E8)),
                         ),
                         child: Row(
                           children: [
@@ -1516,7 +1513,7 @@ class MonitorScreenState extends State<MonitorScreen> {
                           border: Border.all(
                             color: (_enableHeadTilt && _result.rollAngle.abs() >= Thresholds.headTiltRollAngle)
                                 ? const Color(0xFFFECACA)
-                                : const Color(0xFFFFEDD5),
+                                : const Color(0xFFFFF1E8),
                           ),
                         ),
                         child: Row(
@@ -1524,7 +1521,7 @@ class MonitorScreenState extends State<MonitorScreen> {
                             Icon(
                               Icons.screen_rotation_rounded,
                               size: 15,
-                              color: _enableHeadTilt ? const Color(0xFFE57A38) : const Color(0xFF94A3B8),
+                              color: _enableHeadTilt ? const Color(0xFFF26B1D) : const Color(0xFF94A3B8),
                             ),
                             const SizedBox(width: 6),
                             Expanded(
@@ -1568,7 +1565,7 @@ class MonitorScreenState extends State<MonitorScreen> {
                           border: Border.all(
                             color: (_enableHeadBob && _result.headBobCount >= 2)
                                 ? const Color(0xFFFECACA)
-                                : const Color(0xFFFFEDD5),
+                                : const Color(0xFFFFF1E8),
                           ),
                         ),
                         child: Row(
@@ -1576,7 +1573,7 @@ class MonitorScreenState extends State<MonitorScreen> {
                             Icon(
                               Icons.airline_seat_recline_extra_rounded,
                               size: 15,
-                              color: _enableHeadBob ? const Color(0xFFE57A38) : const Color(0xFF94A3B8),
+                              color: _enableHeadBob ? const Color(0xFFF26B1D) : const Color(0xFF94A3B8),
                             ),
                             const SizedBox(width: 6),
                             Expanded(
@@ -1675,13 +1672,13 @@ class MonitorScreenState extends State<MonitorScreen> {
                 await _stopMonitoring();
               },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFE57A38),
+                backgroundColor: const Color(0xFFF26B1D),
                 foregroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
                 ),
                 elevation: 4,
-                shadowColor: const Color(0xFFE57A38).withOpacity(0.35),
+                shadowColor: const Color(0xFFF26B1D).withValues(alpha: 0.35),
               ),
               child: const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
@@ -1752,7 +1749,7 @@ Future<void> _toggleNightVision() async {
         color: _isNightVisionEnabled ? const Color(0xFF1E293B) : Colors.white,
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: _isNightVisionEnabled ? const Color(0xFFF59E0B) : const Color(0xFFFED7AA),
+          color: _isNightVisionEnabled ? const Color(0xFFF59E0B) : const Color(0xFFECEEF2),
           width: _isNightVisionEnabled ? 1.5 : 1.0,
         ),
         boxShadow: [
@@ -1772,7 +1769,7 @@ Future<void> _toggleNightVision() async {
             decoration: BoxDecoration(
               color: _isNightVisionEnabled
                   ? const Color(0xFFFEF3C7)
-                  : const Color(0xFFFFF7ED),
+                  : const Color(0xFFFFF1E8),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
@@ -1782,7 +1779,7 @@ Future<void> _toggleNightVision() async {
               size: 20,
               color: _isNightVisionEnabled
                   ? const Color(0xFFD97706)
-                  : const Color(0xFFE57A38),
+                  : const Color(0xFFF26B1D),
             ),
           ),
           const SizedBox(width: 10),
@@ -1901,7 +1898,7 @@ class _CockpitHudOverlayPainter extends CustomPainter {
 
     // Corner HUD brackets
     final bracketPaint = Paint()
-      ..color = const Color(0xFF334155).withOpacity(0.7)
+      ..color = const Color(0xFF334155).withValues(alpha: 0.7)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 2;
 
@@ -1975,7 +1972,7 @@ class _EarWaveformPainter extends CustomPainter {
       ..close();
 
     final fillPaint = Paint()
-      ..color = const Color(0xFF10B981).withOpacity(0.15)
+      ..color = const Color(0xFF10B981).withValues(alpha: 0.15)
       ..style = PaintingStyle.fill;
 
     canvas.drawPath(fillPath, fillPaint);
@@ -2108,9 +2105,9 @@ class _MicrosleepAlertDialogState extends State<MicrosleepAlertDialog>
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
       decoration: BoxDecoration(
-        color: const Color(0xFFD94126).withOpacity(0.2),
+        color: const Color(0xFFD94126).withValues(alpha: 0.2),
         borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFD94126).withOpacity(0.5)),
+        border: Border.all(color: const Color(0xFFD94126).withValues(alpha: 0.5)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
@@ -2154,7 +2151,7 @@ class _MicrosleepAlertDialogState extends State<MicrosleepAlertDialog>
           border: Border.all(color: const Color(0xFFD94126), width: 3),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFD94126).withOpacity(0.35),
+              color: const Color(0xFFD94126).withValues(alpha: 0.35),
               blurRadius: 20,
               offset: const Offset(0, 6),
             ),
@@ -2176,11 +2173,11 @@ class _MicrosleepAlertDialogState extends State<MicrosleepAlertDialog>
         height: 120,
         decoration: BoxDecoration(
           shape: BoxShape.circle,
-          color: const Color(0xFFD94126).withOpacity(0.18),
+          color: const Color(0xFFD94126).withValues(alpha: 0.18),
           border: Border.all(color: const Color(0xFFD94126), width: 3),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFD94126).withOpacity(0.4),
+              color: const Color(0xFFD94126).withValues(alpha: 0.4),
               blurRadius: 30,
               spreadRadius: 2,
             ),
@@ -2257,8 +2254,8 @@ class _MicrosleepAlertDialogState extends State<MicrosleepAlertDialog>
             children: [
               Text('SIRENE', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Color(0xFFB8ACA4))),
               SizedBox(height: 2),
-              Text('AKTIF', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFFE57A38))),
-              Text('LOOPING', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Color(0xFFE57A38))),
+              Text('AKTIF', style: TextStyle(fontSize: 18, fontWeight: FontWeight.bold, color: Color(0xFFF26B1D))),
+              Text('LOOPING', style: TextStyle(fontSize: 9, fontWeight: FontWeight.bold, color: Color(0xFFF26B1D))),
             ],
           ),
         ],
@@ -2301,7 +2298,7 @@ class _MicrosleepAlertDialogState extends State<MicrosleepAlertDialog>
       decoration: BoxDecoration(
         color: const Color(0xFF231F1C),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: const Color(0xFFE57A38).withOpacity(0.3)),
+        border: Border.all(color: const Color(0xFFF26B1D).withValues(alpha: 0.3)),
       ),
       child: Row(
         children: [
@@ -2309,7 +2306,7 @@ class _MicrosleepAlertDialogState extends State<MicrosleepAlertDialog>
             width: 38,
             height: 38,
             decoration: BoxDecoration(
-              color: const Color(0xFFE57A38).withOpacity(0.18),
+              color: const Color(0xFFF26B1D).withValues(alpha: 0.18),
               borderRadius: BorderRadius.circular(10),
             ),
             child: busy
@@ -2317,10 +2314,10 @@ class _MicrosleepAlertDialogState extends State<MicrosleepAlertDialog>
                     padding: EdgeInsets.all(10),
                     child: CircularProgressIndicator(
                       strokeWidth: 2,
-                      color: Color(0xFFE57A38),
+                      color: Color(0xFFF26B1D),
                     ),
                   )
-                : Icon(icon, color: const Color(0xFFE57A38), size: 20),
+                : Icon(icon, color: const Color(0xFFF26B1D), size: 20),
           ),
           const SizedBox(width: 12),
           Expanded(
@@ -2332,7 +2329,7 @@ class _MicrosleepAlertDialogState extends State<MicrosleepAlertDialog>
                   style: TextStyle(
                     fontSize: 9,
                     fontWeight: FontWeight.w800,
-                    color: Color(0xFFE57A38),
+                    color: Color(0xFFF26B1D),
                     letterSpacing: 0.6,
                   ),
                 ),
@@ -2378,7 +2375,7 @@ class _MicrosleepAlertDialogState extends State<MicrosleepAlertDialog>
               Navigator.of(context).pop();
             },
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFE57A38),
+              backgroundColor: const Color(0xFFF26B1D),
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14),
@@ -2460,7 +2457,7 @@ class OrangeSlidingToggle extends StatelessWidget {
           borderRadius: BorderRadius.circular(20),
           gradient: value
               ? const LinearGradient(
-                  colors: [Color(0xFFE57A38), Color(0xFFF97316)],
+                  colors: [Color(0xFFF26B1D), Color(0xFFF97316)],
                   begin: Alignment.centerLeft,
                   end: Alignment.centerRight,
                 )
@@ -2469,7 +2466,7 @@ class OrangeSlidingToggle extends StatelessWidget {
           boxShadow: value
               ? [
                   BoxShadow(
-                    color: const Color(0xFFE57A38).withValues(alpha: 0.45),
+                    color: const Color(0xFFF26B1D).withValues(alpha: 0.45),
                     blurRadius: 8,
                     offset: const Offset(0, 2),
                   ),

@@ -2,6 +2,8 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 
 import '../core/app_colors.dart';
+import '../core/design_tokens.dart';
+import '../widgets/ui/db_ui.dart';
 import '../routes/app_routes.dart';
 import 'dart:async';
 import 'package:camera/camera.dart';
@@ -268,99 +270,134 @@ class _CockpitScreenState extends State<CockpitScreen>
   // ──────────────────────────────────────────────────────────────────────────
   Widget _buildDriverGreetingBar() {
     final isDark = ThemeService.instance.isDarkMode;
+    final initial = _driverName.trim().isNotEmpty ? _driverName.trim()[0].toUpperCase() : 'P';
+
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCardBg : Colors.white,
-        borderRadius: BorderRadius.circular(18),
+        color: isDark ? AppColors.darkCardBg : DbColors.pureWhite,
+        borderRadius: BorderRadius.circular(DbRadius.r20),
         border: Border.all(
-          color: isDark ? AppColors.darkCardBorder : const Color(0xFFFFEDD5),
+          color: isDark ? AppColors.darkCardBorder : DbColors.hairline,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: isDark
-                ? Colors.black.withValues(alpha: 0.25)
-                : const Color(0xFFE57A38).withValues(alpha: 0.05),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
+        boxShadow: isDark ? DbShadow.cardDark : DbShadow.card,
       ),
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
+      child: Row(
         children: [
-          Row(
-            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-            children: [
-              Row(
-                children: [
-                  Container(
-                    width: 7,
-                    height: 7,
-                    decoration: const BoxDecoration(
-                      color: Color(0xFF10B981),
-                      shape: BoxShape.circle,
-                    ),
-                  ),
-                  const SizedBox(width: 6),
-                  const Text(
-                    'GT TELEMETRI KABIN',
-                    style: TextStyle(
-                      fontSize: 10.5,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 1.2,
-                      color: Color(0xFFC25E21),
-                    ),
-                  ),
-                ],
+          // Driver Avatar Initial
+          Container(
+            width: 44,
+            height: 44,
+            decoration: BoxDecoration(
+              gradient: const LinearGradient(
+                begin: Alignment.topLeft,
+                end: Alignment.bottomRight,
+                colors: [DbColors.navy, Color(0xFF1E293B)],
               ),
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
-                decoration: BoxDecoration(
-                  color: isDark ? AppColors.darkSuccessBg : const Color(0xFFECFDF5),
-                  borderRadius: BorderRadius.circular(10),
-                  border: Border.all(
-                    color: isDark ? const Color(0xFF059669) : const Color(0xFFA7F3D0),
-                  ),
+              borderRadius: BorderRadius.circular(14),
+              border: Border.all(
+                color: DbColors.orange.withValues(alpha: 0.35),
+                width: 1.2,
+              ),
+            ),
+            child: Center(
+              child: Text(
+                initial,
+                style: const TextStyle(
+                  fontSize: 18,
+                  fontWeight: FontWeight.w800,
+                  color: Colors.white,
                 ),
-                child: const Row(
-                  mainAxisSize: MainAxisSize.min,
+              ),
+            ),
+          ),
+          const SizedBox(width: 12),
+          // Greeting & Name
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Row(
                   children: [
-                    Icon(Icons.radar_rounded, color: Color(0xFF059669), size: 14),
-                    SizedBox(width: 4),
                     Text(
-                      'ONLINE',
+                      _greetingText(),
                       style: TextStyle(
-                        fontSize: 9.5,
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w600,
+                        color: isDark ? AppColors.darkTextSecondary : DbColors.inkMuted,
+                      ),
+                    ),
+                    const SizedBox(width: 5),
+                    Container(
+                      width: 3,
+                      height: 3,
+                      decoration: BoxDecoration(
+                        color: isDark ? AppColors.darkTextSecondary : DbColors.inkSubtle,
+                        shape: BoxShape.circle,
+                      ),
+                    ),
+                    const SizedBox(width: 5),
+                    Text(
+                      'GT TELEMETRI',
+                      style: TextStyle(
+                        fontSize: 10,
                         fontWeight: FontWeight.w800,
-                        color: Color(0xFF065F46),
                         letterSpacing: 0.8,
+                        color: DbColors.orange,
                       ),
                     ),
                   ],
                 ),
-              ),
-            ],
-          ),
-          const SizedBox(height: 8),
-          Text(
-            _greetingText(),
-            style: TextStyle(
-              fontSize: 13,
-              fontWeight: FontWeight.w600,
-              color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
+                const SizedBox(height: 2),
+                Text(
+                  _driverName,
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 18,
+                    fontWeight: FontWeight.w800,
+                    color: isDark ? AppColors.darkTextPrimary : DbColors.ink,
+                    letterSpacing: -0.3,
+                  ),
+                ),
+              ],
             ),
           ),
-          const SizedBox(height: 2),
-          Text(
-            _driverName,
-            style: TextStyle(
-              fontSize: 20,
-              fontWeight: FontWeight.w900,
-              color: isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A),
-              letterSpacing: -0.4,
-              height: 1.2,
+          const SizedBox(width: 8),
+          // Online Indicator Pill
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.darkSuccessBg : const Color(0xFFECFDF5),
+              borderRadius: BorderRadius.circular(DbRadius.pill),
+              border: Border.all(
+                color: isDark ? const Color(0xFF059669) : const Color(0xFFA7F3D0),
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Container(
+                  width: 7,
+                  height: 7,
+                  decoration: const BoxDecoration(
+                    color: Color(0xFF10B981),
+                    shape: BoxShape.circle,
+                  ),
+                ),
+                const SizedBox(width: 5),
+                const Text(
+                  'ONLINE',
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w800,
+                    color: Color(0xFF065F46),
+                    letterSpacing: 0.8,
+                  ),
+                ),
+              ],
             ),
           ),
         ],
@@ -392,17 +429,17 @@ class _CockpitScreenState extends State<CockpitScreen>
             : const LinearGradient(
                 begin: Alignment.topCenter,
                 end: Alignment.bottomCenter,
-                colors: [Color(0xFFFFFFFF), Color(0xFFFFFBF8)],
+                colors: [Color(0xFFFFFFFF), Color(0xFFFFFFFF)],
               ),
         borderRadius: BorderRadius.circular(20),
         border: Border.all(
-          color: isDark ? AppColors.darkCardBorder : const Color(0xFFFED7AA),
+          color: isDark ? AppColors.darkCardBorder : const Color(0xFFECEEF2),
         ),
         boxShadow: [
           BoxShadow(
             color: isDark
                 ? Colors.black.withValues(alpha: 0.3)
-                : const Color(0xFFE57A38).withValues(alpha: 0.08),
+                : const Color(0xFFF26B1D).withValues(alpha: 0.08),
             blurRadius: 16,
             offset: const Offset(0, 4),
           ),
@@ -415,7 +452,7 @@ class _CockpitScreenState extends State<CockpitScreen>
             decoration: const BoxDecoration(
               borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
               gradient: LinearGradient(
-                colors: [Colors.transparent, Color(0xFFE57A38), Colors.transparent],
+                colors: [Colors.transparent, Color(0xFFF26B1D), Colors.transparent],
               ),
             ),
           ),
@@ -433,15 +470,15 @@ class _CockpitScreenState extends State<CockpitScreen>
                             width: 32,
                             height: 32,
                             decoration: BoxDecoration(
-                              color: isDark ? AppColors.darkCardBgSoft : const Color(0xFFFFF7ED),
+                              color: isDark ? AppColors.darkCardBgSoft : const Color(0xFFFFF1E8),
                               borderRadius: BorderRadius.circular(10),
                               border: Border.all(
-                                color: isDark ? AppColors.darkCardBorder : const Color(0xFFFED7AA),
+                                color: isDark ? AppColors.darkCardBorder : const Color(0xFFECEEF2),
                               ),
                             ),
                             child: const Icon(
                               Icons.videocam_rounded,
-                              color: Color(0xFFE57A38),
+                              color: Color(0xFFF26B1D),
                               size: 18,
                             ),
                           ),
@@ -496,8 +533,8 @@ class _CockpitScreenState extends State<CockpitScreen>
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
                         color: _isCameraExpanded
-                            ? const Color(0xFFE57A38)
-                            : const Color(0xFFFFEDD5),
+                            ? const Color(0xFFF26B1D)
+                            : const Color(0xFFFFF1E8),
                         width: _isCameraExpanded ? 1.5 : 1.0,
                       ),
                     ),
@@ -529,7 +566,7 @@ class _CockpitScreenState extends State<CockpitScreen>
                                   width: 50,
                                   height: 50,
                                   decoration: BoxDecoration(
-                                    color: Colors.white.withOpacity(0.08),
+                                    color: Colors.white.withValues(alpha: 0.08),
                                     shape: BoxShape.circle,
                                   ),
                                   child: const Icon(Icons.videocam_off_rounded, color: Colors.white70, size: 26),
@@ -542,7 +579,7 @@ class _CockpitScreenState extends State<CockpitScreen>
                                 const SizedBox(height: 6),
                                 Text(
                                   'Ketuk untuk memperbesar',
-                                  style: TextStyle(color: Colors.white.withOpacity(0.4), fontSize: 11),
+                                  style: TextStyle(color: Colors.white.withValues(alpha: 0.4), fontSize: 11),
                                 ),
                               ],
                             ),
@@ -555,7 +592,7 @@ class _CockpitScreenState extends State<CockpitScreen>
                           child: Container(
                             padding: const EdgeInsets.all(5),
                             decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.5),
+                              color: Colors.black.withValues(alpha: 0.5),
                               borderRadius: BorderRadius.circular(8),
                             ),
                             child: Icon(
@@ -576,9 +613,9 @@ class _CockpitScreenState extends State<CockpitScreen>
                           child: Container(
                             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                             decoration: BoxDecoration(
-                              color: Colors.black.withOpacity(0.7),
+                              color: Colors.black.withValues(alpha: 0.7),
                               borderRadius: BorderRadius.circular(10),
-                              border: Border.all(color: statusColor.withOpacity(0.5)),
+                              border: Border.all(color: statusColor.withValues(alpha: 0.5)),
                             ),
                             child: Row(
                               children: [
@@ -604,7 +641,7 @@ class _CockpitScreenState extends State<CockpitScreen>
                                 Text(
                                   _isCameraExpanded ? 'Ketuk untuk kecilkan' : 'Ketuk untuk perbesar',
                                   style: TextStyle(
-                                    color: Colors.white.withOpacity(0.45),
+                                    color: Colors.white.withValues(alpha: 0.45),
                                     fontSize: 9,
                                   ),
                                 ),
@@ -618,37 +655,44 @@ class _CockpitScreenState extends State<CockpitScreen>
                 ),
                 const SizedBox(height: 14),
 
-                SizedBox(
-                  width: double.infinity,
-                  height: 54,
-                  child: ElevatedButton(
-                    onPressed: () {
-                      if (widget.onStartMonitoring != null) {
-                        widget.onStartMonitoring!();
-                      } else {
-                        Navigator.pushNamed(context, AppRoutes.monitor);
-                      }
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFFE57A38),
-                      foregroundColor: Colors.white,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(14),
+                DbPressable(
+                  onTap: () {
+                    if (widget.onStartMonitoring != null) {
+                      widget.onStartMonitoring!();
+                    } else {
+                      Navigator.pushNamed(context, AppRoutes.monitor);
+                    }
+                  },
+                  child: Container(
+                    width: double.infinity,
+                    height: 56,
+                    decoration: BoxDecoration(
+                      gradient: const LinearGradient(
+                        colors: [DbColors.orange, Color(0xFFE05615)],
+                        begin: Alignment.topCenter,
+                        end: Alignment.bottomCenter,
                       ),
-                      elevation: 4,
-                      shadowColor: const Color(0xFFE57A38).withOpacity(0.4),
+                      borderRadius: BorderRadius.circular(DbRadius.r16),
+                      boxShadow: [
+                        BoxShadow(
+                          color: DbColors.orange.withValues(alpha: 0.38),
+                          blurRadius: 14,
+                          offset: const Offset(0, 5),
+                        ),
+                      ],
                     ),
                     child: const Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.speed_rounded, size: 24),
-                        SizedBox(width: 8),
+                        Icon(Icons.speed_rounded, size: 24, color: Colors.white),
+                        SizedBox(width: 10),
                         Text(
                           'MULAI PERJALANAN',
                           style: TextStyle(
-                            fontSize: 16,
+                            fontSize: 15.5,
                             fontWeight: FontWeight.w800,
                             letterSpacing: 0.5,
+                            color: Colors.white,
                           ),
                         ),
                       ],
@@ -684,17 +728,17 @@ class _CockpitScreenState extends State<CockpitScreen>
                 : const LinearGradient(
                     begin: Alignment.topCenter,
                     end: Alignment.bottomCenter,
-                    colors: [Color(0xFFFFFFFF), Color(0xFFFFFBF8)],
+                    colors: [Color(0xFFFFFFFF), Color(0xFFFFFFFF)],
                   ),
             borderRadius: BorderRadius.circular(20),
             border: Border.all(
-              color: isDark ? AppColors.darkCardBorder : const Color(0xFFFED7AA),
+              color: isDark ? AppColors.darkCardBorder : const Color(0xFFECEEF2),
             ),
             boxShadow: [
               BoxShadow(
                 color: isDark
                     ? Colors.black.withValues(alpha: 0.25)
-                    : const Color(0xFFE57A38).withOpacity(0.06),
+                    : const Color(0xFFF26B1D).withValues(alpha: 0.06),
                 blurRadius: 14,
                 offset: const Offset(0, 3),
               ),
@@ -715,7 +759,7 @@ class _CockpitScreenState extends State<CockpitScreen>
                           fontSize: 10,
                           fontWeight: FontWeight.w800,
                           letterSpacing: 1.1,
-                          color: Color(0xFFC25E21),
+                          color: Color(0xFFD9560F),
                         ),
                       ),
                       const SizedBox(height: 2),
@@ -733,15 +777,15 @@ class _CockpitScreenState extends State<CockpitScreen>
                     width: 32,
                     height: 32,
                     decoration: BoxDecoration(
-                      color: isDark ? AppColors.darkCardBgSoft : const Color(0xFFFFF7ED),
+                      color: isDark ? AppColors.darkCardBgSoft : const Color(0xFFFFF1E8),
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(
-                        color: isDark ? AppColors.darkCardBorder : const Color(0xFFFED7AA),
+                        color: isDark ? AppColors.darkCardBorder : const Color(0xFFECEEF2),
                       ),
                     ),
                     child: const Icon(
                       Icons.insights_rounded,
-                      color: Color(0xFFE57A38),
+                      color: Color(0xFFF26B1D),
                       size: 18,
                     ),
                   ),
@@ -760,8 +804,8 @@ class _CockpitScreenState extends State<CockpitScreen>
                         size: const Size(170, 170),
                         painter: _CircularGaugePainter(
                           score: animatedScoreFraction.clamp(0.0, 1.0),
-                          trackColor: isDark ? const Color(0xFF333B4A) : const Color(0xFFFFEDD5),
-                          activeColor: const Color(0xFFE57A38),
+                          trackColor: isDark ? const Color(0xFF253042) : const Color(0xFFFFF1E8),
+                          activeColor: const Color(0xFFF26B1D),
                         ),
                       ),
                       Column(
@@ -769,7 +813,7 @@ class _CockpitScreenState extends State<CockpitScreen>
                         children: [
                           Icon(
                             animatedScore >= 80 ? Icons.visibility_rounded : Icons.warning_amber_rounded,
-                            color: animatedScore >= 80 ? const Color(0xFF059669) : const Color(0xFFE57A38),
+                            color: animatedScore >= 80 ? const Color(0xFF059669) : const Color(0xFFF26B1D),
                             size: 22,
                           ),
                           const SizedBox(height: 2),
@@ -792,7 +836,7 @@ class _CockpitScreenState extends State<CockpitScreen>
                                 style: TextStyle(
                                   fontSize: 18,
                                   fontWeight: FontWeight.w800,
-                                  color: Color(0xFFE57A38),
+                                  color: Color(0xFFF26B1D),
                                 ),
                               ),
                             ],
@@ -803,10 +847,10 @@ class _CockpitScreenState extends State<CockpitScreen>
                             decoration: BoxDecoration(
                               color: animatedScore >= 80
                                   ? (isDark ? AppColors.darkSuccessBg : const Color(0xFFECFDF5))
-                                  : (isDark ? AppColors.darkCardBgSoft : const Color(0xFFFFF7ED)),
+                                  : (isDark ? AppColors.darkCardBgSoft : const Color(0xFFFFF1E8)),
                               borderRadius: BorderRadius.circular(10),
                               border: Border.all(
-                                color: animatedScore >= 80 ? const Color(0xFFA7F3D0) : const Color(0xFFFED7AA),
+                                color: animatedScore >= 80 ? const Color(0xFFA7F3D0) : const Color(0xFFECEEF2),
                               ),
                             ),
                             child: Text(
@@ -817,7 +861,7 @@ class _CockpitScreenState extends State<CockpitScreen>
                                 letterSpacing: 0.3,
                                 color: _userSessions.isEmpty
                                     ? (isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B))
-                                    : (animatedScore >= 80 ? const Color(0xFF065F46) : const Color(0xFFC25E21)),
+                                    : (animatedScore >= 80 ? const Color(0xFF065F46) : const Color(0xFFD9560F)),
                               ),
                             ),
                           ),
@@ -835,11 +879,11 @@ class _CockpitScreenState extends State<CockpitScreen>
                   color: isDark ? AppColors.darkCardBgSoft : Colors.white,
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
-                    color: isDark ? AppColors.darkCardBorder : const Color(0xFFFFEDD5),
+                    color: isDark ? AppColors.darkCardBorder : const Color(0xFFFFF1E8),
                   ),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.black.withOpacity(isDark ? 0.2 : 0.02),
+                      color: Colors.black.withValues(alpha: isDark ? 0.2 : 0.02),
                       blurRadius: 6,
                     )
                   ],
@@ -857,7 +901,7 @@ class _CockpitScreenState extends State<CockpitScreen>
                     Container(
                       height: 36,
                       width: 1,
-                      color: isDark ? AppColors.darkCardBorder : const Color(0xFFFFEDD5),
+                      color: isDark ? AppColors.darkCardBorder : const Color(0xFFFFF1E8),
                     ),
                     Expanded(
                       child: _buildStravaMetricCol(
@@ -870,7 +914,7 @@ class _CockpitScreenState extends State<CockpitScreen>
                     Container(
                       height: 36,
                       width: 1,
-                      color: isDark ? AppColors.darkCardBorder : const Color(0xFFFFEDD5),
+                      color: isDark ? AppColors.darkCardBorder : const Color(0xFFFFF1E8),
                     ),
                     Expanded(
                       child: _buildStravaMetricCol(
@@ -941,7 +985,7 @@ class _CockpitScreenState extends State<CockpitScreen>
       return const Center(
         child: Padding(
           padding: EdgeInsets.all(20),
-          child: CircularProgressIndicator(color: Color(0xFFE57A38), strokeWidth: 2),
+          child: CircularProgressIndicator(color: Color(0xFFF26B1D), strokeWidth: 2),
         ),
       );
     }
@@ -971,10 +1015,10 @@ class _CockpitScreenState extends State<CockpitScreen>
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2.5),
                     decoration: BoxDecoration(
-                      color: isDark ? AppColors.darkCardBgSoft : const Color(0xFFFFF7ED),
+                      color: isDark ? AppColors.darkCardBgSoft : const Color(0xFFFFF1E8),
                       borderRadius: BorderRadius.circular(8),
                       border: Border.all(
-                        color: isDark ? AppColors.darkCardBorder : const Color(0xFFFED7AA),
+                        color: isDark ? AppColors.darkCardBorder : const Color(0xFFECEEF2),
                       ),
                     ),
                     child: Text(
@@ -982,7 +1026,7 @@ class _CockpitScreenState extends State<CockpitScreen>
                       style: const TextStyle(
                         fontSize: 9.5,
                         fontWeight: FontWeight.w800,
-                        color: Color(0xFFC25E21),
+                        color: Color(0xFFD9560F),
                       ),
                     ),
                   ),
@@ -999,10 +1043,10 @@ class _CockpitScreenState extends State<CockpitScreen>
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w800,
-                      color: Color(0xFFE57A38),
+                      color: Color(0xFFF26B1D),
                     ),
                   ),
-                  Icon(Icons.chevron_right_rounded, color: Color(0xFFE57A38), size: 16),
+                  Icon(Icons.chevron_right_rounded, color: Color(0xFFF26B1D), size: 16),
                 ],
               ),
             ),
@@ -1017,13 +1061,13 @@ class _CockpitScreenState extends State<CockpitScreen>
               color: isDark ? AppColors.darkCardBg : Colors.white,
               borderRadius: BorderRadius.circular(16),
               border: Border.all(
-                color: isDark ? AppColors.darkCardBorder : const Color(0xFFFED7AA),
+                color: isDark ? AppColors.darkCardBorder : const Color(0xFFECEEF2),
               ),
             ),
             child: Center(
               child: Column(
                 children: [
-                  const Icon(Icons.route_rounded, color: Color(0xFFE57A38), size: 36),
+                  const Icon(Icons.route_rounded, color: Color(0xFFF26B1D), size: 36),
                   const SizedBox(height: 8),
                   Text(
                     'Belum Ada Riwayat Perjalanan',
@@ -1105,31 +1149,16 @@ class _CockpitScreenState extends State<CockpitScreen>
   }) {
     final isDark = ThemeService.instance.isDarkMode;
     final isGood = score >= 80;
-    final scoreColor = isGood ? const Color(0xFF059669) : const Color(0xFFE57A38);
+    final scoreColor = isGood ? const Color(0xFF059669) : DbColors.orange;
 
     return Container(
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCardBg : null,
-        gradient: isDark
-            ? null
-            : const LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Color(0xFFFFFFFF), Color(0xFFFFFBF8)],
-              ),
-        borderRadius: BorderRadius.circular(16),
+        color: isDark ? AppColors.darkCardBg : DbColors.pureWhite,
+        borderRadius: BorderRadius.circular(DbRadius.r16),
         border: Border.all(
-          color: isDark ? AppColors.darkCardBorder : const Color(0xFFFED7AA),
+          color: isDark ? AppColors.darkCardBorder : DbColors.hairline,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: isDark
-                ? Colors.black.withValues(alpha: 0.25)
-                : const Color(0xFFE57A38).withOpacity(0.04),
-            blurRadius: 10,
-            offset: const Offset(0, 3),
-          ),
-        ],
+        boxShadow: isDark ? DbShadow.cardDark : DbShadow.card,
       ),
       padding: const EdgeInsets.all(14),
       child: Column(
@@ -1150,7 +1179,7 @@ class _CockpitScreenState extends State<CockpitScreen>
                             fontSize: 9.5,
                             fontWeight: FontWeight.w800,
                             letterSpacing: 0.8,
-                            color: Color(0xFFC25E21),
+                            color: DbColors.orange,
                           ),
                         ),
                         const SizedBox(width: 5),
@@ -1158,7 +1187,7 @@ class _CockpitScreenState extends State<CockpitScreen>
                           width: 4,
                           height: 4,
                           decoration: BoxDecoration(
-                            color: isDark ? AppColors.darkCardBorder : const Color(0xFFCBD5E1),
+                            color: isDark ? AppColors.darkCardBorder : DbColors.inkSubtle,
                             shape: BoxShape.circle,
                           ),
                         ),
@@ -1171,7 +1200,7 @@ class _CockpitScreenState extends State<CockpitScreen>
                             style: TextStyle(
                               fontSize: 9.5,
                               fontWeight: FontWeight.w600,
-                              color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
+                              color: isDark ? AppColors.darkTextSecondary : DbColors.inkMuted,
                             ),
                           ),
                         ),
@@ -1185,7 +1214,7 @@ class _CockpitScreenState extends State<CockpitScreen>
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w800,
-                        color: isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A),
+                        color: isDark ? AppColors.darkTextPrimary : DbColors.ink,
                       ),
                     ),
                   ],
@@ -1197,10 +1226,10 @@ class _CockpitScreenState extends State<CockpitScreen>
                 decoration: BoxDecoration(
                   color: isGood
                       ? (isDark ? AppColors.darkSuccessBg : const Color(0xFFECFDF5))
-                      : (isDark ? AppColors.darkCardBgSoft : const Color(0xFFFFF7ED)),
+                      : (isDark ? AppColors.darkCardBgSoft : const Color(0xFFFFF1E8)),
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(
-                    color: isGood ? const Color(0xFFA7F3D0) : const Color(0xFFFED7AA),
+                    color: isGood ? const Color(0xFFA7F3D0) : const Color(0xFFECEEF2),
                   ),
                 ),
                 child: Text(
@@ -1224,7 +1253,7 @@ class _CockpitScreenState extends State<CockpitScreen>
               _buildTripStatCol(
                 'STATUS',
                 microsleeps > 0 ? '$microsleeps Sleep' : (yawns > 0 ? '$yawns Menguap' : 'Aman'),
-                color: microsleeps > 0 ? const Color(0xFFD94126) : (yawns > 0 ? const Color(0xFFE57A38) : const Color(0xFF059669)),
+                color: microsleeps > 0 ? const Color(0xFFD94126) : (yawns > 0 ? DbColors.orange : const Color(0xFF059669)),
               ),
             ],
           ),
@@ -1336,7 +1365,6 @@ class _RouteSparklinePainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    final progress = animationValue.clamp(0.0, 1.0);
     final path = Path();
     path.moveTo(0, size.height * 0.75);
     path.cubicTo(
@@ -1363,7 +1391,7 @@ class _RouteSparklinePainter extends CustomPainter {
       ..close();
 
     final fillPaint = Paint()
-      ..color = color.withOpacity(0.12)
+      ..color = color.withValues(alpha: 0.12)
       ..style = PaintingStyle.fill;
 
     canvas.drawPath(fillPath, fillPaint);

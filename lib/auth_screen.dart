@@ -1,5 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
+import 'core/design_tokens.dart';
+import 'widgets/ui/db_ui.dart';
 import 'supabase_service.dart';
 import 'models/account_config.dart';
 import 'screens/main_shell.dart';
@@ -105,7 +107,7 @@ class _LoginScreenState extends State<LoginScreen>
           shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
           title: const Row(
             children: [
-              Icon(Icons.lock_reset_rounded, color: Color(0xFFE57A38)),
+              Icon(Icons.lock_reset_rounded, color: Color(0xFFF26B1D)),
               SizedBox(width: 10),
               Text('Reset Kata Sandi', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18)),
             ],
@@ -150,7 +152,7 @@ class _LoginScreenState extends State<LoginScreen>
             ),
             ElevatedButton(
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFE57A38),
+                backgroundColor: const Color(0xFFF26B1D),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
               ),
               onPressed: dialogLoading
@@ -247,7 +249,7 @@ class _LoginScreenState extends State<LoginScreen>
             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(22)),
             title: const Row(
               children: [
-                Icon(Icons.mark_email_read_rounded, color: Color(0xFFE57A38), size: 28),
+                Icon(Icons.mark_email_read_rounded, color: Color(0xFFF26B1D), size: 28),
                 SizedBox(width: 12),
                 Expanded(
                   child: Text(
@@ -269,9 +271,9 @@ class _LoginScreenState extends State<LoginScreen>
                 Container(
                   padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                   decoration: BoxDecoration(
-                    color: const Color(0xFFFFF7ED),
+                    color: const Color(0xFFFFF1E8),
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: const Color(0xFFFED7AA)),
+                    border: Border.all(color: const Color(0xFFECEEF2)),
                   ),
                   child: Text(
                     email,
@@ -346,7 +348,7 @@ class _LoginScreenState extends State<LoginScreen>
               ),
               ElevatedButton(
                 style: ElevatedButton.styleFrom(
-                  backgroundColor: const Color(0xFFE57A38),
+                  backgroundColor: const Color(0xFFF26B1D),
                   shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12)),
                   elevation: 2,
                 ),
@@ -540,7 +542,7 @@ class _LoginScreenState extends State<LoginScreen>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFFF8F9FA),
+      backgroundColor: const Color(0xFFFFFFFF),
       body: SafeArea(
         child: FadeTransition(
           opacity: _fadeAnim,
@@ -563,13 +565,13 @@ class _LoginScreenState extends State<LoginScreen>
                       gradient: const LinearGradient(
                         begin: Alignment.topCenter,
                         end: Alignment.bottomCenter,
-                        colors: [Color(0xFFFFFFFF), Color(0xFFFFFBF8)],
+                        colors: [Color(0xFFFFFFFF), Color(0xFFFFFFFF)],
                       ),
                       borderRadius: BorderRadius.circular(20),
-                      border: Border.all(color: const Color(0xFFFED7AA)),
+                      border: Border.all(color: const Color(0xFFECEEF2)),
                       boxShadow: [
                         BoxShadow(
-                          color: const Color(0xFFE57A38).withOpacity(0.08),
+                          color: const Color(0xFFF26B1D).withValues(alpha: 0.08),
                           blurRadius: 16,
                           offset: const Offset(0, 4),
                         ),
@@ -626,11 +628,11 @@ class _LoginScreenState extends State<LoginScreen>
       child: TabBar(
         controller: _tab,
         indicator: BoxDecoration(
-          color: const Color(0xFFE57A38),
+          color: const Color(0xFFF26B1D),
           borderRadius: BorderRadius.circular(9),
           boxShadow: [
             BoxShadow(
-              color: const Color(0xFFE57A38).withOpacity(0.25),
+              color: const Color(0xFFF26B1D).withValues(alpha: 0.25),
               blurRadius: 6,
               offset: const Offset(0, 2),
             ),
@@ -766,13 +768,13 @@ class _LoginScreenState extends State<LoginScreen>
                 borderRadius: BorderRadius.circular(14),
               ),
               elevation: 1,
-              shadowColor: Colors.black.withOpacity(0.04),
+              shadowColor: Colors.black.withValues(alpha: 0.04),
             ),
             child: _googleLoading
                 ? const SizedBox(
                     width: 22,
                     height: 22,
-                    child: CircularProgressIndicator(color: Color(0xFFE57A38), strokeWidth: 2.5),
+                    child: CircularProgressIndicator(color: Color(0xFFF26B1D), strokeWidth: 2.5),
                   )
                 : Row(
                     mainAxisAlignment: MainAxisAlignment.center,
@@ -849,7 +851,7 @@ class _LoginScreenState extends State<LoginScreen>
             child: const Text(
               'Lupa Kata Sandi?',
               style: TextStyle(
-                color: Color(0xFFE57A38),
+                color: Color(0xFFF26B1D),
                 fontSize: 12.5,
                 fontWeight: FontWeight.w700,
               ),
@@ -858,30 +860,39 @@ class _LoginScreenState extends State<LoginScreen>
         ),
         const SizedBox(height: 16),
 
-        SizedBox(
-          width: double.infinity,
-          height: 52,
-          child: ElevatedButton(
-            onPressed: _loginLoading ? null : _doLogin,
-            style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFE57A38),
-              foregroundColor: Colors.white,
-              shape: RoundedRectangleBorder(
-                borderRadius: BorderRadius.circular(14),
-              ),
-              elevation: 4,
-              shadowColor: const Color(0xFFE57A38).withOpacity(0.35),
+        DbPressable(
+          onTap: _loginLoading ? null : _doLogin,
+          child: Container(
+            width: double.infinity,
+            height: 52,
+            decoration: BoxDecoration(
+              color: DbColors.orange,
+              borderRadius: BorderRadius.circular(14),
+              boxShadow: [
+                BoxShadow(
+                  color: DbColors.orange.withValues(alpha: 0.35),
+                  blurRadius: 10,
+                  offset: const Offset(0, 4),
+                ),
+              ],
             ),
-            child: _loginLoading
-                ? const SizedBox(
-                    width: 22,
-                    height: 22,
-                    child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
-                  )
-                : const Text(
-                    'Masuk ke Cockpit',
-                    style: TextStyle(fontSize: 15, fontWeight: FontWeight.w800, letterSpacing: 0.5),
-                  ),
+            child: Center(
+              child: _loginLoading
+                  ? const SizedBox(
+                      width: 22,
+                      height: 22,
+                      child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.5),
+                    )
+                  : const Text(
+                      'Masuk ke Cockpit',
+                      style: TextStyle(
+                        fontSize: 15,
+                        fontWeight: FontWeight.w800,
+                        letterSpacing: 0.5,
+                        color: Colors.white,
+                      ),
+                    ),
+            ),
           ),
         ),
         const SizedBox(height: 18),
@@ -904,7 +915,7 @@ class _LoginScreenState extends State<LoginScreen>
                   TextSpan(
                     text: 'Daftar sekarang',
                     style: TextStyle(
-                      color: Color(0xFFE57A38),
+                      color: Color(0xFFF26B1D),
                       fontSize: 13,
                       fontWeight: FontWeight.w800,
                     ),
@@ -997,13 +1008,13 @@ class _LoginScreenState extends State<LoginScreen>
           child: ElevatedButton(
             onPressed: _regLoading ? null : _doRegister,
             style: ElevatedButton.styleFrom(
-              backgroundColor: const Color(0xFFE57A38),
+              backgroundColor: const Color(0xFFF26B1D),
               foregroundColor: Colors.white,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.circular(14),
               ),
               elevation: 4,
-              shadowColor: const Color(0xFFE57A38).withOpacity(0.35),
+              shadowColor: const Color(0xFFF26B1D).withValues(alpha: 0.35),
             ),
             child: _regLoading
                 ? const SizedBox(
@@ -1037,7 +1048,7 @@ class _LoginScreenState extends State<LoginScreen>
                   TextSpan(
                     text: 'Masuk',
                     style: TextStyle(
-                      color: Color(0xFFE57A38),
+                      color: Color(0xFFF26B1D),
                       fontSize: 13,
                       fontWeight: FontWeight.w800,
                     ),
@@ -1077,7 +1088,7 @@ class _LoginScreenState extends State<LoginScreen>
         border: Border.all(color: const Color(0xFFCBD5E1), width: 1.2),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: Colors.black.withValues(alpha: 0.02),
             blurRadius: 4,
             offset: const Offset(0, 1),
           ),
@@ -1087,7 +1098,7 @@ class _LoginScreenState extends State<LoginScreen>
         controller: controller,
         obscureText: obscureText,
         keyboardType: keyboardType,
-        cursorColor: const Color(0xFFE57A38),
+        cursorColor: const Color(0xFFF26B1D),
         style: const TextStyle(
           color: Color(0xFF0F172A), // Font hitam pekat jelas
           fontSize: 14.5,

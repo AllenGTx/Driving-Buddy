@@ -15,7 +15,6 @@ class _SplashScreenState extends State<SplashScreen>
   late AnimationController _pulseController;
   late Animation<double> _scaleAnimation;
   late Animation<double> _fadeAnimation;
-  late Animation<double> _pulseAnimation;
 
   @override
   void initState() {
@@ -45,9 +44,6 @@ class _SplashScreenState extends State<SplashScreen>
       ),
     );
 
-    _pulseAnimation = Tween<double>(begin: 0.6, end: 1.0).animate(
-      CurvedAnimation(parent: _pulseController, curve: Curves.easeInOut),
-    );
 
     _controller.forward();
 
@@ -98,7 +94,7 @@ class _SplashScreenState extends State<SplashScreen>
                 shape: BoxShape.circle,
                 gradient: RadialGradient(
                   colors: [
-                    const Color(0xFFE57A38).withValues(alpha: 0.12),
+                    const Color(0xFFF26B1D).withValues(alpha: 0.12),
                     Colors.transparent,
                   ],
                 ),
@@ -154,7 +150,7 @@ class _SplashScreenState extends State<SplashScreen>
                                 width: 8,
                                 height: 8,
                                 decoration: BoxDecoration(
-                                  color: const Color(0xFFE57A38).withValues(alpha: 0.3 + 0.7 * anim),
+                                  color: const Color(0xFFF26B1D).withValues(alpha: 0.3 + 0.7 * anim),
                                   shape: BoxShape.circle,
                                 ),
                               );

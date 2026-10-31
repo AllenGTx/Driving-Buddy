@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 
 import '../core/app_colors.dart';
+import '../core/design_tokens.dart';
+import '../widgets/ui/db_ui.dart';
 import '../features/nearby_places/nearby_places.dart';
 import '../services/theme_service.dart';
 import 'home_screen.dart';
@@ -10,7 +12,7 @@ import '../models/account_config.dart';
 import '../services/firebase_service.dart';
 
 // ============================================================================
-// MAIN SHELL — Luxury GT Navigation Bar
+// MAIN SHELL — Navigasi bawah
 // ============================================================================
 
 class MainShell extends StatefulWidget {
@@ -50,9 +52,7 @@ class _MainShellState extends State<MainShell> {
     if (_currentIndex == 1 && index != 1 && _monitorKey.currentState?.isMonitoring == true) {
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
-          content: Text('⚠️ Selesaikan perjalanan terlebih dahulu sebelum berpindah halaman/pengaturan.'),
-          backgroundColor: Color(0xFFE57A38),
-          behavior: SnackBarBehavior.floating,
+          content: Text('Selesaikan perjalanan terlebih dahulu sebelum berpindah halaman.'),
           duration: Duration(seconds: 2),
         ),
       );
@@ -67,6 +67,7 @@ class _MainShellState extends State<MainShell> {
       listenable: ThemeService.instance,
       builder: (context, _) {
         final isDark = ThemeService.instance.isDarkMode;
+        final driveActive = _currentIndex == 1;
 
         return Scaffold(
           backgroundColor: AppColors.dynamicBackground,
@@ -93,71 +94,57 @@ class _MainShellState extends State<MainShell> {
           ),
           bottomNavigationBar: Container(
             decoration: BoxDecoration(
-              color: AppColors.dynamicSurface.withValues(alpha: 0.97),
-              border: Border(
-                top: BorderSide(
-                  color: AppColors.dynamicCardBorder.withValues(alpha: 0.8),
-                  width: 1,
-                ),
-              ),
-              boxShadow: [
-                BoxShadow(
-                  color: isDark
-                      ? Colors.black.withValues(alpha: 0.35)
-                      : const Color(0xFFE57A38).withValues(alpha: 0.08),
-                  blurRadius: 20,
-                  offset: const Offset(0, -4),
-                ),
-              ],
+              color: AppColors.dynamicSurface,
+              border: Border(top: BorderSide(color: AppColors.dynamicBorderLight)),
             ),
             child: SafeArea(
               top: false,
               child: SizedBox(
-                height: 72,
+                height: 68,
                 child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceAround,
                   children: [
-                    _NavItem(
-                      icon: Icons.dashboard_rounded,
-                      label: 'Beranda',
-                      isSelected: _currentIndex == 0,
-                      onTap: () => _switchToTab(0),
+                    Expanded(
+                      child: _NavItem(
+                        icon: Icons.home_outlined,
+                        activeIcon: Icons.home_rounded,
+                        label: 'Beranda',
+                        isSelected: _currentIndex == 0,
+                        onTap: () => _switchToTab(0),
+                      ),
                     ),
-                    // Center Floating Drive / Monitoring Button
-                    GestureDetector(
-                      onTap: () => _switchToTab(1),
-                      child: Container(
-                        width: 54,
-                        height: 54,
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [Color(0xFFE57A38), Color(0xFFC25E21)],
-                            begin: Alignment.topLeft,
-                            end: Alignment.bottomRight,
+                    Semantics(
+                      button: true,
+                      label: 'Mode berkendara',
+                      child: DbPressable(
+                        onTap: () => _switchToTab(1),
+                        pressedScale: 0.92,
+                        child: AnimatedContainer(
+                          duration: DbMotion.of(context, DbMotion.base),
+                          curve: DbMotion.out,
+                          width: 64,
+                          height: 46,
+                          decoration: BoxDecoration(
+                            color: driveActive
+                                ? (isDark ? Colors.white : DbColors.ink)
+                                : DbColors.orange,
+                            borderRadius: BorderRadius.circular(DbRadius.pill),
                           ),
-                          shape: BoxShape.circle,
-                          boxShadow: [
-                            BoxShadow(
-                              color: const Color(0xFFE57A38).withValues(alpha: 0.45),
-                              blurRadius: 16,
-                              offset: const Offset(0, 6),
-                            ),
-                          ],
-                        ),
-                        child: Icon(
-                          _currentIndex == 1
-                              ? Icons.videocam_rounded
-                              : Icons.play_arrow_rounded,
-                          color: Colors.white,
-                          size: 30,
+                          child: Icon(
+                            driveActive ? Icons.videocam_rounded : Icons.play_arrow_rounded,
+                            color: driveActive && isDark ? DbColors.ink : Colors.white,
+                            size: 26,
+                          ),
                         ),
                       ),
                     ),
-                    _NavItem(
-                      icon: Icons.analytics_rounded,
-                      label: 'Aktivitas',
-                      isSelected: _currentIndex == 2,
-                      onTap: () => _switchToTab(2),
+                    Expanded(
+                      child: _NavItem(
+                        icon: Icons.insights_outlined,
+                        activeIcon: Icons.insights_rounded,
+                        label: 'Aktivitas',
+                        isSelected: _currentIndex == 2,
+                        onTap: () => _switchToTab(2),
+                      ),
                     ),
                   ],
                 ),
@@ -172,12 +159,14 @@ class _MainShellState extends State<MainShell> {
 
 class _NavItem extends StatelessWidget {
   final IconData icon;
+  final IconData activeIcon;
   final String label;
   final bool isSelected;
   final VoidCallback onTap;
 
   const _NavItem({
     required this.icon,
+    required this.activeIcon,
     required this.label,
     required this.isSelected,
     required this.onTap,
@@ -185,34 +174,31 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isSelected ? AppColors.primary : AppColors.dynamicTextSecondary;
-
+    final color = isSelected ? AppColors.dynamicTextPrimary : AppColors.dynamicTextMuted;
     return GestureDetector(
       onTap: onTap,
       behavior: HitTestBehavior.opaque,
-      child: Padding(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(
-              icon,
+      child: Column(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          Icon(isSelected ? activeIcon : icon, color: color, size: 24),
+          const SizedBox(height: 3),
+          Text(
+            label,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: isSelected ? FontWeight.w700 : FontWeight.w500,
               color: color,
-              size: 24,
             ),
-            const SizedBox(height: 4),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: isSelected ? FontWeight.w800 : FontWeight.w600,
-                color: color,
-                letterSpacing: 0.2,
-              ),
-            ),
-          ],
-        ),
+          ),
+          const SizedBox(height: 3),
+          AnimatedContainer(
+            duration: DbMotion.of(context, DbMotion.fast),
+            width: isSelected ? 4 : 0,
+            height: 4,
+            decoration: const BoxDecoration(color: DbColors.orange, shape: BoxShape.circle),
+          ),
+        ],
       ),
     );
   }

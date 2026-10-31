@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/app_colors.dart';
+import '../core/design_tokens.dart';
 import '../services/theme_service.dart';
 import '../driving_card_screen.dart';
 import '../services/firebase_service.dart';
@@ -203,7 +204,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
           appBar: const DrivingBuddyAppBar(title: 'Riwayat Perjalanan'),
           body: RefreshIndicator(
             onRefresh: _loadData,
-            color: const Color(0xFFE57A38),
+            color: const Color(0xFFF26B1D),
             child: CustomScrollView(
               physics: const AlwaysScrollableScrollPhysics(
                 parent: BouncingScrollPhysics(),
@@ -238,10 +239,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
                               Container(
                                 padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
                                 decoration: BoxDecoration(
-                                  color: isDark ? AppColors.darkCardBgSoft : const Color(0xFFFFF7ED),
+                                  color: isDark ? AppColors.darkCardBgSoft : const Color(0xFFFFF1E8),
                                   borderRadius: BorderRadius.circular(8),
                                   border: Border.all(
-                                    color: isDark ? AppColors.darkCardBorder : const Color(0xFFFED7AA),
+                                    color: isDark ? AppColors.darkCardBorder : const Color(0xFFECEEF2),
                                   ),
                                 ),
                                 child: Text(
@@ -249,7 +250,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                   style: const TextStyle(
                                     fontSize: 9.5,
                                     fontWeight: FontWeight.w800,
-                                    color: Color(0xFFC25E21),
+                                    color: Color(0xFFD9560F),
                                   ),
                                 ),
                               ),
@@ -293,7 +294,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                             IconButton(
                               constraints: const BoxConstraints(),
                               padding: const EdgeInsets.all(4),
-                              icon: const Icon(Icons.refresh_rounded, color: Color(0xFFE57A38), size: 19),
+                              icon: const Icon(Icons.refresh_rounded, color: Color(0xFFF26B1D), size: 19),
                               onPressed: _loadData,
                               tooltip: 'Perbarui',
                             ),
@@ -308,7 +309,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 if (_isLoading)
                   const SliverFillRemaining(
                     child: Center(
-                      child: CircularProgressIndicator(color: Color(0xFFE57A38)),
+                      child: CircularProgressIndicator(color: Color(0xFFF26B1D)),
                     ),
                   )
                 else if (_sessions.isEmpty)
@@ -367,27 +368,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
       margin: const EdgeInsets.fromLTRB(16, 14, 16, 6),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCardBg : null,
-        gradient: isDark
-            ? null
-            : const LinearGradient(
-                begin: Alignment.topCenter,
-                end: Alignment.bottomCenter,
-                colors: [Color(0xFFFFFFFF), Color(0xFFFFFBF8)],
-              ),
-        borderRadius: BorderRadius.circular(18),
+        color: isDark ? AppColors.darkCardBg : DbColors.pureWhite,
+        borderRadius: BorderRadius.circular(DbRadius.r20),
         border: Border.all(
-          color: isDark ? AppColors.darkCardBorder : const Color(0xFFFED7AA),
+          color: isDark ? AppColors.darkCardBorder : DbColors.hairline,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: isDark
-                ? Colors.black.withValues(alpha: 0.25)
-                : const Color(0xFFE57A38).withOpacity(0.06),
-            blurRadius: 14,
-            offset: const Offset(0, 3),
-          ),
-        ],
+        boxShadow: isDark ? DbShadow.cardDark : DbShadow.card,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -406,12 +392,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         fontSize: 9.5,
                         fontWeight: FontWeight.w800,
                         letterSpacing: 1.1,
-                        color: Color(0xFFC25E21),
+                        color: Color(0xFFD9560F),
                       ),
                     ),
                     const SizedBox(height: 2),
                     Text(
-                      'Ringkasan Keseluruhan Sesi',
+                      _userName != null && _userName!.isNotEmpty
+                          ? 'Perjalanan $_userName'
+                          : 'Ringkasan Keseluruhan Sesi',
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w800,
@@ -425,15 +413,15 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 width: 32,
                 height: 32,
                 decoration: BoxDecoration(
-                  color: isDark ? AppColors.darkCardBgSoft : const Color(0xFFFFF7ED),
+                  color: isDark ? AppColors.darkCardBgSoft : const Color(0xFFFFF1E8),
                   borderRadius: BorderRadius.circular(10),
                   border: Border.all(
-                    color: isDark ? AppColors.darkCardBorder : const Color(0xFFFED7AA),
+                    color: isDark ? AppColors.darkCardBorder : const Color(0xFFECEEF2),
                   ),
                 ),
                 child: const Icon(
                   Icons.auto_graph_rounded,
-                  color: Color(0xFFE57A38),
+                  color: Color(0xFFF26B1D),
                   size: 18,
                 ),
               ),
@@ -455,7 +443,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
               Container(
                 height: 36,
                 width: 1,
-                color: isDark ? AppColors.darkCardBorder : const Color(0xFFFFEDD5),
+                color: isDark ? AppColors.darkCardBorder : const Color(0xFFFFF1E8),
               ),
               Expanded(
                 child: _buildMetricItem(
@@ -468,14 +456,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
               Container(
                 height: 36,
                 width: 1,
-                color: isDark ? AppColors.darkCardBorder : const Color(0xFFFFEDD5),
+                color: isDark ? AppColors.darkCardBorder : const Color(0xFFFFF1E8),
               ),
               Expanded(
                 child: _buildMetricItem(
                   icon: Icons.alt_route_rounded,
                   label: 'TOTAL SESI',
                   value: '${_sessions.length}',
-                  color: const Color(0xFFE57A38),
+                  color: const Color(0xFFF26B1D),
                 ),
               ),
             ],
@@ -537,20 +525,12 @@ class _HistoryScreenState extends State<HistoryScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: isDark ? AppColors.darkCardBg : Colors.white,
-        borderRadius: BorderRadius.circular(16),
+        color: isDark ? AppColors.darkCardBg : DbColors.pureWhite,
+        borderRadius: BorderRadius.circular(DbRadius.r16),
         border: Border.all(
-          color: isDark ? AppColors.darkCardBorder : const Color(0xFFFED7AA),
+          color: isDark ? AppColors.darkCardBorder : DbColors.hairline,
         ),
-        boxShadow: [
-          BoxShadow(
-            color: isDark
-                ? Colors.black.withValues(alpha: 0.25)
-                : Colors.black.withOpacity(0.02),
-            blurRadius: 8,
-            offset: const Offset(0, 2),
-          ),
-        ],
+        boxShadow: isDark ? DbShadow.cardDark : DbShadow.card,
       ),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
@@ -566,15 +546,15 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       width: 32,
                       height: 32,
                       decoration: BoxDecoration(
-                        color: isDark ? AppColors.darkCardBgSoft : const Color(0xFFFFF7ED),
+                        color: isDark ? AppColors.darkCardBgSoft : const Color(0xFFFFF1E8),
                         borderRadius: BorderRadius.circular(8),
                         border: Border.all(
-                          color: isDark ? AppColors.darkCardBorder : const Color(0xFFFED7AA),
+                          color: isDark ? AppColors.darkCardBorder : const Color(0xFFECEEF2),
                         ),
                       ),
                       child: const Icon(
                         Icons.drive_eta_rounded,
-                        color: Color(0xFFE57A38),
+                        color: Color(0xFFF26B1D),
                         size: 16,
                       ),
                     ),
@@ -615,9 +595,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                     decoration: BoxDecoration(
-                      color: scoreColor.withOpacity(0.08),
+                      color: scoreColor.withValues(alpha: 0.08),
                       borderRadius: BorderRadius.circular(8),
-                      border: Border.all(color: scoreColor.withOpacity(0.25)),
+                      border: Border.all(color: scoreColor.withValues(alpha: 0.25)),
                     ),
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
@@ -687,7 +667,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
               color: isDark ? AppColors.darkCardBgSoft : const Color(0xFFF8FAFC),
               borderRadius: BorderRadius.circular(8),
               border: Border.all(
-                color: isDark ? AppColors.darkCardBorder : const Color(0xFFFFEDD5),
+                color: isDark ? AppColors.darkCardBorder : const Color(0xFFFFF1E8),
               ),
             ),
             child: CustomPaint(
@@ -741,7 +721,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: FontWeight.w800,
-                        color: totalEvents > 0 ? const Color(0xFFE57A38) : const Color(0xFF059669),
+                        color: totalEvents > 0 ? const Color(0xFFF26B1D) : const Color(0xFF059669),
                       ),
                     ),
                   ],
@@ -789,7 +769,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
                       title: const Row(
                         children: [
-                          Icon(Icons.wifi_off_rounded, color: Color(0xFFE57A38)),
+                          Icon(Icons.wifi_off_rounded, color: Color(0xFFF26B1D)),
                           SizedBox(width: 8),
                           Text('Koneksi Diperlukan', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
                         ],
@@ -801,7 +781,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       actions: [
                         ElevatedButton(
                           style: ElevatedButton.styleFrom(
-                            backgroundColor: const Color(0xFFE57A38),
+                            backgroundColor: const Color(0xFFF26B1D),
                             foregroundColor: Colors.white,
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                           ),
@@ -855,21 +835,21 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 );
               },
               style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: Color(0xFFFED7AA)),
+                side: const BorderSide(color: Color(0xFFECEEF2)),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                backgroundColor: const Color(0xFFFFF7ED),
+                backgroundColor: const Color(0xFFFFF1E8),
                 padding: const EdgeInsets.symmetric(horizontal: 12),
               ),
               child: const Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.workspace_premium_rounded, size: 16, color: Color(0xFFE57A38)),
+                  Icon(Icons.workspace_premium_rounded, size: 16, color: Color(0xFFF26B1D)),
                   SizedBox(width: 6),
                   Text(
                     'Lihat Kartu Pencapaian',
                     style: TextStyle(
-                      color: Color(0xFFE57A38),
+                      color: Color(0xFFF26B1D),
                       fontSize: 12,
                       fontWeight: FontWeight.w800,
                     ),
@@ -906,7 +886,7 @@ class _HistorySparklinePainter extends CustomPainter {
     );
 
     final paint = Paint()
-      ..color = color.withOpacity(0.7)
+      ..color = color.withValues(alpha: 0.7)
       ..strokeWidth = 2
       ..style = PaintingStyle.stroke
       ..strokeCap = StrokeCap.round;

@@ -14,7 +14,7 @@ import 'features/nearby_places/nearby_places.dart';
 // ─────────────────────────────────────────────
 //  PALETTE
 // ─────────────────────────────────────────────
-const _orange = Color(0xFFE57A38);
+const _orange = Color(0xFFF26B1D);
 const _green = Color(0xFF10B981);
 const _yellow = Color(0xFFF59E0B);
 const _red = Color(0xFFEF4444);
@@ -336,7 +336,7 @@ class _PolaroidMapCard extends StatelessWidget {
                           '${fLat.toStringAsFixed(4)}, ${fLng.toStringAsFixed(4)}',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.barlowCondensed(
+                          style: GoogleFonts.plusJakartaSans(
                             fontSize: 11.5,
                             fontWeight: FontWeight.w700,
                             color: const Color(0xFF64748B),
@@ -350,7 +350,7 @@ class _PolaroidMapCard extends StatelessWidget {
                 const SizedBox(width: 6),
                 Text(
                   'RUTE TELEMETRI GPS',
-                  style: GoogleFonts.barlowCondensed(
+                  style: GoogleFonts.plusJakartaSans(
                     fontSize: 9.5,
                     fontWeight: FontWeight.w800,
                     color: const Color(0xFF94A3B8),
@@ -502,7 +502,7 @@ class _PolaroidMapCard extends StatelessWidget {
                   Container(
                     padding: const EdgeInsets.symmetric(horizontal: 5, vertical: 2),
                     decoration: BoxDecoration(
-                      color: const Color(0xFFE57A38),
+                      color: const Color(0xFFF26B1D),
                       borderRadius: BorderRadius.circular(10),
                       border: Border.all(color: Colors.white, width: 1.5),
                       boxShadow: const [
@@ -567,7 +567,7 @@ class _StravaRoutePainter extends CustomPainter {
 
     // Garis Utama Rute Oranye Strava
     final linePaint = Paint()
-      ..color = const Color(0xFFE57A38)
+      ..color = const Color(0xFFF26B1D)
       ..style = PaintingStyle.stroke
       ..strokeWidth = 4.0
       ..strokeCap = StrokeCap.round
@@ -922,7 +922,7 @@ class _DrivingCardScreenState extends State<DrivingCardScreen>
                                   children: [
                                     Text(
                                       timeStr,
-                                      style: GoogleFonts.racingSansOne(
+                                      style: GoogleFonts.plusJakartaSans(
                                         fontSize: 27,
                                         fontWeight: FontWeight.w900,
                                         fontStyle: FontStyle.italic,
@@ -935,7 +935,7 @@ class _DrivingCardScreenState extends State<DrivingCardScreen>
                                     ),
                                     Text(
                                       dateStr,
-                                      style: GoogleFonts.racingSansOne(
+                                      style: GoogleFonts.plusJakartaSans(
                                         fontSize: 14.5,
                                         fontWeight: FontWeight.w700,
                                         color: Colors.white,
@@ -1186,7 +1186,7 @@ class _DrivingCardScreenState extends State<DrivingCardScreen>
             const SizedBox(width: 4),
             Text(
               label,
-              style: GoogleFonts.barlowCondensed(
+              style: GoogleFonts.plusJakartaSans(
                 fontSize: 11.5,
                 fontWeight: FontWeight.w700,
                 color: _grey,
@@ -1199,7 +1199,7 @@ class _DrivingCardScreenState extends State<DrivingCardScreen>
         Text(
           value,
           textAlign: TextAlign.center,
-          style: GoogleFonts.barlowCondensed(
+          style: GoogleFonts.plusJakartaSans(
             fontSize: 17,
             fontWeight: FontWeight.w900,
             color: _orange,
