@@ -399,9 +399,10 @@ class SessionService {
     };
 
     final user = AuthService.currentUser;
+    // Selalu simpan ke cache lokal terlebih dahulu agar data tersimpan aman seketika (offline-first)
+    await saveSessionLocally(sessionPayload);
+
     if (user == null) {
-      // User offline / guest: simpan ke cache lokal
-      await saveSessionLocally(sessionPayload);
       return;
     }
 
@@ -412,7 +413,7 @@ class SessionService {
         .collection('sessions')
         .doc(sessionId);
 
-    await docRef.set({
+      await docRef.set({
       'endedAt': FieldValue.serverTimestamp(),
       'endedAtIso': DateTime.now().toIso8601String(),
       'durationSeconds': durationSeconds,
@@ -455,19 +456,17 @@ class SessionService {
       if (routePoints != null && routePoints.isNotEmpty)
         'routePoints': routePoints,
       'status': 'completed',
-    }, SetOptions(merge: true));
+    }, SetOptions(merge: true)).timeout(const Duration(seconds: 3));
 
-    // Update agregat user
-    try {
-      final userDoc = firestore.collection('users').doc(user.uid);
-      await userDoc.update({
-        'totalTrips': FieldValue.increment(1),
-      });
-    } catch (_) {}
+      // Update agregat user
+      try {
+        final userDoc = firestore.collection('users').doc(user.uid);
+        await userDoc.update({
+          'totalTrips': FieldValue.increment(1),
+        }).timeout(const Duration(seconds: 2));
+      } catch (_) {}
     } catch (e) {
-      debugPrint('Firestore offline fallback: ');
-      // Jika upload gagal karena tidak ada koneksi / offline, simpan ke antrean lokal
-      await saveSessionLocally(sessionPayload);
+      debugPrint('Firestore offline fallback / timeout: ');
     }
   }
 

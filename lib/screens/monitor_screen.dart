@@ -112,6 +112,7 @@ class MonitorScreenState extends State<MonitorScreen> {
   int _microsleepCount = 0;
   bool _isCurrentlySleeping = false;
   bool _isCurrentlyDrowsy = false;
+  bool _isStopping = false;
 
   @override
   void initState() {
@@ -534,7 +535,31 @@ class MonitorScreenState extends State<MonitorScreen> {
   }
 
   Future<void> _stopMonitoring() async {
+    if (_isStopping) return;
+    setState(() {
+      _isStopping = true;
+    });
+
     _pauseTimer();
+
+    // 1. Matikan kamera dan audio seketika (0 ms delay)
+    // Bebaskan CPU, hentikan streaming frame AI dan matikan indikator kamera Android
+    try {
+      await _cameraController?.stopImageStream();
+    } catch (_) {}
+    await _cameraController?.dispose();
+    _cameraController = null;
+    await _alert.stop();
+    if (_ownsNearby) {
+      _nearby.stop();
+      _nearby.start(askPermission: false);
+    }
+    await WakelockPlus.disable();
+    if (_isNightVisionEnabled) {
+      try {
+        await ScreenBrightness.instance.resetScreenBrightness();
+      } catch (_) {}
+    }
 
     final int finalDuration = _elapsedSeconds;
     final int finalDrowsy = _drowsyCount;
@@ -589,7 +614,7 @@ class MonitorScreenState extends State<MonitorScreen> {
     score -= (finalMicro * 10).clamp(0, 40);
     score = score.clamp(0, 100);
 
-    // Simpan sesi ke Firestore jika login
+    // 2. Simpan sesi (tersimpan ke lokal seketika & tersinkron ke cloud jika online)
     if (AuthService.isLoggedIn && _currentSessionId != null) {
       try {
         await SessionService.endSession(
@@ -612,39 +637,24 @@ class MonitorScreenState extends State<MonitorScreen> {
           endLng: _nearby.fix?.lng ?? _startLng,
           routePoints: List.from(_routeBreadcrumbs),
         );
-        debugPrint('✅ Sesi tersimpan ke Supabase! Score: $score');
       } catch (e) {
-        debugPrint('❌ Gagal simpan sesi ke Supabase: $e');
+        debugPrint('Gagal simpan sesi online (aman di lokal): ');
       }
     }
 
-    try {
-      await _cameraController?.stopImageStream();
-    } catch (_) {}
-    await _cameraController?.dispose();
-    _cameraController = null;
-    await _alert.stop();
-    if (_ownsNearby) {
-      _nearby.stop();
-      _nearby.start(askPermission: false);
+    if (mounted) {
+      setState(() {
+        _isStopping = false;
+        _isMonitoring = false;
+        _elapsedSeconds = 0;
+        _result = DetectionResult.initial;
+        _eyeDetected = false;
+        _cameraMode = 'Standby';
+        _isAlertShowing = false;
+        _frameCount = 0;
+        _currentSessionId = null;
+      });
     }
-    await WakelockPlus.disable();
-    if (_isNightVisionEnabled) {
-      try {
-        await ScreenBrightness.instance.resetScreenBrightness();
-      } catch (_) {}
-    }
-
-    setState(() {
-      _isMonitoring = false;
-      _elapsedSeconds = 0;
-      _result = DetectionResult.initial;
-      _eyeDetected = false;
-      _cameraMode = 'Standby';
-      _isAlertShowing = false;
-      _frameCount = 0;
-      _currentSessionId = null;
-    });
 
     // Dialog konfirmasi selesai perjalanan: Pilihan Lihat Kartu Sekarang atau Nanti Saja
     if (mounted) {
@@ -2022,33 +2032,64 @@ class MonitorScreenState extends State<MonitorScreen> {
             width: double.infinity,
             height: 54,
             child: ElevatedButton(
-              onPressed: () async {
-                await _stopMonitoring();
-              },
+              onPressed: _isStopping
+                  ? null
+                  : () async {
+                      await _stopMonitoring();
+                    },
               style: ElevatedButton.styleFrom(
-                backgroundColor: const Color(0xFFF26B1D),
+                backgroundColor: _isStopping
+                    ? const Color(0xFFF26B1D).withValues(alpha: 0.6)
+                    : const Color(0xFFF26B1D),
+                disabledBackgroundColor: const Color(0xFFF26B1D).withValues(alpha: 0.6),
                 foregroundColor: Colors.white,
+                disabledForegroundColor: Colors.white,
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(14),
                 ),
-                elevation: 4,
+                elevation: _isStopping ? 0 : 4,
                 shadowColor: const Color(0xFFF26B1D).withValues(alpha: 0.35),
               ),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  const Icon(Icons.flag_rounded, size: 22),
-                  const SizedBox(width: 8),
-                  Text(
-                    LanguageService.instance.s.finishTrip.toUpperCase(),
-                    style: TextStyle(
-                      fontSize: 15,
-                      fontWeight: FontWeight.w800,
-                      letterSpacing: 0.5,
+              child: _isStopping
+                  ? Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const SizedBox(
+                          width: 20,
+                          height: 20,
+                          child: CircularProgressIndicator(
+                            strokeWidth: 2.5,
+                            valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Text(
+                          LanguageService.instance.isEnglish
+                              ? 'SAVING TRIP...'
+                              : 'MENYIMPAN PERJALANAN...',
+                          style: const TextStyle(
+                            fontSize: 14,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
+                    )
+                  : Row(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        const Icon(Icons.flag_rounded, size: 22),
+                        const SizedBox(width: 8),
+                        Text(
+                          LanguageService.instance.s.finishTrip.toUpperCase(),
+                          style: const TextStyle(
+                            fontSize: 15,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.5,
+                          ),
+                        ),
+                      ],
                     ),
-                  ),
-                ],
-              ),
             ),
           ),
       ],
