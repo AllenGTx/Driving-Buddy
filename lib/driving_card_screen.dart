@@ -8,7 +8,6 @@ import 'package:path_provider/path_provider.dart';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:share_plus/share_plus.dart';
-import 'package:cloud_firestore/cloud_firestore.dart';
 import 'services/firebase_service.dart';
 import 'features/nearby_places/nearby_places.dart';
 
@@ -124,39 +123,100 @@ class _PolaroidMapCard extends StatelessWidget {
     this.routePoints,
   });
 
-  int _lon2tile(double lon, int zoom) {
-    return ((lon + 180.0) / 360.0 * (1 << zoom)).floor();
-  }
 
-  int _lat2tile(double lat, int zoom) {
-    final latRad = lat * math.pi / 180.0;
-    return ((1.0 - math.log(math.tan(latRad) + 1.0 / math.cos(latRad)) / math.pi) / 2.0 * (1 << zoom)).floor();
+
+  /// Hitung zoom adaptif agar Start, Finish, dan seluruh rute muat sempurna di dalam frame Polaroid
+  int _calculateAdaptiveZoom({
+    required double minLat,
+    required double maxLat,
+    required double minLng,
+    required double maxLng,
+  }) {
+    final latDiff = (maxLat - minLat).abs();
+    final lngDiff = (maxLng - minLng).abs();
+    if (latDiff < 0.0001 && lngDiff < 0.0001) {
+      return 16;
+    }
+
+    // Viewport card ~330px lebar, ~295px tinggi.
+    // Beri batas 210px x 180px (margin 35%) agar badge Start & Finish tidak terpotong tepi layar.
+    const double maxSpanX = 210.0;
+    const double maxSpanY = 180.0;
+
+    for (int z = 16; z >= 8; z--) {
+      final n = (1 << z).toDouble();
+      final spanX = (lngDiff / 360.0) * n * 256.0;
+
+      double mercatorY(double deg) {
+        final rad = deg.clamp(-85.0511, 85.0511) * math.pi / 180.0;
+        return (1.0 - math.log(math.tan(rad) + 1.0 / math.cos(rad)) / math.pi) / 2.0 * n * 256.0;
+      }
+
+      final spanY = (mercatorY(minLat) - mercatorY(maxLat)).abs();
+
+      if (spanX <= maxSpanX && spanY <= maxSpanY) {
+        return z;
+      }
+    }
+    return 8;
   }
 
   @override
   Widget build(BuildContext context) {
-    final lat = centerLat ?? -6.2088;
-    final lng = centerLng ?? 106.8456;
+    // 1. Titik Finish (Destinasi Akhir Perjalanan)
+    final fLat = centerLat ?? -6.2088;
+    final fLng = centerLng ?? 106.8456;
 
-    // Kalkulasi jarak rute antara start dan finish untuk menentukan zoom otomatis
-    final sLat = startLat ?? lat;
-    final sLng = startLng ?? lng;
-    final distDeg = math.sqrt(math.pow(lat - sLat, 2) + math.pow(lng - sLng, 2));
+    // 2. Titik Start (Awal Keberangkatan)
+    double sLat = startLat ?? (routePoints != null && routePoints!.isNotEmpty ? routePoints!.first['lat']! : (fLat - 0.003));
+    double sLng = startLng ?? (routePoints != null && routePoints!.isNotEmpty ? routePoints!.first['lng']! : (fLng - 0.003));
 
-    int dynamicZoom = 15;
-    if (distDeg < 0.005) {
-      dynamicZoom = 16; // Sangat dekat (< 500m) -> zoom in detail jalan
-    } else if (distDeg < 0.015) {
-      dynamicZoom = 15; // Jarak menengah (~1.5 km)
-    } else if (distDeg < 0.04) {
-      dynamicZoom = 14; // Jarak agak jauh (~4 km)
-    } else if (distDeg < 0.1) {
-      dynamicZoom = 13; // Jarak jauh (~10 km)
-    } else {
-      dynamicZoom = 12; // Luar kota
+    // Jika start dan finish terlalu dekat / sama, beri offset visual agar kedua pin terlihat
+    if ((sLat - fLat).abs() < 0.00005 && (sLng - fLng).abs() < 0.00005) {
+      sLat = fLat - 0.0020;
+      sLng = fLng - 0.0020;
     }
-    final zoom = dynamicZoom;
 
+    // 3. Kumpulkan semua titik untuk kalkulasi Bounding Box
+    final allPoints = <Map<String, double>>[
+      {'lat': sLat, 'lng': sLng},
+      {'lat': fLat, 'lng': fLng},
+    ];
+    if (routePoints != null && routePoints!.isNotEmpty) {
+      for (final p in routePoints!) {
+        final pLat = p['lat'];
+        final pLng = p['lng'];
+        if (pLat != null && pLng != null && (pLat != 0.0 || pLng != 0.0)) {
+          allPoints.add({'lat': pLat, 'lng': pLng});
+        }
+      }
+    }
+
+    double minLat = allPoints.first['lat']!;
+    double maxLat = allPoints.first['lat']!;
+    double minLng = allPoints.first['lng']!;
+    double maxLng = allPoints.first['lng']!;
+
+    for (final p in allPoints) {
+      final pLat = p['lat']!;
+      final pLng = p['lng']!;
+      if (pLat < minLat) minLat = pLat;
+      if (pLat > maxLat) maxLat = pLat;
+      if (pLng < minLng) minLng = pLng;
+      if (pLng > maxLng) maxLng = pLng;
+    }
+
+    // 4. Titik tengah geografis sesungguhnya (Midpoint) agar rute tepat berada di tengah foto
+    final mapCenterLat = (minLat + maxLat) / 2.0;
+    final mapCenterLng = (minLng + maxLng) / 2.0;
+
+    // 5. Kalkulasi zoom adaptif: dekat (zoom in 16), jauh/antar kota (zoom out 10-12)
+    final zoom = _calculateAdaptiveZoom(
+      minLat: minLat,
+      maxLat: maxLat,
+      minLng: minLng,
+      maxLng: maxLng,
+    );
 
     return Center(
       child: Container(
@@ -190,8 +250,8 @@ class _PolaroidMapCard extends StatelessWidget {
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
-                    // Single High-Resolution Unified Tile Image
-                    _buildTileMap(lat, lng, zoom),
+                    // Single High-Resolution Unified Tile Image (Pusat di Midpoint rute)
+                    _buildTileMap(mapCenterLat, mapCenterLng, zoom),
 
                     // Atmospheric Vignette Overlay
                     Positioned.fill(
@@ -210,7 +270,15 @@ class _PolaroidMapCard extends StatelessWidget {
                     ),
 
                     // Strava-style Route Overlay (Start Pin, Finish Pin, & Glowing Polyline)
-                    _buildStravaRouteOverlay(lat, lng, zoom),
+                    _buildStravaRouteOverlay(
+                      mapCenterLat: mapCenterLat,
+                      mapCenterLng: mapCenterLng,
+                      sLat: sLat,
+                      sLng: sLng,
+                      fLat: fLat,
+                      fLng: fLng,
+                      z: zoom,
+                    ),
 
                     // Top-right Live GPS Pill
                     Positioned(
@@ -265,7 +333,7 @@ class _PolaroidMapCard extends StatelessWidget {
                       const SizedBox(width: 4),
                       Flexible(
                         child: Text(
-                          '${lat.toStringAsFixed(4)}, ${lng.toStringAsFixed(4)}',
+                          '${fLat.toStringAsFixed(4)}, ${fLng.toStringAsFixed(4)}',
                           maxLines: 1,
                           overflow: TextOverflow.ellipsis,
                           style: GoogleFonts.barlowCondensed(
@@ -346,16 +414,19 @@ class _PolaroidMapCard extends StatelessWidget {
     });
   }
 
-  /// Gambar rute ala Strava dengan Titik Start Hijau, Titik Finish Oranye/Merah, dan Garis Polyline GPS Asli
-  Widget _buildStravaRouteOverlay(double lat, double lng, int z) {
-    final sLat = startLat ?? (lat - 0.0018);
-    final sLng = startLng ?? (lng - 0.0022);
-    final fLat = lat;
-    final fLng = lng;
-
+  /// Gambar rute ala Strava dengan Titik Start Hijau, Titik Finish Oranye, dan Garis Polyline GPS Asli
+  Widget _buildStravaRouteOverlay({
+    required double mapCenterLat,
+    required double mapCenterLng,
+    required double sLat,
+    required double sLng,
+    required double fLat,
+    required double fLng,
+    required int z,
+  }) {
     final n = (1 << z).toDouble();
-    final xf = (lng + 180.0) / 360.0 * n;
-    final latRad = lat * math.pi / 180.0;
+    final xf = (mapCenterLng + 180.0) / 360.0 * n;
+    final latRad = mapCenterLat.clamp(-85.0511, 85.0511) * math.pi / 180.0;
     final yf = (1.0 - math.log(math.tan(latRad) + 1.0 / math.cos(latRad)) / math.pi) / 2.0 * n;
     const ts = 256.0;
 
@@ -605,9 +676,22 @@ class _DrivingCardScreenState extends State<DrivingCardScreen>
   }
 
   Future<void> _resolveGpsCoordinates() async {
-    // 1. Cek apakah koordinat sudah ada dan valid (bukan fallback Jakarta default)
-    if (_resolvedLastLat != null && _resolvedLastLng != null &&
-        (_resolvedLastLat! != -6.2088 || _resolvedLastLng! != 106.8456)) {
+    // Ambil koordinat awal dari breadcrumbs jika startLat masih null
+    if (_resolvedStartLat == null && _resolvedRoutePoints != null && _resolvedRoutePoints!.isNotEmpty) {
+      _resolvedStartLat = _resolvedRoutePoints!.first['lat'];
+      _resolvedStartLng = _resolvedRoutePoints!.first['lng'];
+    }
+    if (_resolvedLastLat == null && _resolvedRoutePoints != null && _resolvedRoutePoints!.isNotEmpty) {
+      _resolvedLastLat = _resolvedRoutePoints!.last['lat'];
+      _resolvedLastLng = _resolvedRoutePoints!.last['lng'];
+    }
+
+    // 1. Cek apakah koordinat sudah ada dan valid
+    final hasValidLast = _resolvedLastLat != null && _resolvedLastLng != null &&
+        (_resolvedLastLat! != -6.2088 || _resolvedLastLng! != 106.8456);
+    final hasValidStart = _resolvedStartLat != null && _resolvedStartLng != null;
+
+    if (hasValidLast && hasValidStart) {
       return;
     }
 

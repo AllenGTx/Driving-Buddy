@@ -6,6 +6,7 @@ import 'package:connectivity_plus/connectivity_plus.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_storage/firebase_storage.dart';
+import 'package:google_sign_in/google_sign_in.dart';
 
 // ============================================================================
 // FIREBASE SERVICE — Authentication, Firestore Database, & Storage
@@ -93,7 +94,12 @@ class AuthService {
     return credential;
   }
 
-  /// Login langsung via Akun Google
+  static final GoogleSignIn _googleSignIn = GoogleSignIn(
+    scopes: ['email', 'profile'],
+    serverClientId: '587027656702-kgmmt061b1js71rd9ss6tti2so2sv4bv.apps.googleusercontent.com',
+  );
+
+  /// Login langsung via Akun Google (One-Tap Native Android/iOS Account Chooser)
   static Future<UserCredential> signInWithGoogle() async {
     UserCredential credential;
     if (kIsWeb) {
@@ -102,8 +108,33 @@ class AuthService {
       googleProvider.addScope('profile');
       credential = await auth.signInWithPopup(googleProvider);
     } else {
-      final googleProvider = GoogleAuthProvider();
-      credential = await auth.signInWithProvider(googleProvider);
+      try {
+        await _googleSignIn.signOut();
+      } catch (_) {}
+
+      GoogleSignInAccount? googleUser;
+      try {
+        googleUser = await _googleSignIn.signIn();
+      } catch (nativeErr) {
+        debugPrint('Native GoogleSignIn error: $nativeErr');
+        final googleProvider = GoogleAuthProvider();
+        return await auth.signInWithProvider(googleProvider);
+      }
+
+      if (googleUser == null) {
+        throw FirebaseAuthException(
+          code: 'popup-closed-by-user',
+          message: 'Login Google dibatalkan.',
+        );
+      }
+
+      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      final OAuthCredential oAuthCredential = GoogleAuthProvider.credential(
+        accessToken: googleAuth.accessToken,
+        idToken: googleAuth.idToken,
+      );
+
+      credential = await auth.signInWithCredential(oAuthCredential);
     }
 
     final user = credential.user;

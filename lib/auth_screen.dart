@@ -23,6 +23,27 @@ class _LoginScreenState extends State<LoginScreen>
   late final AnimationController _slideCtrl;
   late final Animation<double> _fadeAnim;
   late final Animation<Offset> _slideAnim;
+  final ScrollController _scrollController = ScrollController();
+
+  void _setError(String msg, {bool isRegister = false}) {
+    if (!mounted) return;
+    setState(() {
+      if (isRegister) {
+        _regError = msg;
+      } else {
+        _loginError = msg;
+      }
+    });
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (_scrollController.hasClients) {
+        _scrollController.animateTo(
+          0.0,
+          duration: const Duration(milliseconds: 300),
+          curve: Curves.easeOutCubic,
+        );
+      }
+    });
+  }
 
   // Login fields
   final _loginEmail = TextEditingController();
@@ -60,6 +81,7 @@ class _LoginScreenState extends State<LoginScreen>
   void dispose() {
     _tab.dispose();
     _slideCtrl.dispose();
+    _scrollController.dispose();
     _loginEmail.dispose();
     _loginPassword.dispose();
     _regName.dispose();
@@ -351,15 +373,16 @@ class _LoginScreenState extends State<LoginScreen>
 
   // ── login ───────────────────────────────
   Future<void> _doLogin() async {
+    FocusScope.of(context).unfocus(); // Tutup keyboard agar layar lega
     final email = _loginEmail.text.trim();
     final password = _loginPassword.text;
 
     if (email.isEmpty) {
-      setState(() => _loginError = 'Email tidak boleh kosong.');
+      _setError('Email tidak boleh kosong.');
       return;
     }
     if (password.isEmpty) {
-      setState(() => _loginError = 'Kata sandi tidak boleh kosong.');
+      _setError('Kata sandi tidak boleh kosong.');
       return;
     }
 
@@ -398,7 +421,6 @@ class _LoginScreenState extends State<LoginScreen>
         errMsg = 'Terlalu banyak percobaan gagal. Silakan tunggu beberapa saat.';
       } else if (code == 'invalid-credential') {
         // Firebase Auth terbaru sering mengembalikan 'invalid-credential' untuk menyamarkan error.
-        // Coba periksa apakah email terdaftar menggunakan query users di Firestore:
         try {
           final snapshot = await firestore
               .collection('users')
@@ -416,9 +438,9 @@ class _LoginScreenState extends State<LoginScreen>
       } else {
         errMsg = _xlErr(e.code);
       }
-      setState(() => _loginError = errMsg);
+      _setError(errMsg);
     } catch (_) {
-      setState(() => _loginError = 'Terjadi kesalahan saat masuk. Coba lagi.');
+      _setError('Terjadi kesalahan saat masuk. Coba lagi.');
     } finally {
       if (mounted) setState(() => _loginLoading = false);
     }
@@ -426,27 +448,28 @@ class _LoginScreenState extends State<LoginScreen>
 
   // ── register ────────────────────────────
   Future<void> _doRegister() async {
+    FocusScope.of(context).unfocus();
     final name = _regName.text.trim();
     final email = _regEmail.text.trim();
     final password = _regPassword.text;
     final confirm = _regConfirm.text;
 
     if (name.isEmpty) {
-      return setState(() => _regError = 'Nama lengkap tidak boleh kosong.');
+      return _setError('Nama lengkap tidak boleh kosong.', isRegister: true);
     }
 
     final emailErr = _validateEmailAddress(email);
     if (emailErr != null) {
-      return setState(() => _regError = emailErr);
+      return _setError(emailErr, isRegister: true);
     }
 
     final passErr = _validatePasswordFormat(password);
     if (passErr != null) {
-      return setState(() => _regError = passErr);
+      return _setError(passErr, isRegister: true);
     }
 
     if (password != confirm) {
-      return setState(() => _regError = 'Konfirmasi kata sandi tidak cocok.');
+      return _setError('Konfirmasi kata sandi tidak cocok.', isRegister: true);
     }
 
     setState(() {
@@ -483,9 +506,9 @@ class _LoginScreenState extends State<LoginScreen>
       } else {
         msg = _xlErr(e.code);
       }
-      setState(() => _regError = msg);
+      _setError(msg, isRegister: true);
     } catch (e) {
-      setState(() => _regError = 'Terjadi kesalahan pendaftaran. Coba lagi.');
+      _setError('Terjadi kesalahan pendaftaran. Coba lagi.', isRegister: true);
     } finally {
       if (mounted) setState(() => _regLoading = false);
     }
@@ -524,14 +547,16 @@ class _LoginScreenState extends State<LoginScreen>
           child: SlideTransition(
             position: _slideAnim,
             child: SingleChildScrollView(
-              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+              controller: _scrollController,
+              physics: const BouncingScrollPhysics(),
+              padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 8),
               child: Column(
                 children: [
-                  const SizedBox(height: 16),
+                  const SizedBox(height: 4),
                   _buildBrandHeader(),
-                  const SizedBox(height: 24),
+                  const SizedBox(height: 12),
                   _buildTabSelector(),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 12),
                   // Form Card
                   Container(
                     decoration: BoxDecoration(
@@ -550,7 +575,7 @@ class _LoginScreenState extends State<LoginScreen>
                         ),
                       ],
                     ),
-                    padding: const EdgeInsets.all(20),
+                    padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 18),
                     child: AnimatedBuilder(
                       animation: _tab,
                       builder: (context, _) {
@@ -558,7 +583,7 @@ class _LoginScreenState extends State<LoginScreen>
                       },
                     ),
                   ),
-                  const SizedBox(height: 20),
+                  const SizedBox(height: 16),
                 ],
               ),
             ),
@@ -573,14 +598,14 @@ class _LoginScreenState extends State<LoginScreen>
       children: [
         Image.asset(
           'assets/images/DrivingBuddyLogo_tight.png',
-          height: 80,
+          height: 48,
           fit: BoxFit.contain,
         ),
-        const SizedBox(height: 6),
+        const SizedBox(height: 4),
         const Text(
           'GT Telemetri Kabin & Monitoring Kelelahan',
           style: TextStyle(
-            fontSize: 12,
+            fontSize: 11.5,
             fontWeight: FontWeight.w600,
             color: Color(0xFF64748B),
           ),
@@ -591,22 +616,22 @@ class _LoginScreenState extends State<LoginScreen>
 
   Widget _buildTabSelector() {
     return Container(
-      height: 46,
-      padding: const EdgeInsets.all(4),
+      height: 40,
+      padding: const EdgeInsets.all(3),
       decoration: BoxDecoration(
         color: const Color(0xFFF1F5F9),
-        borderRadius: BorderRadius.circular(14),
+        borderRadius: BorderRadius.circular(12),
         border: Border.all(color: const Color(0xFFE2E8F0)),
       ),
       child: TabBar(
         controller: _tab,
         indicator: BoxDecoration(
           color: const Color(0xFFE57A38),
-          borderRadius: BorderRadius.circular(10),
+          borderRadius: BorderRadius.circular(9),
           boxShadow: [
             BoxShadow(
               color: const Color(0xFFE57A38).withOpacity(0.25),
-              blurRadius: 8,
+              blurRadius: 6,
               offset: const Offset(0, 2),
             ),
           ],
@@ -615,8 +640,8 @@ class _LoginScreenState extends State<LoginScreen>
         dividerColor: Colors.transparent,
         labelColor: Colors.white,
         unselectedLabelColor: const Color(0xFF64748B),
-        labelStyle: const TextStyle(fontWeight: FontWeight.w800, fontSize: 13),
-        unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 13),
+        labelStyle: const TextStyle(fontWeight: FontWeight.w800, fontSize: 12.5),
+        unselectedLabelStyle: const TextStyle(fontWeight: FontWeight.w600, fontSize: 12.5),
         onTap: (index) => setState(() {}),
         tabs: const [
           Tab(text: 'Masuk'),
@@ -630,17 +655,17 @@ class _LoginScreenState extends State<LoginScreen>
   bool _googleLoading = false;
 
   Future<void> _doGoogleLogin() async {
+    FocusScope.of(context).unfocus();
     setState(() {
       _googleLoading = true;
       _loginError = null;
       _regError = null;
     });
     try {
-      // Timeout guard agar jika popup ditutup di background tanpa trigger event, loading otomatis mati
       await AuthService.signInWithGoogle().timeout(
         const Duration(seconds: 45),
         onTimeout: () {
-          throw 'Popup login Google ditutup atau waktu habis.';
+          throw 'Waktu login Google habis atau dibatalkan.';
         },
       );
       final gEmail = AuthService.currentUser?.email;
@@ -652,20 +677,25 @@ class _LoginScreenState extends State<LoginScreen>
       }
     } on FirebaseAuthException catch (e) {
       if (mounted) {
-        if (e.code == 'popup-closed-by-user' || e.code == 'cancelled') {
-          // User sengaja menutup popup, jangan tampilkan error merah menakutkan, cukup batalkan loading
+        final code = e.code.toLowerCase();
+        if (code == 'popup-closed-by-user' || code == 'cancelled' || code == 'canceled') {
           setState(() => _loginError = null);
         } else {
-          setState(() => _loginError = _xlErr(e.message ?? 'Login Google dibatalkan'));
+          _setError(_xlErr(e.message ?? 'Login Google dibatalkan'));
         }
       }
     } catch (e) {
       if (mounted) {
         final errStr = e.toString().toLowerCase();
-        if (errStr.contains('popup-closed-by-user') || errStr.contains('closed by user') || errStr.contains('cancel')) {
+        if (errStr.contains('popup-closed-by-user') ||
+            errStr.contains('closed by user') ||
+            errStr.contains('cancel') ||
+            errStr.contains('12501')) {
           setState(() => _loginError = null);
+        } else if (errStr.contains('10') || errStr.contains('developer_error')) {
+          _setError('Konfigurasi SHA-1 Firebase belum sesuai untuk aplikasi ini. Silakan gunakan login Email.');
         } else {
-          setState(() => _loginError = 'Login Google dibatalkan atau waktu habis.');
+          _setError('Terjadi kendala saat login Google: $e');
         }
       }
     } finally {
