@@ -377,10 +377,31 @@ class NearbyPlacesController extends ChangeNotifier {
 
   void _onFixError(int gen) {
     if (_disposed || gen != _generation) return;
-    // GPS dimatikan / izin dicabut di tengah jalan: berhenti mendengarkan, lalu cek keadaan sekarang.
-    _fixSub?.cancel();
-    _fixSub = null;
-    unawaited(_checkAccess(ask: false, gen: gen));
+    // Cek apakah izin atau layanan lokasi benar-benar mati sebelum membatalkan stream
+    _location.checkAccess().then((access) {
+      if (_disposed || gen != _generation) return;
+      if (access != LocationAccess.granted) {
+        _fixSub?.cancel();
+        _fixSub = null;
+        _access = access;
+        _recompute();
+        _notify(force: true);
+        _recheckTimer?.cancel();
+        _recheckTimer = Timer(_policy.recheckAccessEvery, () {
+          if (_disposed || gen != _generation) return;
+          unawaited(_checkAccess(ask: false, gen: gen));
+        });
+      } else {
+        // Layanan & izin masih aktif, error hanya transient.
+        if (_fixSub == null && _track) {
+          _fixSub = _location.fixes().listen(
+                _onFix,
+                onError: (Object error) => _onFixError(gen),
+                cancelOnError: false,
+              );
+        }
+      }
+    }).catchError((_) {});
   }
 
   // -------------------------------------------------------------- posisi
@@ -403,7 +424,7 @@ class NearbyPlacesController extends ChangeNotifier {
     if (_autoRefresh) _maybeAutoRefresh();
 
     _recompute();
-    _notify(force: firstFix);
+    _notify(force: _track || firstFix);
   }
 
   /// Hitung ulang jarak/arah semua tempat dari posisi baru (tanpa panggilan ke server).

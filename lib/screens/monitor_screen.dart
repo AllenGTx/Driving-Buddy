@@ -3,6 +3,7 @@ import '../services/language_service.dart';
 import 'dart:ui' as ui;
 import 'dart:async';
 import 'dart:io';
+import 'dart:math' as math;
 import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
@@ -129,37 +130,105 @@ class MonitorScreenState extends State<MonitorScreen> {
   void _onNearbyUpdate() {
     if (!mounted) return;
     final fix = _nearby.fix;
-    if (fix != null) {
-      final mps = fix.speedMps;
-      // Filter noise GPS saat diam: threshold 0.8 m/s ≈ 2.88 km/jam
-      if (mps != null && mps >= 0.8) {
-        _currentSpeedKmh = mps * 3.6;
-        if (_currentSpeedKmh > _topSpeedKmh) {
+    if (fix == null || !fix.isValid) return;
+
+    // Titik awal & breadcrumb awal perjalanan
+    if (_isMonitoring) {
+      if (_startLat == null || _startLng == null) {
+        _startLat = fix.lat;
+        _startLng = fix.lng;
+        if (_routeBreadcrumbs.isEmpty) {
+          _routeBreadcrumbs.add({'lat': fix.lat, 'lng': fix.lng});
+        }
+      }
+    }
+
+    if (_lastDriverFix == null) {
+      _lastDriverFix = fix;
+      if (fix.speedMps != null && fix.speedMps! >= 0.5) {
+        _currentSpeedKmh = fix.speedMps! * 3.6;
+        if (_currentSpeedKmh > _topSpeedKmh && _currentSpeedKmh <= 220.0) {
           _topSpeedKmh = _currentSpeedKmh;
         }
-      } else {
-        _currentSpeedKmh = 0.0;
+      }
+      if (_isMonitoring) setState(() {});
+      return;
+    }
+
+    final prev = _lastDriverFix!;
+    final dMeters = haversineM(prev.lat, prev.lng, fix.lat, fix.lng);
+    final dtSeconds = fix.timestamp.difference(prev.timestamp).inMilliseconds.abs() / 1000.0;
+
+    // 1. Kecepatan kinematik dari perpindahan jarak per satuan waktu (delta-d / delta-t)
+    double? kinematicSpeedKmh;
+    if (dtSeconds >= 0.3 && dtSeconds <= 15.0) {
+      final mps = dMeters / dtSeconds;
+      kinematicSpeedKmh = mps * 3.6;
+    }
+
+    // 2. Hardware Doppler Speed dari Chipset GPS
+    final hwSpeedMps = fix.speedMps;
+    final double? hwSpeedKmh = (hwSpeedMps != null && hwSpeedMps.isFinite && hwSpeedMps >= 0.0)
+        ? hwSpeedMps * 3.6
+        : null;
+
+    // 3. Sensor Fusion & Filter Noise/Jitter saat Diam
+    // Jika dMeters < 1.8 meter dan kecepatan hardware < 1.5 km/j (atau tidak ada), kendaraan diam
+    final isLikelyStationary = dMeters < 1.8 && ((hwSpeedKmh ?? 0.0) < 1.8);
+
+    double resolvedSpeedKmh = 0.0;
+    if (!isLikelyStationary) {
+      if (hwSpeedKmh != null && hwSpeedKmh >= 1.5) {
+        // Hardware speed tersedia dan valid
+        if (kinematicSpeedKmh != null && kinematicSpeedKmh >= 1.5 && kinematicSpeedKmh <= 220.0) {
+          // Padukan keduanya: 70% Doppler Hardware + 30% Kinematik Perpindahan
+          resolvedSpeedKmh = (hwSpeedKmh * 0.70) + (kinematicSpeedKmh * 0.30);
+        } else {
+          resolvedSpeedKmh = hwSpeedKmh;
+        }
+      } else if (kinematicSpeedKmh != null && kinematicSpeedKmh >= 1.5 && kinematicSpeedKmh <= 220.0) {
+        // Hardware speed tidak tersedia / bernilai 0 (khas Fused Location di beberapa merk HP), gunakan kinematik!
+        resolvedSpeedKmh = kinematicSpeedKmh;
+      }
+    }
+
+    // Filter lonjakan warp GPS anomali (> 220 km/j)
+    if (resolvedSpeedKmh > 220.0) {
+      resolvedSpeedKmh = _currentSpeedKmh;
+    }
+
+    _currentSpeedKmh = resolvedSpeedKmh;
+
+    // 4. Update Top Speed, Sampel, Jarak Tempuh & Breadcrumb Rute
+    if (_isMonitoring) {
+      if (_currentSpeedKmh > _topSpeedKmh && _currentSpeedKmh <= 220.0) {
+        _topSpeedKmh = _currentSpeedKmh;
+      }
+      if (_currentSpeedKmh >= 1.5) {
+        _sessionSpeedSamples.add(_currentSpeedKmh);
       }
 
-      if (_lastDriverFix != null && _isMonitoring) {
-        final dMeters = haversineM(_lastDriverFix!.lat, _lastDriverFix!.lng, fix.lat, fix.lng);
-        // Hanya akumulasi jarak jika kendaraan benar-benar bergerak (speed >= 2.5 km/j atau delta > 12m)
-        if ((_currentSpeedKmh >= 2.5 || dMeters >= 12.0) && dMeters < 500.0) {
-          _totalDistanceMeters += dMeters;
-          // Rekam breadcrumb jika berpindah minimal 8 meter
-          if (_routeBreadcrumbs.isEmpty ||
-              haversineM(_routeBreadcrumbs.last['lat']!, _routeBreadcrumbs.last['lng']!, fix.lat, fix.lng) >= 8.0) {
+      // Akumulasi jarak tempuh kendaraan jika bergerak (kecepatan >= 1.5 km/j atau dMeters >= 2.0m)
+      // dan bukan anomali GPS teleportasi (dMeters < 400m)
+      if ((_currentSpeedKmh >= 1.5 || dMeters >= 2.0) && dMeters < 400.0) {
+        _totalDistanceMeters += dMeters;
+
+        // Rekam breadcrumb rute jika berpindah minimal 4.0 meter dari titik sebelumnya
+        if (_routeBreadcrumbs.isEmpty) {
+          _routeBreadcrumbs.add({'lat': fix.lat, 'lng': fix.lng});
+        } else {
+          final lastPt = _routeBreadcrumbs.last;
+          final dFromLast = haversineM(lastPt['lat']!, lastPt['lng']!, fix.lat, fix.lng);
+          if (dFromLast >= 4.0 && dFromLast < 400.0) {
             _routeBreadcrumbs.add({'lat': fix.lat, 'lng': fix.lng});
           }
         }
-      } else if (_isMonitoring && _routeBreadcrumbs.isEmpty && fix.lat != 0.0) {
-        _routeBreadcrumbs.add({'lat': fix.lat, 'lng': fix.lng});
       }
-      _lastDriverFix = fix;
+    }
 
-      if (_isMonitoring) {
-        setState(() {});
-      }
+    _lastDriverFix = fix;
+    if (_isMonitoring) {
+      setState(() {});
     }
   }
 
@@ -415,9 +484,7 @@ class MonitorScreenState extends State<MonitorScreen> {
         _sessionMarSamples.add(result.mar);
       }
       _sessionTiltSamples.add(result.rollAngle.abs());
-      if (_currentSpeedKmh > 0) {
-        _sessionSpeedSamples.add(_currentSpeedKmh);
-      }
+
 
       // Cek apakah sedang dalam masa snooze
       final isSnoozed = _snoozeUntil != null && DateTime.now().isBefore(_snoozeUntil!);
@@ -569,14 +636,20 @@ class MonitorScreenState extends State<MonitorScreen> {
     final DateTime sessionStart = _sessionStartTime ?? DateTime.now();
 
     // Hitung kecepatan rata-rata:
-    // Proteksi sesi pendek (< 15 detik atau jarak < 50 meter) dari artefak pembagian waktu kecil
     double calculatedAvgSpeed = _currentSpeedKmh;
-    if (_totalDistanceMeters > 50.0 && finalDuration >= 15) {
-      final speedFromDistance = (_totalDistanceMeters / 1000.0) / (finalDuration / 3600.0);
-      if (calculatedAvgSpeed <= 1.0 || speedFromDistance > calculatedAvgSpeed) {
-        calculatedAvgSpeed = speedFromDistance;
+    if (_totalDistanceMeters > 30.0 && finalDuration >= 10) {
+      final overallAvgSpeed = (_totalDistanceMeters / 1000.0) / (finalDuration / 3600.0);
+      calculatedAvgSpeed = overallAvgSpeed;
+
+      // Jika ada sampel kecepatan saat melaju, padukan dengan kecepatan cruising bergerak
+      if (_sessionSpeedSamples.isNotEmpty) {
+        final movingSamples = _sessionSpeedSamples.where((s) => s >= 2.0).toList();
+        if (movingSamples.isNotEmpty) {
+          final movingAvgSpeed = movingSamples.reduce((a, b) => a + b) / movingSamples.length;
+          calculatedAvgSpeed = math.max(overallAvgSpeed, movingAvgSpeed * 0.85);
+        }
       }
-    } else if (finalDuration < 15 && _totalDistanceMeters < 50.0) {
+    } else if (finalDuration < 15 && _totalDistanceMeters < 30.0) {
       // Sesi uji coba sangat singkat / diam: bersihkan jitter koordinat
       if (_sessionSpeedSamples.isEmpty || _sessionSpeedSamples.every((s) => s < 2.5)) {
         calculatedAvgSpeed = 0.0;
@@ -596,11 +669,14 @@ class MonitorScreenState extends State<MonitorScreen> {
         ? _sessionTiltSamples.reduce((a, b) => a + b) / _sessionTiltSamples.length
         : 3.5;
 
-    if (_sessionSpeedSamples.isNotEmpty) {
-      final spdAvg = _sessionSpeedSamples.reduce((a, b) => a + b) / _sessionSpeedSamples.length;
-      if (spdAvg > calculatedAvgSpeed) calculatedAvgSpeed = spdAvg;
-    }
+    // Pastikan top speed akurat dari sampel perjalanan atau _topSpeedKmh tertinggi
     double realTopSpeed = _topSpeedKmh;
+    if (_sessionSpeedSamples.isNotEmpty) {
+      final maxSample = _sessionSpeedSamples.reduce(math.max);
+      if (maxSample > realTopSpeed) {
+        realTopSpeed = maxSample;
+      }
+    }
     if (calculatedAvgSpeed > 0 && realTopSpeed < calculatedAvgSpeed) {
       realTopSpeed = calculatedAvgSpeed * 1.15;
     } else if (calculatedAvgSpeed == 0.0 && _totalDistanceMeters < 30.0) {

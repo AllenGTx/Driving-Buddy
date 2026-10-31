@@ -129,16 +129,15 @@ class GeolocatorLocationProvider implements LocationProvider {
     final heading = p.heading;
     final speed = p.speed;
     final accuracy = p.accuracy;
-    // `hasXxx` = HP benar-benar melaporkan nilainya; kalau false, angkanya cuma 0.0 pengisi.
     return DriverFix(
       lat: p.latitude,
       lng: p.longitude,
-      timestamp: DateTime.now(),
-      headingDeg: (p.hasHeading && heading.isFinite && heading >= 0 && heading <= 360)
+      timestamp: p.timestamp,
+      headingDeg: (heading.isFinite && heading >= 0 && heading <= 360)
           ? heading
           : null,
-      speedMps: (p.hasSpeed && speed.isFinite && speed >= 0) ? speed : null,
-      accuracyM: (p.hasAccuracy && accuracy.isFinite && accuracy >= 0)
+      speedMps: (speed.isFinite && speed >= 0) ? speed : null,
+      accuracyM: (accuracy.isFinite && accuracy >= 0)
           ? accuracy
           : null,
     );
@@ -151,7 +150,7 @@ class GeolocatorLocationProvider implements LocationProvider {
     try {
       final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.bestForNavigation,
-        forceAndroidLocationManager: true,
+        forceAndroidLocationManager: false,
         timeLimit: timeout,
       );
       return _toFix(position);
@@ -168,7 +167,7 @@ class GeolocatorLocationProvider implements LocationProvider {
           ? AndroidSettings(
               accuracy: LocationAccuracy.bestForNavigation,
               distanceFilter: 0,
-              forceLocationManager: true,
+              forceLocationManager: false,
               intervalDuration: const Duration(seconds: 1),
             )
           : LocationSettings(
