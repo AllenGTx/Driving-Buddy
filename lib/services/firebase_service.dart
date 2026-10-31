@@ -173,17 +173,21 @@ class AuthService {
 
     final user = credential.user;
     if (user != null) {
-      // JANGAN TIMPA FOTO PROFIL: Cek apakah user sudah punya foto profil sebelumnya
-      bool hasExistingPhoto = false;
-      String? savedCustomPhoto;
-      try {
-        final existingDoc = await firestore.collection('users').doc(user.uid).get();
-        final existingPhoto = existingDoc.data()?['photoUrl'] as String?;
-        if (existingPhoto != null && existingPhoto.trim().isNotEmpty) {
-          hasExistingPhoto = true;
-          savedCustomPhoto = existingPhoto.trim();
-        }
-      } catch (_) {}
+      // JANGAN TIMPA FOTO PROFIL: Cek local cache terlebih dahulu, baru Firestore
+      final localPhoto = await AccountConfig.getPhotoUrl(userEmail: user.email);
+      bool hasExistingPhoto = (localPhoto != null && localPhoto.trim().isNotEmpty);
+      String? savedCustomPhoto = hasExistingPhoto ? localPhoto.trim() : null;
+
+      if (!hasExistingPhoto) {
+        try {
+          final existingDoc = await firestore.collection('users').doc(user.uid).get();
+          final existingPhoto = existingDoc.data()?['photoUrl'] as String?;
+          if (existingPhoto != null && existingPhoto.trim().isNotEmpty) {
+            hasExistingPhoto = true;
+            savedCustomPhoto = existingPhoto.trim();
+          }
+        } catch (_) {}
+      }
 
       await firestore.collection('users').doc(user.uid).set({
         'uid': user.uid,

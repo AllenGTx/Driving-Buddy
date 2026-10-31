@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:firebase_core/firebase_core.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'models/account_config.dart';
 
 import 'firebase_options.dart';
 import 'services/theme_service.dart';
@@ -38,6 +40,10 @@ void main() async {
       options: DefaultFirebaseOptions.currentPlatform,
     );
     debugPrint('✅ Firebase initialized successfully');
+    final curUser = FirebaseAuth.instance.currentUser;
+    if (curUser?.email != null) {
+      await AccountConfig.getPhotoUrl(userEmail: curUser!.email);
+    }
   } catch (e) {
     debugPrint('⚠️ Firebase initialize warning (menunggu auth key asli): $e');
   }

@@ -409,15 +409,23 @@ class _CockpitScreenState extends State<CockpitScreen>
             ),
           ),
           const SizedBox(width: 8),
-          // Online Indicator Pill
+          // Online Indicator Pill (Neon Glow Effect)
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
             decoration: BoxDecoration(
-              color: isDark ? AppColors.darkSuccessBg : const Color(0xFFECFDF5),
+              color: isDark ? const Color(0xFF06281E) : const Color(0xFFECFDF5),
               borderRadius: BorderRadius.circular(DbRadius.pill),
               border: Border.all(
-                color: isDark ? const Color(0xFF059669) : const Color(0xFFA7F3D0),
+                color: isDark ? const Color(0xFF10B981) : const Color(0xFFA7F3D0),
+                width: isDark ? 1.4 : 1.0,
               ),
+              boxShadow: [
+                BoxShadow(
+                  color: const Color(0xFF10B981).withValues(alpha: isDark ? 0.65 : 0.25),
+                  blurRadius: isDark ? 12 : 6,
+                  spreadRadius: isDark ? 1.5 : 0.5,
+                ),
+              ],
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
@@ -425,19 +433,34 @@ class _CockpitScreenState extends State<CockpitScreen>
                 Container(
                   width: 7,
                   height: 7,
-                  decoration: const BoxDecoration(
-                    color: Color(0xFF10B981),
+                  decoration: BoxDecoration(
+                    color: const Color(0xFF10B981),
                     shape: BoxShape.circle,
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF10B981).withValues(alpha: 0.9),
+                        blurRadius: 6,
+                        spreadRadius: 1,
+                      ),
+                    ],
                   ),
                 ),
                 const SizedBox(width: 5),
-                const Text(
+                Text(
                   'ONLINE',
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w800,
-                    color: Color(0xFF065F46),
+                    color: isDark ? const Color(0xFF34D399) : const Color(0xFF065F46),
                     letterSpacing: 0.8,
+                    shadows: isDark
+                        ? [
+                            const Shadow(
+                              color: Color(0xFF10B981),
+                              blurRadius: 8,
+                            ),
+                          ]
+                        : null,
                   ),
                 ),
               ],
@@ -529,7 +552,7 @@ class _CockpitScreenState extends State<CockpitScreen>
                           const SizedBox(width: 8),
                           Flexible(
                             child: Text(
-                              'Sensor AI Kabin',
+                              'Preview',
                               style: TextStyle(
                                 fontSize: 13.5,
                                 fontWeight: FontWeight.w800,

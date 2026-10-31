@@ -1283,6 +1283,128 @@ class MonitorScreenState extends State<MonitorScreen> {
             ),
           ),
 
+          // Header Bar di atas viewport kamera: Status Deteksi Wajah & Tombol Perbesar
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 8),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.darkCardBgSoft : const Color(0xFFF8FAFC),
+              border: Border(
+                bottom: BorderSide(
+                  color: isDark ? AppColors.darkCardBorder : const Color(0xFFE2E8F0),
+                ),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                // Status Deteksi Wajah
+                Container(
+                  padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4.5),
+                  decoration: BoxDecoration(
+                    color: !_isMonitoring
+                        ? (isDark ? const Color(0xFF1E293B) : const Color(0xFFF1F5F9))
+                        : (isDanger
+                            ? (isDark ? const Color(0xFF7F1D1D).withValues(alpha: 0.5) : const Color(0xFFFEF2F2))
+                            : (_eyeDetected
+                                ? (isDark ? const Color(0xFF064E3B).withValues(alpha: 0.5) : const Color(0xFFECFDF5))
+                                : (isDark ? const Color(0xFF7F1D1D).withValues(alpha: 0.5) : const Color(0xFFFEF2F2)))),
+                    borderRadius: BorderRadius.circular(8),
+                    border: Border.all(
+                      color: !_isMonitoring
+                          ? const Color(0xFF94A3B8)
+                          : (isDanger
+                              ? const Color(0xFFEF4444)
+                              : (_eyeDetected ? const Color(0xFF10B981) : const Color(0xFFEF4444))),
+                      width: 1,
+                    ),
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 7,
+                        height: 7,
+                        decoration: BoxDecoration(
+                          color: !_isMonitoring
+                              ? const Color(0xFF94A3B8)
+                              : (isDanger
+                                  ? const Color(0xFFEF4444)
+                                  : (_eyeDetected ? const Color(0xFF10B981) : const Color(0xFFEF4444))),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                      const SizedBox(width: 6),
+                      Text(
+                        !_isMonitoring
+                            ? 'Sensor Kamera Siaga'
+                            : (isDanger
+                                ? 'Peringatan Kantuk!'
+                                : (_eyeDetected ? 'Wajah Terdeteksi' : 'Wajah Tidak Terdeteksi')),
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.w800,
+                          color: !_isMonitoring
+                              ? (isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B))
+                              : (isDanger
+                                  ? const Color(0xFFEF4444)
+                                  : (_eyeDetected
+                                      ? (isDark ? const Color(0xFF34D399) : const Color(0xFF059669))
+                                      : const Color(0xFFEF4444))),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+
+                // Tombol Perbesar (Hanya aktif saat monitoring)
+                if (_isMonitoring)
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: () {
+                        setState(() {
+                          _showCameraModal = true;
+                        });
+                      },
+                      borderRadius: BorderRadius.circular(8),
+                      child: Container(
+                        padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4.5),
+                        decoration: BoxDecoration(
+                          color: const Color(0xFFF26B1D).withValues(alpha: isDark ? 0.2 : 0.12),
+                          borderRadius: BorderRadius.circular(8),
+                          border: Border.all(
+                            color: const Color(0xFFF26B1D).withValues(alpha: 0.6),
+                            width: 1,
+                          ),
+                        ),
+                        child: const Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            Icon(
+                              Icons.fullscreen_rounded,
+                              color: Color(0xFFF26B1D),
+                              size: 16,
+                            ),
+                            SizedBox(width: 4),
+                            Text(
+                              'Perbesar',
+                              style: TextStyle(
+                                fontSize: 10.5,
+                                fontWeight: FontWeight.w800,
+                                color: Color(0xFFF26B1D),
+                              ),
+                            ),
+                          ],
+                        ),
+                      ),
+                    ),
+                  )
+                else
+                  const SizedBox.shrink(),
+              ],
+            ),
+          ),
+
           // Camera Viewport Box
           Container(
             height: 240,
@@ -1425,44 +1547,7 @@ class MonitorScreenState extends State<MonitorScreen> {
 
                 // 3. Live HUD Overlays (HANYA MUNCUL SAAT MONITORING AKTIF, AGAR FRAME STANDBY BERSIH)
                 if (_isMonitoring) ...[
-                  // Tombol Pop-up Pratinjau Kamera Kabin (Pop-up Window)
-                  Positioned(
-                    top: 10,
-                    right: 10,
-                    child: Material(
-                      color: Colors.transparent,
-                      child: InkWell(
-                        onTap: () {
-                          setState(() {
-                            _showCameraModal = true;
-                          });
-                        },
-                        borderRadius: BorderRadius.circular(10),
-                        child: Container(
-                          padding: const EdgeInsets.all(7),
-                          decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.70),
-                            borderRadius: BorderRadius.circular(10),
-                            border: Border.all(
-                              color: const Color(0xFFF26B1D),
-                              width: 1.2,
-                            ),
-                            boxShadow: [
-                              BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.4),
-                                blurRadius: 8,
-                              ),
-                            ],
-                          ),
-                          child: const Icon(
-                            Icons.fullscreen_rounded,
-                            color: Color(0xFFF26B1D),
-                            size: 20,
-                          ),
-                        ),
-                      ),
-                    ),
-                  ),
+
                   IgnorePointer(
                     child: CustomPaint(
                       painter: _CockpitHudOverlayPainter(
@@ -1474,52 +1559,7 @@ class MonitorScreenState extends State<MonitorScreen> {
                     ),
                   ),
 
-                  // Top-Left Status Badge
-                  Positioned(
-                    top: 10,
-                    left: 10,
-                    child: Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-                      decoration: BoxDecoration(
-                        color: Colors.white.withValues(alpha: 0.95),
-                        borderRadius: BorderRadius.circular(10),
-                        border: Border.all(
-                          color: isDanger ? const Color(0xFFFECACA) : const Color(0xFFA7F3D0),
-                        ),
-                        boxShadow: [
-                          BoxShadow(
-                            color: Colors.black.withValues(alpha: 0.04),
-                            blurRadius: 6,
-                          )
-                        ],
-                      ),
-                      child: Row(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Container(
-                            width: 7,
-                            height: 7,
-                            decoration: BoxDecoration(
-                              color: isDanger ? const Color(0xFFD94126) : const Color(0xFF10B981),
-                              shape: BoxShape.circle,
-                            ),
-                          ),
-                          const SizedBox(width: 6),
-                          Text(
-                            isDanger
-                                ? 'Peringatan Kantuk!'
-                                : (_eyeDetected ? 'Wajah Terdeteksi' : 'Wajah Tidak Terdeteksi'),
-                            style: TextStyle(
-                              fontSize: 9.5,
-                              fontWeight: FontWeight.w800,
-                              letterSpacing: 0.5,
-                              color: isDanger ? const Color(0xFFD94126) : const Color(0xFF0F172A),
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  ),
+
 
 
 
@@ -1711,10 +1751,10 @@ class MonitorScreenState extends State<MonitorScreen> {
                                       children: [
                                         TextSpan(
                                           text: '${_result.blinkCount}',
-                                          style: const TextStyle(
+                                          style: TextStyle(
                                             fontSize: 13,
                                             fontWeight: FontWeight.w800,
-                                            color: Color(0xFF0F172A),
+                                            color: isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A),
                                           ),
                                         ),
                                         const TextSpan(
@@ -1822,12 +1862,12 @@ class MonitorScreenState extends State<MonitorScreen> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: isDark ? AppColors.darkCardBgSoft : Colors.white,
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
                             color: (_enableHeadTilt && _result.rollAngle.abs() >= Thresholds.headTiltRollAngle)
                                 ? const Color(0xFFFECACA)
-                                : const Color(0xFFFFF1E8),
+                                : (isDark ? AppColors.darkCardBorder : const Color(0xFFFFF1E8)),
                           ),
                         ),
                         child: Row(
@@ -1847,7 +1887,7 @@ class MonitorScreenState extends State<MonitorScreen> {
                                     style: TextStyle(
                                       fontSize: 8,
                                       fontWeight: FontWeight.w800,
-                                      color: _enableHeadTilt ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                                      color: _enableHeadTilt ? (isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B)) : const Color(0xFF94A3B8),
                                     ),
                                   ),
                                   Text(
@@ -1859,7 +1899,7 @@ class MonitorScreenState extends State<MonitorScreen> {
                                       fontWeight: FontWeight.w800,
                                       color: (_enableHeadTilt && _result.rollAngle.abs() >= Thresholds.headTiltRollAngle)
                                           ? const Color(0xFFD94126)
-                                          : const Color(0xFF0F172A),
+                                          : (isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A)),
                                     ),
                                   ),
                                 ],
@@ -1874,12 +1914,12 @@ class MonitorScreenState extends State<MonitorScreen> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 8),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: isDark ? AppColors.darkCardBgSoft : Colors.white,
                           borderRadius: BorderRadius.circular(10),
                           border: Border.all(
                             color: (_enableHeadBob && _result.headBobCount >= 2)
                                 ? const Color(0xFFFECACA)
-                                : const Color(0xFFFFF1E8),
+                                : (isDark ? AppColors.darkCardBorder : const Color(0xFFFFF1E8)),
                           ),
                         ),
                         child: Row(
@@ -1899,7 +1939,7 @@ class MonitorScreenState extends State<MonitorScreen> {
                                     style: TextStyle(
                                       fontSize: 8,
                                       fontWeight: FontWeight.w800,
-                                      color: _enableHeadBob ? const Color(0xFF64748B) : const Color(0xFF94A3B8),
+                                      color: _enableHeadBob ? (isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B)) : const Color(0xFF94A3B8),
                                     ),
                                   ),
                                   Text(
@@ -1911,7 +1951,7 @@ class MonitorScreenState extends State<MonitorScreen> {
                                       fontWeight: FontWeight.w800,
                                       color: (_enableHeadBob && _result.headBobCount >= 2)
                                           ? const Color(0xFFD94126)
-                                          : const Color(0xFF0F172A),
+                                          : (isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A)),
                                     ),
                                   ),
                                 ],
@@ -1944,6 +1984,7 @@ class MonitorScreenState extends State<MonitorScreen> {
   // 4. COCKPIT DRIVE CONTROL ACTION BUTTONS
   // ──────────────────────────────────────────────────────────────────────────
   Widget _buildCockpitDriveControls() {
+    final isDark = ThemeService.instance.isDarkMode;
     return Column(
       children: [
         // Sub-actions: Snooze & Auto pilot status
@@ -1953,20 +1994,20 @@ class MonitorScreenState extends State<MonitorScreen> {
             OutlinedButton.icon(
               onPressed: _snoozeAlert,
               style: OutlinedButton.styleFrom(
-                backgroundColor: Colors.white,
-                side: const BorderSide(color: Color(0xFFCBD5E1)),
+                backgroundColor: isDark ? AppColors.darkCardBgSoft : Colors.white,
+                side: BorderSide(color: isDark ? AppColors.darkCardBorder : const Color(0xFFCBD5E1)),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.circular(10),
                 ),
                 padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
               ),
-              icon: const Icon(Icons.snooze_rounded, size: 16, color: Color(0xFF64748B)),
-              label: const Text(
+              icon: Icon(Icons.snooze_rounded, size: 16, color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B)),
+              label: Text(
                 'TUNDA PERINGATAN (15 MNT)',
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w800,
-                  color: Color(0xFF334155),
+                  color: isDark ? AppColors.darkTextPrimary : const Color(0xFF334155),
                   letterSpacing: 0.5,
                 ),
               ),

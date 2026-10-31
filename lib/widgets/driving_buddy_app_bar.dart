@@ -40,8 +40,12 @@ class _DrivingBuddyAppBarState extends State<DrivingBuddyAppBar> {
 
   Future<void> _syncAvatarPhoto() async {
     final curEmail = AuthService.currentUser?.email;
-    final cached = await AccountConfig.getPhotoUrl(userEmail: curEmail);
-    if ((cached == null || cached.isEmpty) && AuthService.currentUser != null) {
+    if (curEmail != null && curEmail.isNotEmpty) {
+      final cached = await AccountConfig.getPhotoUrl(userEmail: curEmail);
+      if (cached != null && cached.isNotEmpty) {
+        AccountConfig.photoNotifier.value = cached;
+        return;
+      }
       try {
         final profile = await AuthService.getUserProfile();
         final p = profile?['photoUrl'] as String?;

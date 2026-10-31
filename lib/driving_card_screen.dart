@@ -218,35 +218,34 @@ class _PolaroidMapCard extends StatelessWidget {
       maxLng: maxLng,
     );
 
-    return Center(
-      child: Container(
-        constraints: const BoxConstraints(maxWidth: 240),
-        decoration: BoxDecoration(
-          color: const Color(0xFFFDFBF7), // Warm vintage polaroid paper
-          borderRadius: BorderRadius.circular(10),
-          boxShadow: [
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.35),
-              blurRadius: 28,
-              offset: const Offset(0, 14),
-            ),
-            BoxShadow(
-              color: Colors.black.withValues(alpha: 0.12),
-              blurRadius: 10,
-              offset: const Offset(0, 4),
-            ),
-          ],
-        ),
-        padding: const EdgeInsets.fromLTRB(10, 10, 10, 14),
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          crossAxisAlignment: CrossAxisAlignment.stretch,
-          children: [
-            // Inner Square Photographic Map Window
-            ClipRRect(
-              borderRadius: BorderRadius.circular(4),
-              child: AspectRatio(
-                aspectRatio: 1.32,
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: const Color(0xFFFDFBF7), // Warm vintage polaroid paper
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.35),
+            blurRadius: 28,
+            offset: const Offset(0, 14),
+          ),
+          BoxShadow(
+            color: Colors.black.withValues(alpha: 0.12),
+            blurRadius: 10,
+            offset: const Offset(0, 4),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.fromLTRB(10, 10, 10, 12),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.stretch,
+        children: [
+          // Inner Photographic Map Window
+          ClipRRect(
+            borderRadius: BorderRadius.circular(6),
+            child: AspectRatio(
+              aspectRatio: 1.55,
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
@@ -361,8 +360,7 @@ class _PolaroidMapCard extends StatelessWidget {
             ),
           ],
         ),
-      ),
-    );
+      );
   }
 
   /// Peta OSM: susun tile 256px di sekitar koordinat sehingga titik posisi tepat di tengah.
@@ -767,12 +765,13 @@ class _DrivingCardScreenState extends State<DrivingCardScreen>
   }
 
   String _formatDuration(int totalSeconds) {
-    if (totalSeconds < 60) return '$totalSeconds Dtk';
+    if (totalSeconds < 60) return '$totalSeconds d';
     final h = totalSeconds ~/ 3600;
     final m = (totalSeconds % 3600) ~/ 60;
     final s = totalSeconds % 60;
     if (h > 0) return '${h}j ${m}m';
-    return '${m}m ${s}s';
+    if (s > 0) return '${m}m ${s}d';
+    return '${m}m';
   }
 
   Color get _scoreColor {
@@ -811,18 +810,36 @@ class _DrivingCardScreenState extends State<DrivingCardScreen>
       startedAt: widget.startedAt,
     );
 
-    final speedStr = widget.avgSpeedKmh > 0
-        ? '${widget.avgSpeedKmh.toStringAsFixed(0)} km/j'
-        : '0 km/j';
-    final distStr = widget.distanceKm > 0
-        ? '${widget.distanceKm.toStringAsFixed(2)} KM'
-        : '0.00 KM';
+    // Structured metrics with unified values and units
+    String durVal;
+    String durUnit;
+    if (widget.durationSeconds < 60) {
+      durVal = '${widget.durationSeconds}';
+      durUnit = 'd';
+    } else {
+      final h = widget.durationSeconds ~/ 3600;
+      final m = (widget.durationSeconds % 3600) ~/ 60;
+      final s = widget.durationSeconds % 60;
+      if (h > 0) {
+        durVal = '${h}j ${m}m';
+        durUnit = '';
+      } else if (s > 0) {
+        durVal = '${m}m ${s}d';
+        durUnit = '';
+      } else {
+        durVal = '$m';
+        durUnit = 'm';
+      }
+    }
+    final distVal = widget.distanceKm > 0 ? widget.distanceKm.toStringAsFixed(2) : '0.00';
+    const distUnit = 'km';
+    final speedVal = widget.avgSpeedKmh > 0 ? widget.avgSpeedKmh.toStringAsFixed(0) : '0';
+    const speedUnit = 'km/j';
     final double realTopSpeed = (widget.maxSpeedKmh != null && widget.maxSpeedKmh! > 0)
         ? widget.maxSpeedKmh!
         : (widget.avgSpeedKmh > 0 ? widget.avgSpeedKmh * 1.15 : 0.0);
-    final topSpeedStr = realTopSpeed > 0
-        ? '${realTopSpeed.toStringAsFixed(0)} km/j'
-        : '0 km/j';
+    final topSpeedVal = realTopSpeed > 0 ? realTopSpeed.toStringAsFixed(0) : '0';
+    const topSpeedUnit = 'km/j';
 
     return Scaffold(
       backgroundColor: const Color(0xFF0F172A),
@@ -983,31 +1000,35 @@ class _DrivingCardScreenState extends State<DrivingCardScreen>
                                   Expanded(
                                     child: _buildMetric(
                                       label: 'DURASI',
-                                      value: _formatDuration(widget.durationSeconds),
+                                      value: durVal,
+                                      unit: durUnit,
                                       icon: Icons.timer_outlined,
                                     ),
                                   ),
-                                  Container(height: 28, width: 1, color: Colors.white.withValues(alpha: 0.12)),
+                                  Container(height: 26, width: 1, color: Colors.white.withValues(alpha: 0.12)),
                                   Expanded(
                                     child: _buildMetric(
                                       label: 'JARAK',
-                                      value: distStr,
+                                      value: distVal,
+                                      unit: distUnit,
                                       icon: Icons.alt_route_rounded,
                                     ),
                                   ),
-                                  Container(height: 28, width: 1, color: Colors.white.withValues(alpha: 0.12)),
+                                  Container(height: 26, width: 1, color: Colors.white.withValues(alpha: 0.12)),
                                   Expanded(
                                     child: _buildMetric(
                                       label: 'AVG SPEED',
-                                      value: speedStr,
+                                      value: speedVal,
+                                      unit: speedUnit,
                                       icon: Icons.speed_rounded,
                                     ),
                                   ),
-                                  Container(height: 28, width: 1, color: Colors.white.withValues(alpha: 0.12)),
+                                  Container(height: 26, width: 1, color: Colors.white.withValues(alpha: 0.12)),
                                   Expanded(
                                     child: _buildMetric(
                                       label: 'TOP SPEED',
-                                      value: topSpeedStr,
+                                      value: topSpeedVal,
+                                      unit: topSpeedUnit,
                                       icon: Icons.electric_bolt_rounded,
                                     ),
                                   ),
@@ -1190,45 +1211,58 @@ class _DrivingCardScreenState extends State<DrivingCardScreen>
   Widget _buildMetric({
     required String label,
     required String value,
+    String unit = '',
     required IconData icon,
   }) {
     return Padding(
-      padding: const EdgeInsets.symmetric(horizontal: 4),
+      padding: const EdgeInsets.symmetric(horizontal: 2),
       child: Column(
         mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(icon, size: 12, color: _grey),
-                const SizedBox(width: 4),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            children: [
+              Icon(icon, size: 10, color: _grey),
+              const SizedBox(width: 3),
+              Text(
+                label,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 8.5,
+                  fontWeight: FontWeight.w700,
+                  color: _grey,
+                  letterSpacing: 0.5,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 3),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.center,
+            crossAxisAlignment: CrossAxisAlignment.baseline,
+            textBaseline: TextBaseline.alphabetic,
+            children: [
+              Text(
+                value,
+                textAlign: TextAlign.center,
+                style: GoogleFonts.plusJakartaSans(
+                  fontSize: 13.5,
+                  fontWeight: FontWeight.w900,
+                  color: _orange,
+                ),
+              ),
+              if (unit.isNotEmpty) ...[
+                const SizedBox(width: 2),
                 Text(
-                  label,
+                  unit,
                   style: GoogleFonts.plusJakartaSans(
-                    fontSize: 10.5,
+                    fontSize: 9.5,
                     fontWeight: FontWeight.w700,
-                    color: _grey,
-                    letterSpacing: 0.8,
+                    color: _orange.withValues(alpha: 0.85),
                   ),
                 ),
               ],
-            ),
-          ),
-          const SizedBox(height: 4),
-          FittedBox(
-            fit: BoxFit.scaleDown,
-            child: Text(
-              value,
-              textAlign: TextAlign.center,
-              style: GoogleFonts.plusJakartaSans(
-                fontSize: 15,
-                fontWeight: FontWeight.w900,
-                color: _orange,
-                letterSpacing: 0.3,
-              ),
-            ),
+            ],
           ),
         ],
       ),
@@ -1242,21 +1276,21 @@ class _DrivingCardScreenState extends State<DrivingCardScreen>
     required Color color,
   }) {
     return Container(
-      padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 4),
+      padding: const EdgeInsets.symmetric(vertical: 5, horizontal: 4),
       decoration: BoxDecoration(
         color: const Color(0xFF1E293B).withValues(alpha: 0.88),
-        borderRadius: BorderRadius.circular(12),
+        borderRadius: BorderRadius.circular(10),
         border: Border.all(color: color.withValues(alpha: 0.25)),
       ),
       child: Column(
         children: [
-          Icon(icon, color: color, size: 16),
-          const SizedBox(height: 3),
+          Icon(icon, color: color, size: 14),
+          const SizedBox(height: 2),
           Text(
             value,
             style: TextStyle(
               color: color,
-              fontSize: 14,
+              fontSize: 12.5,
               fontWeight: FontWeight.w900,
             ),
           ),
@@ -1265,7 +1299,7 @@ class _DrivingCardScreenState extends State<DrivingCardScreen>
             label,
             style: const TextStyle(
               color: _grey,
-              fontSize: 9.5,
+              fontSize: 9,
               fontWeight: FontWeight.w700,
             ),
           ),
