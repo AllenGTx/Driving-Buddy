@@ -172,11 +172,22 @@ class AuthService {
 
     final user = credential.user;
     if (user != null) {
+      // JANGAN TIMPA FOTO PROFIL: Cek apakah user sudah punya foto profil sebelumnya
+      bool hasExistingPhoto = false;
+      try {
+        final existingDoc = await firestore.collection('users').doc(user.uid).get();
+        final existingPhoto = existingDoc.data()?['photoUrl'] as String?;
+        if (existingPhoto != null && existingPhoto.trim().isNotEmpty) {
+          hasExistingPhoto = true;
+        }
+      } catch (_) {}
+
       await firestore.collection('users').doc(user.uid).set({
         'uid': user.uid,
         'email': user.email,
         'displayName': user.displayName ?? 'Pengemudi',
-        'photoUrl': user.photoURL,
+        if (!hasExistingPhoto && user.photoURL != null && user.photoURL!.isNotEmpty)
+          'photoUrl': user.photoURL,
         'lastLogin': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
     }
@@ -312,6 +323,8 @@ class SessionService {
     required int totalDrowsyEvents,
     required int totalMicrosleeps,
     double? avgEar,
+    double? avgMar,
+    double? avgHeadTilt,
     double? startLat,
     double? startLng,
     double? endLat,
@@ -339,6 +352,12 @@ class SessionService {
       'totalMicrosleeps': totalMicrosleeps,
       'total_microsleeps': totalMicrosleeps,
       'avgEar': avgEar ?? 0.0,
+      'avg_ear': avgEar ?? 0.0,
+      'avgMar': avgMar ?? 0.0,
+      'avg_mar': avgMar ?? 0.0,
+      'avgHeadTilt': avgHeadTilt ?? 0.0,
+      'avg_kemiringan_kepala': avgHeadTilt ?? 0.0,
+      'avg_head_tilt': avgHeadTilt ?? 0.0,
       'startLat': startLat,
       'startLng': startLng,
       'start_lat': startLat,
@@ -393,6 +412,12 @@ class SessionService {
       'totalMicrosleeps': totalMicrosleeps,
       'total_microsleeps': totalMicrosleeps,
       'avgEar': avgEar ?? 0.0,
+      'avg_ear': avgEar ?? 0.0,
+      'avgMar': avgMar ?? 0.0,
+      'avg_mar': avgMar ?? 0.0,
+      'avgHeadTilt': avgHeadTilt ?? 0.0,
+      'avg_kemiringan_kepala': avgHeadTilt ?? 0.0,
+      'avg_head_tilt': avgHeadTilt ?? 0.0,
       'startLat': startLat,
       'startLng': startLng,
       'start_lat': startLat,

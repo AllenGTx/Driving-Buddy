@@ -124,10 +124,15 @@ class AppTheme {
       ),
       switchTheme: SwitchThemeData(
         thumbColor: WidgetStateProperty.resolveWith(
-          (s) => s.contains(WidgetState.selected) ? Colors.white : null,
+          (s) => Colors.white,
         ),
         trackColor: WidgetStateProperty.resolveWith(
-          (s) => s.contains(WidgetState.selected) ? DbColors.orange : null,
+          (s) => s.contains(WidgetState.selected)
+              ? DbColors.orange
+              : (dark ? const Color(0xFF334155) : const Color(0xFFCBD5E1)),
+        ),
+        trackOutlineColor: WidgetStateProperty.resolveWith(
+          (s) => Colors.transparent,
         ),
       ),
     );

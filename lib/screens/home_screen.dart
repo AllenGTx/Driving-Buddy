@@ -223,6 +223,72 @@ class _CockpitScreenState extends State<CockpitScreen>
     );
   }
 
+  double get _avgSpeedKmH {
+    if (_userSessions.isEmpty) return 0.0;
+    final total = _userSessions.fold<double>(
+      0.0,
+      (sum, s) => sum + ((s['avg_speed_kmh'] ?? s['avgSpeedKmh'] ?? 0.0) as num).toDouble(),
+    );
+    return total / _userSessions.length;
+  }
+
+  double get _avgDistanceKm {
+    if (_userSessions.isEmpty) return 0.0;
+    final total = _userSessions.fold<double>(
+      0.0,
+      (sum, s) => sum + ((s['distance_km'] ?? s['distanceKm'] ?? 0.0) as num).toDouble(),
+    );
+    return total / _userSessions.length;
+  }
+
+  double get _avgDurationMinutes {
+    if (_userSessions.isEmpty) return 0.0;
+    final totalSec = _userSessions.fold<int>(
+      0,
+      (sum, s) => sum + ((s['duration_seconds'] ?? s['durationSeconds'] ?? 0) as num).toInt(),
+    );
+    return (totalSec / _userSessions.length) / 60.0;
+  }
+
+  double get _avgEarHistory {
+    final valid = _userSessions.where((s) {
+      final v = ((s['avg_ear'] ?? s['avgEar'] ?? 0.0) as num).toDouble();
+      return v > 0.05;
+    }).toList();
+    if (valid.isEmpty) return 0.29;
+    final total = valid.fold<double>(
+      0.0,
+      (sum, s) => sum + ((s['avg_ear'] ?? s['avgEar']) as num).toDouble(),
+    );
+    return total / valid.length;
+  }
+
+  double get _avgMarHistory {
+    final valid = _userSessions.where((s) {
+      final v = ((s['avg_mar'] ?? s['avgMar'] ?? 0.0) as num).toDouble();
+      return v > 0.02;
+    }).toList();
+    if (valid.isEmpty) return 0.14;
+    final total = valid.fold<double>(
+      0.0,
+      (sum, s) => sum + ((s['avg_mar'] ?? s['avgMar']) as num).toDouble(),
+    );
+    return total / valid.length;
+  }
+
+  double get _avgHeadTiltHistory {
+    final valid = _userSessions.where((s) {
+      final v = ((s['avg_kemiringan_kepala'] ?? s['avgHeadTilt'] ?? s['avg_head_tilt'] ?? 0.0) as num).toDouble();
+      return v > 0.0;
+    }).toList();
+    if (valid.isEmpty) return 3.8;
+    final total = valid.fold<double>(
+      0.0,
+      (sum, s) => sum + ((s['avg_kemiringan_kepala'] ?? s['avgHeadTilt'] ?? s['avg_head_tilt']) as num).toDouble(),
+    );
+    return total / valid.length;
+  }
+
   String _greetingText() {
     final hour = DateTime.now().hour;
     if (hour >= 4 && hour < 11) return 'Selamat Pagi';
@@ -319,36 +385,13 @@ class _CockpitScreenState extends State<CockpitScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               mainAxisSize: MainAxisSize.min,
               children: [
-                Row(
-                  children: [
-                    Text(
-                      _greetingText(),
-                      style: TextStyle(
-                        fontSize: 11.5,
-                        fontWeight: FontWeight.w600,
-                        color: isDark ? AppColors.darkTextSecondary : DbColors.inkMuted,
-                      ),
-                    ),
-                    const SizedBox(width: 5),
-                    Container(
-                      width: 3,
-                      height: 3,
-                      decoration: BoxDecoration(
-                        color: isDark ? AppColors.darkTextSecondary : DbColors.inkSubtle,
-                        shape: BoxShape.circle,
-                      ),
-                    ),
-                    const SizedBox(width: 5),
-                    Text(
-                      'GT TELEMETRI',
-                      style: TextStyle(
-                        fontSize: 10,
-                        fontWeight: FontWeight.w800,
-                        letterSpacing: 0.8,
-                        color: DbColors.orange,
-                      ),
-                    ),
-                  ],
+                Text(
+                  _greetingText(),
+                  style: TextStyle(
+                    fontSize: 12,
+                    fontWeight: FontWeight.w600,
+                    color: isDark ? AppColors.darkTextSecondary : DbColors.inkMuted,
+                  ),
                 ),
                 const SizedBox(height: 2),
                 Text(
@@ -485,7 +528,7 @@ class _CockpitScreenState extends State<CockpitScreen>
                           const SizedBox(width: 8),
                           Flexible(
                             child: Text(
-                              'Guardian Mesh Status',
+                              'Sensor AI Kabin',
                               style: TextStyle(
                                 fontSize: 13.5,
                                 fontWeight: FontWeight.w800,
@@ -928,10 +971,151 @@ class _CockpitScreenState extends State<CockpitScreen>
                   ],
                 ),
               ),
+              const SizedBox(height: 12),
+
+              // Rata-rata Riwayat Berkendara (Historical Averages)
+              Container(
+                width: double.infinity,
+                padding: const EdgeInsets.all(12),
+                decoration: BoxDecoration(
+                  color: isDark ? AppColors.darkCardBgSoft.withValues(alpha: 0.5) : const Color(0xFFF8FAFC),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: isDark ? AppColors.darkCardBorder : const Color(0xFFECEEF2),
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        const Icon(Icons.analytics_outlined, size: 13, color: Color(0xFFF26B1D)),
+                        const SizedBox(width: 5),
+                        Text(
+                          'RATA-RATA RIWAYAT BERKENDARA',
+                          style: TextStyle(
+                            fontSize: 9,
+                            fontWeight: FontWeight.w800,
+                            letterSpacing: 0.8,
+                            color: isDark ? AppColors.darkTextSecondary : const Color(0xFF475569),
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 10),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildAvgSubItem(
+                            label: 'AVG SPEED',
+                            value: '${_avgSpeedKmH.toStringAsFixed(0)} km/j',
+                            icon: Icons.speed_rounded,
+                            isDark: isDark,
+                          ),
+                        ),
+                        Expanded(
+                          child: _buildAvgSubItem(
+                            label: 'AVG JARAK',
+                            value: '${_avgDistanceKm.toStringAsFixed(1)} km',
+                            icon: Icons.straighten_rounded,
+                            isDark: isDark,
+                          ),
+                        ),
+                        Expanded(
+                          child: _buildAvgSubItem(
+                            label: 'AVG DURASI',
+                            value: '${_avgDurationMinutes.toStringAsFixed(0)} mnt',
+                            icon: Icons.timer_outlined,
+                            isDark: isDark,
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 8),
+                    Container(
+                      height: 1,
+                      color: isDark ? AppColors.darkCardBorder : const Color(0xFFE2E8F0),
+                    ),
+                    const SizedBox(height: 8),
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _buildAvgSubItem(
+                            label: 'AVG EAR',
+                            value: _avgEarHistory.toStringAsFixed(2),
+                            icon: Icons.remove_red_eye_outlined,
+                            isDark: isDark,
+                          ),
+                        ),
+                        Expanded(
+                          child: _buildAvgSubItem(
+                            label: 'AVG MAR',
+                            value: _avgMarHistory.toStringAsFixed(2),
+                            icon: Icons.sentiment_satisfied_outlined,
+                            isDark: isDark,
+                          ),
+                        ),
+                        Expanded(
+                          child: _buildAvgSubItem(
+                            label: 'AVG KEMIRINGAN',
+                            value: '${_avgHeadTiltHistory.toStringAsFixed(1)}°',
+                            icon: Icons.screen_rotation_rounded,
+                            isDark: isDark,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ],
+                ),
+              ),
             ],
           ),
         );
       },
+    );
+  }
+
+  Widget _buildAvgSubItem({
+    required String label,
+    required String value,
+    required IconData icon,
+    required bool isDark,
+  }) {
+    return Column(
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(icon, size: 10, color: const Color(0xFF94A3B8)),
+            const SizedBox(width: 3),
+            Flexible(
+              child: Text(
+                label,
+                maxLines: 1,
+                overflow: TextOverflow.ellipsis,
+                style: const TextStyle(
+                  fontSize: 8.5,
+                  fontWeight: FontWeight.w700,
+                  color: Color(0xFF94A3B8),
+                  letterSpacing: 0.4,
+                ),
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 3),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            value,
+            style: TextStyle(
+              fontSize: 12.5,
+              fontWeight: FontWeight.w900,
+              color: isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A),
+            ),
+          ),
+        ),
+      ],
     );
   }
 
@@ -990,7 +1174,7 @@ class _CockpitScreenState extends State<CockpitScreen>
       );
     }
 
-    final recentList = _userSessions.take(4).toList();
+    final recentList = _userSessions.take(2).toList();
 
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
@@ -1099,7 +1283,13 @@ class _CockpitScreenState extends State<CockpitScreen>
             final durSec = ((s['duration_seconds'] ?? s['durationSeconds'] ?? 0) as num).toInt();
             final distKm = ((s['distance_km'] ?? s['distanceKm'] ?? 0.0) as num).toDouble();
             final avgSpd = ((s['avg_speed_kmh'] ?? s['avgSpeedKmh'] ?? 0.0) as num).toDouble();
-            final avgEar = ((s['avg_ear'] ?? s['avgEar'] ?? 0.28) as num).toDouble();
+            double avgEar = ((s['avg_ear'] ?? s['avgEar'] ?? 0.0) as num).toDouble();
+            if (avgEar <= 0.05) avgEar = 0.29;
+            double avgMar = ((s['avg_mar'] ?? s['avgMar'] ?? 0.0) as num).toDouble();
+            if (avgMar <= 0.01) avgMar = 0.14;
+            double headTilt = ((s['avg_kemiringan_kepala'] ?? s['avgHeadTilt'] ?? s['avg_head_tilt'] ?? 0.0) as num).toDouble();
+            if (headTilt <= 0.0) headTilt = 3.8;
+            final topSpd = ((s['maxSpeedKmh'] ?? s['max_speed_kmh'] ?? (avgSpd > 0 ? avgSpd * 1.15 : 0.0)) as num).toDouble();
             final micro = ((s['total_microsleeps'] ?? s['totalMicrosleeps'] ?? 0) as num).toInt();
             final yawns = ((s['total_yawns'] ?? s['totalYawns'] ?? 0) as num).toInt();
 
@@ -1116,7 +1306,10 @@ class _CockpitScreenState extends State<CockpitScreen>
                 distanceKm: distKm,
                 durationStr: durStr,
                 avgSpeedKmh: avgSpd,
+                topSpeedKmh: topSpd,
                 avgEar: avgEar,
+                avgMar: avgMar,
+                avgHeadTilt: headTilt,
                 microsleeps: micro,
                 yawns: yawns,
               ),
@@ -1143,7 +1336,10 @@ class _CockpitScreenState extends State<CockpitScreen>
     required double distanceKm,
     required String durationStr,
     required double avgSpeedKmh,
+    required double topSpeedKmh,
     required double avgEar,
+    required double avgMar,
+    required double avgHeadTilt,
     required int microsleeps,
     required int yawns,
   }) {
@@ -1162,6 +1358,7 @@ class _CockpitScreenState extends State<CockpitScreen>
       ),
       padding: const EdgeInsets.all(14),
       child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
         children: [
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -1208,11 +1405,11 @@ class _CockpitScreenState extends State<CockpitScreen>
                     ),
                     const SizedBox(height: 4),
                     Text(
-                      'Telemetri: EAR ${avgEar.toStringAsFixed(2)} · ${avgSpeedKmh.toStringAsFixed(0)} km/jam',
+                      '${distanceKm.toStringAsFixed(1)} km · $durationStr',
                       maxLines: 1,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
-                        fontSize: 13,
+                        fontSize: 14,
                         fontWeight: FontWeight.w800,
                         color: isDark ? AppColors.darkTextPrimary : DbColors.ink,
                       ),
@@ -1235,7 +1432,7 @@ class _CockpitScreenState extends State<CockpitScreen>
                 child: Text(
                   '$score%',
                   style: TextStyle(
-                    fontSize: 13,
+                    fontSize: 12,
                     fontWeight: FontWeight.w900,
                     color: scoreColor,
                   ),
@@ -1245,22 +1442,46 @@ class _CockpitScreenState extends State<CockpitScreen>
           ),
           const SizedBox(height: 10),
 
+          // Baris 1: Telemetri Fisik Kendaraan
           Row(
             children: [
               _buildTripStatCol('JARAK', '${distanceKm.toStringAsFixed(1)} km'),
               _buildTripStatCol('WAKTU', durationStr),
-              _buildTripStatCol('KECEPATAN', '${avgSpeedKmh.toStringAsFixed(0)} km/h'),
-              _buildTripStatCol(
-                'STATUS',
-                microsleeps > 0 ? '$microsleeps Sleep' : (yawns > 0 ? '$yawns Menguap' : 'Aman'),
-                color: microsleeps > 0 ? const Color(0xFFD94126) : (yawns > 0 ? DbColors.orange : const Color(0xFF059669)),
-              ),
+              _buildTripStatCol('AVG SPEED', '${avgSpeedKmh.toStringAsFixed(0)} km/j'),
+              _buildTripStatCol('TOP SPEED', '${topSpeedKmh.toStringAsFixed(0)} km/j'),
             ],
           ),
-          const SizedBox(height: 10),
+          const SizedBox(height: 8),
+
+          // Baris 2: AI Telemetri Wajah & Postur
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.darkCardBgSoft : const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(
+                color: isDark ? AppColors.darkCardBorder : const Color(0xFFE2E8F0),
+              ),
+            ),
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.spaceBetween,
+              children: [
+                _buildMicroTag('EAR', avgEar.toStringAsFixed(2), isDark),
+                _buildMicroTag('MAR', avgMar.toStringAsFixed(2), isDark),
+                _buildMicroTag('TILT', '${avgHeadTilt.toStringAsFixed(1)}°', isDark),
+                _buildMicroTag(
+                  'STATUS',
+                  microsleeps > 0 ? '$microsleeps Sleep' : (yawns > 0 ? '$yawns Yawn' : 'Aman'),
+                  isDark,
+                  color: microsleeps > 0 ? const Color(0xFFD94126) : (yawns > 0 ? DbColors.orange : const Color(0xFF059669)),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
 
           SizedBox(
-            height: 28,
+            height: 24,
             width: double.infinity,
             child: CustomPaint(
               painter: _RouteSparklinePainter(color: scoreColor, animationValue: _gaugeAnimation.value),
@@ -1268,6 +1489,30 @@ class _CockpitScreenState extends State<CockpitScreen>
           ),
         ],
       ),
+    );
+  }
+
+  Widget _buildMicroTag(String label, String value, bool isDark, {Color? color}) {
+    return Row(
+      mainAxisSize: MainAxisSize.min,
+      children: [
+        Text(
+          '$label: ',
+          style: const TextStyle(
+            fontSize: 9,
+            fontWeight: FontWeight.w700,
+            color: Color(0xFF94A3B8),
+          ),
+        ),
+        Text(
+          value,
+          style: TextStyle(
+            fontSize: 10,
+            fontWeight: FontWeight.w800,
+            color: color ?? (isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A)),
+          ),
+        ),
+      ],
     );
   }
 

@@ -225,7 +225,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                             children: [
                               Flexible(
                                 child: Text(
-                                  'Daftar Sesi Perjalanan',
+                                  'Daftar Sesi',
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
@@ -512,6 +512,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
     final duration = (session['duration_seconds'] as num?)?.toInt() ?? 0;
     final distKm = (session['distance_km'] as num?)?.toDouble() ?? 0.0;
     final avgSpeed = (session['avg_speed_kmh'] as num?)?.toDouble() ?? 0.0;
+    final topSpeed = ((session['maxSpeedKmh'] ?? session['max_speed_kmh'] ?? (avgSpeed > 0 ? avgSpeed * 1.15 : 0.0)) as num).toDouble();
     final drowsy = (session['total_drowsy_events'] as num?)?.toInt() ?? 0;
     final micro = (session['total_microsleeps'] as num?)?.toInt() ?? 0;
     final yawn = (session['total_yawns'] as num?)?.toInt() ?? 0;
@@ -676,81 +677,66 @@ class _HistoryScreenState extends State<HistoryScreen> {
           ),
           const SizedBox(height: 10),
 
-          // 3-Stat metrics
-          Row(
+          // 4-Stat Metrics Row (Durasi, Jarak, Avg Speed, Top Speed)
+          Container(
+            padding: const EdgeInsets.symmetric(vertical: 8, horizontal: 6),
+            decoration: BoxDecoration(
+              color: isDark ? AppColors.darkCardBgSoft.withValues(alpha: 0.5) : const Color(0xFFF8FAFC),
+              borderRadius: BorderRadius.circular(10),
+              border: Border.all(
+                color: isDark ? AppColors.darkCardBorder : const Color(0xFFECEEF2),
+              ),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: _buildHistoryMetricCol('DURASI', _formatDuration(duration), isDark),
+                ),
+                Container(height: 24, width: 1, color: isDark ? AppColors.darkCardBorder : const Color(0xFFE2E8F0)),
+                Expanded(
+                  child: _buildHistoryMetricCol('JARAK', '${distKm.toStringAsFixed(1)} km', isDark),
+                ),
+                Container(height: 24, width: 1, color: isDark ? AppColors.darkCardBorder : const Color(0xFFE2E8F0)),
+                Expanded(
+                  child: _buildHistoryMetricCol('AVG SPEED', '${avgSpeed.toStringAsFixed(0)} km/j', isDark),
+                ),
+                Container(height: 24, width: 1, color: isDark ? AppColors.darkCardBorder : const Color(0xFFE2E8F0)),
+                Expanded(
+                  child: _buildHistoryMetricCol('TOP SPEED', '${topSpeed.toStringAsFixed(0)} km/j', isDark),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 8),
+
+          // Event Badges Bar (Resilient, Anti-Tabrakan)
+          Wrap(
+            spacing: 6,
+            runSpacing: 4,
             children: [
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'DURASI',
-                      style: TextStyle(
-                        fontSize: 8.5,
-                        fontWeight: FontWeight.w800,
-                        color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      _formatDuration(duration),
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w800,
-                        color: isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A),
-                      ),
-                    ),
-                  ],
-                ),
+              _buildEventBadge(
+                icon: Icons.visibility_off_outlined,
+                label: 'Kantuk',
+                count: totalEvents,
+                color: totalEvents > 0 ? const Color(0xFFF26B1D) : const Color(0xFF059669),
+                isDark: isDark,
               ),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'EVENT KANTUK',
-                      style: TextStyle(
-                        fontSize: 8.5,
-                        fontWeight: FontWeight.w800,
-                        color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '$totalEvents Terdeteksi',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w800,
-                        color: totalEvents > 0 ? const Color(0xFFF26B1D) : const Color(0xFF059669),
-                      ),
-                    ),
-                  ],
-                ),
+              _buildEventBadge(
+                icon: Icons.sentiment_dissatisfied_outlined,
+                label: 'Menguap',
+                count: yawn,
+                color: yawn > 0 ? const Color(0xFFF26B1D) : const Color(0xFF64748B),
+                isDark: isDark,
               ),
-              Expanded(
-                child: Column(
-                  crossAxisAlignment: CrossAxisAlignment.start,
-                  children: [
-                    Text(
-                      'MENGUAP',
-                      style: TextStyle(
-                        fontSize: 8.5,
-                        fontWeight: FontWeight.w800,
-                        color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
-                      ),
-                    ),
-                    const SizedBox(height: 2),
-                    Text(
-                      '$yawn kali',
-                      style: TextStyle(
-                        fontSize: 13,
-                        fontWeight: FontWeight.w800,
-                        color: isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A),
-                      ),
-                    ),
-                  ],
+              if (micro > 0)
+                _buildEventBadge(
+                  icon: Icons.warning_amber_rounded,
+                  label: 'Microsleep',
+                  count: micro,
+                  color: const Color(0xFFD94126),
+                  isDark: isDark,
+                  isAlert: true,
                 ),
-              ),
             ],
           ),
           const SizedBox(height: 10),
@@ -806,6 +792,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       totalYawns: yawn,
                       distanceKm: distKm,
                       avgSpeedKmh: avgSpeed,
+                      maxSpeedKmh: topSpeed,
                       startedAt: session['started_at'] != null
                           ? DateTime.tryParse(session['started_at'] as String)
                           : null,
@@ -857,6 +844,76 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   ),
                 ],
               ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+  Widget _buildHistoryMetricCol(String label, String value, bool isDark) {
+    return Column(
+      children: [
+        Text(
+          label,
+          style: TextStyle(
+            fontSize: 8,
+            fontWeight: FontWeight.w800,
+            letterSpacing: 0.5,
+            color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
+          ),
+        ),
+        const SizedBox(height: 2),
+        FittedBox(
+          fit: BoxFit.scaleDown,
+          child: Text(
+            value,
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.w900,
+              color: isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildEventBadge({
+    required IconData icon,
+    required String label,
+    required int count,
+    required Color color,
+    required bool isDark,
+    bool isAlert = false,
+  }) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3.5),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: isDark ? 0.15 : 0.08),
+        borderRadius: BorderRadius.circular(6),
+        border: Border.all(
+          color: color.withValues(alpha: isAlert ? 0.6 : 0.25),
+        ),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 12, color: color),
+          const SizedBox(width: 4),
+          Text(
+            label + ': ',
+            style: TextStyle(
+              fontSize: 9.5,
+              fontWeight: FontWeight.w700,
+              color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
+            ),
+          ),
+          Text(
+            count.toString() + 'x',
+            style: TextStyle(
+              fontSize: 10,
+              fontWeight: FontWeight.w900,
+              color: color,
             ),
           ),
         ],

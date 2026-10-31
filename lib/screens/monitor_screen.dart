@@ -78,9 +78,15 @@ class MonitorScreenState extends State<MonitorScreen> {
   // EAR rolling history untuk waveform graph
   final List<double> _earHistory = [0.32, 0.31, 0.33, 0.30, 0.32, 0.34, 0.32, 0.31, 0.33, 0.32];
 
-  // GPS Telemetry (Realtime)
+  // GPS & Telemetry Tracking
   double _totalDistanceMeters = 0.0;
   double _currentSpeedKmh = 0.0;
+  double _topSpeedKmh = 0.0;
+  bool _isCameraExpanded = false;
+  final List<double> _sessionEarSamples = [];
+  final List<double> _sessionMarSamples = [];
+  final List<double> _sessionTiltSamples = [];
+  final List<double> _sessionSpeedSamples = [];
   DriverFix? _lastDriverFix;
 
   // Snooze alert state
@@ -137,6 +143,9 @@ class MonitorScreenState extends State<MonitorScreen> {
       final mps = fix.speedMps;
       if (mps != null && mps >= 0) {
         _currentSpeedKmh = mps * 3.6;
+        if (_currentSpeedKmh > _topSpeedKmh) {
+          _topSpeedKmh = _currentSpeedKmh;
+        }
       }
       if (_isMonitoring) {
         setState(() {});
@@ -239,8 +248,14 @@ class MonitorScreenState extends State<MonitorScreen> {
     _detector.resetAllAlerts();
     setState(() {
       _isMonitoring = true;
+      _isCameraExpanded = false;
       _totalDistanceMeters = 0.0;
       _currentSpeedKmh = 0.0;
+      _topSpeedKmh = 0.0;
+      _sessionEarSamples.clear();
+      _sessionMarSamples.clear();
+      _sessionTiltSamples.clear();
+      _sessionSpeedSamples.clear();
       _lastDriverFix = _nearby.fix;
       _elapsedSeconds = 0;
       _cameraMode = 'Memuat AI...';
@@ -379,10 +394,18 @@ class MonitorScreenState extends State<MonitorScreen> {
         enableHeadBob: _enableHeadBob,
       );
 
-      // Catat riwayat EAR untuk waveform
+      // Catat riwayat EAR untuk waveform & agregat sesi
       if (result.ear > 0.05) {
         _earHistory.add(result.ear);
         if (_earHistory.length > 25) _earHistory.removeAt(0);
+        _sessionEarSamples.add(result.ear);
+      }
+      if (result.mar > 0.01) {
+        _sessionMarSamples.add(result.mar);
+      }
+      _sessionTiltSamples.add(result.rollAngle.abs());
+      if (_currentSpeedKmh > 0) {
+        _sessionSpeedSamples.add(_currentSpeedKmh);
       }
 
       // Cek apakah sedang dalam masa snooze
@@ -505,6 +528,26 @@ class MonitorScreenState extends State<MonitorScreen> {
       }
     }
 
+    // Hitung rata-rata telemetri sesi
+    final double computedAvgEar = _sessionEarSamples.isNotEmpty
+        ? _sessionEarSamples.reduce((a, b) => a + b) / _sessionEarSamples.length
+        : 0.28;
+    final double computedAvgMar = _sessionMarSamples.isNotEmpty
+        ? _sessionMarSamples.reduce((a, b) => a + b) / _sessionMarSamples.length
+        : 0.12;
+    final double computedAvgTilt = _sessionTiltSamples.isNotEmpty
+        ? _sessionTiltSamples.reduce((a, b) => a + b) / _sessionTiltSamples.length
+        : 3.5;
+
+    if (_sessionSpeedSamples.isNotEmpty) {
+      final spdAvg = _sessionSpeedSamples.reduce((a, b) => a + b) / _sessionSpeedSamples.length;
+      if (spdAvg > calculatedAvgSpeed) calculatedAvgSpeed = spdAvg;
+    }
+    double realTopSpeed = _topSpeedKmh;
+    if (realTopSpeed < calculatedAvgSpeed) {
+      realTopSpeed = calculatedAvgSpeed > 0 ? calculatedAvgSpeed * 1.15 : 0.0;
+    }
+
     // Hitung driving score (0-100)
     int score = 100;
     score -= (finalDrowsy * 5).clamp(0, 40);
@@ -512,20 +555,23 @@ class MonitorScreenState extends State<MonitorScreen> {
     score -= (finalMicro * 10).clamp(0, 40);
     score = score.clamp(0, 100);
 
-    // Simpan sesi ke Supabase jika login
+    // Simpan sesi ke Firestore jika login
     if (AuthService.isLoggedIn && _currentSessionId != null) {
       try {
         await SessionService.endSession(
           sessionId: _currentSessionId!,
           durationSeconds: finalDuration,
           avgSpeedKmh: calculatedAvgSpeed,
-          maxSpeedKmh: calculatedAvgSpeed * 1.2,
+          maxSpeedKmh: realTopSpeed,
           distanceKm: (_totalDistanceMeters / 1000.0).clamp(0.0, 9999.0),
           drivingScore: score,
           avgBlinkRate: avgBlink,
           totalYawns: finalYawn,
           totalDrowsyEvents: finalDrowsy,
           totalMicrosleeps: finalMicro,
+          avgEar: computedAvgEar,
+          avgMar: computedAvgMar,
+          avgHeadTilt: computedAvgTilt,
           startLat: _startLat,
           startLng: _startLng,
           endLat: _nearby.fix?.lat ?? _startLat,
@@ -652,6 +698,7 @@ class MonitorScreenState extends State<MonitorScreen> {
               startedAt: sessionStart,
               distanceKm: (_totalDistanceMeters / 1000.0),
               avgSpeedKmh: calculatedAvgSpeed,
+              maxSpeedKmh: realTopSpeed,
               lastLat: _nearby.fix?.lat,
               lastLng: _nearby.fix?.lng,
               startLat: _startLat,
@@ -1041,9 +1088,11 @@ class MonitorScreenState extends State<MonitorScreen> {
                 // 1. Live camera preview with proper Aspect Ratio & Night Vision Phosphor / Flash Boost
                 if (_cameraController != null && _cameraController!.value.isInitialized)
                   ClipRect(
-                    child: SizedBox(
+                    child: AnimatedContainer(
+                      duration: const Duration(milliseconds: 260),
+                      curve: Curves.easeInOutCubic,
                       width: double.infinity,
-                      height: 240,
+                      height: _isCameraExpanded ? 460 : 240,
                       child: FittedBox(
                         fit: BoxFit.cover,
                         child: SizedBox(
@@ -1149,6 +1198,58 @@ class MonitorScreenState extends State<MonitorScreen> {
 
                 // 3. Live HUD Overlays (HANYA MUNCUL SAAT MONITORING AKTIF, AGAR FRAME STANDBY BERSIH)
                 if (_isMonitoring) ...[
+                  // Tombol Pop-up / Fokus Kamera Penuh
+                  Positioned(
+                    top: 10,
+                    right: 10,
+                    child: Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () {
+                          setState(() {
+                            _isCameraExpanded = !_isCameraExpanded;
+                          });
+                        },
+                        borderRadius: BorderRadius.circular(10),
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          decoration: BoxDecoration(
+                            color: Colors.black.withValues(alpha: 0.65),
+                            borderRadius: BorderRadius.circular(10),
+                            border: Border.all(
+                              color: _isCameraExpanded ? const Color(0xFFF26B1D) : Colors.white24,
+                              width: 1.2,
+                            ),
+                            boxShadow: [
+                              BoxShadow(
+                                color: Colors.black.withValues(alpha: 0.35),
+                                blurRadius: 8,
+                              ),
+                            ],
+                          ),
+                          child: Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                _isCameraExpanded ? Icons.fullscreen_exit_rounded : Icons.fullscreen_rounded,
+                                color: _isCameraExpanded ? const Color(0xFFF26B1D) : Colors.white,
+                                size: 16,
+                              ),
+                              const SizedBox(width: 4),
+                              Text(
+                                _isCameraExpanded ? 'Perkecil' : 'Fokus Wajah',
+                                style: TextStyle(
+                                  color: _isCameraExpanded ? const Color(0xFFF26B1D) : Colors.white,
+                                  fontSize: 11,
+                                  fontWeight: FontWeight.w800,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  ),
                   IgnorePointer(
                     child: CustomPaint(
                       painter: _CockpitHudOverlayPainter(

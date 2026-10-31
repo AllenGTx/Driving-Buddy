@@ -4,6 +4,9 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 /// Opsi pilihan tema aplikasi.
 enum AppThemeMode {
+  /// Mengikuti pengaturan tema sistem HP user (Default user baru)
+  system,
+
   /// Mengikuti waktu: 16:00 - 04:00 (Dark Gray), 04:00 - 16:00 (Light)
   autoTime,
 
@@ -15,7 +18,8 @@ enum AppThemeMode {
 }
 
 /// Service pengelola tema aplikasi DrivingBuddy.
-/// Menyediakan pergantian otomatis berdasarkan jam lokal (16:00 - 04:00),
+/// Menyediakan dukungan mengikuti sistem HP secara bawaan,
+/// pergantian otomatis jam lokal (16:00 - 04:00),
 /// serta dukungan override manual (selalu terang / selalu abu-abu gelap).
 class ThemeService extends ChangeNotifier with WidgetsBindingObserver {
   ThemeService._internal();
@@ -23,7 +27,7 @@ class ThemeService extends ChangeNotifier with WidgetsBindingObserver {
 
   static const String _prefKey = 'app_theme_mode';
 
-  AppThemeMode _currentMode = AppThemeMode.autoTime;
+  AppThemeMode _currentMode = AppThemeMode.system;
   bool _lastIsDark = false;
   Timer? _ticker;
   bool _initialized = false;
@@ -34,6 +38,9 @@ class ThemeService extends ChangeNotifier with WidgetsBindingObserver {
   /// Evaluasi apakah tampilan saat ini harus mode gelap (abu-abu gelap).
   bool get isDarkMode {
     switch (_currentMode) {
+      case AppThemeMode.system:
+        final brightness = WidgetsBinding.instance.platformDispatcher.platformBrightness;
+        return brightness == Brightness.dark;
       case AppThemeMode.light:
         return false;
       case AppThemeMode.dark:
@@ -46,6 +53,8 @@ class ThemeService extends ChangeNotifier with WidgetsBindingObserver {
   /// Label penjelasan status mode tema untuk UI pengaturan.
   String get modeDescription {
     switch (_currentMode) {
+      case AppThemeMode.system:
+        return 'Mengikuti Sistem HP (${isDarkMode ? "Aktif: Gelap" : "Aktif: Terang"})';
       case AppThemeMode.autoTime:
         return isDarkMode
             ? 'Otomatis Waktu (Aktif: Gelap 16:00–04:00)'
@@ -79,8 +88,10 @@ class ThemeService extends ChangeNotifier with WidgetsBindingObserver {
       if (saved != null) {
         _currentMode = AppThemeMode.values.firstWhere(
           (e) => e.name == saved,
-          orElse: () => AppThemeMode.autoTime,
+          orElse: () => AppThemeMode.system,
         );
+      } else {
+        _currentMode = AppThemeMode.system;
       }
     } catch (e) {
       debugPrint('ThemeService init error: $e');
@@ -97,7 +108,18 @@ class ThemeService extends ChangeNotifier with WidgetsBindingObserver {
   }
 
   void _checkTimeTransition() {
-    if (_currentMode == AppThemeMode.autoTime) {
+    if (_currentMode == AppThemeMode.autoTime || _currentMode == AppThemeMode.system) {
+      final currentIsDark = isDarkMode;
+      if (currentIsDark != _lastIsDark) {
+        _lastIsDark = currentIsDark;
+        notifyListeners();
+      }
+    }
+  }
+
+  @override
+  void didChangePlatformBrightness() {
+    if (_currentMode == AppThemeMode.system) {
       final currentIsDark = isDarkMode;
       if (currentIsDark != _lastIsDark) {
         _lastIsDark = currentIsDark;
@@ -123,7 +145,8 @@ class ThemeService extends ChangeNotifier with WidgetsBindingObserver {
 
   @override
   void didChangeAppLifecycleState(AppLifecycleState state) {
-    if (state == AppLifecycleState.resumed && _currentMode == AppThemeMode.autoTime) {
+    if (state == AppLifecycleState.resumed &&
+        (_currentMode == AppThemeMode.autoTime || _currentMode == AppThemeMode.system)) {
       _checkTimeTransition();
     }
   }

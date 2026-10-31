@@ -209,13 +209,17 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
       final name = await AuthService.getUserName();
       final email = user?.email ?? '';
       final profile = await AuthService.getUserProfile();
-      final firestorePhoto = profile?['photoUrl'] as String?;
       final cachedPhoto = await AccountConfig.getPhotoUrl(userEmail: email);
-      final photo = (firestorePhoto != null && firestorePhoto.isNotEmpty)
-          ? firestorePhoto
-          : ((user?.photoURL != null && user!.photoURL!.isNotEmpty)
-              ? user.photoURL
-              : cachedPhoto);
+      final firestorePhoto = profile?['photoUrl'] as String?;
+      // Prioritaskan foto kustom yang dipilih pengemudi (lokal / firestore) di atas foto Google
+      String? photo;
+      if (cachedPhoto != null && cachedPhoto.trim().isNotEmpty) {
+        photo = cachedPhoto;
+      } else if (firestorePhoto != null && firestorePhoto.trim().isNotEmpty) {
+        photo = firestorePhoto;
+      } else if (user?.photoURL != null && user!.photoURL!.trim().isNotEmpty) {
+        photo = user.photoURL;
+      }
 
       if (photo != null && photo.isNotEmpty) {
         await AccountConfig.setPhotoUrl(photo, userEmail: email);
@@ -412,55 +416,57 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                       const SizedBox(height: 16),
 
                       // Email (Read-Only agar tidak menimbulkan bug akun)
-                      const Text(
+                      Text(
                         'Email Terdaftar',
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w800,
-                          color: Color(0xFF0F172A),
+                          color: isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A),
                         ),
                       ),
                       const SizedBox(height: 8),
                       Container(
                         padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
                         decoration: BoxDecoration(
-                          color: const Color(0xFFF1F5F9),
+                          color: isDark ? AppColors.darkCardBgSoft : const Color(0xFFF1F5F9),
                           borderRadius: BorderRadius.circular(12),
-                          border: Border.all(color: const Color(0xFFCBD5E1)),
+                          border: Border.all(
+                            color: isDark ? AppColors.darkCardBorder : const Color(0xFFCBD5E1),
+                          ),
                         ),
                         child: Row(
                           children: [
-                            const Icon(Icons.email_rounded, color: Color(0xFF64748B), size: 20),
+                            Icon(Icons.email_rounded, color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B), size: 20),
                             const SizedBox(width: 12),
                             Expanded(
                               child: Text(
                                 _emailController.text.isNotEmpty
                                     ? _emailController.text
                                     : 'email@contoh.com',
-                                style: const TextStyle(
+                                style: TextStyle(
                                   fontSize: 14,
                                   fontWeight: FontWeight.w700,
-                                  color: Color(0xFF334155),
+                                  color: isDark ? AppColors.darkTextPrimary : const Color(0xFF334155),
                                 ),
                               ),
                             ),
                             Container(
                               padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 3),
                               decoration: BoxDecoration(
-                                color: const Color(0xFFE2E8F0),
+                                color: isDark ? AppColors.darkCardBg : const Color(0xFFE2E8F0),
                                 borderRadius: BorderRadius.circular(6),
                               ),
-                              child: const Row(
+                              child: Row(
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  Icon(Icons.lock_rounded, size: 11, color: Color(0xFF64748B)),
-                                  SizedBox(width: 3),
+                                  Icon(Icons.lock_rounded, size: 11, color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B)),
+                                  const SizedBox(width: 3),
                                   Text(
                                     'Terkunci',
                                     style: TextStyle(
                                       fontSize: 9.5,
                                       fontWeight: FontWeight.w800,
-                                      color: Color(0xFF64748B),
+                                      color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
                                     ),
                                   ),
                                 ],
@@ -581,14 +587,17 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
         Row(
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
-            Text(
-              'Tampilan & Tema Kabin',
+            Expanded(
+              child: Text(
+                'Tampilan & Tema Kabin',
               style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w800,
                 color: isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A),
               ),
             ),
+            ),
+            const SizedBox(width: 8),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
               decoration: BoxDecoration(
@@ -650,6 +659,25 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
           ),
           child: Column(
             children: [
+              // 0. Opsi Default Sistem HP
+              _buildThemeOptionTile(
+                mode: AppThemeMode.system,
+                currentMode: currentMode,
+                icon: Icons.smartphone_rounded,
+                title: 'Mengikuti Sistem HP (Default)',
+                subtitle: 'Otomatis berganti terang atau gelap mengikuti tema perangkat HP Anda.',
+                badge: 'Bawaan',
+                badgeColor: const Color(0xFF3B82F6),
+                isDark: isDark,
+                onTap: () => themeService.setThemeMode(AppThemeMode.system),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: Divider(
+                  color: isDark ? AppColors.darkBorderLight : const Color(0xFFFFF1E8),
+                  height: 1,
+                ),
+              ),
               // 1. Opsi Otomatis Waktu (16:00 - 04:00)
               _buildThemeOptionTile(
                 mode: AppThemeMode.autoTime,
@@ -1419,8 +1447,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                   const SizedBox(width: 8),
                   Switch(
                     value: _enableHeadTilt,
-                    activeColor: const Color(0xFFF26B1D),
-                    onChanged: (val) async {
+                                        onChanged: (val) async {
                       setState(() => _enableHeadTilt = val);
                       await AlertConfig.setHeadTiltEnabled(val);
                     },
@@ -1478,8 +1505,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                   const SizedBox(width: 8),
                   Switch(
                     value: _enableHeadBob,
-                    activeColor: const Color(0xFFF26B1D),
-                    onChanged: (val) async {
+                                        onChanged: (val) async {
                       setState(() => _enableHeadBob = val);
                       await AlertConfig.setHeadBobEnabled(val);
                     },

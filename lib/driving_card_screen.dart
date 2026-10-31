@@ -599,6 +599,7 @@ class DrivingCardScreen extends StatefulWidget {
   final int totalYawns;
   final double distanceKm;
   final double avgSpeedKmh;
+  final double? maxSpeedKmh;
   final bool isFirstSession;
   final DateTime? startedAt;
   final String? sessionId;
@@ -617,6 +618,7 @@ class DrivingCardScreen extends StatefulWidget {
     required this.totalYawns,
     this.distanceKm = 0,
     this.avgSpeedKmh = 0,
+    this.maxSpeedKmh,
     this.isFirstSession = false,
     this.startedAt,
     this.sessionId,
@@ -1177,36 +1179,46 @@ class _DrivingCardScreenState extends State<DrivingCardScreen>
     required String value,
     required IconData icon,
   }) {
-    return Column(
-      children: [
-        Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Icon(icon, size: 12, color: _grey),
-            const SizedBox(width: 4),
-            Text(
-              label,
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Icon(icon, size: 12, color: _grey),
+                const SizedBox(width: 4),
+                Text(
+                  label,
+                  style: GoogleFonts.plusJakartaSans(
+                    fontSize: 10.5,
+                    fontWeight: FontWeight.w700,
+                    color: _grey,
+                    letterSpacing: 0.8,
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(height: 4),
+          FittedBox(
+            fit: BoxFit.scaleDown,
+            child: Text(
+              value,
+              textAlign: TextAlign.center,
               style: GoogleFonts.plusJakartaSans(
-                fontSize: 11.5,
-                fontWeight: FontWeight.w700,
-                color: _grey,
-                letterSpacing: 1.1,
+                fontSize: 15,
+                fontWeight: FontWeight.w900,
+                color: _orange,
+                letterSpacing: 0.3,
               ),
             ),
-          ],
-        ),
-        const SizedBox(height: 4),
-        Text(
-          value,
-          textAlign: TextAlign.center,
-          style: GoogleFonts.plusJakartaSans(
-            fontSize: 17,
-            fontWeight: FontWeight.w900,
-            color: _orange,
-            letterSpacing: 0.5,
           ),
-        ),
-      ],
+        ],
+      ),
     );
   }
 
