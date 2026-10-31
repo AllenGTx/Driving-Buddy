@@ -1,3 +1,4 @@
+import 'dart:ui' as ui;
 import 'dart:async';
 import 'dart:io';
 import 'package:flutter/foundation.dart';
@@ -83,6 +84,7 @@ class MonitorScreenState extends State<MonitorScreen> {
   double _currentSpeedKmh = 0.0;
   double _topSpeedKmh = 0.0;
   bool _isCameraExpanded = false;
+  bool _showCameraModal = false;
   final List<double> _sessionEarSamples = [];
   final List<double> _sessionMarSamples = [];
   final List<double> _sessionTiltSamples = [];
@@ -771,6 +773,7 @@ class MonitorScreenState extends State<MonitorScreen> {
   }) {
     if (!_isMonitoring || _isAlertShowing) return;
     _isAlertShowing = true;
+    if (_showCameraModal) { setState(() => _showCameraModal = false); }
 
     // Alarm bunyi: langsung cari tempat berhenti terdekat (apa pun jenisnya) untuk kartu di dialog.
     unawaited(_nearby.requestUrgent());
@@ -847,7 +850,9 @@ class MonitorScreenState extends State<MonitorScreen> {
         title: 'Berkendara',
         showProfileButton: !_isMonitoring,
       ),
-      body: SingleChildScrollView(
+      body: Stack(
+        children: [
+          SingleChildScrollView(
         physics: const BouncingScrollPhysics(),
         padding: const EdgeInsets.fromLTRB(16, 12, 16, 24),
         child: Column(
@@ -875,12 +880,194 @@ class MonitorScreenState extends State<MonitorScreen> {
           ],
         ),
       ),
-    );
+      if (_showCameraModal && _cameraController != null && _cameraController!.value.isInitialized)
+        _buildCameraFocusModal(),
+    ],
+  ),
+);
   }
 
   // ──────────────────────────────────────────────────────────────────────────
   // 1. TOP LIVE HUD BAR (3 Columns: Kecepatan, Jarak, Index Lelah)
   // ──────────────────────────────────────────────────────────────────────────
+
+  // ──────────────────────────────────────────────────────────────────────────
+  // FLOATING CAMERA POP-UP MODAL (3/4 Screen Window dengan Efek Bokeh)
+  // ──────────────────────────────────────────────────────────────────────────
+  Widget _buildCameraFocusModal() {
+    return Positioned.fill(
+      child: Stack(
+        children: [
+          // 1. Efek Bokeh / Blur Latar Belakang Cockpit
+          Positioned.fill(
+            child: BackdropFilter(
+              filter: ui.ImageFilter.blur(sigmaX: 14, sigmaY: 14),
+              child: GestureDetector(
+                onTap: () => setState(() => _showCameraModal = false),
+                child: Container(
+                  color: Colors.black.withValues(alpha: 0.72),
+                ),
+              ),
+            ),
+          ),
+
+          // 2. Centered Floating Window (~75% Tinggi Layar)
+          Center(
+            child: Container(
+              width: MediaQuery.of(context).size.width * 0.90,
+              height: MediaQuery.of(context).size.height * 0.74,
+              constraints: const BoxConstraints(maxWidth: 420, maxHeight: 620),
+              decoration: BoxDecoration(
+                color: const Color(0xFF0F172A),
+                borderRadius: BorderRadius.circular(20),
+                border: Border.all(
+                  color: const Color(0xFFF26B1D).withValues(alpha: 0.55),
+                  width: 1.5,
+                ),
+                boxShadow: [
+                  BoxShadow(
+                    color: Colors.black.withValues(alpha: 0.85),
+                    blurRadius: 32,
+                    spreadRadius: 4,
+                    offset: const Offset(0, 10),
+                  ),
+                ],
+              ),
+              clipBehavior: Clip.antiAlias,
+              child: Column(
+                children: [
+                  // Window Header Bar (Seperti referensi Deep Live Cam Preview)
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    color: const Color(0xFF1E293B),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Row(
+                          children: [
+                            Container(
+                              width: 8,
+                              height: 8,
+                              decoration: const BoxDecoration(
+                                color: Color(0xFF10B981),
+                                shape: BoxShape.circle,
+                              ),
+                            ),
+                            const SizedBox(width: 8),
+                            const Text(
+                              'Pratinjau Kamera AI Kabin',
+                              style: TextStyle(
+                                color: Colors.white,
+                                fontSize: 13,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.3,
+                              ),
+                            ),
+                          ],
+                        ),
+                        InkWell(
+                          onTap: () => setState(() => _showCameraModal = false),
+                          borderRadius: BorderRadius.circular(8),
+                          child: Container(
+                            padding: const EdgeInsets.all(4),
+                            decoration: BoxDecoration(
+                              color: Colors.white.withValues(alpha: 0.1),
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            child: const Icon(Icons.close_rounded, color: Colors.white, size: 18),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+
+                  // Center Viewport: Letterboxed Black Background dengan Kamera Penuh
+                  Expanded(
+                    child: Container(
+                      color: Colors.black, // Letterbox bars atas/bawah
+                      alignment: Alignment.center,
+                      child: AspectRatio(
+                        aspectRatio: _cameraController!.value.aspectRatio,
+                        child: Stack(
+                          fit: StackFit.expand,
+                          children: [
+                            _isNightVisionEnabled
+                                ? ColorFiltered(
+                                    colorFilter: const ColorFilter.matrix(<double>[
+                                      0.45, 0.65, 0.15, 0, 45,
+                                      0.35, 1.35, 0.25, 0, 70,
+                                      0.15, 0.45, 0.55, 0, 35,
+                                      0,    0,    0,    1, 0,
+                                    ]),
+                                    child: CameraPreview(_cameraController!),
+                                  )
+                                : CameraPreview(_cameraController!),
+                          ],
+                        ),
+                      ),
+                    ),
+                  ),
+
+                  // Window Footer Bar dengan Telemetri Wajah & Tombol Kembali
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                    color: const Color(0xFF1E293B),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        _buildPopupStatTag('EAR', _result.ear > 0.05 ? _result.ear.toStringAsFixed(2) : '0.28'),
+                        _buildPopupStatTag('MAR', _result.mar > 0.01 ? _result.mar.toStringAsFixed(2) : '0.12'),
+                        _buildPopupStatTag('TILT', '${_result.rollAngle.abs().toStringAsFixed(1)}°'),
+                        ElevatedButton.icon(
+                          onPressed: () => setState(() => _showCameraModal = false),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFF26B1D),
+                            foregroundColor: Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+                            minimumSize: const Size(0, 32),
+                            shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+                          ),
+                          icon: const Icon(Icons.fullscreen_exit_rounded, size: 15),
+                          label: const Text('Kembali', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800)),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildPopupStatTag(String label, String value) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          label,
+          style: const TextStyle(
+            fontSize: 8.5,
+            fontWeight: FontWeight.w800,
+            color: Color(0xFF94A3B8),
+            letterSpacing: 0.5,
+          ),
+        ),
+        const SizedBox(height: 1),
+        Text(
+          value,
+          style: const TextStyle(
+            fontSize: 13,
+            fontWeight: FontWeight.w900,
+            color: Colors.white,
+          ),
+        ),
+      ],
+    );
+  }
+
   Widget _buildTopLiveHudBar(int fatigueIndex) {
     final distanceKm = (_totalDistanceMeters / 1000.0).toStringAsFixed(1);
     final speedStr = _isMonitoring ? _currentSpeedKmh.toStringAsFixed(0) : '0';
@@ -1124,7 +1311,7 @@ class MonitorScreenState extends State<MonitorScreen> {
                       duration: const Duration(milliseconds: 260),
                       curve: Curves.easeInOutCubic,
                       width: double.infinity,
-                      height: _isCameraExpanded ? 460 : 240,
+                      height: 240,
                       child: FittedBox(
                         fit: BoxFit.cover,
                         child: SizedBox(
@@ -1230,7 +1417,7 @@ class MonitorScreenState extends State<MonitorScreen> {
 
                 // 3. Live HUD Overlays (HANYA MUNCUL SAAT MONITORING AKTIF, AGAR FRAME STANDBY BERSIH)
                 if (_isMonitoring) ...[
-                  // Tombol Pop-up / Fokus Kamera Penuh
+                  // Tombol Pop-up Pratinjau Kamera Kabin (Pop-up Window)
                   Positioned(
                     top: 10,
                     right: 10,
@@ -1239,39 +1426,39 @@ class MonitorScreenState extends State<MonitorScreen> {
                       child: InkWell(
                         onTap: () {
                           setState(() {
-                            _isCameraExpanded = !_isCameraExpanded;
+                            _showCameraModal = true;
                           });
                         },
                         borderRadius: BorderRadius.circular(10),
                         child: Container(
                           padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
                           decoration: BoxDecoration(
-                            color: Colors.black.withValues(alpha: 0.65),
+                            color: Colors.black.withValues(alpha: 0.70),
                             borderRadius: BorderRadius.circular(10),
                             border: Border.all(
-                              color: _isCameraExpanded ? const Color(0xFFF26B1D) : Colors.white24,
+                              color: const Color(0xFFF26B1D),
                               width: 1.2,
                             ),
                             boxShadow: [
                               BoxShadow(
-                                color: Colors.black.withValues(alpha: 0.35),
+                                color: Colors.black.withValues(alpha: 0.4),
                                 blurRadius: 8,
                               ),
                             ],
                           ),
-                          child: Row(
+                          child: const Row(
                             mainAxisSize: MainAxisSize.min,
                             children: [
                               Icon(
-                                _isCameraExpanded ? Icons.fullscreen_exit_rounded : Icons.fullscreen_rounded,
-                                color: _isCameraExpanded ? const Color(0xFFF26B1D) : Colors.white,
-                                size: 16,
+                                Icons.open_in_full_rounded,
+                                color: Color(0xFFF26B1D),
+                                size: 14,
                               ),
-                              const SizedBox(width: 4),
+                              SizedBox(width: 5),
                               Text(
-                                _isCameraExpanded ? 'Perkecil' : 'Fokus Wajah',
+                                'Pratinjau Layar Penuh',
                                 style: TextStyle(
-                                  color: _isCameraExpanded ? const Color(0xFFF26B1D) : Colors.white,
+                                  color: Colors.white,
                                   fontSize: 11,
                                   fontWeight: FontWeight.w800,
                                 ),

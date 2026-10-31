@@ -1,3 +1,4 @@
+import '../models/account_config.dart';
 import 'dart:io';
 import 'dart:convert';
 import 'package:flutter/foundation.dart';
@@ -174,11 +175,13 @@ class AuthService {
     if (user != null) {
       // JANGAN TIMPA FOTO PROFIL: Cek apakah user sudah punya foto profil sebelumnya
       bool hasExistingPhoto = false;
+      String? savedCustomPhoto;
       try {
         final existingDoc = await firestore.collection('users').doc(user.uid).get();
         final existingPhoto = existingDoc.data()?['photoUrl'] as String?;
         if (existingPhoto != null && existingPhoto.trim().isNotEmpty) {
           hasExistingPhoto = true;
+          savedCustomPhoto = existingPhoto.trim();
         }
       } catch (_) {}
 
@@ -190,6 +193,12 @@ class AuthService {
           'photoUrl': user.photoURL,
         'lastLogin': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
+
+      // SINKRONKAN LANGSUNG KE AccountConfig SEGERA (Cegah munculnya foto Tanjiro)
+      final photoToSet = hasExistingPhoto ? savedCustomPhoto : user.photoURL;
+      if (photoToSet != null && photoToSet.isNotEmpty) {
+        await AccountConfig.setPhotoUrl(photoToSet, userEmail: user.email);
+      }
     }
 
     return credential;

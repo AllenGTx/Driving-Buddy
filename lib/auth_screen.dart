@@ -681,7 +681,13 @@ class _LoginScreenState extends State<LoginScreen>
         },
       );
       final gEmail = AuthService.currentUser?.email;
-      await AccountConfig.getPhotoUrl(userEmail: gEmail);
+      final profile = await AuthService.getUserProfile();
+      final customPhoto = profile?['photoUrl'] as String?;
+      if (customPhoto != null && customPhoto.isNotEmpty) {
+        await AccountConfig.setPhotoUrl(customPhoto, userEmail: gEmail);
+      } else {
+        await AccountConfig.getPhotoUrl(userEmail: gEmail);
+      }
       if (mounted) {
         Navigator.of(context).pushReplacement(
           MaterialPageRoute(builder: (_) => const MainShell()),

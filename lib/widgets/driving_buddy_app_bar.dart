@@ -35,8 +35,21 @@ class _DrivingBuddyAppBarState extends State<DrivingBuddyAppBar> {
   @override
   void initState() {
     super.initState();
+    _syncAvatarPhoto();
+  }
+
+  Future<void> _syncAvatarPhoto() async {
     final curEmail = AuthService.currentUser?.email;
-    AccountConfig.getPhotoUrl(userEmail: curEmail);
+    final cached = await AccountConfig.getPhotoUrl(userEmail: curEmail);
+    if ((cached == null || cached.isEmpty) && AuthService.currentUser != null) {
+      try {
+        final profile = await AuthService.getUserProfile();
+        final p = profile?['photoUrl'] as String?;
+        if (p != null && p.isNotEmpty) {
+          await AccountConfig.setPhotoUrl(p, userEmail: curEmail);
+        }
+      } catch (_) {}
+    }
   }
 
   @override
@@ -124,13 +137,12 @@ class _DrivingBuddyAppBarState extends State<DrivingBuddyAppBar> {
                 child: ValueListenableBuilder<String?>(
                   valueListenable: AccountConfig.photoNotifier,
                   builder: (context, photoUrl, _) {
-                    String? authPhoto;
-                    try {
-                      authPhoto = AuthService.currentUser?.photoURL;
-                    } catch (_) {}
-                    final effectivePhoto = (photoUrl != null && photoUrl.isNotEmpty)
-                        ? photoUrl
-                        : authPhoto;
+                    final customPhoto = AccountConfig.photoNotifier.value;
+                    final effectivePhoto = (customPhoto != null && customPhoto.isNotEmpty)
+                        ? customPhoto
+                        : (photoUrl != null && photoUrl.isNotEmpty
+                            ? photoUrl
+                            : AuthService.currentUser?.photoURL);
 
                     Widget imageWidget = const Icon(Icons.person_rounded, color: Colors.white, size: 20);
 

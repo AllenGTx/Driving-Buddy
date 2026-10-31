@@ -220,7 +220,7 @@ class _PolaroidMapCard extends StatelessWidget {
 
     return Center(
       child: Container(
-        constraints: const BoxConstraints(maxWidth: 390),
+        constraints: const BoxConstraints(maxWidth: 240),
         decoration: BoxDecoration(
           color: const Color(0xFFFDFBF7), // Warm vintage polaroid paper
           borderRadius: BorderRadius.circular(10),
@@ -246,7 +246,7 @@ class _PolaroidMapCard extends StatelessWidget {
             ClipRRect(
               borderRadius: BorderRadius.circular(4),
               child: AspectRatio(
-                aspectRatio: 1.68,
+                aspectRatio: 1.0,
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
@@ -1026,52 +1026,57 @@ class _DrivingCardScreenState extends State<DrivingCardScreen>
                               ),
                               child: Row(
                                 children: [
-                                  // Score Ring Dial
+                                  // Score Ring Dial (Clean & Bebas Nabrak)
                                   AnimatedBuilder(
                                     animation: _scoreAnim,
                                     builder: (context, child) {
                                       final progress = _scoreAnim.value * widget.drivingScore / 100;
-                                      return SizedBox(
-                                        width: 62,
-                                        height: 62,
-                                        child: Stack(
-                                          alignment: Alignment.center,
-                                          children: [
-                                            CustomPaint(
-                                              size: const Size(62, 62),
-                                              painter: _ScoreRingPainter(progress, _scoreColor),
-                                            ),
-                                            Column(
-                                              mainAxisSize: MainAxisSize.min,
+                                      return Column(
+                                        mainAxisSize: MainAxisSize.min,
+                                        children: [
+                                          SizedBox(
+                                            width: 58,
+                                            height: 58,
+                                            child: Stack(
+                                              alignment: Alignment.center,
                                               children: [
+                                                CustomPaint(
+                                                  size: const Size(58, 58),
+                                                  painter: _ScoreRingPainter(progress, _scoreColor),
+                                                ),
                                                 Text(
                                                   '${(widget.drivingScore * _scoreAnim.value).round()}',
                                                   style: TextStyle(
                                                     color: _scoreColor,
-                                                    fontSize: 17,
+                                                    fontSize: 19,
                                                     fontWeight: FontWeight.w900,
                                                     height: 1.0,
                                                   ),
                                                 ),
-                                                const SizedBox(height: 2),
-                                                Padding(
-                                                  padding: const EdgeInsets.symmetric(horizontal: 2),
-                                                  child: Text(
-                                                    _scoreLabel,
-                                                    maxLines: 1,
-                                                    overflow: TextOverflow.ellipsis,
-                                                    style: const TextStyle(
-                                                      color: _grey,
-                                                      fontSize: 6.2,
-                                                      fontWeight: FontWeight.w800,
-                                                      letterSpacing: 0.2,
-                                                    ),
-                                                  ),
-                                                ),
                                               ],
                                             ),
-                                          ],
-                                        ),
+                                          ),
+                                          const SizedBox(height: 5),
+                                          Container(
+                                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+                                            decoration: BoxDecoration(
+                                              color: _scoreColor.withValues(alpha: 0.15),
+                                              borderRadius: BorderRadius.circular(6),
+                                              border: Border.all(
+                                                color: _scoreColor.withValues(alpha: 0.35),
+                                              ),
+                                            ),
+                                            child: Text(
+                                              _scoreLabel,
+                                              style: TextStyle(
+                                                color: _scoreColor,
+                                                fontSize: 7.5,
+                                                fontWeight: FontWeight.w900,
+                                                letterSpacing: 0.3,
+                                              ),
+                                            ),
+                                          ),
+                                        ],
                                       );
                                     },
                                   ),
