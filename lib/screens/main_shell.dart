@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../core/app_colors.dart';
 import '../features/nearby_places/nearby_places.dart';
+import '../services/theme_service.dart';
 import 'home_screen.dart';
 import 'monitor_screen.dart';
 import 'history_screen.dart';
@@ -62,100 +63,109 @@ class _MainShellState extends State<MainShell> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      body: IndexedStack(
-        index: _currentIndex,
-        children: [
-          CockpitScreen(
-            isActive: _currentIndex == 0,
-            onStartMonitoring: () {
-              _switchToTab(1);
-              WidgetsBinding.instance.addPostFrameCallback((_) {
-                _monitorKey.currentState?.startFromExternal();
-              });
-            },
-            nearbyController: _nearbyController,
+    return ListenableBuilder(
+      listenable: ThemeService.instance,
+      builder: (context, _) {
+        final isDark = ThemeService.instance.isDarkMode;
+
+        return Scaffold(
+          backgroundColor: AppColors.dynamicBackground,
+          body: IndexedStack(
+            index: _currentIndex,
+            children: [
+              CockpitScreen(
+                isActive: _currentIndex == 0,
+                onStartMonitoring: () {
+                  _switchToTab(1);
+                  WidgetsBinding.instance.addPostFrameCallback((_) {
+                    _monitorKey.currentState?.startFromExternal();
+                  });
+                },
+                nearbyController: _nearbyController,
+              ),
+              MonitorScreen(
+                key: _monitorKey,
+                isActive: _currentIndex == 1,
+                nearbyController: _nearbyController,
+              ),
+              const HistoryScreen(),
+            ],
           ),
-          MonitorScreen(
-            key: _monitorKey,
-            isActive: _currentIndex == 1,
-            nearbyController: _nearbyController,
-          ),
-          const HistoryScreen(),
-        ],
-      ),
-      bottomNavigationBar: Container(
-        decoration: BoxDecoration(
-          color: Colors.white.withOpacity(0.97),
-          border: Border(
-            top: BorderSide(
-              color: AppColors.cardBorder.withOpacity(0.7),
-              width: 1,
-            ),
-          ),
-          boxShadow: [
-            BoxShadow(
-              color: const Color(0xFFE57A38).withOpacity(0.08),
-              blurRadius: 20,
-              offset: const Offset(0, -4),
-            ),
-          ],
-        ),
-        child: SafeArea(
-          top: false,
-          child: SizedBox(
-            height: 72,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceAround,
-              children: [
-                _NavItem(
-                  icon: Icons.dashboard_rounded,
-                  label: 'Beranda',
-                  isSelected: _currentIndex == 0,
-                  onTap: () => _switchToTab(0),
+          bottomNavigationBar: Container(
+            decoration: BoxDecoration(
+              color: AppColors.dynamicSurface.withValues(alpha: 0.97),
+              border: Border(
+                top: BorderSide(
+                  color: AppColors.dynamicCardBorder.withValues(alpha: 0.8),
+                  width: 1,
                 ),
-                // Center Floating Drive / Monitoring Button
-                GestureDetector(
-                  onTap: () => _switchToTab(1),
-                  child: Container(
-                    width: 54,
-                    height: 54,
-                    decoration: BoxDecoration(
-                      gradient: const LinearGradient(
-                        colors: [Color(0xFFE57A38), Color(0xFFC25E21)],
-                        begin: Alignment.topLeft,
-                        end: Alignment.bottomRight,
-                      ),
-                      shape: BoxShape.circle,
-                      boxShadow: [
-                        BoxShadow(
-                          color: const Color(0xFFE57A38).withOpacity(0.45),
-                          blurRadius: 16,
-                          offset: const Offset(0, 6),
-                        ),
-                      ],
-                    ),
-                    child: Icon(
-                      _currentIndex == 1
-                          ? Icons.videocam_rounded
-                          : Icons.play_arrow_rounded,
-                      color: Colors.white,
-                      size: 30,
-                    ),
-                  ),
-                ),
-                _NavItem(
-                  icon: Icons.analytics_rounded,
-                  label: 'Aktivitas',
-                  isSelected: _currentIndex == 2,
-                  onTap: () => _switchToTab(2),
+              ),
+              boxShadow: [
+                BoxShadow(
+                  color: isDark
+                      ? Colors.black.withValues(alpha: 0.35)
+                      : const Color(0xFFE57A38).withValues(alpha: 0.08),
+                  blurRadius: 20,
+                  offset: const Offset(0, -4),
                 ),
               ],
             ),
+            child: SafeArea(
+              top: false,
+              child: SizedBox(
+                height: 72,
+                child: Row(
+                  mainAxisAlignment: MainAxisAlignment.spaceAround,
+                  children: [
+                    _NavItem(
+                      icon: Icons.dashboard_rounded,
+                      label: 'Beranda',
+                      isSelected: _currentIndex == 0,
+                      onTap: () => _switchToTab(0),
+                    ),
+                    // Center Floating Drive / Monitoring Button
+                    GestureDetector(
+                      onTap: () => _switchToTab(1),
+                      child: Container(
+                        width: 54,
+                        height: 54,
+                        decoration: BoxDecoration(
+                          gradient: const LinearGradient(
+                            colors: [Color(0xFFE57A38), Color(0xFFC25E21)],
+                            begin: Alignment.topLeft,
+                            end: Alignment.bottomRight,
+                          ),
+                          shape: BoxShape.circle,
+                          boxShadow: [
+                            BoxShadow(
+                              color: const Color(0xFFE57A38).withValues(alpha: 0.45),
+                              blurRadius: 16,
+                              offset: const Offset(0, 6),
+                            ),
+                          ],
+                        ),
+                        child: Icon(
+                          _currentIndex == 1
+                              ? Icons.videocam_rounded
+                              : Icons.play_arrow_rounded,
+                          color: Colors.white,
+                          size: 30,
+                        ),
+                      ),
+                    ),
+                    _NavItem(
+                      icon: Icons.analytics_rounded,
+                      label: 'Aktivitas',
+                      isSelected: _currentIndex == 2,
+                      onTap: () => _switchToTab(2),
+                    ),
+                  ],
+                ),
+              ),
+            ),
           ),
-        ),
-      ),
+        );
+      },
     );
   }
 }
@@ -175,7 +185,7 @@ class _NavItem extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final color = isSelected ? AppColors.primary : AppColors.textSecondary;
+    final color = isSelected ? AppColors.primary : AppColors.dynamicTextSecondary;
 
     return GestureDetector(
       onTap: onTap,
@@ -207,4 +217,3 @@ class _NavItem extends StatelessWidget {
     );
   }
 }
-

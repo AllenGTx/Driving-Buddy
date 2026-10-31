@@ -766,7 +766,7 @@ class MonitorScreenState extends State<MonitorScreen> {
     final fatigueIndex = _calculateFatigueIndex();
 
     return Scaffold(
-      backgroundColor: AppColors.background,
+      backgroundColor: AppColors.dynamicBackground,
       appBar: DrivingBuddyAppBar(
         title: 'Berkendara',
         showProfileButton: !_isMonitoring,

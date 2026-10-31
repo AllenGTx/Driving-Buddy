@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../core/app_colors.dart';
+import '../services/theme_service.dart';
 import '../driving_card_screen.dart';
 import '../services/firebase_service.dart';
 import '../widgets/driving_buddy_app_bar.dart';
@@ -192,178 +193,197 @@ class _HistoryScreenState extends State<HistoryScreen> {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: AppColors.background,
-      appBar: const DrivingBuddyAppBar(title: 'Riwayat Perjalanan'),
-      body: RefreshIndicator(
-        onRefresh: _loadData,
-        color: const Color(0xFFE57A38),
-        child: CustomScrollView(
-          physics: const AlwaysScrollableScrollPhysics(
-            parent: BouncingScrollPhysics(),
-          ),
-          slivers: [
-                  // 1. Summary Card with Dial
-                  SliverToBoxAdapter(child: _buildSummaryCard()),
+    return ListenableBuilder(
+      listenable: ThemeService.instance,
+      builder: (context, _) {
+        final isDark = ThemeService.instance.isDarkMode;
 
-                  // 2. Section Header with Clean Action Buttons
-                  SliverToBoxAdapter(
-                    child: Padding(
-                      padding: const EdgeInsets.fromLTRB(16, 16, 16, 10),
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                        children: [
-                          Expanded(
-                            child: Row(
-                              children: [
-                                const Flexible(
-                                  child: Text(
-                                    'Daftar Sesi Perjalanan',
-                                    maxLines: 1,
-                                    overflow: TextOverflow.ellipsis,
-                                    style: TextStyle(
-                                      fontSize: 15,
-                                      fontWeight: FontWeight.w800,
-                                      color: Color(0xFF0F172A),
-                                    ),
-                                  ),
-                                ),
-                                const SizedBox(width: 6),
-                                Container(
-                                  padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
-                                  decoration: BoxDecoration(
-                                    color: const Color(0xFFFFF7ED),
-                                    borderRadius: BorderRadius.circular(8),
-                                    border: Border.all(color: const Color(0xFFFED7AA)),
-                                  ),
-                                  child: Text(
-                                    '${_sessions.length} Sesi',
-                                    style: const TextStyle(
-                                      fontSize: 9.5,
-                                      fontWeight: FontWeight.w800,
-                                      color: Color(0xFFC25E21),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                          const SizedBox(width: 8),
-                          Row(
-                            mainAxisSize: MainAxisSize.min,
+        return Scaffold(
+          backgroundColor: isDark ? AppColors.darkBackground : AppColors.background,
+          appBar: const DrivingBuddyAppBar(title: 'Riwayat Perjalanan'),
+          body: RefreshIndicator(
+            onRefresh: _loadData,
+            color: const Color(0xFFE57A38),
+            child: CustomScrollView(
+              physics: const AlwaysScrollableScrollPhysics(
+                parent: BouncingScrollPhysics(),
+              ),
+              slivers: [
+                // 1. Summary Card with Dial
+                SliverToBoxAdapter(child: _buildSummaryCard()),
+
+                // 2. Section Header with Clean Action Buttons
+                SliverToBoxAdapter(
+                  child: Padding(
+                    padding: const EdgeInsets.fromLTRB(16, 16, 16, 10),
+                    child: Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        Expanded(
+                          child: Row(
                             children: [
-                              if (_sessions.isNotEmpty)
-                                Tooltip(
-                                  message: 'Bersihkan Semua',
-                                  child: InkWell(
-                                    onTap: _clearAllHistory,
-                                    borderRadius: BorderRadius.circular(8),
-                                    child: Container(
-                                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                                      decoration: BoxDecoration(
-                                        color: const Color(0xFFFEF2F2),
-                                        borderRadius: BorderRadius.circular(8),
-                                        border: Border.all(color: const Color(0xFFFECACA)),
-                                      ),
-                                      child: const Row(
-                                        mainAxisSize: MainAxisSize.min,
-                                        children: [
-                                          Icon(Icons.delete_sweep_rounded, size: 14, color: Color(0xFFD94126)),
-                                          SizedBox(width: 4),
-                                          Text(
-                                            'Hapus',
-                                            style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: Color(0xFFD94126)),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
+                              Flexible(
+                                child: Text(
+                                  'Daftar Sesi Perjalanan',
+                                  maxLines: 1,
+                                  overflow: TextOverflow.ellipsis,
+                                  style: TextStyle(
+                                    fontSize: 15,
+                                    fontWeight: FontWeight.w800,
+                                    color: isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A),
                                   ),
                                 ),
-                              const SizedBox(width: 4),
-                              IconButton(
-                                constraints: const BoxConstraints(),
-                                padding: const EdgeInsets.all(4),
-                                icon: const Icon(Icons.refresh_rounded, color: Color(0xFFE57A38), size: 19),
-                                onPressed: _loadData,
-                                tooltip: 'Perbarui',
+                              ),
+                              const SizedBox(width: 6),
+                              Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                                decoration: BoxDecoration(
+                                  color: isDark ? AppColors.darkCardBgSoft : const Color(0xFFFFF7ED),
+                                  borderRadius: BorderRadius.circular(8),
+                                  border: Border.all(
+                                    color: isDark ? AppColors.darkCardBorder : const Color(0xFFFED7AA),
+                                  ),
+                                ),
+                                child: Text(
+                                  '${_sessions.length} Sesi',
+                                  style: const TextStyle(
+                                    fontSize: 9.5,
+                                    fontWeight: FontWeight.w800,
+                                    color: Color(0xFFC25E21),
+                                  ),
+                                ),
                               ),
                             ],
+                          ),
+                        ),
+                        const SizedBox(width: 8),
+                        Row(
+                          mainAxisSize: MainAxisSize.min,
+                          children: [
+                            if (_sessions.isNotEmpty)
+                              Tooltip(
+                                message: 'Bersihkan Semua',
+                                child: InkWell(
+                                  onTap: _clearAllHistory,
+                                  borderRadius: BorderRadius.circular(8),
+                                  child: Container(
+                                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                                    decoration: BoxDecoration(
+                                      color: isDark ? AppColors.darkDangerBg : const Color(0xFFFEF2F2),
+                                      borderRadius: BorderRadius.circular(8),
+                                      border: Border.all(
+                                        color: isDark ? const Color(0xFFD94126) : const Color(0xFFFECACA),
+                                      ),
+                                    ),
+                                    child: const Row(
+                                      mainAxisSize: MainAxisSize.min,
+                                      children: [
+                                        Icon(Icons.delete_sweep_rounded, size: 14, color: Color(0xFFD94126)),
+                                        SizedBox(width: 4),
+                                        Text(
+                                          'Hapus',
+                                          style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: Color(0xFFD94126)),
+                                        ),
+                                      ],
+                                    ),
+                                  ),
+                                ),
+                              ),
+                            const SizedBox(width: 4),
+                            IconButton(
+                              constraints: const BoxConstraints(),
+                              padding: const EdgeInsets.all(4),
+                              icon: const Icon(Icons.refresh_rounded, color: Color(0xFFE57A38), size: 19),
+                              onPressed: _loadData,
+                              tooltip: 'Perbarui',
+                            ),
+                          ],
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+
+                // 3. Loading / Empty / List
+                if (_isLoading)
+                  const SliverFillRemaining(
+                    child: Center(
+                      child: CircularProgressIndicator(color: Color(0xFFE57A38)),
+                    ),
+                  )
+                else if (_sessions.isEmpty)
+                  SliverFillRemaining(
+                    child: Center(
+                      child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
+                        children: [
+                          Icon(
+                            Icons.directions_car_outlined,
+                            size: 56,
+                            color: (isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B)).withValues(alpha: 0.35),
+                          ),
+                          const SizedBox(height: 14),
+                          Text(
+                            'Belum Ada Sesi Perjalanan',
+                            style: TextStyle(
+                              fontSize: 16,
+                              fontWeight: FontWeight.w800,
+                              color: isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A),
+                            ),
+                          ),
+                          const SizedBox(height: 6),
+                          Text(
+                            'Mulai sesi berkendara untuk merekam telemetri Anda.',
+                            style: TextStyle(
+                              fontSize: 12,
+                              color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
+                            ),
                           ),
                         ],
                       ),
                     ),
-                  ),
-
-                  // 3. Loading / Empty / List
-                  if (_isLoading)
-                    const SliverFillRemaining(
-                      child: Center(
-                        child: CircularProgressIndicator(color: Color(0xFFE57A38)),
-                      ),
-                    )
-                  else if (_sessions.isEmpty)
-                    SliverFillRemaining(
-                      child: Center(
-                        child: Column(
-                          mainAxisAlignment: MainAxisAlignment.center,
-                          children: [
-                            Icon(
-                              Icons.directions_car_outlined,
-                              size: 56,
-                              color: const Color(0xFF64748B).withOpacity(0.35),
-                            ),
-                            const SizedBox(height: 14),
-                            const Text(
-                              'Belum Ada Sesi Perjalanan',
-                              style: TextStyle(
-                                fontSize: 16,
-                                fontWeight: FontWeight.w800,
-                                color: Color(0xFF0F172A),
-                              ),
-                            ),
-                            const SizedBox(height: 6),
-                            const Text(
-                              'Mulai sesi berkendara untuk merekam telemetri Anda.',
-                              style: TextStyle(
-                                fontSize: 12,
-                                color: Color(0xFF64748B),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                    )
-                  else
-                    SliverPadding(
-                      padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
-                      sliver: SliverList.builder(
-                        itemCount: _sessions.length,
-                        itemBuilder: (context, index) {
-                          return _buildSessionCard(_sessions[index], index);
-                        },
-                      ),
+                  )
+                else
+                  SliverPadding(
+                    padding: const EdgeInsets.fromLTRB(16, 0, 16, 24),
+                    sliver: SliverList.builder(
+                      itemCount: _sessions.length,
+                      itemBuilder: (context, index) {
+                        return _buildSessionCard(_sessions[index], index);
+                      },
                     ),
-                ],
-              ),
+                  ),
+              ],
             ),
-          );
+          ),
+        );
+      },
+    );
   }
 
   Widget _buildSummaryCard() {
+    final isDark = ThemeService.instance.isDarkMode;
     return Container(
       margin: const EdgeInsets.fromLTRB(16, 14, 16, 6),
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFFFFFFFF), Color(0xFFFFFBF8)],
-        ),
+        color: isDark ? AppColors.darkCardBg : null,
+        gradient: isDark
+            ? null
+            : const LinearGradient(
+                begin: Alignment.topCenter,
+                end: Alignment.bottomCenter,
+                colors: [Color(0xFFFFFFFF), Color(0xFFFFFBF8)],
+              ),
         borderRadius: BorderRadius.circular(18),
-        border: Border.all(color: const Color(0xFFFED7AA)),
+        border: Border.all(
+          color: isDark ? AppColors.darkCardBorder : const Color(0xFFFED7AA),
+        ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFE57A38).withOpacity(0.06),
+            color: isDark
+                ? Colors.black.withValues(alpha: 0.25)
+                : const Color(0xFFE57A38).withOpacity(0.06),
             blurRadius: 14,
             offset: const Offset(0, 3),
           ),
@@ -379,8 +399,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
               Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
-                  children: const [
-                    Text(
+                  children: [
+                    const Text(
                       'TELEMETRI KUMULATIF',
                       style: TextStyle(
                         fontSize: 9.5,
@@ -389,13 +409,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         color: Color(0xFFC25E21),
                       ),
                     ),
-                    SizedBox(height: 2),
+                    const SizedBox(height: 2),
                     Text(
                       'Ringkasan Keseluruhan Sesi',
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w800,
-                        color: Color(0xFF0F172A),
+                        color: isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A),
                       ),
                     ),
                   ],
@@ -405,9 +425,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 width: 32,
                 height: 32,
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFFF7ED),
+                  color: isDark ? AppColors.darkCardBgSoft : const Color(0xFFFFF7ED),
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: const Color(0xFFFED7AA)),
+                  border: Border.all(
+                    color: isDark ? AppColors.darkCardBorder : const Color(0xFFFED7AA),
+                  ),
                 ),
                 child: const Icon(
                   Icons.auto_graph_rounded,
@@ -427,10 +449,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   icon: Icons.timer_outlined,
                   label: 'TOTAL WAKTU',
                   value: _formatDuration(_totalSeconds),
-                  color: const Color(0xFF0F172A),
+                  color: isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A),
                 ),
               ),
-              Container(height: 36, width: 1, color: const Color(0xFFFFEDD5)),
+              Container(
+                height: 36,
+                width: 1,
+                color: isDark ? AppColors.darkCardBorder : const Color(0xFFFFEDD5),
+              ),
               Expanded(
                 child: _buildMetricItem(
                   icon: Icons.shield_outlined,
@@ -439,7 +465,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   color: _scoreColor(_avgScore),
                 ),
               ),
-              Container(height: 36, width: 1, color: const Color(0xFFFFEDD5)),
+              Container(
+                height: 36,
+                width: 1,
+                color: isDark ? AppColors.darkCardBorder : const Color(0xFFFFEDD5),
+              ),
               Expanded(
                 child: _buildMetricItem(
                   icon: Icons.alt_route_rounded,
@@ -489,6 +519,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
   }
 
   Widget _buildSessionCard(Map<String, dynamic> session, int index) {
+    final isDark = ThemeService.instance.isDarkMode;
     final score = (session['driving_score'] as num?)?.toInt() ?? 100;
     final duration = (session['duration_seconds'] as num?)?.toInt() ?? 0;
     final distKm = (session['distance_km'] as num?)?.toDouble() ?? 0.0;
@@ -506,12 +537,16 @@ class _HistoryScreenState extends State<HistoryScreen> {
       margin: const EdgeInsets.only(bottom: 12),
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? AppColors.darkCardBg : Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFFED7AA)),
+        border: Border.all(
+          color: isDark ? AppColors.darkCardBorder : const Color(0xFFFED7AA),
+        ),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.02),
+            color: isDark
+                ? Colors.black.withValues(alpha: 0.25)
+                : Colors.black.withOpacity(0.02),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -531,9 +566,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       width: 32,
                       height: 32,
                       decoration: BoxDecoration(
-                        color: const Color(0xFFFFF7ED),
+                        color: isDark ? AppColors.darkCardBgSoft : const Color(0xFFFFF7ED),
                         borderRadius: BorderRadius.circular(8),
-                        border: Border.all(color: const Color(0xFFFED7AA)),
+                        border: Border.all(
+                          color: isDark ? AppColors.darkCardBorder : const Color(0xFFFED7AA),
+                        ),
                       ),
                       child: const Icon(
                         Icons.drive_eta_rounded,
@@ -550,20 +587,20 @@ class _HistoryScreenState extends State<HistoryScreen> {
                             dateStr,
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w800,
-                              color: Color(0xFF0F172A),
+                              color: isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A),
                             ),
                           ),
                           Text(
                             '${distKm.toStringAsFixed(1)} km · ${avgSpeed.toStringAsFixed(0)} km/j avg',
                             maxLines: 1,
                             overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
+                            style: TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.w600,
-                              color: Color(0xFF64748B),
+                              color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
                             ),
                           ),
                         ],
@@ -625,9 +662,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
               child: Container(
                 padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFEF2F2),
+                  color: isDark ? AppColors.darkDangerBg : const Color(0xFFFEF2F2),
                   borderRadius: BorderRadius.circular(6),
-                  border: Border.all(color: const Color(0xFFFECACA)),
+                  border: Border.all(
+                    color: isDark ? const Color(0xFFD94126) : const Color(0xFFFECACA),
+                  ),
                 ),
                 child: Text(
                   '${micro}x Microsleep Terdeteksi',
@@ -645,9 +684,11 @@ class _HistoryScreenState extends State<HistoryScreen> {
             height: 32,
             width: double.infinity,
             decoration: BoxDecoration(
-              color: const Color(0xFFF8FAFC),
+              color: isDark ? AppColors.darkCardBgSoft : const Color(0xFFF8FAFC),
               borderRadius: BorderRadius.circular(8),
-              border: Border.all(color: const Color(0xFFFFEDD5)),
+              border: Border.all(
+                color: isDark ? AppColors.darkCardBorder : const Color(0xFFFFEDD5),
+              ),
             ),
             child: CustomPaint(
               painter: _HistorySparklinePainter(color: scoreColor),
@@ -662,9 +703,23 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('DURASI', style: TextStyle(fontSize: 8.5, fontWeight: FontWeight.w800, color: Color(0xFF64748B))),
+                    Text(
+                      'DURASI',
+                      style: TextStyle(
+                        fontSize: 8.5,
+                        fontWeight: FontWeight.w800,
+                        color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
+                      ),
+                    ),
                     const SizedBox(height: 2),
-                    Text(_formatDuration(duration), style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFF0F172A))),
+                    Text(
+                      _formatDuration(duration),
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -672,9 +727,23 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('EVENT KANTUK', style: TextStyle(fontSize: 8.5, fontWeight: FontWeight.w800, color: Color(0xFF64748B))),
+                    Text(
+                      'EVENT KANTUK',
+                      style: TextStyle(
+                        fontSize: 8.5,
+                        fontWeight: FontWeight.w800,
+                        color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
+                      ),
+                    ),
                     const SizedBox(height: 2),
-                    Text('$totalEvents Terdeteksi', style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: totalEvents > 0 ? const Color(0xFFE57A38) : const Color(0xFF059669))),
+                    Text(
+                      '$totalEvents Terdeteksi',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: totalEvents > 0 ? const Color(0xFFE57A38) : const Color(0xFF059669),
+                      ),
+                    ),
                   ],
                 ),
               ),
@@ -682,9 +751,23 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text('MENGUAP', style: TextStyle(fontSize: 8.5, fontWeight: FontWeight.w800, color: Color(0xFF64748B))),
+                    Text(
+                      'MENGUAP',
+                      style: TextStyle(
+                        fontSize: 8.5,
+                        fontWeight: FontWeight.w800,
+                        color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
+                      ),
+                    ),
                     const SizedBox(height: 2),
-                    Text('$yawn kali', style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800, color: Color(0xFF0F172A))),
+                    Text(
+                      '$yawn kali',
+                      style: TextStyle(
+                        fontSize: 13,
+                        fontWeight: FontWeight.w800,
+                        color: isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A),
+                      ),
+                    ),
                   ],
                 ),
               ),

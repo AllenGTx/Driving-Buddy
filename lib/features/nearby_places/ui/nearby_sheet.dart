@@ -230,7 +230,7 @@ class _NearbyPlacesSheetState extends State<NearbyPlacesSheet>
             key: const Key('sheet_refresh'),
             tooltip: 'Muat ulang',
             onPressed: _refresh,
-            icon: const Icon(Icons.refresh_rounded, color: PlacesStyle.slate600),
+            icon: Icon(Icons.refresh_rounded, color: PlacesStyle.slate600),
           ),
 
         ],
@@ -602,10 +602,10 @@ class _PlaceTile extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Material(
-      color: Colors.white,
+      color: PlacesStyle.cardBg,
       shape: RoundedRectangleBorder(
         borderRadius: BorderRadius.circular(PlacesStyle.radiusXl),
-        side: const BorderSide(color: PlacesStyle.orange100),
+        side: BorderSide(color: PlacesStyle.orange100),
       ),
       clipBehavior: Clip.antiAlias,
       child: InkWell(
@@ -692,14 +692,14 @@ class _PlaceTile extends StatelessWidget {
               ),
             ),
             if (ahead == true)
-              const _Pill(
+              _Pill(
                 text: 'DI DEPAN',
                 icon: Icons.arrow_upward_rounded,
                 color: PlacesStyle.emerald,
                 background: PlacesStyle.emerald50,
               )
             else if (ahead == false)
-              const _Pill(
+              _Pill(
                 text: 'DI BELAKANG',
                 icon: Icons.arrow_downward_rounded,
                 color: PlacesStyle.slate600,
@@ -713,13 +713,13 @@ class _PlaceTile extends StatelessWidget {
                 background: PlacesStyle.slate100,
               ),
             if (place.openNow == true)
-              const _Pill(
+              _Pill(
                 text: 'BUKA',
                 color: PlacesStyle.emerald,
                 background: PlacesStyle.emerald50,
               )
             else if (place.openNow == false)
-              const _Pill(
+              _Pill(
                 text: 'TUTUP',
                 color: PlacesStyle.vermilionDark,
                 background: PlacesStyle.vermilion50,
@@ -832,8 +832,8 @@ class _InfoBanner extends StatelessWidget {
             InkWell(
               onTap: onClose,
               customBorder: const CircleBorder(),
-              child: const Padding(
-                padding: EdgeInsets.symmetric(horizontal: 4),
+              child: Padding(
+                padding: const EdgeInsets.symmetric(horizontal: 4),
                 child: Icon(Icons.close_rounded, size: 16, color: PlacesStyle.slate500),
               ),
             ),
@@ -973,7 +973,7 @@ class _PanelButton extends StatelessWidget {
       label: Text(label),
       style: OutlinedButton.styleFrom(
         foregroundColor: PlacesStyle.copperDark,
-        side: const BorderSide(color: PlacesStyle.orange300),
+        side: BorderSide(color: PlacesStyle.orange300),
         minimumSize: const Size(0, 44),
         shape: shape,
       ),
