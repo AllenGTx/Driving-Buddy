@@ -94,6 +94,8 @@ class AuthService {
     return credential;
   }
 
+  static String? lastAttemptedGoogleEmail;
+
   static final GoogleSignIn _googleSignIn = GoogleSignIn(
     scopes: ['email', 'profile'],
     serverClientId: '587027656702-kgmmt061b1js71rd9ss6tti2so2sv4bv.apps.googleusercontent.com',
@@ -128,7 +130,25 @@ class AuthService {
         );
       }
 
+      lastAttemptedGoogleEmail = googleUser.email;
       final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+      debugPrint('GoogleSignIn user: ${googleUser.email}, idToken: ${googleAuth.idToken != null ? "EXISTS" : "NULL"}, accessToken: ${googleAuth.accessToken != null ? "EXISTS" : "NULL"}');
+
+      // Jika idToken null (misal pada microG tanpa sertifikat SHA-1), coba fallback ke browser provider
+      if (googleAuth.idToken == null) {
+        debugPrint('Google idToken is null, trying fallback to browser OAuth...');
+        try {
+          final googleProvider = GoogleAuthProvider();
+          return await auth.signInWithProvider(googleProvider);
+        } catch (providerErr) {
+          debugPrint('signInWithProvider fallback failed: $providerErr');
+          throw FirebaseAuthException(
+            code: 'missing-id-token',
+            message: 'Google ID Token tidak ditemukan dari perangkat. Silakan masuk menggunakan Email & Sandi atau daftarkan SHA-1 di Firebase.',
+          );
+        }
+      }
+
       final OAuthCredential oAuthCredential = GoogleAuthProvider.credential(
         accessToken: googleAuth.accessToken,
         idToken: googleAuth.idToken,

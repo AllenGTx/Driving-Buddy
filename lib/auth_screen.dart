@@ -678,10 +678,29 @@ class _LoginScreenState extends State<LoginScreen>
     } on FirebaseAuthException catch (e) {
       if (mounted) {
         final code = e.code.toLowerCase();
+        final msg = (e.message ?? '').toLowerCase();
+
         if (code == 'popup-closed-by-user' || code == 'cancelled' || code == 'canceled') {
           setState(() => _loginError = null);
+        } else if (code == 'account-exists-with-different-credential' ||
+            msg.contains('account already exists') ||
+            msg.contains('different-credential') ||
+            msg.contains('different credential')) {
+          final gEmail = AuthService.lastAttemptedGoogleEmail;
+          if (gEmail != null && gEmail.isNotEmpty) {
+            _loginEmail.text = gEmail;
+          }
+          _tab.animateTo(0);
+          _setError('Akun ${AuthService.lastAttemptedGoogleEmail ?? 'ini'} sudah terdaftar dengan Kata Sandi. Silakan masukkan kata sandi di atas.');
+        } else if (code == 'missing-id-token' || msg.contains('id token')) {
+          final gEmail = AuthService.lastAttemptedGoogleEmail;
+          if (gEmail != null && gEmail.isNotEmpty) {
+            _loginEmail.text = gEmail;
+          }
+          _tab.animateTo(0);
+          _setError('Google ID Token tidak ditemukan. Silakan masuk menggunakan kata sandi akun.');
         } else {
-          _setError(_xlErr(e.message ?? 'Login Google dibatalkan'));
+          _setError(e.message ?? _xlErr(e.code));
         }
       }
     } catch (e) {
@@ -692,6 +711,15 @@ class _LoginScreenState extends State<LoginScreen>
             errStr.contains('cancel') ||
             errStr.contains('12501')) {
           setState(() => _loginError = null);
+        } else if (errStr.contains('account-exists-with-different-credential') ||
+            errStr.contains('different-credential') ||
+            errStr.contains('account already exists')) {
+          final gEmail = AuthService.lastAttemptedGoogleEmail;
+          if (gEmail != null && gEmail.isNotEmpty) {
+            _loginEmail.text = gEmail;
+          }
+          _tab.animateTo(0);
+          _setError('Akun ${AuthService.lastAttemptedGoogleEmail ?? 'ini'} sudah terdaftar dengan Kata Sandi. Silakan masukkan kata sandi di atas.');
         } else if (errStr.contains('10') || errStr.contains('developer_error')) {
           _setError('Konfigurasi SHA-1 Firebase belum sesuai untuk aplikasi ini. Silakan gunakan login Email.');
         } else {
