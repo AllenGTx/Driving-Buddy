@@ -110,12 +110,17 @@ class _ScoreRingPainter extends CustomPainter {
 // ─────────────────────────────────────────────
 //  POLAROID MAP CARD (Centrally Framed Photo Aesthetic)
 // ─────────────────────────────────────────────
-class _PolaroidMapCard extends StatelessWidget {
+// ─────────────────────────────────────────────
+//  POLAROID MAP CARD (Centrally Framed Photo Aesthetic with Interactive Pan & Zoom)
+// ─────────────────────────────────────────────
+class _PolaroidMapCard extends StatefulWidget {
   final double? centerLat;
   final double? centerLng;
   final double? startLat;
   final double? startLng;
   final List<Map<String, double>>? routePoints;
+  final bool isSharing;
+  final ValueChanged<bool>? onInteractionChanged;
 
   const _PolaroidMapCard({
     this.centerLat,
@@ -123,11 +128,46 @@ class _PolaroidMapCard extends StatelessWidget {
     this.startLat,
     this.startLng,
     this.routePoints,
+    this.isSharing = false,
+    this.onInteractionChanged,
   });
 
+  @override
+  State<_PolaroidMapCard> createState() => _PolaroidMapCardState();
+}
 
+class _PolaroidMapCardState extends State<_PolaroidMapCard> {
+  double? _userCenterLat;
+  double? _userCenterLng;
+  int? _userZoom;
+  bool _hasUserInteracted = false;
 
-  /// Hitung zoom adaptif agar Start, Finish, dan seluruh rute muat sempurna di dalam frame Polaroid
+  // Gesture tracking
+  Offset _scaleStartFocal = Offset.zero;
+  double _scaleStartCenterLat = 0.0;
+  double _scaleStartCenterLng = 0.0;
+  double _scaleStartZoom = 15.0;
+
+  static Offset _latLngToPixel(double lat, double lng, int z) {
+    final n = (1 << z).toDouble() * 256.0;
+    final x = (lng + 180.0) / 360.0 * n;
+    final latRad = lat.clamp(-85.0511, 85.0511) * math.pi / 180.0;
+    final y = (1.0 - math.log(math.tan(latRad) + 1.0 / math.cos(latRad)) / math.pi) / 2.0 * n;
+    return Offset(x, y);
+  }
+
+  static Map<String, double> _pixelToLatLng(double px, double py, int z) {
+    final n = (1 << z).toDouble() * 256.0;
+    final lng = (px / n) * 360.0 - 180.0;
+    final u = math.pi * (1.0 - 2.0 * (py / n));
+    final sinhU = (math.exp(u) - math.exp(-u)) / 2.0;
+    final latRad = math.atan(sinhU);
+    final lat = latRad * 180.0 / math.pi;
+    return {'lat': lat.clamp(-85.0511, 85.0511), 'lng': lng.clamp(-180.0, 180.0)};
+  }
+
+  /// Hitung zoom adaptif agar Start, Finish, dan seluruh rute memiliki ruang bernapas luas
+  /// dan badge FINISH tidak mepet / mentok ke tepi atas layar.
   int _calculateAdaptiveZoom({
     required double minLat,
     required double maxLat,
@@ -137,13 +177,14 @@ class _PolaroidMapCard extends StatelessWidget {
     final latDiff = (maxLat - minLat).abs();
     final lngDiff = (maxLng - minLng).abs();
     if (latDiff < 0.0001 && lngDiff < 0.0001) {
-      return 16;
+      return 15;
     }
 
-    // Viewport card ~330px lebar, ~295px tinggi.
-    // Beri batas 210px x 180px (margin 35%) agar badge Start & Finish tidak terpotong tepi layar.
-    const double maxSpanX = 210.0;
-    const double maxSpanY = 180.0;
+    // Viewport Polaroid ~310px lebar x ~224px tinggi.
+    // Beri batas lega (maxSpanX: 180, maxSpanY: 110)
+    // agar pin Start & Finish memiliki margin leluasa (minimal 50-60px dari border atas/bawah)
+    const double maxSpanX = 180.0;
+    const double maxSpanY = 110.0;
 
     for (int z = 16; z >= 8; z--) {
       final n = (1 << z).toDouble();
@@ -166,12 +207,12 @@ class _PolaroidMapCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     // 1. Titik Finish (Destinasi Akhir Perjalanan)
-    final fLat = centerLat ?? -6.2088;
-    final fLng = centerLng ?? 106.8456;
+    final fLat = widget.centerLat ?? -6.2088;
+    final fLng = widget.centerLng ?? 106.8456;
 
     // 2. Titik Start (Awal Keberangkatan)
-    double sLat = startLat ?? (routePoints != null && routePoints!.isNotEmpty ? routePoints!.first['lat']! : (fLat - 0.003));
-    double sLng = startLng ?? (routePoints != null && routePoints!.isNotEmpty ? routePoints!.first['lng']! : (fLng - 0.003));
+    double sLat = widget.startLat ?? (widget.routePoints != null && widget.routePoints!.isNotEmpty ? widget.routePoints!.first['lat']! : (fLat - 0.003));
+    double sLng = widget.startLng ?? (widget.routePoints != null && widget.routePoints!.isNotEmpty ? widget.routePoints!.first['lng']! : (fLng - 0.003));
 
     // Jika start dan finish terlalu dekat / sama, beri offset visual agar kedua pin terlihat
     if ((sLat - fLat).abs() < 0.00005 && (sLng - fLng).abs() < 0.00005) {
@@ -179,13 +220,13 @@ class _PolaroidMapCard extends StatelessWidget {
       sLng = fLng - 0.0020;
     }
 
-    // 3. Kumpulkan semua titik untuk kalkulasi Bounding Box
+    // 3. Kumpulkan semua titik untuk kalkulasi Bounding Box auto-fit
     final allPoints = <Map<String, double>>[
       {'lat': sLat, 'lng': sLng},
       {'lat': fLat, 'lng': fLng},
     ];
-    if (routePoints != null && routePoints!.isNotEmpty) {
-      for (final p in routePoints!) {
+    if (widget.routePoints != null && widget.routePoints!.isNotEmpty) {
+      for (final p in widget.routePoints!) {
         final pLat = p['lat'];
         final pLng = p['lng'];
         if (pLat != null && pLng != null && (pLat != 0.0 || pLng != 0.0)) {
@@ -208,17 +249,22 @@ class _PolaroidMapCard extends StatelessWidget {
       if (pLng > maxLng) maxLng = pLng;
     }
 
-    // 4. Titik tengah geografis sesungguhnya (Midpoint) agar rute tepat berada di tengah foto
-    final mapCenterLat = (minLat + maxLat) / 2.0;
-    final mapCenterLng = (minLng + maxLng) / 2.0;
+    // Titik tengah geografis default (Midpoint rute)
+    final autoCenterLat = (minLat + maxLat) / 2.0;
+    final autoCenterLng = (minLng + maxLng) / 2.0;
 
-    // 5. Kalkulasi zoom adaptif: dekat (zoom in 16), jauh/antar kota (zoom out 10-12)
-    final zoom = _calculateAdaptiveZoom(
+    // Zoom adaptif default
+    final autoZoom = _calculateAdaptiveZoom(
       minLat: minLat,
       maxLat: maxLat,
       minLng: minLng,
       maxLng: maxLng,
     );
+
+    // Titik tengah & zoom efektif (mempertahankan hasil geser/zoom pengguna)
+    final mapCenterLat = _userCenterLat ?? autoCenterLat;
+    final mapCenterLng = _userCenterLng ?? autoCenterLng;
+    final zoom = _userZoom ?? autoZoom;
 
     return Container(
       width: double.infinity,
@@ -243,99 +289,258 @@ class _PolaroidMapCard extends StatelessWidget {
         mainAxisSize: MainAxisSize.min,
         crossAxisAlignment: CrossAxisAlignment.stretch,
         children: [
-          // Inner Photographic Map Window
+          // Inner Photographic Map Window (Interaktif Pan & Zoom)
           ClipRRect(
             borderRadius: BorderRadius.circular(6),
             child: AspectRatio(
               aspectRatio: 1.38,
-                child: Stack(
-                  fit: StackFit.expand,
-                  children: [
-                    // Single High-Resolution Unified Tile Image (Pusat di Midpoint rute)
-                    _buildTileMap(mapCenterLat, mapCenterLng, zoom),
+              child: Listener(
+                onPointerDown: (_) {
+                  widget.onInteractionChanged?.call(true);
+                },
+                onPointerUp: (_) {
+                  widget.onInteractionChanged?.call(false);
+                },
+                onPointerCancel: (_) {
+                  widget.onInteractionChanged?.call(false);
+                },
+                child: GestureDetector(
+                  behavior: HitTestBehavior.opaque,
+                  onScaleStart: (details) {
+                    _scaleStartFocal = details.localFocalPoint;
+                    _scaleStartCenterLat = mapCenterLat;
+                    _scaleStartCenterLng = mapCenterLng;
+                    _scaleStartZoom = zoom.toDouble();
+                  },
+                  onScaleUpdate: (details) {
+                    // 1. Pan (Pergeseran Peta)
+                    final delta = details.localFocalPoint - _scaleStartFocal;
+                    if (delta.dx != 0 || delta.dy != 0) {
+                      final startPx = _latLngToPixel(_scaleStartCenterLat, _scaleStartCenterLng, zoom);
+                      final newPx = Offset(startPx.dx - delta.dx, startPx.dy - delta.dy);
+                      final newCoord = _pixelToLatLng(newPx.dx, newPx.dy, zoom);
+                      _userCenterLat = newCoord['lat'];
+                      _userCenterLng = newCoord['lng'];
+                      _hasUserInteracted = true;
+                    }
 
-                    // Atmospheric Vignette Overlay
-                    Positioned.fill(
-                      child: Container(
-                        decoration: BoxDecoration(
-                          gradient: RadialGradient(
-                            center: Alignment.center,
-                            radius: 0.95,
-                            colors: [
-                              Colors.transparent,
-                              Colors.black.withValues(alpha: 0.12),
-                            ],
-                          ),
-                        ),
-                      ),
-                    ),
-
-                    // Strava-style Route Overlay (Start Pin, Finish Pin, & Glowing Polyline)
-                    _buildStravaRouteOverlay(
-                      mapCenterLat: mapCenterLat,
-                      mapCenterLng: mapCenterLng,
-                      sLat: sLat,
-                      sLng: sLng,
-                      fLat: fLat,
-                      fLng: fLng,
-                      z: zoom,
-                    ),
-
-
-                  ],
-                ),
-              ),
-            ),
-            const SizedBox(height: 12),
-
-            // Polaroid Bottom Caption Strip (Bebas Overflow)
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              crossAxisAlignment: CrossAxisAlignment.center,
-              children: [
-                Expanded(
-                  child: Row(
+                    // 2. Pinch to Zoom
+                    if (details.scale != 1.0) {
+                      final zDelta = (math.log(details.scale) / math.ln2);
+                      final newZ = (_scaleStartZoom + zDelta).round().clamp(9, 18);
+                      if (newZ != zoom) {
+                        _userZoom = newZ;
+                        _hasUserInteracted = true;
+                      }
+                    }
+                    setState(() {});
+                  },
+                  child: Stack(
+                    fit: StackFit.expand,
                     children: [
-                      const Icon(Icons.location_on_rounded, size: 12, color: _orange),
-                      const SizedBox(width: 3.5),
-                      Flexible(
-                        child: Text(
-                          '${fLat.toStringAsFixed(4)}, ${fLng.toStringAsFixed(4)}',
-                          maxLines: 1,
-                          overflow: TextOverflow.ellipsis,
-                          style: GoogleFonts.plusJakartaSans(
-                            fontSize: 10.5,
-                            fontWeight: FontWeight.w700,
-                            color: const Color(0xFF64748B),
-                            letterSpacing: 0.2,
+                      // 1. Single High-Resolution Unified Tile Image (Pusat di mapCenter)
+                      _buildTileMap(mapCenterLat, mapCenterLng, zoom),
+
+                      // 2. Atmospheric Vignette Overlay
+                      Positioned.fill(
+                        child: Container(
+                          decoration: BoxDecoration(
+                            gradient: RadialGradient(
+                              center: Alignment.center,
+                              radius: 0.95,
+                              colors: [
+                                Colors.transparent,
+                                Colors.black.withValues(alpha: 0.12),
+                              ],
+                            ),
                           ),
                         ),
                       ),
+
+                      // 3. Strava-style Route Overlay (Start Pin, Finish Pin, & Glowing Polyline)
+                      _buildStravaRouteOverlay(
+                        mapCenterLat: mapCenterLat,
+                        mapCenterLng: mapCenterLng,
+                        sLat: sLat,
+                        sLng: sLng,
+                        fLat: fLat,
+                        fLng: fLng,
+                        z: zoom,
+                      ),
+
+                      // 4. Subtle Touch Hint (Muncul saat pertama kali dibuka)
+                      if (!widget.isSharing && !_hasUserInteracted)
+                        Positioned(
+                          top: 8,
+                          left: 8,
+                          child: IgnorePointer(
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 3),
+                              decoration: BoxDecoration(
+                                color: const Color(0xFF0F172A).withValues(alpha: 0.68),
+                                borderRadius: BorderRadius.circular(10),
+                                border: Border.all(color: Colors.white.withValues(alpha: 0.15)),
+                              ),
+                              child: const Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.touch_app_rounded, size: 10, color: Colors.white),
+                                  SizedBox(width: 3.5),
+                                  Text(
+                                    'Geser / Zoom untuk atur',
+                                    style: TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 8.5,
+                                      fontWeight: FontWeight.w600,
+                                      letterSpacing: 0.2,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
+
+                      // 5. Floating Zoom & Reset Controller Pills (Disembunyikan saat Export Image)
+                      if (!widget.isSharing)
+                        Positioned(
+                          right: 8,
+                          bottom: 8,
+                          child: Container(
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF0F172A).withValues(alpha: 0.78),
+                              borderRadius: BorderRadius.circular(20),
+                              border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
+                              boxShadow: const [
+                                BoxShadow(color: Colors.black26, blurRadius: 6, offset: Offset(0, 2)),
+                              ],
+                            ),
+                            padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 2),
+                            child: Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                // Zoom In (+)
+                                InkWell(
+                                  onTap: () {
+                                    setState(() {
+                                      _hasUserInteracted = true;
+                                      _userZoom = (zoom + 1).clamp(9, 18);
+                                      _userCenterLat ??= mapCenterLat;
+                                      _userCenterLng ??= mapCenterLng;
+                                    });
+                                  },
+                                  borderRadius: BorderRadius.circular(16),
+                                  child: const Padding(
+                                    padding: EdgeInsets.all(4),
+                                    child: Icon(Icons.add_rounded, size: 16, color: Colors.white),
+                                  ),
+                                ),
+                                Container(
+                                  width: 1,
+                                  height: 12,
+                                  color: Colors.white24,
+                                  margin: const EdgeInsets.symmetric(horizontal: 2),
+                                ),
+                                // Zoom Out (-)
+                                InkWell(
+                                  onTap: () {
+                                    setState(() {
+                                      _hasUserInteracted = true;
+                                      _userZoom = (zoom - 1).clamp(9, 18);
+                                      _userCenterLat ??= mapCenterLat;
+                                      _userCenterLng ??= mapCenterLng;
+                                    });
+                                  },
+                                  borderRadius: BorderRadius.circular(16),
+                                  child: const Padding(
+                                    padding: EdgeInsets.all(4),
+                                    child: Icon(Icons.remove_rounded, size: 16, color: Colors.white),
+                                  ),
+                                ),
+                                if (_hasUserInteracted) ...[
+                                  Container(
+                                    width: 1,
+                                    height: 12,
+                                    color: Colors.white24,
+                                    margin: const EdgeInsets.symmetric(horizontal: 2),
+                                  ),
+                                  // Re-center / Reset
+                                  InkWell(
+                                    onTap: () {
+                                      setState(() {
+                                        _hasUserInteracted = false;
+                                        _userCenterLat = null;
+                                        _userCenterLng = null;
+                                        _userZoom = null;
+                                      });
+                                    },
+                                    borderRadius: BorderRadius.circular(16),
+                                    child: const Padding(
+                                      padding: EdgeInsets.all(4),
+                                      child: Icon(Icons.center_focus_strong_rounded, size: 15, color: _orange),
+                                    ),
+                                  ),
+                                ],
+                              ],
+                            ),
+                          ),
+                        ),
                     ],
                   ),
                 ),
-                const SizedBox(width: 6),
-                Row(
-                  mainAxisSize: MainAxisSize.min,
+              ),
+            ),
+          ),
+          const SizedBox(height: 12),
+
+          // Polaroid Bottom Caption Strip (Bebas Overflow)
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            crossAxisAlignment: CrossAxisAlignment.center,
+            children: [
+              Expanded(
+                child: Row(
                   children: [
-                    const Icon(Icons.gps_fixed_rounded, size: 11, color: _orange),
+                    const Icon(Icons.location_on_rounded, size: 12, color: _orange),
                     const SizedBox(width: 3.5),
-                    Text(
-                      LanguageService.instance.s.travelRoute,
-                      style: GoogleFonts.plusJakartaSans(
-                        fontSize: 9,
-                        fontWeight: FontWeight.w800,
-                        color: const Color(0xFF0F172A),
-                        letterSpacing: 0.5,
+                    Flexible(
+                      child: Text(
+                        '${fLat.toStringAsFixed(4)}, ${fLng.toStringAsFixed(4)}',
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
+                        style: GoogleFonts.plusJakartaSans(
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w700,
+                          color: const Color(0xFF64748B),
+                          letterSpacing: 0.2,
+                        ),
                       ),
                     ),
                   ],
                 ),
-              ],
-            ),
-          ],
-        ),
-      );
+              ),
+              const SizedBox(width: 6),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(Icons.gps_fixed_rounded, size: 11, color: _orange),
+                  const SizedBox(width: 3.5),
+                  Text(
+                    LanguageService.instance.s.travelRoute,
+                    style: GoogleFonts.plusJakartaSans(
+                      fontSize: 9,
+                      fontWeight: FontWeight.w800,
+                      color: const Color(0xFF0F172A),
+                      letterSpacing: 0.5,
+                    ),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+    );
   }
 
   /// Peta OSM: susun tile 256px di sekitar koordinat sehingga titik posisi tepat di tengah.
@@ -419,8 +624,8 @@ class _PolaroidMapCard extends StatelessWidget {
         final finishP = toPixel(fLat, fLng);
 
         List<Offset> polylinePixels = [];
-        if (routePoints != null && routePoints!.length >= 2) {
-          polylinePixels = routePoints!
+        if (widget.routePoints != null && widget.routePoints!.length >= 2) {
+          polylinePixels = widget.routePoints!
               .map((pt) => toPixel(pt['lat']!, pt['lng']!))
               .toList();
         }
@@ -610,6 +815,7 @@ class _DrivingCardScreenState extends State<DrivingCardScreen>
     with SingleTickerProviderStateMixin {
   final GlobalKey _cardRepaintKey = GlobalKey();
   bool _isSharing = false;
+  bool _isMapInteracting = false;
   late final String _randomBg;
   late AnimationController _ctrl;
   late Animation<double> _scoreAnim;
@@ -885,7 +1091,7 @@ class _DrivingCardScreenState extends State<DrivingCardScreen>
                     child: ConstrainedBox(
                       constraints: const BoxConstraints(maxWidth: 440),
                       child: SingleChildScrollView(
-                        physics: const BouncingScrollPhysics(),
+                        physics: _isMapInteracting ? const NeverScrollableScrollPhysics() : const BouncingScrollPhysics(),
                         padding: const EdgeInsets.fromLTRB(16, 6, 16, 24),
                         child: Column(
                           children: [
@@ -956,6 +1162,10 @@ class _DrivingCardScreenState extends State<DrivingCardScreen>
                               startLat: _resolvedStartLat ?? widget.startLat,
                               startLng: _resolvedStartLng ?? widget.startLng,
                               routePoints: _resolvedRoutePoints ?? widget.routePoints,
+                              isSharing: _isSharing,
+                              onInteractionChanged: (interacting) {
+                                if (mounted) setState(() => _isMapInteracting = interacting);
+                              },
                             ),
                             const SizedBox(height: 10),
 
