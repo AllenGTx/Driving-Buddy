@@ -57,7 +57,7 @@ class _SplashScreenState extends State<SplashScreen>
           final freshUser = FirebaseAuth.instance.currentUser;
           isVerifiedUser = freshUser?.emailVerified ?? false;
         } catch (_) {
-          isVerifiedUser = user.emailVerified;
+          isVerifiedUser = false;
         }
         if (!isVerifiedUser) {
           await FirebaseAuth.instance.signOut();

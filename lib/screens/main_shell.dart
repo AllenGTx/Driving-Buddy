@@ -1,3 +1,5 @@
+import 'package:firebase_auth/firebase_auth.dart';
+import '../routes/app_routes.dart';
 import 'package:flutter/material.dart';
 
 import '../core/app_colors.dart';
@@ -33,6 +35,21 @@ class _MainShellState extends State<MainShell> {
   @override
   void initState() {
     super.initState();
+    // Guard: Wajib user aktif dan email terverifikasi sebelum masuk MainShell
+    final curUser = FirebaseAuth.instance.currentUser;
+    if (curUser == null || !curUser.emailVerified) {
+      WidgetsBinding.instance.addPostFrameCallback((_) async {
+        await FirebaseAuth.instance.signOut();
+        if (mounted) {
+          Navigator.of(context).pushNamedAndRemoveUntil(
+            AppRoutes.welcome,
+            (route) => false,
+          );
+        }
+      });
+      return;
+    }
+
     _currentIndex = widget.initialIndex;
     // Otomatis aktifkan pencarian tempat terdekat saat aplikasi dibuka.
     _nearbyController.start(askPermission: false);

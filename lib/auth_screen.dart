@@ -76,8 +76,13 @@ class _LoginScreenState extends State<LoginScreen>
   @override
   void initState() {
     super.initState();
+    // Pastikan tidak ada sesi unverified menggantung
+    final curUser = FirebaseAuth.instance.currentUser;
+    if (curUser != null && !curUser.emailVerified) {
+      FirebaseAuth.instance.signOut();
+    }
     // Bersihkan akun fake testing jika pernah tercatat di Firestore
-    AuthService.cleanupFakeUser('allenjancok123@gmailc.om');
+    AuthService.cleanupFakeUsers();
     _tab = TabController(length: 2, vsync: this);
     _tab.addListener(() {
       if (_tab.indexIsChanging) {
@@ -386,8 +391,19 @@ class _LoginScreenState extends State<LoginScreen>
       builder: (ctx) {
         bool resending = false;
         String? resendMsg;
-        return StatefulBuilder(
-          builder: (context, setDState) => AlertDialog(
+        return PopScope(
+          canPop: false,
+          onPopInvokedWithResult: (didPop, result) {
+            if (didPop) return;
+            Navigator.of(ctx).pop();
+            _loginEmail.text = email;
+            _tab.animateTo(0);
+            setState(() {
+              _loginError = null;
+            });
+          },
+          child: StatefulBuilder(
+            builder: (context, setDState) => AlertDialog(
             backgroundColor: isDark ? const Color(0xFF131B2E) : Colors.white,
             shape: RoundedRectangleBorder(
               borderRadius: BorderRadius.circular(22),
@@ -545,6 +561,7 @@ class _LoginScreenState extends State<LoginScreen>
                 ),
               ),
             ],
+            ),
           ),
         );
       },
@@ -666,6 +683,9 @@ class _LoginScreenState extends State<LoginScreen>
         fullName: name,
       );
 
+      // Jaminan ekstra: Pastikan sesi langsung logout di sisi aplikasi
+      await FirebaseAuth.instance.signOut();
+
       setState(() {
         _regSuccess = 'Pendaftaran berhasil! Silakan periksa email verifikasi Anda.';
       });
@@ -677,7 +697,11 @@ class _LoginScreenState extends State<LoginScreen>
       String msg = 'Terjadi kesalahan pendaftaran.';
       final code = e.code.toLowerCase();
       if (code == 'email-already-in-use') {
-        msg = 'Email ini sudah terdaftar. Silakan masuk menggunakan kata sandi Anda.';
+        msg = 'Email ini sudah terdaftar namun mungkin belum diverifikasi. Silakan masuk atau cek email untuk verifikasi.';
+        if (mounted) {
+          _showVerificationDialog(email, password: password);
+        }
+        return;
       } else if (code == 'invalid-email') {
         msg = 'Format email tidak valid atau domain tidak dikenali.';
       } else if (code == 'weak-password') {

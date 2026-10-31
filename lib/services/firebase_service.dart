@@ -52,26 +52,16 @@ class AuthService {
 
     final user = credential.user;
     if (user != null) {
-      await user.updateDisplayName(fullName);
       try {
+        await user.updateDisplayName(fullName);
         await user.sendEmailVerification();
       } catch (e) {
         debugPrint('Kirim verifikasi email error: $e');
+      } finally {
+        // PENTING: Segera keluarkan sesi secara mutlak agar tidak ada token aktif tersimpan!
+        // Akun di Firestore TIDAK AKAN DIBUAT sebelum user mengklik tautan verifikasi di email!
+        await auth.signOut();
       }
-      // Simpan profile dokumen ke Firestore (tandai belum verifikasi)
-      await firestore.collection('users').doc(user.uid).set({
-        'uid': user.uid,
-        'email': cleanEmail,
-        'displayName': fullName,
-        'photoUrl': null,
-        'createdAt': FieldValue.serverTimestamp(),
-        'emailVerified': false,
-        'totalTrips': 0,
-        'overallAvgScore': 100,
-      }, SetOptions(merge: true));
-
-      // PENTING: Segera keluarkan sesi agar tidak langsung masuk sebelum email diverifikasi!
-      await auth.signOut();
     }
 
     return credential;
@@ -93,7 +83,7 @@ class AuthService {
       // Reload dari server Firebase untuk mendapatkan status verifikasi terbaru
       await user.reload();
       final freshUser = auth.currentUser;
-      if (freshUser != null && !freshUser.emailVerified) {
+      if (freshUser == null || !freshUser.emailVerified) {
         await auth.signOut();
         throw FirebaseAuthException(
           code: 'email-not-verified',
@@ -139,14 +129,23 @@ class AuthService {
   }
 
   /// Hapus akun bodong/fake dari database Firestore jika ada
-  static Future<void> cleanupFakeUser(String email) async {
-    try {
-      final snap = await firestore.collection('users').where('email', isEqualTo: email.trim()).get();
-      for (final doc in snap.docs) {
-        await doc.reference.delete();
-      }
-    } catch (_) {}
+  static Future<void> cleanupFakeUsers() async {
+    final targets = [
+      'allenjancok123@gmailc.om',
+      'allenjancok123@gmail.com',
+    ];
+    for (final email in targets) {
+      try {
+        final snap = await firestore.collection('users').where('email', isEqualTo: email.trim()).get();
+        for (final doc in snap.docs) {
+          await doc.reference.delete();
+          debugPrint('🗑️ Hapus akun fake dari Firestore: ');
+        }
+      } catch (_) {}
+    }
   }
+
+  static Future<void> cleanupFakeUser(String email) => cleanupFakeUsers();
 
   static String? lastAttemptedGoogleEmail;
 
@@ -654,7 +653,7 @@ class SessionService {
       }
       list.add(sessionData);
       await prefs.setString(_keyPendingSessions, jsonEncode(list));
-      debugPrint('📦 Sesi disimpan ke offline cache lokal (Total pending: \)');
+      debugPrint('📦 Sesi disimpan ke offline cache lokal (Total pending: ${list.length})');
     } catch (e) {
       debugPrint('Gagal simpan sesi lokal: ');
     }
@@ -715,7 +714,7 @@ class SessionService {
       }
     } catch (_) {}
 
-    debugPrint('✅ Berhasil menyinkronkan \ sesi offline ke Firestore');
+    debugPrint('✅ Berhasil menyinkronkan $syncedCount sesi offline ke Firestore');
     return syncedCount;
   }
 
