@@ -47,11 +47,25 @@ class _SplashScreenState extends State<SplashScreen>
 
     _controller.forward();
 
-    Future.delayed(const Duration(milliseconds: 2600), () {
+    Future.delayed(const Duration(milliseconds: 2600), () async {
       if (!mounted) return;
-      final isLoggedIn = FirebaseAuth.instance.currentUser != null;
+      final user = FirebaseAuth.instance.currentUser;
+      bool isVerifiedUser = false;
+      if (user != null) {
+        try {
+          await user.reload();
+          final freshUser = FirebaseAuth.instance.currentUser;
+          isVerifiedUser = freshUser?.emailVerified ?? false;
+        } catch (_) {
+          isVerifiedUser = user.emailVerified;
+        }
+        if (!isVerifiedUser) {
+          await FirebaseAuth.instance.signOut();
+        }
+      }
+      if (!mounted) return;
       Navigator.of(context).pushReplacementNamed(
-        isLoggedIn ? AppRoutes.main : AppRoutes.welcome,
+        isVerifiedUser ? AppRoutes.main : AppRoutes.welcome,
       );
     });
   }

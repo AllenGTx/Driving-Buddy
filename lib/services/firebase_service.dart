@@ -22,7 +22,12 @@ final FirebaseStorage storage = FirebaseStorage.instance;
 // ----------------------------------------------------------------------------
 class AuthService {
   /// Cek status login
-  static bool get isLoggedIn => auth.currentUser != null;
+  /// Cek status login (hanya bernilai true jika user aktif dan email sudah terverifikasi)
+  static bool get isLoggedIn {
+    final user = auth.currentUser;
+    if (user == null) return false;
+    return user.emailVerified;
+  }
 
   /// Ambil User aktif
   static User? get currentUser => auth.currentUser;
@@ -39,8 +44,9 @@ class AuthService {
     required String password,
     required String fullName,
   }) async {
+    final cleanEmail = email.trim();
     final credential = await auth.createUserWithEmailAndPassword(
-      email: email.trim(),
+      email: cleanEmail,
       password: password,
     );
 
@@ -50,36 +56,52 @@ class AuthService {
       try {
         await user.sendEmailVerification();
       } catch (e) {
-        debugPrint('Kirim verifikasi email error: ');
+        debugPrint('Kirim verifikasi email error: $e');
       }
-      // Simpan profile dokumen ke Firestore
+      // Simpan profile dokumen ke Firestore (tandai belum verifikasi)
       await firestore.collection('users').doc(user.uid).set({
         'uid': user.uid,
-        'email': email.trim(),
+        'email': cleanEmail,
         'displayName': fullName,
         'photoUrl': null,
         'createdAt': FieldValue.serverTimestamp(),
+        'emailVerified': false,
         'totalTrips': 0,
         'overallAvgScore': 100,
       }, SetOptions(merge: true));
+
+      // PENTING: Segera keluarkan sesi agar tidak langsung masuk sebelum email diverifikasi!
+      await auth.signOut();
     }
 
     return credential;
   }
 
-  /// Login email & password
+  /// Login email & password (Wajib Email Terverifikasi)
   static Future<UserCredential> login({
     required String email,
     required String password,
   }) async {
+    final cleanEmail = email.trim();
     final credential = await auth.signInWithEmailAndPassword(
-      email: email.trim(),
+      email: cleanEmail,
       password: password,
     );
 
-    // Sinkronisasi data user di firestore jika belum ada
     final user = credential.user;
     if (user != null) {
+      // Reload dari server Firebase untuk mendapatkan status verifikasi terbaru
+      await user.reload();
+      final freshUser = auth.currentUser;
+      if (freshUser != null && !freshUser.emailVerified) {
+        await auth.signOut();
+        throw FirebaseAuthException(
+          code: 'email-not-verified',
+          message: 'Email Anda belum diverifikasi. Silakan periksa inbox atau spam email Anda dan klik tautan verifikasi.',
+        );
+      }
+
+      // Sinkronisasi data user di firestore jika belum ada
       final doc = await firestore.collection('users').doc(user.uid).get();
       if (!doc.exists) {
         await firestore.collection('users').doc(user.uid).set({
@@ -88,11 +110,42 @@ class AuthService {
           'displayName': user.displayName ?? 'Pengemudi',
           'photoUrl': user.photoURL,
           'createdAt': FieldValue.serverTimestamp(),
+          'emailVerified': true,
+        }, SetOptions(merge: true));
+      } else {
+        await firestore.collection('users').doc(user.uid).set({
+          'emailVerified': true,
         }, SetOptions(merge: true));
       }
     }
 
     return credential;
+  }
+
+  /// Kirim ulang email verifikasi untuk akun yang belum terverifikasi
+  static Future<void> sendVerificationEmailFor({
+    required String email,
+    required String password,
+  }) async {
+    final cred = await auth.signInWithEmailAndPassword(
+      email: email.trim(),
+      password: password,
+    );
+    final user = cred.user;
+    if (user != null) {
+      await user.sendEmailVerification();
+      await auth.signOut();
+    }
+  }
+
+  /// Hapus akun bodong/fake dari database Firestore jika ada
+  static Future<void> cleanupFakeUser(String email) async {
+    try {
+      final snap = await firestore.collection('users').where('email', isEqualTo: email.trim()).get();
+      for (final doc in snap.docs) {
+        await doc.reference.delete();
+      }
+    } catch (_) {}
   }
 
   static String? lastAttemptedGoogleEmail;

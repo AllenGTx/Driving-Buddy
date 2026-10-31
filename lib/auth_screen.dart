@@ -76,6 +76,8 @@ class _LoginScreenState extends State<LoginScreen>
   @override
   void initState() {
     super.initState();
+    // Bersihkan akun fake testing jika pernah tercatat di Firestore
+    AuthService.cleanupFakeUser('allenjancok123@gmailc.om');
     _tab = TabController(length: 2, vsync: this);
     _tab.addListener(() {
       if (_tab.indexIsChanging) {
@@ -271,19 +273,88 @@ class _LoginScreenState extends State<LoginScreen>
 
   // ── Validasi Pendaftaran ────────────────────
   String? _validateEmailAddress(String email) {
-    if (email.isEmpty) return 'Email tidak boleh kosong.';
+    final trimmed = email.trim();
+    if (trimmed.isEmpty) return 'Email tidak boleh kosong.';
+
+    // 1. Regex sintaks standar RFC email
     final emailRegex = RegExp(
       r'^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+$',
     );
-    if (!emailRegex.hasMatch(email)) {
-      return 'Format email tidak valid (contoh: nama@domain.com).';
+    if (!emailRegex.hasMatch(trimmed)) {
+      return 'Format email tidak valid (contoh: nama@gmail.com).';
     }
-    final parts = email.split('@');
+
+    final parts = trimmed.split('@');
     if (parts.length != 2) return 'Format email tidak valid.';
+    final userPart = parts[0];
     final domain = parts[1].toLowerCase();
-    if (!domain.contains('.')) return 'Domain email tidak lengkap.';
-    final tld = domain.split('.').last;
-    if (tld.length < 2) return 'Domain email tidak valid.';
+
+    if (userPart.isEmpty || domain.isEmpty) {
+      return 'Format email tidak valid.';
+    }
+
+    // 2. Deteksi Typo Domain Populer yang Umum Terjadi (Mencegah email bodong)
+    const typoDomains = {
+      'gmailc.om': 'gmail.com',
+      'gmail.co': 'gmail.com',
+      'gmai.com': 'gmail.com',
+      'gamil.com': 'gmail.com',
+      'gmaill.com': 'gmail.com',
+      'gmial.com': 'gmail.com',
+      'gmai.co': 'gmail.com',
+      'gmail.cmo': 'gmail.com',
+      'gmail.cm': 'gmail.com',
+      'gmaild.com': 'gmail.com',
+      'yaho.com': 'yahoo.com',
+      'yahooo.com': 'yahoo.com',
+      'yaho.co.id': 'yahoo.co.id',
+      'yaho.com.id': 'yahoo.co.id',
+      'hotmial.com': 'hotmail.com',
+      'hotmai.com': 'hotmail.com',
+      'outlok.com': 'outlook.com',
+      'outloo.com': 'outlook.com',
+      'iclud.com': 'icloud.com',
+    };
+
+    if (typoDomains.containsKey(domain)) {
+      return 'Domain tidak valid. Apakah maksud Anda @${typoDomains[domain]}?';
+    }
+
+    // 3. Validasi Kelengkapan dan Ekstensi Domain (TLD)
+    final domainParts = domain.split('.');
+    if (domainParts.length < 2) {
+      return 'Domain email tidak lengkap (contoh: @gmail.com).';
+    }
+
+    final tld = domainParts.last;
+    if (tld.length < 2) {
+      return 'Ekstensi domain email tidak valid.';
+    }
+
+    // Daftar TLD resmi dan umum di dunia nyata
+    const allowedTlds = {
+      'com', 'net', 'org', 'edu', 'gov', 'mil', 'int',
+      'id', 'co.id', 'ac.id', 'go.id', 'or.id', 'web.id', 'my.id', 'biz.id',
+      'io', 'ai', 'me', 'app', 'dev', 'co', 'info', 'biz', 'tech', 'online',
+      'store', 'site', 'xyz', 'club', 'pro', 'mobi', 'tv', 'cc', 'us', 'uk',
+      'co.uk', 'ca', 'de', 'jp', 'fr', 'au', 'sg', 'my', 'in', 'nl', 'ch',
+      'ru', 'cn', 'kr', 'br', 'za', 'nz', 'es', 'it', 'se', 'no', 'fi', 'dk'
+    };
+
+    final fullTld = domainParts.length >= 3
+        ? '${domainParts[domainParts.length - 2]}.${domainParts.last}'
+        : tld;
+
+    if (!allowedTlds.contains(tld) && !allowedTlds.contains(fullTld)) {
+      return 'Ekstensi .$tld tidak dikenali. Gunakan email resmi (Gmail, Yahoo, Outlook, dsb).';
+    }
+
+    // 4. Pastikan nama domain sebelum TLD memiliki minimal 2 karakter
+    final sld = domainParts[domainParts.length - 2];
+    if (sld.length < 2) {
+      return 'Nama domain email terlalu pendek atau tidak valid.';
+    }
+
     return null;
   }
 
@@ -307,7 +378,7 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   // ── Dialog Verifikasi Email ─────────────────
-  void _showVerificationDialog(String email) {
+  void _showVerificationDialog(String email, {String? password}) {
     final isDark = ThemeService.instance.isDarkMode;
     showDialog(
       context: context,
@@ -423,9 +494,13 @@ class _LoginScreenState extends State<LoginScreen>
                     : () async {
                         setDState(() => resending = true);
                         try {
-                          final user = AuthService.currentUser;
-                          if (user != null) {
-                            await user.sendEmailVerification();
+                          if (password != null && password.isNotEmpty) {
+                            await AuthService.sendVerificationEmailFor(email: email, password: password);
+                          } else {
+                            final user = AuthService.currentUser;
+                            if (user != null) {
+                              await user.sendEmailVerification();
+                            }
                           }
                           setDState(() {
                             resending = false;
@@ -511,7 +586,10 @@ class _LoginScreenState extends State<LoginScreen>
       String errMsg = 'Kata sandi salah. Silakan periksa kembali.';
       final code = e.code.toLowerCase();
 
-      if (code == 'user-not-found') {
+      if (code == 'email-not-verified') {
+        _showVerificationDialog(email, password: password);
+        return;
+      } else if (code == 'user-not-found') {
         errMsg = 'Email tidak terdaftar di Driving Buddy.';
       } else if (code == 'wrong-password') {
         errMsg = 'Kata sandi salah. Silakan periksa kembali.';
@@ -593,7 +671,7 @@ class _LoginScreenState extends State<LoginScreen>
       });
 
       if (mounted) {
-        _showVerificationDialog(email);
+        _showVerificationDialog(email, password: password);
       }
     } on FirebaseAuthException catch (e) {
       String msg = 'Terjadi kesalahan pendaftaran.';
