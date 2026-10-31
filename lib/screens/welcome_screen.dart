@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import '../core/app_colors.dart';
 import '../services/theme_service.dart';
+import '../services/language_service.dart';
 import '../widgets/ui/db_ui.dart';
 import '../routes/app_routes.dart';
 
@@ -43,9 +44,11 @@ class _WelcomeScreenState extends State<WelcomeScreen>
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: ThemeService.instance,
+      listenable: Listenable.merge([ThemeService.instance, LanguageService.instance]),
       builder: (context, _) {
         final isDark = ThemeService.instance.isDarkMode;
+        final langService = LanguageService.instance;
+        final s = langService.s;
         final screenHeight = MediaQuery.of(context).size.height;
         final topPadding = MediaQuery.of(context).padding.top;
         final waveHeight = screenHeight * 0.67;
@@ -124,6 +127,52 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                             fit: BoxFit.contain,
                           ),
                         ),
+
+                        // Language Switch Pill at Top-Right
+                        Positioned(
+                          top: topPadding + 14,
+                          right: 20,
+                          child: GestureDetector(
+                            onTap: () {
+                              langService.setLanguage(
+                                langService.isIndonesian
+                                    ? AppLanguage.en
+                                    : AppLanguage.id,
+                              );
+                            },
+                            child: Container(
+                              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
+                              decoration: BoxDecoration(
+                                color: Colors.black.withValues(alpha: 0.35),
+                                borderRadius: BorderRadius.circular(16),
+                                border: Border.all(
+                                  color: Colors.white.withValues(alpha: 0.3),
+                                  width: 1,
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.language_rounded,
+                                    size: 14,
+                                    color: Colors.white.withValues(alpha: 0.9),
+                                  ),
+                                  const SizedBox(width: 5),
+                                  Text(
+                                    langService.isIndonesian ? 'ID' : 'EN',
+                                    style: const TextStyle(
+                                      color: Colors.white,
+                                      fontSize: 11,
+                                      fontWeight: FontWeight.w800,
+                                      letterSpacing: 0.5,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
+                        ),
                       ],
                     ),
                   ),
@@ -139,7 +188,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
 
                           // Heading
                           Text(
-                            'Welcome',
+                            s.welcomeTitle,
                             style: TextStyle(
                               fontSize: 30,
                               fontWeight: FontWeight.w900,
@@ -162,7 +211,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
 
                           // App Narrative / Description
                           Text(
-                            'Asisten AI cerdas untuk memantau keselamatan & kewaspadaan berkendara Anda di setiap perjalanan.',
+                            s.welcomeDesc,
                             style: TextStyle(
                               fontSize: 13.5,
                               height: 1.48,
@@ -178,7 +227,7 @@ class _WelcomeScreenState extends State<WelcomeScreen>
                             mainAxisAlignment: MainAxisAlignment.end,
                             children: [
                               Text(
-                                'Continue',
+                                s.continueBtn,
                                 style: TextStyle(
                                   fontSize: 14.5,
                                   fontWeight: FontWeight.w800,

@@ -13,6 +13,7 @@ import '../models/account_config.dart';
 import '../widgets/driving_buddy_app_bar.dart';
 import '../features/nearby_places/nearby_places.dart';
 import '../services/theme_service.dart';
+import '../services/language_service.dart';
 
 // ============================================================================
 // HOME SCREEN / COCKPIT (Beranda Telemetri Amber Accent — Luxury GT)
@@ -152,7 +153,7 @@ class _CockpitScreenState extends State<CockpitScreen>
       if (mounted) {
         setState(() {
           _isPreviewReady = false;
-          _previewStatus = 'Wajah tidak terdeteksi / Kamera belum diizinkan';
+          _previewStatus = LanguageService.instance.isEnglish ? 'No face detected / Camera not allowed' : 'Wajah tidak terdeteksi / Kamera belum diizinkan';
         });
       }
     }
@@ -301,7 +302,7 @@ class _CockpitScreenState extends State<CockpitScreen>
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: ThemeService.instance,
+      listenable: Listenable.merge([ThemeService.instance, LanguageService.instance]),
       builder: (context, _) {
         final isDark = ThemeService.instance.isDarkMode;
 
@@ -575,7 +576,7 @@ class _CockpitScreenState extends State<CockpitScreen>
                         border: Border.all(color: statusBorder),
                       ),
                       child: Text(
-                        _faceDetected ? 'SENSOR AKTIF' : 'SENSOR SIAGA',
+                        _faceDetected ? LanguageService.instance.s.sensorActive : LanguageService.instance.s.sensorReady,
                         style: TextStyle(
                           fontSize: 9.5,
                           fontWeight: FontWeight.w800,
@@ -749,13 +750,13 @@ class _CockpitScreenState extends State<CockpitScreen>
                         ),
                       ],
                     ),
-                    child: const Row(
+                    child: Row(
                       mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Icon(Icons.speed_rounded, size: 24, color: Colors.white),
-                        SizedBox(width: 10),
+                        const Icon(Icons.speed_rounded, size: 24, color: Colors.white),
+                        const SizedBox(width: 10),
                         Text(
-                          'MULAI PERJALANAN',
+                          LanguageService.instance.s.startTrip,
                           style: TextStyle(
                             fontSize: 15.5,
                             fontWeight: FontWeight.w800,
@@ -821,8 +822,8 @@ class _CockpitScreenState extends State<CockpitScreen>
                   Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
-                      const Text(
-                        'ANALISIS TELEMETRI REALTIME',
+                      Text(
+                        LanguageService.instance.s.telemetryRealtime,
                         style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w800,
@@ -832,7 +833,7 @@ class _CockpitScreenState extends State<CockpitScreen>
                       ),
                       const SizedBox(height: 2),
                       Text(
-                        'Skor Kewaspadaan Rata-rata',
+                        LanguageService.instance.s.avgAlertnessScore,
                         style: TextStyle(
                           fontSize: 15,
                           fontWeight: FontWeight.w800,
@@ -1017,7 +1018,7 @@ class _CockpitScreenState extends State<CockpitScreen>
                         const Icon(Icons.analytics_outlined, size: 13, color: Color(0xFFF26B1D)),
                         const SizedBox(width: 5),
                         Text(
-                          'RATA-RATA RIWAYAT BERKENDARA',
+                          LanguageService.instance.s.historicalAverages,
                           style: TextStyle(
                             fontSize: 9,
                             fontWeight: FontWeight.w800,
@@ -1032,7 +1033,7 @@ class _CockpitScreenState extends State<CockpitScreen>
                       children: [
                         Expanded(
                           child: _buildAvgSubItem(
-                            label: 'AVG SPEED',
+                            label: LanguageService.instance.s.avgSpeed.toUpperCase(),
                             value: '${_avgSpeedKmH.toStringAsFixed(0)} km/j',
                             icon: Icons.speed_rounded,
                             isDark: isDark,
@@ -1211,7 +1212,7 @@ class _CockpitScreenState extends State<CockpitScreen>
                 children: [
                   Flexible(
                     child: Text(
-                      'Aktivitas Terakhir',
+                      LanguageService.instance.s.recentHistory,
                       style: TextStyle(
                         fontSize: 16,
                         fontWeight: FontWeight.w800,
@@ -1244,11 +1245,11 @@ class _CockpitScreenState extends State<CockpitScreen>
             ),
             GestureDetector(
               onTap: () => Navigator.pushNamed(context, AppRoutes.history),
-              child: const Row(
+              child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
                   Text(
-                    'Lihat Semua',
+                    LanguageService.instance.s.viewAll,
                     style: TextStyle(
                       fontSize: 12,
                       fontWeight: FontWeight.w800,
@@ -1279,7 +1280,7 @@ class _CockpitScreenState extends State<CockpitScreen>
                   const Icon(Icons.route_rounded, color: Color(0xFFF26B1D), size: 36),
                   const SizedBox(height: 8),
                   Text(
-                    'Belum Ada Riwayat Perjalanan',
+                    LanguageService.instance.s.emptyHistoryTitle,
                     style: TextStyle(
                       fontWeight: FontWeight.w800,
                       fontSize: 14,
@@ -1288,7 +1289,7 @@ class _CockpitScreenState extends State<CockpitScreen>
                   ),
                   const SizedBox(height: 4),
                   Text(
-                    'Mulai sesi berkendara pertamamu dengan menekan tombol di atas!',
+                    LanguageService.instance.s.emptyHistoryDesc,
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       fontSize: 12,
@@ -1347,10 +1348,10 @@ class _CockpitScreenState extends State<CockpitScreen>
   String _formatSessionDate(String? iso) {
     if (iso == null) return 'Baru Saja';
     final dt = DateTime.tryParse(iso)?.toLocal();
-    if (dt == null) return 'Baru Saja';
+    if (dt == null) return LanguageService.instance.isEnglish ? 'Just Now' : 'Baru Saja';
     final now = DateTime.now();
-    if (now.difference(dt).inDays == 0) return 'Hari ini';
-    if (now.difference(dt).inDays == 1) return 'Kemarin';
+    if (now.difference(dt).inDays == 0) return LanguageService.instance.s.today;
+    if (now.difference(dt).inDays == 1) return LanguageService.instance.isEnglish ? 'Yesterday' : 'Kemarin';
     return '${dt.day}/${dt.month}/${dt.year}';
   }
 
@@ -1396,7 +1397,7 @@ class _CockpitScreenState extends State<CockpitScreen>
                     Row(
                       children: [
                         Text(
-                          'SESI PERJALANAN #$tripIndex',
+                          LanguageService.instance.isEnglish ? 'TRIP SESSION #$tripIndex' : 'SESI PERJALANAN #$tripIndex',
                           style: const TextStyle(
                             fontSize: 9.5,
                             fontWeight: FontWeight.w800,
@@ -1470,10 +1471,10 @@ class _CockpitScreenState extends State<CockpitScreen>
           // Baris 1: Telemetri Fisik Kendaraan
           Row(
             children: [
-              _buildTripStatCol('JARAK', '${distanceKm.toStringAsFixed(1)} km'),
-              _buildTripStatCol('WAKTU', durationStr),
-              _buildTripStatCol('AVG SPEED', '${avgSpeedKmh.toStringAsFixed(0)} km/j'),
-              _buildTripStatCol('TOP SPEED', '${topSpeedKmh.toStringAsFixed(0)} km/j'),
+              _buildTripStatCol(LanguageService.instance.s.distance.toUpperCase(), '${distanceKm.toStringAsFixed(1)} ${LanguageService.instance.s.distUnit}'),
+              _buildTripStatCol(LanguageService.instance.s.duration.toUpperCase(), durationStr),
+              _buildTripStatCol(LanguageService.instance.s.avgSpeed.toUpperCase(), '${avgSpeedKmh.toStringAsFixed(0)} ${LanguageService.instance.s.speedUnit}'),
+              _buildTripStatCol(LanguageService.instance.s.topSpeed.toUpperCase(), '${topSpeedKmh.toStringAsFixed(0)} ${LanguageService.instance.s.speedUnit}'),
             ],
           ),
           const SizedBox(height: 8),
@@ -1496,7 +1497,7 @@ class _CockpitScreenState extends State<CockpitScreen>
                 _buildMicroTag('TILT', '${avgHeadTilt.toStringAsFixed(1)}°', isDark),
                 _buildMicroTag(
                   'STATUS',
-                  microsleeps > 0 ? '$microsleeps Sleep' : (yawns > 0 ? '$yawns Yawn' : 'Aman'),
+                  microsleeps > 0 ? '$microsleeps ${LanguageService.instance.s.microsleep}' : (yawns > 0 ? '$yawns ${LanguageService.instance.s.yawn}' : LanguageService.instance.s.statusSafe),
                   isDark,
                   color: microsleeps > 0 ? const Color(0xFFD94126) : (yawns > 0 ? DbColors.orange : const Color(0xFF059669)),
                 ),

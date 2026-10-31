@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../core/app_colors.dart';
 import '../core/design_tokens.dart';
 import '../services/theme_service.dart';
+import '../services/language_service.dart';
 import '../driving_card_screen.dart';
 import '../services/firebase_service.dart';
 import '../widgets/driving_buddy_app_bar.dart';
@@ -52,24 +53,26 @@ class _HistoryScreenState extends State<HistoryScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.delete_outline_rounded, color: Color(0xFFD94126)),
-            SizedBox(width: 8),
+            const Icon(Icons.delete_outline_rounded, color: Color(0xFFD94126)),
+            const SizedBox(width: 8),
             Text(
-              'Hapus Sesi?',
-              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
+              LanguageService.instance.isEnglish ? 'Delete Session?' : 'Hapus Sesi?',
+              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
             ),
           ],
         ),
-        content: const Text(
-          'Data perjalanan ini akan dihapus permanen dari riwayat database Anda.',
-          style: TextStyle(color: Color(0xFF64748B), fontSize: 13.5),
+        content: Text(
+          LanguageService.instance.isEnglish
+              ? 'This trip data will be permanently removed from your history database.'
+              : 'Data perjalanan ini akan dihapus permanen dari riwayat database Anda.',
+          style: const TextStyle(color: Color(0xFF64748B), fontSize: 13.5),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Batal', style: TextStyle(color: Color(0xFF64748B))),
+            child: Text(LanguageService.instance.s.cancel, style: const TextStyle(color: Color(0xFF64748B))),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -77,7 +80,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Hapus', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            child: Text(LanguageService.instance.s.delete, style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -90,8 +93,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
           _sessions.removeAt(index);
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Sesi perjalanan berhasil dihapus.'),
+          SnackBar(
+            content: Text(LanguageService.instance.isEnglish ? 'Trip session successfully deleted.' : 'Sesi perjalanan berhasil dihapus.'),
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -106,24 +109,26 @@ class _HistoryScreenState extends State<HistoryScreen> {
       context: context,
       builder: (ctx) => AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Row(
+        title: Row(
           children: [
-            Icon(Icons.delete_sweep_rounded, color: Color(0xFFD94126), size: 28),
-            SizedBox(width: 8),
+            const Icon(Icons.delete_sweep_rounded, color: Color(0xFFD94126), size: 28),
+            const SizedBox(width: 8),
             Text(
-              'Bersihkan Semua?',
-              style: TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
+              LanguageService.instance.isEnglish ? 'Clear All History?' : 'Bersihkan Semua?',
+              style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 18),
             ),
           ],
         ),
-        content: const Text(
-          'Seluruh riwayat telemetri perjalanan Anda akan dikosongkan secara permanen.',
-          style: TextStyle(color: Color(0xFF64748B), fontSize: 13.5),
+        content: Text(
+          LanguageService.instance.isEnglish
+              ? 'All your trip telemetry history will be cleared permanently.'
+              : 'Seluruh riwayat telemetri perjalanan Anda akan dikosongkan secara permanen.',
+          style: const TextStyle(color: Color(0xFF64748B), fontSize: 13.5),
         ),
         actions: [
           TextButton(
             onPressed: () => Navigator.pop(ctx, false),
-            child: const Text('Batal', style: TextStyle(color: Color(0xFF64748B))),
+            child: Text(LanguageService.instance.s.cancel, style: const TextStyle(color: Color(0xFF64748B))),
           ),
           ElevatedButton(
             style: ElevatedButton.styleFrom(
@@ -131,7 +136,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
               shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
             ),
             onPressed: () => Navigator.pop(ctx, true),
-            child: const Text('Hapus Semua', style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
+            child: Text(LanguageService.instance.isEnglish ? 'Clear All' : 'Hapus Semua', style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold)),
           ),
         ],
       ),
@@ -146,8 +151,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
           _isLoading = false;
         });
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Seluruh riwayat perjalanan berhasil dibersihkan.'),
+          SnackBar(
+            content: Text(LanguageService.instance.isEnglish ? 'All trip history successfully cleared.' : 'Seluruh riwayat perjalanan berhasil dibersihkan.'),
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -171,8 +176,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
     if (dt == null) return '-';
     final now = DateTime.now();
     final diff = now.difference(dt).inDays;
-    if (diff == 0) return 'Hari ini';
-    if (diff == 1) return 'Kemarin';
+    if (diff == 0) return LanguageService.instance.s.today;
+    if (diff == 1) return LanguageService.instance.isEnglish ? 'Yesterday' : 'Kemarin';
     return '${dt.day}/${dt.month}/${dt.year}';
   }
 
@@ -195,13 +200,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: ThemeService.instance,
+      listenable: Listenable.merge([ThemeService.instance, LanguageService.instance]),
       builder: (context, _) {
         final isDark = ThemeService.instance.isDarkMode;
 
         return Scaffold(
           backgroundColor: isDark ? AppColors.darkBackground : AppColors.background,
-          appBar: const DrivingBuddyAppBar(title: 'Riwayat Perjalanan'),
+          appBar: DrivingBuddyAppBar(title: LanguageService.instance.s.historyTitle),
           body: RefreshIndicator(
             onRefresh: _loadData,
             color: const Color(0xFFF26B1D),
@@ -225,7 +230,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                             children: [
                               Flexible(
                                 child: Text(
-                                  'Daftar Sesi',
+                                  LanguageService.instance.s.tripSessionsList,
                                   maxLines: 1,
                                   overflow: TextOverflow.ellipsis,
                                   style: TextStyle(
@@ -246,7 +251,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                   ),
                                 ),
                                 child: Text(
-                                  '${_sessions.length} Sesi',
+                                  '${_sessions.length} ${LanguageService.instance.s.sessionsCount}',
                                   style: const TextStyle(
                                     fontSize: 9.5,
                                     fontWeight: FontWeight.w800,
@@ -263,7 +268,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           children: [
                             if (_sessions.isNotEmpty)
                               Tooltip(
-                                message: 'Bersihkan Semua',
+                                message: LanguageService.instance.isEnglish ? 'Clear All' : 'Bersihkan Semua',
                                 child: InkWell(
                                   onTap: _clearAllHistory,
                                   borderRadius: BorderRadius.circular(8),
@@ -276,13 +281,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                         color: isDark ? const Color(0xFFD94126) : const Color(0xFFFECACA),
                                       ),
                                     ),
-                                    child: const Row(
+                                    child: Row(
                                       mainAxisSize: MainAxisSize.min,
                                       children: [
-                                        Icon(Icons.delete_sweep_rounded, size: 14, color: Color(0xFFD94126)),
+                                        const Icon(Icons.delete_sweep_rounded, size: 14, color: Color(0xFFD94126)),
                                         SizedBox(width: 4),
                                         Text(
-                                          'Hapus',
+                                          LanguageService.instance.s.delete,
                                           style: TextStyle(fontSize: 10.5, fontWeight: FontWeight.w800, color: Color(0xFFD94126)),
                                         ),
                                       ],
@@ -296,7 +301,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                               padding: const EdgeInsets.all(4),
                               icon: const Icon(Icons.refresh_rounded, color: Color(0xFFF26B1D), size: 19),
                               onPressed: _loadData,
-                              tooltip: 'Perbarui',
+                              tooltip: LanguageService.instance.isEnglish ? 'Refresh' : 'Perbarui',
                             ),
                           ],
                         ),
@@ -325,7 +330,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           ),
                           const SizedBox(height: 14),
                           Text(
-                            'Belum Ada Sesi Perjalanan',
+                            LanguageService.instance.s.emptyHistoryTitle,
                             style: TextStyle(
                               fontSize: 16,
                               fontWeight: FontWeight.w800,
@@ -334,7 +339,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           ),
                           const SizedBox(height: 6),
                           Text(
-                            'Mulai sesi berkendara untuk merekam telemetri Anda.',
+                            LanguageService.instance.s.emptyHistoryDesc,
                             style: TextStyle(
                               fontSize: 12,
                               color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
@@ -386,8 +391,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
-                    const Text(
-                      'TELEMETRI KUMULATIF',
+                    Text(
+                      LanguageService.instance.s.cumulativeTelemetry,
                       style: TextStyle(
                         fontSize: 9.5,
                         fontWeight: FontWeight.w800,
@@ -398,8 +403,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     const SizedBox(height: 2),
                     Text(
                       _userName != null && _userName!.isNotEmpty
-                          ? 'Perjalanan $_userName'
-                          : 'Ringkasan Keseluruhan Sesi',
+                          ? '${LanguageService.instance.s.driverTrip} $_userName'
+                          : (LanguageService.instance.isEnglish ? 'Overall Trip Summary' : 'Ringkasan Keseluruhan Sesi'),
                       style: TextStyle(
                         fontSize: 15,
                         fontWeight: FontWeight.w800,
@@ -435,7 +440,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
               Expanded(
                 child: _buildMetricItem(
                   icon: Icons.timer_outlined,
-                  label: 'TOTAL WAKTU',
+                  label: LanguageService.instance.s.totalTime,
                   value: _formatDuration(_totalSeconds),
                   color: isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A),
                 ),
@@ -448,7 +453,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
               Expanded(
                 child: _buildMetricItem(
                   icon: Icons.shield_outlined,
-                  label: 'RATA-RATA SKOR',
+                  label: LanguageService.instance.s.avgScore,
                   value: '$_avgScore%',
                   color: _scoreColor(_avgScore),
                 ),
@@ -461,7 +466,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
               Expanded(
                 child: _buildMetricItem(
                   icon: Icons.alt_route_rounded,
-                  label: 'TOTAL SESI',
+                  label: LanguageService.instance.s.totalSessions,
                   value: '${_sessions.length}',
                   color: const Color(0xFFF26B1D),
                 ),
@@ -610,7 +615,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         ),
                         const SizedBox(width: 4),
                         Text(
-                          'SKOR $score%',
+                          '${LanguageService.instance.s.score} $score%',
                           style: TextStyle(
                             fontSize: 10,
                             fontWeight: FontWeight.w900,
@@ -627,7 +632,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       icon: const Icon(Icons.delete_outline_rounded, color: Color(0xFF94A3B8), size: 18),
                       hoverColor: const Color(0xFFFEF2F2),
                       splashRadius: 18,
-                      tooltip: 'Hapus Sesi Ini',
+                      tooltip: LanguageService.instance.isEnglish ? 'Delete This Session' : 'Hapus Sesi Ini',
                       onPressed: () => _deleteSingleSession(sessionId, index),
                     ),
                 ],
@@ -650,7 +655,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   ),
                 ),
                 child: Text(
-                  '${micro}x Microsleep Terdeteksi',
+                  '${micro}x ${LanguageService.instance.s.microsleep} ${LanguageService.instance.s.detected}',
                   style: const TextStyle(
                     fontSize: 9.5,
                     fontWeight: FontWeight.w800,
@@ -690,19 +695,19 @@ class _HistoryScreenState extends State<HistoryScreen> {
             child: Row(
               children: [
                 Expanded(
-                  child: _buildHistoryMetricCol('DURASI', _formatDuration(duration), isDark),
+                  child: _buildHistoryMetricCol(LanguageService.instance.s.duration.toUpperCase(), _formatDuration(duration), isDark),
                 ),
                 Container(height: 24, width: 1, color: isDark ? AppColors.darkCardBorder : const Color(0xFFE2E8F0)),
                 Expanded(
-                  child: _buildHistoryMetricCol('JARAK', '${distKm.toStringAsFixed(1)} km', isDark),
+                  child: _buildHistoryMetricCol(LanguageService.instance.s.distance.toUpperCase(), '${distKm.toStringAsFixed(1)} ${LanguageService.instance.s.distUnit}', isDark),
                 ),
                 Container(height: 24, width: 1, color: isDark ? AppColors.darkCardBorder : const Color(0xFFE2E8F0)),
                 Expanded(
-                  child: _buildHistoryMetricCol('AVG SPEED', '${avgSpeed.toStringAsFixed(0)} km/j', isDark),
+                  child: _buildHistoryMetricCol(LanguageService.instance.s.avgSpeed.toUpperCase(), '${avgSpeed.toStringAsFixed(0)} ${LanguageService.instance.s.speedUnit}', isDark),
                 ),
                 Container(height: 24, width: 1, color: isDark ? AppColors.darkCardBorder : const Color(0xFFE2E8F0)),
                 Expanded(
-                  child: _buildHistoryMetricCol('TOP SPEED', '${topSpeed.toStringAsFixed(0)} km/j', isDark),
+                  child: _buildHistoryMetricCol(LanguageService.instance.s.topSpeed.toUpperCase(), '${topSpeed.toStringAsFixed(0)} ${LanguageService.instance.s.speedUnit}', isDark),
                 ),
               ],
             ),
@@ -716,14 +721,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
             children: [
               _buildEventBadge(
                 icon: Icons.visibility_off_outlined,
-                label: 'Kantuk',
+                label: LanguageService.instance.s.drowsy,
                 count: totalEvents,
                 color: totalEvents > 0 ? const Color(0xFFF26B1D) : const Color(0xFF059669),
                 isDark: isDark,
               ),
               _buildEventBadge(
                 icon: Icons.sentiment_dissatisfied_outlined,
-                label: 'Menguap',
+                label: LanguageService.instance.s.yawn,
                 count: yawn,
                 color: yawn > 0 ? const Color(0xFFF26B1D) : const Color(0xFF64748B),
                 isDark: isDark,
@@ -731,7 +736,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
               if (micro > 0)
                 _buildEventBadge(
                   icon: Icons.warning_amber_rounded,
-                  label: 'Microsleep',
+                  label: LanguageService.instance.s.microsleep,
                   count: micro,
                   color: const Color(0xFFD94126),
                   isDark: isDark,
@@ -753,16 +758,21 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     context: context,
                     builder: (ctx) => AlertDialog(
                       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
-                      title: const Row(
+                      title: Row(
                         children: [
-                          Icon(Icons.wifi_off_rounded, color: Color(0xFFF26B1D)),
-                          SizedBox(width: 8),
-                          Text('Koneksi Diperlukan', style: TextStyle(fontWeight: FontWeight.w800, fontSize: 16)),
+                          const Icon(Icons.wifi_off_rounded, color: Color(0xFFF26B1D)),
+                          const SizedBox(width: 8),
+                          Text(
+                            LanguageService.instance.isEnglish ? 'Internet Connection Required' : 'Koneksi Diperlukan',
+                            style: const TextStyle(fontWeight: FontWeight.w800, fontSize: 16),
+                          ),
                         ],
                       ),
-                      content: const Text(
-                        'Kartu Berkendara membutuhkan koneksi internet untuk memuat ubin peta satelit OpenStreetMap.\n\nSilakan sambungkan WiFi atau Data Seluler untuk melihat kartu.',
-                        style: TextStyle(fontSize: 13, height: 1.4),
+                      content: Text(
+                        LanguageService.instance.isEnglish
+                            ? 'The Driving Card requires an internet connection to load map satellite tiles.\n\nPlease connect to WiFi or Cellular Data to view the card.'
+                            : 'Kartu Berkendara membutuhkan koneksi internet untuk memuat ubin peta satelit OpenStreetMap.\n\nSilakan sambungkan WiFi atau Data Seluler untuk melihat kartu.',
+                        style: const TextStyle(fontSize: 13, height: 1.4),
                       ),
                       actions: [
                         ElevatedButton(
@@ -772,7 +782,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
                           ),
                           onPressed: () => Navigator.pop(ctx),
-                          child: const Text('Mengerti', style: TextStyle(fontWeight: FontWeight.bold)),
+                          child: Text(
+                            LanguageService.instance.isEnglish ? 'Understood' : 'Mengerti',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
                         ),
                       ],
                     ),
@@ -827,14 +840,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 backgroundColor: isDark ? AppColors.darkCardBgSoft : const Color(0xFFFFF1E8),
                 padding: const EdgeInsets.symmetric(horizontal: 12),
               ),
-              child: const Row(
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.workspace_premium_rounded, size: 16, color: Color(0xFFF26B1D)),
-                  SizedBox(width: 6),
+                  const Icon(Icons.workspace_premium_rounded, size: 16, color: Color(0xFFF26B1D)),
+                  const SizedBox(width: 6),
                   Text(
-                    'Lihat Kartu Pencapaian',
+                    LanguageService.instance.s.viewAchievementCard,
                     style: TextStyle(
                       color: Color(0xFFF26B1D),
                       fontSize: 12,

@@ -9,6 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:share_plus/share_plus.dart';
 import 'services/firebase_service.dart';
+import 'services/language_service.dart';
 import 'features/nearby_places/nearby_places.dart';
 
 // ─────────────────────────────────────────────
@@ -45,22 +46,23 @@ List<Achievement> computeAchievements({
   final h = startedAt?.hour ?? DateTime.now().hour;
 
   if (drivingScore >= 85 && totalMicrosleeps == 0) {
-    results.add(const Achievement('#PengemudiWaspada', '', _blue));
+    results.add(Achievement(LanguageService.instance.s.alertDriverTag, '', _blue));
   }
   if (totalMicrosleeps == 0 && totalDrowsy == 0) {
-    results.add(const Achievement('#ZeroFatigue', '', _green));
+    results.add(Achievement(LanguageService.instance.s.zeroFatigueTag, '', _green));
   }
+  final isEn = LanguageService.instance.isEnglish;
   if (h >= 21 || h < 5) {
-    results.add(const Achievement('#NightDriver', '', _purple));
+    results.add(Achievement(isEn ? '#NightDriver' : '#PengemudiMalam', '', _purple));
   } else if (h >= 5 && h < 8) {
-    results.add(const Achievement('#EarlyBird', '', _yellow));
+    results.add(Achievement(isEn ? '#EarlyBird' : '#BangunPagi', '', _yellow));
   }
   if (isFirstSession) {
-    results.add(const Achievement('#PertamaBergerak', '', _orange));
+    results.add(Achievement(isEn ? '#FirstDrive' : '#PertamaBergerak', '', _orange));
   }
 
   if (results.isEmpty) {
-    results.add(const Achievement('#TerusWaspada', '', _orange));
+    results.add(Achievement(LanguageService.instance.s.stayAlertTag, '', _orange));
   }
 
   return results.take(3).toList();
@@ -319,7 +321,7 @@ class _PolaroidMapCard extends StatelessWidget {
                     const Icon(Icons.gps_fixed_rounded, size: 11, color: _orange),
                     const SizedBox(width: 3.5),
                     Text(
-                      'RUTE PERJALANAN',
+                      LanguageService.instance.s.travelRoute,
                       style: GoogleFonts.plusJakartaSans(
                         fontSize: 9,
                         fontWeight: FontWeight.w800,
@@ -756,10 +758,11 @@ class _DrivingCardScreenState extends State<DrivingCardScreen>
 
   String get _scoreLabel {
     final s = widget.drivingScore;
-    if (s >= 85) return 'SANGAT AMAN';
-    if (s >= 70) return 'AMAN';
-    if (s >= 50) return 'WASPADA';
-    return 'BAHAYA';
+    final strings = LanguageService.instance.s;
+    if (s >= 85) return strings.statusVerySafe;
+    if (s >= 70) return strings.statusSafe;
+    if (s >= 50) return strings.statusCaution;
+    return strings.statusRest;
   }
 
   @override
@@ -770,7 +773,9 @@ class _DrivingCardScreenState extends State<DrivingCardScreen>
     final ampm = hour >= 12 ? 'PM' : 'AM';
     final h12 = hour % 12 == 0 ? 12 : hour % 12;
     final timeStr = '${h12.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')} $ampm';
-    final monthNames = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+    final monthNamesId = ['Jan','Feb','Mar','Apr','Mei','Jun','Jul','Agu','Sep','Okt','Nov','Des'];
+    final monthNamesEn = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    final monthNames = LanguageService.instance.isEnglish ? monthNamesEn : monthNamesId;
     final dateStr = '${dt.day} ${monthNames[dt.month - 1]} ${dt.year}';
 
     final achievements = computeAchievements(
@@ -784,35 +789,36 @@ class _DrivingCardScreenState extends State<DrivingCardScreen>
     );
 
     // Structured metrics with unified values and units
+    final s = LanguageService.instance.s;
     String durVal;
     String durUnit;
     if (widget.durationSeconds < 60) {
       durVal = '${widget.durationSeconds}';
-      durUnit = 'd';
+      durUnit = s.secShort;
     } else {
       final h = widget.durationSeconds ~/ 3600;
       final m = (widget.durationSeconds % 3600) ~/ 60;
-      final s = widget.durationSeconds % 60;
+      final sec = widget.durationSeconds % 60;
       if (h > 0) {
-        durVal = '${h}j ${m}m';
+        durVal = '$h${s.hourShort} $m${s.minShort}';
         durUnit = '';
-      } else if (s > 0) {
-        durVal = '${m}m ${s}d';
+      } else if (sec > 0) {
+        durVal = '$m${s.minShort} $sec${s.secShort}';
         durUnit = '';
       } else {
         durVal = '$m';
-        durUnit = 'm';
+        durUnit = s.minShort;
       }
     }
     final distVal = widget.distanceKm > 0 ? widget.distanceKm.toStringAsFixed(2) : '0.00';
-    const distUnit = 'km';
+    final distUnit = s.distUnit;
     final speedVal = widget.avgSpeedKmh > 0 ? widget.avgSpeedKmh.toStringAsFixed(0) : '0';
-    const speedUnit = 'km/j';
+    final speedUnit = s.speedUnit;
     final double realTopSpeed = (widget.maxSpeedKmh != null && widget.maxSpeedKmh! > 0)
         ? widget.maxSpeedKmh!
         : (widget.avgSpeedKmh > 0 ? widget.avgSpeedKmh * 1.15 : 0.0);
     final topSpeedVal = realTopSpeed > 0 ? realTopSpeed.toStringAsFixed(0) : '0';
-    const topSpeedUnit = 'km/j';
+    final topSpeedUnit = s.speedUnit;
 
     return Scaffold(
       backgroundColor: const Color(0xFF0F172A),
@@ -972,7 +978,7 @@ class _DrivingCardScreenState extends State<DrivingCardScreen>
                                 children: [
                                   Expanded(
                                     child: _buildMetric(
-                                      label: 'DURASI',
+                                      label: LanguageService.instance.s.duration.toUpperCase(),
                                       value: durVal,
                                       unit: durUnit,
                                       icon: Icons.timer_outlined,
@@ -981,7 +987,7 @@ class _DrivingCardScreenState extends State<DrivingCardScreen>
                                   Container(height: 26, width: 1, color: Colors.white.withValues(alpha: 0.12)),
                                   Expanded(
                                     child: _buildMetric(
-                                      label: 'JARAK',
+                                      label: LanguageService.instance.s.distance.toUpperCase(),
                                       value: distVal,
                                       unit: distUnit,
                                       icon: Icons.alt_route_rounded,
@@ -990,7 +996,7 @@ class _DrivingCardScreenState extends State<DrivingCardScreen>
                                   Container(height: 26, width: 1, color: Colors.white.withValues(alpha: 0.12)),
                                   Expanded(
                                     child: _buildMetric(
-                                      label: 'AVG SPEED',
+                                      label: LanguageService.instance.s.avgSpeed.toUpperCase(),
                                       value: speedVal,
                                       unit: speedUnit,
                                       icon: Icons.speed_rounded,
@@ -999,7 +1005,7 @@ class _DrivingCardScreenState extends State<DrivingCardScreen>
                                   Container(height: 26, width: 1, color: Colors.white.withValues(alpha: 0.12)),
                                   Expanded(
                                     child: _buildMetric(
-                                      label: 'TOP SPEED',
+                                      label: LanguageService.instance.s.topSpeed.toUpperCase(),
                                       value: topSpeedVal,
                                       unit: topSpeedUnit,
                                       icon: Icons.electric_bolt_rounded,
@@ -1081,8 +1087,8 @@ class _DrivingCardScreenState extends State<DrivingCardScreen>
                                     child: Column(
                                       crossAxisAlignment: CrossAxisAlignment.start,
                                       children: [
-                                        const Text(
-                                          'PENCAPAIAN PENGEMUDI',
+                                        Text(
+                                          LanguageService.instance.s.driverAchievement,
                                           style: TextStyle(
                                             fontSize: 8,
                                             fontWeight: FontWeight.w800,
@@ -1111,7 +1117,7 @@ class _DrivingCardScreenState extends State<DrivingCardScreen>
                                   child: _buildTelemetryCard(
                                     icon: Icons.bedtime_outlined,
                                     value: '${widget.totalMicrosleeps}x',
-                                    label: 'Microsleep',
+                                    label: LanguageService.instance.s.microsleep,
                                     color: widget.totalMicrosleeps == 0 ? _green : _red,
                                   ),
                                 ),
@@ -1120,7 +1126,7 @@ class _DrivingCardScreenState extends State<DrivingCardScreen>
                                   child: _buildTelemetryCard(
                                     icon: Icons.warning_amber_rounded,
                                     value: '${widget.totalDrowsy}x',
-                                    label: 'Kantuk',
+                                    label: LanguageService.instance.s.drowsy,
                                     color: widget.totalDrowsy == 0 ? _green : _yellow,
                                   ),
                                 ),
@@ -1129,7 +1135,7 @@ class _DrivingCardScreenState extends State<DrivingCardScreen>
                                   child: _buildTelemetryCard(
                                     icon: Icons.air_rounded,
                                     value: '${widget.totalYawns}x',
-                                    label: 'Menguap',
+                                    label: LanguageService.instance.s.yawn,
                                     color: widget.totalYawns <= 2 ? _green : _orange,
                                   ),
                                 ),
@@ -1157,8 +1163,8 @@ class _DrivingCardScreenState extends State<DrivingCardScreen>
                                   shadowColor: _orange.withValues(alpha: 0.4),
                                 ),
                                 icon: const Icon(Icons.share_rounded, size: 18),
-                                label: const Text(
-                                  'Bagikan Kartu Berkendara',
+                                label: Text(
+                                  LanguageService.instance.s.shareDrivingCard,
                                   style: TextStyle(
                                     fontSize: 13.5,
                                     fontWeight: FontWeight.w800,
@@ -1291,12 +1297,18 @@ class _DrivingCardScreenState extends State<DrivingCardScreen>
     if (_isSharing) return;
     setState(() => _isSharing = true);
 
-    final shareText = 
-        '🚗 Sesi berkendara bersama Driving Buddy selesai!\n'
-        '⏱ Waktu: ${_formatDuration(widget.durationSeconds)}\n'
-        '🏆 Skor Keselamatan: ${widget.drivingScore}/100 — $_scoreLabel\n'
-        '😴 Microsleep: ${widget.totalMicrosleeps}x | Kantuk: ${widget.totalDrowsy}x | Menguap: ${widget.totalYawns}x\n\n'
-        'Tetap fokus dan utamakan keselamatan berkendara dengan DrivingBuddy!';
+    final isEn = LanguageService.instance.isEnglish;
+    final shareText = isEn
+        ? '🚗 Driving session completed with Driving Buddy!\n'
+          '⏱ Duration: ${_formatDuration(widget.durationSeconds)}\n'
+          '🏆 Safety Score: ${widget.drivingScore}/100 — $_scoreLabel\n'
+          '😴 Microsleep: ${widget.totalMicrosleeps}x | Drowsy: ${widget.totalDrowsy}x | Yawn: ${widget.totalYawns}x\n\n'
+          'Stay focused and prioritize driving safety with DrivingBuddy!'
+        : '🚗 Sesi berkendara bersama Driving Buddy selesai!\n'
+          '⏱ Waktu: ${_formatDuration(widget.durationSeconds)}\n'
+          '🏆 Skor Keselamatan: ${widget.drivingScore}/100 — $_scoreLabel\n'
+          '😴 Microsleep: ${widget.totalMicrosleeps}x | Kantuk: ${widget.totalDrowsy}x | Menguap: ${widget.totalYawns}x\n\n'
+          'Tetap fokus dan utamakan keselamatan berkendara dengan DrivingBuddy!';
 
     try {
       final boundary = _cardRepaintKey.currentContext?.findRenderObject() as RenderRepaintBoundary?;

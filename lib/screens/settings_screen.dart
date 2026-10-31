@@ -10,6 +10,7 @@ import '../services/alert_config.dart';
 import '../services/firebase_service.dart';
 import '../services/sos_service.dart';
 import '../services/theme_service.dart';
+import '../services/language_service.dart';
 import '../routes/app_routes.dart';
 
 // ============================================================================
@@ -368,8 +369,8 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
       setState(() => _isLoggedIn = false);
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Berhasil keluar'),
+          SnackBar(
+            content: Text(LanguageService.instance.isEnglish ? 'Successfully logged out' : 'Berhasil keluar'),
             behavior: SnackBarBehavior.floating,
           ),
         );
@@ -380,7 +381,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: ThemeService.instance,
+      listenable: Listenable.merge([ThemeService.instance, LanguageService.instance]),
       builder: (context, _) {
         final isDark = ThemeService.instance.isDarkMode;
 
@@ -400,7 +401,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                   children: [
 
                           Text(
-                            'Nama Pengemudi',
+                            LanguageService.instance.isEnglish ? 'Driver Name' : 'Nama Pengemudi',
                             style: TextStyle(
                               fontSize: 13,
                               fontWeight: FontWeight.w800,
@@ -410,14 +411,14 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                       const SizedBox(height: 8),
                       _buildTextField(
                         controller: _nameController,
-                        hint: 'Masukkan nama kamu',
+                        hint: LanguageService.instance.isEnglish ? 'Enter your full name' : 'Masukkan nama kamu',
                         icon: Icons.person_rounded,
                       ),
                       const SizedBox(height: 16),
 
                       // Email (Read-Only agar tidak menimbulkan bug akun)
                       Text(
-                        'Email Terdaftar',
+                        LanguageService.instance.isEnglish ? 'Registered Email' : 'Email Terdaftar',
                         style: TextStyle(
                           fontSize: 13,
                           fontWeight: FontWeight.w800,
@@ -462,7 +463,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                                   Icon(Icons.lock_rounded, size: 11, color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B)),
                                   const SizedBox(width: 3),
                                   Text(
-                                    'Terkunci',
+                                    LanguageService.instance.isEnglish ? 'Locked' : 'Terkunci',
                                     style: TextStyle(
                                       fontSize: 9.5,
                                       fontWeight: FontWeight.w800,
@@ -497,7 +498,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                                   ),
                                 )
                               : const Icon(Icons.save_rounded, size: 18),
-                          label: Text(_isSaving ? 'Menyimpan...' : 'Simpan Profil & Kontak SOS'),
+                          label: Text(_isSaving ? (LanguageService.instance.isEnglish ? 'Saving...' : 'Menyimpan...') : (LanguageService.instance.isEnglish ? 'Save Profile & SOS Contacts' : 'Simpan Profil & Kontak SOS')),
                           style: ElevatedButton.styleFrom(
                             backgroundColor: const Color(0xFFF26B1D),
                             foregroundColor: Colors.white,
@@ -509,6 +510,12 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                       ),
                       const SizedBox(height: 28),
                       Divider(color: isDark ? AppColors.darkBorderLight : const Color(0xFFECEEF2)),
+                const SizedBox(height: 20),
+
+                // Bahasa Aplikasi (Bahasa Indonesia / English)
+                _buildLanguageSettingsSection(),
+                const SizedBox(height: 28),
+                Divider(color: isDark ? AppColors.darkBorderLight : const Color(0xFFECEEF2)),
                 const SizedBox(height: 20),
 
                 // Tampilan & Tema Kabin (Otomatis Waktu / Terang / Abu-abu Gelap)
@@ -530,7 +537,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                 const SizedBox(height: 20),
 
                 Text(
-                  'Informasi Sistem',
+                  LanguageService.instance.s.systemInfo,
                   style: TextStyle(
                     fontSize: 14,
                     fontWeight: FontWeight.w800,
@@ -538,10 +545,10 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                   ),
                 ),
                 const SizedBox(height: 12),
-                _buildInfoRow(Icons.security_rounded, 'Privasi',
-                    'Kamera diproses lokal 100%, frame video tidak dikirim'),
+                _buildInfoRow(Icons.security_rounded, LanguageService.instance.s.privacy,
+                    LanguageService.instance.s.privacyDesc),
                 const SizedBox(height: 8),
-                _buildInfoRow(Icons.info_outline_rounded, 'Versi',
+                _buildInfoRow(Icons.info_outline_rounded, LanguageService.instance.s.version,
                     'v1.0.0'),
                 const SizedBox(height: 24),
                 if (_isLoggedIn) ...[
@@ -552,8 +559,8 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                       onPressed: _signOut,
                       icon: const Icon(Icons.logout_rounded,
                           size: 18, color: Color(0xFFD94126)),
-                      label: const Text(
-                        'Keluar dari Akun',
+                      label: Text(
+                        LanguageService.instance.s.logout,
                         style: TextStyle(color: Color(0xFFD94126), fontWeight: FontWeight.bold),
                       ),
                       style: OutlinedButton.styleFrom(
@@ -576,6 +583,218 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
 );
   }
 
+  Widget _buildLanguageSettingsSection() {
+    final langService = LanguageService.instance;
+    final currentLang = langService.currentLanguage;
+    final isDark = ThemeService.instance.isDarkMode;
+    final s = langService.s;
+
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Expanded(
+              child: Text(
+                s.appLanguage,
+                style: TextStyle(
+                  fontSize: 15,
+                  fontWeight: FontWeight.w800,
+                  color: isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A),
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 4),
+              decoration: BoxDecoration(
+                color: isDark ? AppColors.darkChipBg : const Color(0xFFFFF1E8),
+                borderRadius: BorderRadius.circular(8),
+                border: Border.all(
+                  color: isDark ? AppColors.darkCardBorder : const Color(0xFFECEEF2),
+                ),
+              ),
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  const Icon(
+                    Icons.language_rounded,
+                    size: 13,
+                    color: Color(0xFFF26B1D),
+                  ),
+                  const SizedBox(width: 4),
+                  Text(
+                    langService.isIndonesian ? 'Bahasa Indonesia' : 'English',
+                    style: const TextStyle(
+                      fontSize: 10,
+                      fontWeight: FontWeight.w800,
+                      color: Color(0xFFF26B1D),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+        const SizedBox(height: 4),
+        Text(
+          s.appLanguageDesc,
+          style: TextStyle(
+            fontSize: 12,
+            color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
+          ),
+        ),
+        const SizedBox(height: 14),
+
+        Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.darkCardBg : Colors.white,
+            borderRadius: BorderRadius.circular(16),
+            border: Border.all(
+              color: isDark ? AppColors.darkCardBorder : const Color(0xFFECEEF2),
+            ),
+            boxShadow: [
+              BoxShadow(
+                color: isDark
+                    ? Colors.black.withValues(alpha: 0.3)
+                    : const Color(0xFFF26B1D).withValues(alpha: 0.04),
+                blurRadius: 8,
+                offset: const Offset(0, 2),
+              ),
+            ],
+          ),
+          child: Column(
+            children: [
+              _buildLanguageOptionTile(
+                lang: AppLanguage.id,
+                currentLang: currentLang,
+                iconText: '🇮🇩',
+                title: 'Bahasa Indonesia',
+                subtitle: 'Gunakan Bahasa Indonesia untuk seluruh antarmuka & instruksi telemetri',
+                isDark: isDark,
+                onTap: () => langService.setLanguage(AppLanguage.id),
+              ),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 10),
+                child: Divider(
+                  color: isDark ? AppColors.darkBorderLight : const Color(0xFFFFF1E8),
+                  height: 1,
+                ),
+              ),
+              _buildLanguageOptionTile(
+                lang: AppLanguage.en,
+                currentLang: currentLang,
+                iconText: '🇬🇧',
+                title: 'English',
+                subtitle: 'Use English across all telemetry, alert, and navigation interfaces',
+                isDark: isDark,
+                onTap: () => langService.setLanguage(AppLanguage.en),
+              ),
+            ],
+          ),
+        ),
+      ],
+    );
+  }
+
+  Widget _buildLanguageOptionTile({
+    required AppLanguage lang,
+    required AppLanguage currentLang,
+    required String iconText,
+    required String title,
+    required String subtitle,
+    required bool isDark,
+    required VoidCallback onTap,
+  }) {
+    final isSelected = lang == currentLang;
+
+    return InkWell(
+      onTap: onTap,
+      borderRadius: BorderRadius.circular(12),
+      child: Padding(
+        padding: const EdgeInsets.symmetric(vertical: 4),
+        child: Row(
+          crossAxisAlignment: CrossAxisAlignment.start,
+          children: [
+            Container(
+              width: 38,
+              height: 38,
+              decoration: BoxDecoration(
+                color: isSelected
+                    ? const Color(0xFFF26B1D).withValues(alpha: 0.15)
+                    : (isDark ? AppColors.darkSurface : const Color(0xFFF8FAFC)),
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: isSelected
+                      ? const Color(0xFFF26B1D)
+                      : (isDark ? AppColors.darkCardBorder : const Color(0xFFE2E8F0)),
+                  width: isSelected ? 1.5 : 1,
+                ),
+              ),
+              child: Center(
+                child: Text(
+                  iconText,
+                  style: const TextStyle(fontSize: 18),
+                ),
+              ),
+            ),
+            const SizedBox(width: 14),
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    title,
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: isSelected ? FontWeight.w800 : FontWeight.w700,
+                      color: isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A),
+                    ),
+                  ),
+                  const SizedBox(height: 3),
+                  Text(
+                    subtitle,
+                    style: TextStyle(
+                      fontSize: 12,
+                      height: 1.35,
+                      color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
+                    ),
+                  ),
+                ],
+              ),
+            ),
+            const SizedBox(width: 10),
+            Container(
+              width: 22,
+              height: 22,
+              decoration: BoxDecoration(
+                shape: BoxShape.circle,
+                border: Border.all(
+                  color: isSelected ? const Color(0xFFF26B1D) : (isDark ? const Color(0xFF475569) : const Color(0xFFCBD5E1)),
+                  width: 2,
+                ),
+              ),
+              child: isSelected
+                  ? Center(
+                      child: Container(
+                        width: 12,
+                        height: 12,
+                        decoration: const BoxDecoration(
+                          color: Color(0xFFF26B1D),
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    )
+                  : null,
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildThemeSettingsSection() {
     final themeService = ThemeService.instance;
     final currentMode = themeService.currentMode;
@@ -589,7 +808,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
           children: [
             Expanded(
               child: Text(
-                'Tampilan & Tema Kabin',
+                LanguageService.instance.s.themeAndDisplay,
               style: TextStyle(
                 fontSize: 15,
                 fontWeight: FontWeight.w800,
@@ -617,7 +836,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    isDark ? 'Gelap' : 'Terang',
+                    isDark ? LanguageService.instance.s.darkBadge : LanguageService.instance.s.lightBadge,
                     style: const TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w800,
@@ -631,7 +850,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
         ),
         const SizedBox(height: 4),
         Text(
-          'Pilih preferensi tema antarmuka atau biarkan otomatis beralih mengikuti waktu',
+          LanguageService.instance.s.themeDesc,
           style: TextStyle(
             fontSize: 12,
             color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
@@ -664,9 +883,9 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                 mode: AppThemeMode.system,
                 currentMode: currentMode,
                 icon: Icons.smartphone_rounded,
-                title: 'Mengikuti Sistem HP (Default)',
-                subtitle: 'Otomatis berganti terang atau gelap mengikuti tema perangkat HP Anda.',
-                badge: 'Bawaan',
+                title: LanguageService.instance.s.themeSystem,
+                subtitle: LanguageService.instance.s.themeSystemDesc,
+                badge: LanguageService.instance.isEnglish ? 'Default' : 'Bawaan',
                 badgeColor: const Color(0xFF3B82F6),
                 isDark: isDark,
                 onTap: () => themeService.setThemeMode(AppThemeMode.system),
@@ -683,10 +902,9 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                 mode: AppThemeMode.autoTime,
                 currentMode: currentMode,
                 icon: Icons.access_time_filled_rounded,
-                title: 'Otomatis Sesuai Waktu (16:00 - 04:00)',
-                subtitle:
-                    'Mode Abu-abu Gelap aktif jam 16:00–04:00 (malam). Jam 04:00–16:00 (siang) kembali ke Mode Terang.',
-                badge: 'Disarankan',
+                title: LanguageService.instance.s.themeAutoTime,
+                subtitle: LanguageService.instance.s.themeAutoTimeDesc,
+                badge: LanguageService.instance.isEnglish ? 'Recommended' : 'Disarankan',
                 badgeColor: const Color(0xFF10B981),
                 isDark: isDark,
                 onTap: () => themeService.setThemeMode(AppThemeMode.autoTime),
@@ -704,8 +922,8 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                 mode: AppThemeMode.light,
                 currentMode: currentMode,
                 icon: Icons.light_mode_rounded,
-                title: 'Mode Terang (Daylight)',
-                subtitle: 'Latar gading bersih dengan kartu putih jernih setiap saat.',
+                title: LanguageService.instance.s.themeLight,
+                subtitle: LanguageService.instance.s.themeLightDesc,
                 isDark: isDark,
                 onTap: () => themeService.setThemeMode(AppThemeMode.light),
               ),
@@ -722,9 +940,8 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                 mode: AppThemeMode.dark,
                 currentMode: currentMode,
                 icon: Icons.dark_mode_rounded,
-                title: 'Mode Abu-abu Gelap (Night Cockpit)',
-                subtitle:
-                    'Warna charcoal dark gray teduh dan ramah mata pengemudi (bukan hitam pekat).',
+                title: LanguageService.instance.s.themeDark,
+                subtitle: LanguageService.instance.s.themeDarkDesc,
                 isDark: isDark,
                 onTap: () => themeService.setThemeMode(AppThemeMode.dark),
               ),
@@ -1365,7 +1582,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Deteksi Postur Kepala (AI Advanced)',
+          LanguageService.instance.s.headPostureDetection,
           style: TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w800,
@@ -1374,7 +1591,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
         ),
         const SizedBox(height: 4),
         Text(
-          'Fitur pelengkap mata: pantau kemiringan dan sentakan kepala saat tertidur',
+          LanguageService.instance.s.headPostureDesc,
           style: TextStyle(fontSize: 12, color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B)),
         ),
         const SizedBox(height: 14),
@@ -1419,7 +1636,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Deteksi Head Tilt (Kemiringan Kepala)',
+                          LanguageService.instance.s.headTiltSetting,
                           style: TextStyle(
                             fontSize: 13.5,
                             fontWeight: FontWeight.w800,
@@ -1428,7 +1645,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          'Memicu alarm darurat saat kepala miring > 18° selama lebih dari 1.8 detik (indikasi tertidur ke samping).',
+                          LanguageService.instance.isEnglish ? 'Triggers emergency alarm when head tilts > 18° for more than 1.8 seconds (lateral nod off).' : 'Memicu alarm darurat saat kepala miring > 18° selama lebih dari 1.8 detik (indikasi tertidur ke samping).',
                           style: TextStyle(
                             fontSize: 11,
                             color: isDark ? AppColors.darkTextSecondary : Colors.grey.shade600,
@@ -1481,7 +1698,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Deteksi Head Bob (Sentakan Menunduk)',
+                          LanguageService.instance.s.headBobSetting,
                           style: TextStyle(
                             fontSize: 13.5,
                             fontWeight: FontWeight.w800,
@@ -1581,8 +1798,8 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                         child: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 18),
                       ),
                     ),
-                    const Text(
-                      'Pengaturan',
+                    Text(
+                      LanguageService.instance.s.settingsTitle,
                       style: TextStyle(
                         fontSize: 18,
                         fontWeight: FontWeight.w900,
@@ -1686,7 +1903,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                 Text(
                   _isLoggedIn
                       ? (_nameController.text.isNotEmpty ? _nameController.text : 'Pengemudi')
-                      : 'Tamu / Offline',
+                      : (LanguageService.instance.isEnglish ? 'Guest / Offline' : 'Tamu / Offline'),
                   style: const TextStyle(
                     fontSize: 19,
                     fontWeight: FontWeight.w900,
@@ -1712,7 +1929,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                     ),
                   ),
                   child: Text(
-                    _isLoggedIn ? '● Akun Terhubung' : '○ Mode Tamu (Offline)',
+                    _isLoggedIn ? (LanguageService.instance.isEnglish ? '● Account Connected' : '● Akun Terhubung') : (LanguageService.instance.isEnglish ? '○ Guest Mode (Offline)' : '○ Mode Tamu (Offline)'),
                     style: TextStyle(
                       fontSize: 11,
                       fontWeight: FontWeight.w800,
@@ -1800,7 +2017,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Text(
-                      'Kontak Darurat SOS (WhatsApp)',
+                      LanguageService.instance.isEnglish ? 'SOS Emergency Contacts (WhatsApp)' : 'Kontak Darurat SOS (WhatsApp)',
                       style: TextStyle(
                         fontSize: 13.5,
                         fontWeight: FontWeight.w800,
@@ -1808,7 +2025,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                       ),
                     ),
                     Text(
-                      'Kirim GPS lokasi & sinyal darurat otomatis',
+                      LanguageService.instance.isEnglish ? 'Automatically send GPS location & emergency signal' : 'Kirim GPS lokasi & sinyal darurat otomatis',
                       style: TextStyle(fontSize: 10.5, color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B)),
                     ),
                   ],
@@ -1821,16 +2038,18 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                   borderRadius: BorderRadius.circular(8),
                   border: Border.all(color: const Color(0xFFA7F3D0)),
                 ),
-                child: const Text(
-                  'MAKS 3 KONTAK',
-                  style: TextStyle(fontSize: 8.5, fontWeight: FontWeight.w800, color: Color(0xFF059669)),
+                child: Text(
+                  LanguageService.instance.isEnglish ? 'MAX 3 CONTACTS' : 'MAKS 3 KONTAK',
+                  style: const TextStyle(fontSize: 8.5, fontWeight: FontWeight.w800, color: Color(0xFF059669)),
                 ),
               ),
             ],
           ),
           const SizedBox(height: 10),
           Text(
-            'Jika alarm kantuk berbunyi selama 1 menit penuh tanpa respon tombol "Saya Sudah Bangun", sistem otomatis mengirimkan pesan darurat beserta tautan titik peta GPS ke seluruh kontak darurat di bawah ini.',
+            LanguageService.instance.isEnglish
+                ? 'If the drowsiness alarm sounds for 1 full minute without response, the system automatically sends an emergency message with GPS map location to all emergency contacts below.'
+                : 'Jika alarm kantuk berbunyi selama 1 menit penuh tanpa respon tombol "Saya Sudah Bangun", sistem otomatis mengirimkan pesan darurat beserta tautan titik peta GPS ke seluruh kontak darurat di bawah ini.',
             style: TextStyle(fontSize: 11, color: isDark ? AppColors.darkTextSecondary : const Color(0xFF475569), height: 1.4),
           ),
           const SizedBox(height: 12),
@@ -1843,14 +2062,16 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                 borderRadius: BorderRadius.circular(10),
                 border: Border.all(color: const Color(0xFFFECACA)),
               ),
-              child: const Row(
+              child: Row(
                 children: [
-                  Icon(Icons.warning_amber_rounded, color: Color(0xFFD94126), size: 18),
-                  SizedBox(width: 8),
+                  const Icon(Icons.warning_amber_rounded, color: Color(0xFFD94126), size: 18),
+                  const SizedBox(width: 8),
                   Expanded(
                     child: Text(
-                      'Kontak SOS belum diisi! Masukkan nomor darurat agar keluarga/rekan dapat menerima lokasi Anda saat darurat.',
-                      style: TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFFB91C1C)),
+                      LanguageService.instance.isEnglish
+                          ? 'SOS contact not filled! Enter an emergency number so family/friends can receive your location during an emergency.'
+                          : 'Kontak SOS belum diisi! Masukkan nomor darurat agar keluarga/rekan dapat menerima lokasi Anda saat darurat.',
+                      style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w700, color: Color(0xFFB91C1C)),
                     ),
                   ),
                 ],
@@ -1859,15 +2080,15 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
           const SizedBox(height: 2),
 
           // Kontak 1 (Utama)
-          _buildPhoneInputRow('Kontak 1 (Utama)', _sosController1, hint: 'Contoh: 089876543210'),
+          _buildPhoneInputRow(LanguageService.instance.isEnglish ? 'Contact 1 (Primary)' : 'Kontak 1 (Utama)', _sosController1, hint: LanguageService.instance.isEnglish ? 'e.g. 089876543210' : 'Contoh: 089876543210'),
           const SizedBox(height: 10),
 
           // Kontak 2 (Cadangan)
-          _buildPhoneInputRow('Kontak 2 (Cadangan Opsional)', _sosController2, hint: 'Contoh: 081234567890'),
+          _buildPhoneInputRow(LanguageService.instance.isEnglish ? 'Contact 2 (Optional Backup)' : 'Kontak 2 (Cadangan Opsional)', _sosController2, hint: LanguageService.instance.isEnglish ? 'e.g. 081234567890' : 'Contoh: 081234567890'),
           const SizedBox(height: 10),
 
           // Kontak 3 (Cadangan)
-          _buildPhoneInputRow('Kontak 3 (Cadangan Opsional)', _sosController3, hint: 'Contoh: 088888888888'),
+          _buildPhoneInputRow(LanguageService.instance.isEnglish ? 'Contact 3 (Optional Backup)' : 'Kontak 3 (Cadangan Opsional)', _sosController3, hint: LanguageService.instance.isEnglish ? 'e.g. 088888888888' : 'Contoh: 088888888888'),
           const SizedBox(height: 14),
 
           // Single Clean Full-Width Button (Tidak Nabrak Box)
@@ -1883,9 +2104,9 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                       child: CircularProgressIndicator(strokeWidth: 2, color: Colors.white),
                     )
                   : const Icon(Icons.check_circle_outline_rounded, size: 18),
-              label: const Text(
-                'Simpan Kontak Darurat SOS',
-                style: TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
+              label: Text(
+                LanguageService.instance.isEnglish ? 'Save SOS Emergency Contacts' : 'Simpan Kontak Darurat SOS',
+                style: const TextStyle(fontSize: 13, fontWeight: FontWeight.w800),
               ),
               style: ElevatedButton.styleFrom(
                 backgroundColor: const Color(0xFFF26B1D),

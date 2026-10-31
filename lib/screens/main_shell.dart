@@ -5,6 +5,7 @@ import '../core/design_tokens.dart';
 import '../widgets/ui/db_ui.dart';
 import '../features/nearby_places/nearby_places.dart';
 import '../services/theme_service.dart';
+import '../services/language_service.dart';
 import 'home_screen.dart';
 import 'monitor_screen.dart';
 import 'history_screen.dart';
@@ -64,9 +65,10 @@ class _MainShellState extends State<MainShell> {
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: ThemeService.instance,
+      listenable: Listenable.merge([ThemeService.instance, LanguageService.instance]),
       builder: (context, _) {
         final isDark = ThemeService.instance.isDarkMode;
+        final s = LanguageService.instance.s;
         final driveActive = _currentIndex == 1;
 
         return Scaffold(
@@ -107,14 +109,14 @@ class _MainShellState extends State<MainShell> {
                       child: _NavItem(
                         icon: Icons.home_outlined,
                         activeIcon: Icons.home_rounded,
-                        label: 'Beranda',
+                        label: s.navHome,
                         isSelected: _currentIndex == 0,
                         onTap: () => _switchToTab(0),
                       ),
                     ),
                     Semantics(
                       button: true,
-                      label: 'Mode berkendara',
+                      label: s.navDriveMode,
                       child: DbPressable(
                         onTap: () => _switchToTab(1),
                         pressedScale: 0.92,
@@ -141,7 +143,7 @@ class _MainShellState extends State<MainShell> {
                       child: _NavItem(
                         icon: Icons.insights_outlined,
                         activeIcon: Icons.insights_rounded,
-                        label: 'Aktivitas',
+                        label: s.navHistory,
                         isSelected: _currentIndex == 2,
                         onTap: () => _switchToTab(2),
                       ),

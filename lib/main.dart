@@ -6,6 +6,7 @@ import 'models/account_config.dart';
 
 import 'firebase_options.dart';
 import 'services/theme_service.dart';
+import 'services/language_service.dart';
 import 'core/app_colors.dart';
 import 'core/app_theme.dart';
 import 'routes/app_routes.dart';
@@ -33,6 +34,7 @@ void main() async {
   
   // Inisialisasi service tema (otomatis jam 16:00 - 04:00 & cache preferensi)
   await ThemeService.instance.init();
+  await LanguageService.instance.init();
 
   // Inisialisasi Firebase
   try {
@@ -61,7 +63,7 @@ class DrivingBuddyApp extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: ThemeService.instance,
+      listenable: Listenable.merge([ThemeService.instance, LanguageService.instance]),
       builder: (context, _) {
         final isDark = ThemeService.instance.isDarkMode;
 

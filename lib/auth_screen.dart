@@ -2,6 +2,7 @@ import 'dart:math' as math;
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'services/theme_service.dart';
+import 'services/language_service.dart';
 import 'core/app_colors.dart';
 import 'widgets/ui/db_ui.dart';
 import 'supabase_service.dart';
@@ -23,6 +24,7 @@ class LoginScreen extends StatefulWidget {
 
 class _LoginScreenState extends State<LoginScreen>
     with TickerProviderStateMixin {
+  AppStrings get s => LanguageService.instance.s;
   late final TabController _tab;
 
   // Animations
@@ -727,10 +729,10 @@ class _LoginScreenState extends State<LoginScreen>
   @override
   Widget build(BuildContext context) {
     return ListenableBuilder(
-      listenable: ThemeService.instance,
+      listenable: Listenable.merge([ThemeService.instance, LanguageService.instance]),
       builder: (context, _) {
         final isDark = ThemeService.instance.isDarkMode;
-        final screenHeight = MediaQuery.of(context).size.height;
+                final screenHeight = MediaQuery.of(context).size.height;
         final topPadding = MediaQuery.of(context).padding.top;
         final headerHeight = math.max(200.0, math.min(235.0, screenHeight * 0.26));
 
@@ -855,16 +857,50 @@ class _LoginScreenState extends State<LoginScreen>
               ),
             ),
 
-            // Back to Welcome Screen Button at Top-Right
+            // Language Toggle & Back to Welcome Screen at Top-Right
             Positioned(
               top: topPadding + 10,
-              right: 18,
-              child: IconButton(
-                icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 18),
-                tooltip: 'Kembali ke Welcome',
-                onPressed: () {
-                  Navigator.of(context).pushReplacementNamed(AppRoutes.welcome);
-                },
+              right: 14,
+              child: Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  GestureDetector(
+                    onTap: () {
+                      LanguageService.instance.setLanguage(
+                        LanguageService.instance.isIndonesian
+                            ? AppLanguage.en
+                            : AppLanguage.id,
+                      );
+                    },
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.35),
+                        borderRadius: BorderRadius.circular(14),
+                        border: Border.all(
+                          color: Colors.white.withValues(alpha: 0.3),
+                          width: 1,
+                        ),
+                      ),
+                      child: Text(
+                        LanguageService.instance.isIndonesian ? 'ID' : 'EN',
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 10.5,
+                          fontWeight: FontWeight.w800,
+                        ),
+                      ),
+                    ),
+                  ),
+                  const SizedBox(width: 4),
+                  IconButton(
+                    icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 18),
+                    tooltip: LanguageService.instance.s.back,
+                    onPressed: () {
+                      Navigator.of(context).pushReplacementNamed(AppRoutes.welcome);
+                    },
+                  ),
+                ],
               ),
             ),
           ],
@@ -876,11 +912,11 @@ class _LoginScreenState extends State<LoginScreen>
   // ── Hero Header ─────────────────────────────
   Widget _buildHeroHeader(bool isDark) {
     final isLoginTab = _tab.index == 0;
-    return Column(
+        return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          isLoginTab ? 'Sign In' : 'Daftar Akun',
+          isLoginTab ? s.signIn : s.signUp,
           style: TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.w900,
@@ -904,7 +940,7 @@ class _LoginScreenState extends State<LoginScreen>
 
   // ── Capsule Segment Tab ─────────────────────
   Widget _buildCapsuleSegment(bool isDark) {
-    return Container(
+        return Container(
       height: 44,
       padding: const EdgeInsets.all(4),
       decoration: BoxDecoration(
@@ -956,7 +992,7 @@ class _LoginScreenState extends State<LoginScreen>
                   },
                   child: Center(
                     child: Text(
-                      'Masuk',
+                      s.tabSignIn,
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: _tab.index == 0 ? FontWeight.w800 : FontWeight.w600,
@@ -977,7 +1013,7 @@ class _LoginScreenState extends State<LoginScreen>
                   },
                   child: Center(
                     child: Text(
-                      'Daftar Baru',
+                      s.tabSignUp,
                       style: TextStyle(
                         fontSize: 13,
                         fontWeight: _tab.index == 1 ? FontWeight.w800 : FontWeight.w600,
@@ -998,7 +1034,7 @@ class _LoginScreenState extends State<LoginScreen>
 
   // ── Login Form ──────────────────────────────
   Widget _buildLoginForm(bool isDark) {
-    return Column(
+        return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (_loginError != null) ...[
@@ -1006,7 +1042,7 @@ class _LoginScreenState extends State<LoginScreen>
           const SizedBox(height: 14),
         ],
 
-        _buildLabel('Email Pengemudi', isDark),
+        _buildLabel(s.emailLabel, isDark),
         const SizedBox(height: 6),
         _buildInputField(
           controller: _loginEmail,
@@ -1017,7 +1053,7 @@ class _LoginScreenState extends State<LoginScreen>
         ),
         const SizedBox(height: 14),
 
-        _buildLabel('Kata Sandi', isDark),
+        _buildLabel(s.passwordLabel, isDark),
         const SizedBox(height: 6),
         _buildInputField(
           controller: _loginPassword,
@@ -1045,9 +1081,9 @@ class _LoginScreenState extends State<LoginScreen>
               minimumSize: const Size(50, 26),
               tapTargetSize: MaterialTapTargetSize.shrinkWrap,
             ),
-            child: const Text(
-              'Lupa Kata Sandi?',
-              style: TextStyle(
+            child: Text(
+              s.forgotPassword,
+              style: const TextStyle(
                 color: Color(0xFFF26B1D),
                 fontSize: 12,
                 fontWeight: FontWeight.w700,
@@ -1085,9 +1121,9 @@ class _LoginScreenState extends State<LoginScreen>
                       height: 20,
                       child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.2),
                     )
-                  : const Text(
-                      'Masuk ke Cockpit',
-                      style: TextStyle(
+                  : Text(
+                      s.btnSignIn,
+                      style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w800,
                         letterSpacing: 0.2,
@@ -1115,16 +1151,16 @@ class _LoginScreenState extends State<LoginScreen>
               TextSpan(
                 children: [
                   TextSpan(
-                    text: 'Belum punya akun? ',
+                    text: s.dontHaveAccount,
                     style: TextStyle(
                       color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
                       fontSize: 12.5,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
-                  const TextSpan(
-                    text: 'Daftar sekarang',
-                    style: TextStyle(
+                  TextSpan(
+                    text: s.registerNow,
+                    style: const TextStyle(
                       color: Color(0xFFF26B1D),
                       fontSize: 12.5,
                       fontWeight: FontWeight.w800,
@@ -1141,7 +1177,7 @@ class _LoginScreenState extends State<LoginScreen>
 
   // ── Register Form ───────────────────────────
   Widget _buildRegisterForm(bool isDark) {
-    return Column(
+        return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         if (_regSuccess != null) ...[
@@ -1153,17 +1189,17 @@ class _LoginScreenState extends State<LoginScreen>
           const SizedBox(height: 14),
         ],
 
-        _buildLabel('Nama Lengkap', isDark),
+        _buildLabel(s.fullNameLabel, isDark),
         const SizedBox(height: 6),
         _buildInputField(
           controller: _regName,
-          hint: 'Contoh: Adrian Hartono',
+          hint: s.fullNameHint,
           icon: Icons.person_outline_rounded,
           isDark: isDark,
         ),
         const SizedBox(height: 14),
 
-        _buildLabel('Email Pengemudi', isDark),
+        _buildLabel(s.emailLabel, isDark),
         const SizedBox(height: 6),
         _buildInputField(
           controller: _regEmail,
@@ -1174,7 +1210,7 @@ class _LoginScreenState extends State<LoginScreen>
         ),
         const SizedBox(height: 14),
 
-        _buildLabel('Kata Sandi', isDark),
+        _buildLabel(s.passwordLabel, isDark),
         const SizedBox(height: 6),
         _buildInputField(
           controller: _regPassword,
@@ -1193,7 +1229,7 @@ class _LoginScreenState extends State<LoginScreen>
         ),
         const SizedBox(height: 4),
         Text(
-          '* Minimal 8 karakter, wajib kombinasi huruf besar, huruf kecil, angka, dan simbol unik',
+          s.passwordReqText,
           style: TextStyle(
             fontSize: 10.5,
             color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
@@ -1202,7 +1238,7 @@ class _LoginScreenState extends State<LoginScreen>
         ),
         const SizedBox(height: 14),
 
-        _buildLabel('Konfirmasi Kata Sandi', isDark),
+        _buildLabel(s.confirmPasswordLabel, isDark),
         const SizedBox(height: 6),
         _buildInputField(
           controller: _regConfirm,
@@ -1249,9 +1285,9 @@ class _LoginScreenState extends State<LoginScreen>
                       height: 20,
                       child: CircularProgressIndicator(color: Colors.white, strokeWidth: 2.2),
                     )
-                  : const Text(
-                      'Buat Akun Pengemudi',
-                      style: TextStyle(
+                  : Text(
+                      s.btnSignUp,
+                      style: const TextStyle(
                         fontSize: 14,
                         fontWeight: FontWeight.w800,
                         letterSpacing: 0.2,
@@ -1279,16 +1315,16 @@ class _LoginScreenState extends State<LoginScreen>
               TextSpan(
                 children: [
                   TextSpan(
-                    text: 'Sudah punya akun? ',
+                    text: s.alreadyHaveAccount,
                     style: TextStyle(
                       color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
                       fontSize: 12.5,
                       fontWeight: FontWeight.w500,
                     ),
                   ),
-                  const TextSpan(
-                    text: 'Masuk',
-                    style: TextStyle(
+                  TextSpan(
+                    text: s.signInNow,
+                    style: const TextStyle(
                       color: Color(0xFFF26B1D),
                       fontSize: 12.5,
                       fontWeight: FontWeight.w800,
@@ -1305,7 +1341,7 @@ class _LoginScreenState extends State<LoginScreen>
 
   // ── Google Sign In Button ───────────────────
   Widget _buildGoogleSignInButton(bool isDark) {
-    return Column(
+        return Column(
       children: [
         Row(
           children: [
@@ -1318,7 +1354,7 @@ class _LoginScreenState extends State<LoginScreen>
             Padding(
               padding: const EdgeInsets.symmetric(horizontal: 14),
               child: Text(
-                'atau masuk dengan',
+                s.orContinueWith,
                 style: TextStyle(
                   color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF94A3B8),
                   fontSize: 11.5,
@@ -1368,7 +1404,7 @@ class _LoginScreenState extends State<LoginScreen>
                       ),
                       const SizedBox(width: 10),
                       Text(
-                        'Lanjutkan dengan Google',
+                        s.googleSignIn,
                         style: TextStyle(
                           color: isDark ? Colors.white : const Color(0xFF0F172A),
                           fontSize: 13,

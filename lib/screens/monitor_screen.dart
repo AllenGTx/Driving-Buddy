@@ -1,4 +1,5 @@
 import '../services/theme_service.dart';
+import '../services/language_service.dart';
 import 'dart:ui' as ui;
 import 'dart:async';
 import 'dart:io';
@@ -84,8 +85,7 @@ class MonitorScreenState extends State<MonitorScreen> {
   double _totalDistanceMeters = 0.0;
   double _currentSpeedKmh = 0.0;
   double _topSpeedKmh = 0.0;
-  bool _isCameraExpanded = false;
-  bool _showCameraModal = false;
+    bool _showCameraModal = false;
   final List<double> _sessionEarSamples = [];
   final List<double> _sessionMarSamples = [];
   final List<double> _sessionTiltSamples = [];
@@ -257,7 +257,6 @@ class MonitorScreenState extends State<MonitorScreen> {
     _detector.resetAllAlerts();
     setState(() {
       _isMonitoring = true;
-      _isCameraExpanded = false;
       _isCurrentlySleeping = false;
       _isCurrentlyDrowsy = false;
       _totalDistanceMeters = 0.0;
@@ -752,8 +751,8 @@ class MonitorScreenState extends State<MonitorScreen> {
     });
     _alert.stop();
     ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(
-        content: Text('Peringatan ditunda selama 15 menit.'),
+      SnackBar(
+        content: Text(LanguageService.instance.isEnglish ? 'Alert snoozed for 15 minutes.' : 'Peringatan ditunda selama 15 menit.'),
         behavior: SnackBarBehavior.floating,
       ),
     );
@@ -848,7 +847,7 @@ class MonitorScreenState extends State<MonitorScreen> {
     return Scaffold(
       backgroundColor: AppColors.dynamicBackground,
       appBar: DrivingBuddyAppBar(
-        title: 'Berkendara',
+        title: LanguageService.instance.s.drivingTitle,
         showProfileButton: !_isMonitoring,
       ),
       body: Stack(
@@ -956,8 +955,8 @@ class MonitorScreenState extends State<MonitorScreen> {
                                 ),
                               ),
                               const SizedBox(width: 8),
-                              const Text(
-                                'Kamera Kabin',
+                              Text(
+                                LanguageService.instance.isEnglish ? 'Cabin Camera' : 'Kamera Kabin',
                                 style: TextStyle(
                                   color: Colors.white,
                                   fontSize: 13,
@@ -1034,7 +1033,7 @@ class MonitorScreenState extends State<MonitorScreen> {
                             shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
                           ),
                           icon: const Icon(Icons.fullscreen_exit_rounded, size: 15),
-                          label: const Text('Kembali', style: TextStyle(fontSize: 11, fontWeight: FontWeight.w800)),
+                          label: Text(LanguageService.instance.s.back, style: const TextStyle(fontSize: 11, fontWeight: FontWeight.w800)),
                         ),
                       ],
                     ),
@@ -1095,9 +1094,9 @@ class MonitorScreenState extends State<MonitorScreen> {
         // Kecepatan
         Expanded(
           child: _buildHudCell(
-            label: 'KECEPATAN',
+            label: LanguageService.instance.isEnglish ? 'SPEED' : 'KECEPATAN',
             value: speedStr,
-            unit: 'km/j',
+            unit: LanguageService.instance.s.speedUnit,
             isDark: isDark,
             bottomWidget: Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -1106,14 +1105,14 @@ class MonitorScreenState extends State<MonitorScreen> {
                 borderRadius: BorderRadius.circular(6),
                 border: Border.all(color: isDark ? const Color(0xFF059669) : const Color(0xFFA7F3D0)),
               ),
-              child: const Row(
+              child: Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  Icon(Icons.trending_flat_rounded, size: 12, color: Color(0xFF059669)),
-                  SizedBox(width: 2),
+                  const Icon(Icons.trending_flat_rounded, size: 12, color: Color(0xFF059669)),
+                  const SizedBox(width: 2),
                   Text(
-                    'STABIL',
-                    style: TextStyle(fontSize: 8.5, fontWeight: FontWeight.w800, color: Color(0xFF065F46)),
+                    LanguageService.instance.isEnglish ? 'STEADY' : 'STABIL',
+                    style: const TextStyle(fontSize: 8.5, fontWeight: FontWeight.w800, color: Color(0xFF065F46)),
                   ),
                 ],
               ),
@@ -1125,9 +1124,9 @@ class MonitorScreenState extends State<MonitorScreen> {
         // Jarak (Realtime GPS)
         Expanded(
           child: _buildHudCell(
-            label: 'JARAK',
+            label: LanguageService.instance.s.distance.toUpperCase(),
             value: distanceKm,
-            unit: 'km',
+            unit: LanguageService.instance.s.distUnit,
             isDark: isDark,
             bottomWidget: Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
@@ -1142,7 +1141,7 @@ class MonitorScreenState extends State<MonitorScreen> {
                   const Icon(Icons.gps_fixed_rounded, size: 10, color: Color(0xFFF26B1D)),
                   const SizedBox(width: 2),
                   Text(
-                    _totalDistanceMeters > 0 ? ' km/j' : 'GPS SIAGA',
+                    _totalDistanceMeters > 0 ? ' ${LanguageService.instance.s.speedUnit}' : (LanguageService.instance.isEnglish ? 'GPS READY' : 'GPS SIAGA'),
                     style: TextStyle(fontSize: 8.5, fontWeight: FontWeight.w700, color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B)),
                   ),
                 ],
@@ -1155,13 +1154,13 @@ class MonitorScreenState extends State<MonitorScreen> {
         // Index Lelah
         Expanded(
           child: _buildHudCell(
-            label: 'INDEX LELAH',
+            label: LanguageService.instance.isEnglish ? 'FATIGUE INDEX' : 'INDEX LELAH',
             value: '$fatigueIndex',
             unit: '%',
             valueColor: const Color(0xFFF26B1D),
             isDark: isDark,
             bottomWidget: Text(
-              '$fatigueLabel · AMBANG 65%',
+              '$fatigueLabel · ${LanguageService.instance.isEnglish ? "THRESH 65%" : "AMBANG 65%"}',
               style: TextStyle(
                 fontSize: 8,
                 fontWeight: FontWeight.w800,
@@ -1336,10 +1335,10 @@ class MonitorScreenState extends State<MonitorScreen> {
                       const SizedBox(width: 6),
                       Text(
                         !_isMonitoring
-                            ? 'Sensor Kamera Siaga'
+                            ? (LanguageService.instance.isEnglish ? 'Camera Sensor Ready' : 'Sensor Kamera Siaga')
                             : (isDanger
-                                ? 'Peringatan Kantuk!'
-                                : (_eyeDetected ? 'Wajah Terdeteksi' : 'Wajah Tidak Terdeteksi')),
+                                ? (LanguageService.instance.isEnglish ? 'Drowsiness Warning!' : 'Peringatan Kantuk!')
+                                : (_eyeDetected ? LanguageService.instance.s.faceDetected : LanguageService.instance.s.faceNotDetected)),
                         style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w800,
@@ -1498,7 +1497,7 @@ class MonitorScreenState extends State<MonitorScreen> {
                             ),
                             const SizedBox(height: 10),
                             Text(
-                              'Kamera Standby',
+                              LanguageService.instance.isEnglish ? 'Camera Standby' : 'Kamera Siaga',
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w800,
@@ -1506,8 +1505,8 @@ class MonitorScreenState extends State<MonitorScreen> {
                               ),
                             ),
                             const SizedBox(height: 4),
-                            const Text(
-                              'Tekan tombol untuk mulai deteksi',
+                            Text(
+                              LanguageService.instance.isEnglish ? 'Tap button below to start detection' : 'Tekan tombol untuk mulai deteksi',
                               style: TextStyle(
                                 fontSize: 11,
                                 color: Color(0xFF94A3B8),
@@ -2003,7 +2002,7 @@ class MonitorScreenState extends State<MonitorScreen> {
               ),
               icon: Icon(Icons.snooze_rounded, size: 16, color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B)),
               label: Text(
-                'TUNDA PERINGATAN (15 MNT)',
+                '${LanguageService.instance.s.snoozeAlert.toUpperCase()} (15 ${LanguageService.instance.s.minShort.toUpperCase()})',
                 style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w800,
@@ -2035,13 +2034,13 @@ class MonitorScreenState extends State<MonitorScreen> {
                 elevation: 4,
                 shadowColor: const Color(0xFFF26B1D).withValues(alpha: 0.35),
               ),
-              child: const Row(
+              child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: [
-                  Icon(Icons.flag_rounded, size: 22),
-                  SizedBox(width: 8),
+                  const Icon(Icons.flag_rounded, size: 22),
+                  const SizedBox(width: 8),
                   Text(
-                    'SELESAIKAN PERJALANAN',
+                    LanguageService.instance.s.finishTrip.toUpperCase(),
                     style: TextStyle(
                       fontSize: 15,
                       fontWeight: FontWeight.w800,
@@ -2145,7 +2144,7 @@ Future<void> _toggleNightVision() async {
               mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
-                  'Penerangan Wajah Malam / Night Glow',
+                  LanguageService.instance.s.nightGlowTitle,
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w800,
