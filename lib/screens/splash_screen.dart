@@ -51,7 +51,7 @@ class _SplashScreenState extends State<SplashScreen>
       if (!mounted) return;
       final isLoggedIn = FirebaseAuth.instance.currentUser != null;
       Navigator.of(context).pushReplacementNamed(
-        isLoggedIn ? AppRoutes.main : AppRoutes.login,
+        isLoggedIn ? AppRoutes.main : AppRoutes.welcome,
       );
     });
   }
@@ -140,7 +140,7 @@ class _SplashScreenState extends State<SplashScreen>
                         // Pulsing loading dots
                         AnimatedBuilder(
                           animation: _pulseController,
-                          builder: (_, __) => Row(
+                          builder: (context, child) => Row(
                             mainAxisSize: MainAxisSize.min,
                             children: List.generate(3, (i) {
                               final offset = (i / 3);

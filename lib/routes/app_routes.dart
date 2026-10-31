@@ -8,9 +8,11 @@ import '../screens/monitor_screen.dart';
 import '../screens/history_screen.dart';
 import '../screens/settings_screen.dart';
 import '../screens/splash_screen.dart';
+import '../screens/welcome_screen.dart';
 
 class AppRoutes {
   static const String initial = '/';
+  static const String welcome = '/welcome';
   static const String login = '/login';
   static const String main = '/main';
   static const String home = '/home';
@@ -23,6 +25,7 @@ class AppRoutes {
   /// Named routes map for MaterialApp
   static Map<String, WidgetBuilder> get routes => {
     initial: (context) => const SplashScreen(),
+    welcome: (context) => const WelcomeScreen(),
     login: (context) => const LoginScreen(),
     main: (context) => const MainShell(),
     home: (context) => const MainShell(initialIndex: 0),

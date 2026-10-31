@@ -60,6 +60,7 @@ flutter:
     - assets/images/CardBG4.jpg
     - assets/images/CardBG5.jpg
     - assets/images/profile_road_bg.jpg
+    - assets/images/WelcomeCar.jpg
     - assets/audio/alarm.mp3
     - assets/sounds/alarm.mp3
     - assets/sounds/beep.wav

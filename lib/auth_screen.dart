@@ -7,6 +7,7 @@ import 'widgets/ui/db_ui.dart';
 import 'supabase_service.dart';
 import 'models/account_config.dart';
 import 'screens/main_shell.dart';
+import 'routes/app_routes.dart';
 
 // ============================================================================
 // AUTH SCREEN (Login & Registrasi — World-Class Organic Topo & Luxury GT)
@@ -843,28 +844,27 @@ class _LoginScreenState extends State<LoginScreen>
               ),
             ),
 
-            // Centered Driving Buddy Logo with refined padding
+            // Driving Buddy Logo at Top-Left (Clean, NO black box/badge)
             Positioned(
               top: topPadding + 14,
-              left: 0,
-              right: 0,
-              child: Center(
-                child: Container(
-                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: isDark ? 0.25 : 0.12),
-                    borderRadius: BorderRadius.circular(20),
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.18),
-                      width: 1,
-                    ),
-                  ),
-                  child: Image.asset(
-                    'assets/images/DrivingBuddyLogo_white_tight.png',
-                    height: 34,
-                    fit: BoxFit.contain,
-                  ),
-                ),
+              left: 24,
+              child: Image.asset(
+                'assets/images/DrivingBuddyLogo_white_tight.png',
+                height: 32,
+                fit: BoxFit.contain,
+              ),
+            ),
+
+            // Back to Welcome Screen Button at Top-Right
+            Positioned(
+              top: topPadding + 10,
+              right: 18,
+              child: IconButton(
+                icon: const Icon(Icons.arrow_back_ios_new_rounded, color: Colors.white, size: 18),
+                tooltip: 'Kembali ke Welcome',
+                onPressed: () {
+                  Navigator.of(context).pushReplacementNamed(AppRoutes.welcome);
+                },
               ),
             ),
           ],
@@ -873,16 +873,16 @@ class _LoginScreenState extends State<LoginScreen>
     );
   }
 
-  // ── Welcoming Hero Header ───────────────────
+  // ── Hero Header ─────────────────────────────
   Widget _buildHeroHeader(bool isDark) {
     final isLoginTab = _tab.index == 0;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          isLoginTab ? 'Selamat Datang' : 'Buat Akun Baru',
+          isLoginTab ? 'Sign In' : 'Daftar Akun',
           style: TextStyle(
-            fontSize: 26,
+            fontSize: 28,
             fontWeight: FontWeight.w900,
             letterSpacing: -0.6,
             color: isDark ? Colors.white : const Color(0xFF0F172A),
@@ -896,18 +896,6 @@ class _LoginScreenState extends State<LoginScreen>
           decoration: BoxDecoration(
             color: const Color(0xFFF26B1D),
             borderRadius: BorderRadius.circular(2),
-          ),
-        ),
-        const SizedBox(height: 8),
-        Text(
-          isLoginTab
-              ? 'Pantau kewaspadaan & telemetri perjalanan Anda secara real-time bersama asisten AI kabin.'
-              : 'Daftarkan profil Anda untuk mulai menikmati proteksi anti-kantuk dan keselamatan berkendara.',
-          style: TextStyle(
-            fontSize: 13,
-            height: 1.45,
-            fontWeight: FontWeight.w500,
-            color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
           ),
         ),
       ],
