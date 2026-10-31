@@ -1,7 +1,9 @@
 import 'package:flutter/material.dart';
+import '../../../services/language_service.dart';
 
 import '../logic/nearby_controller.dart';
 import '../models/nearby_place.dart';
+import '../models/place_category.dart';
 import 'nearby_sheet.dart';
 import 'places_style.dart';
 
@@ -82,7 +84,7 @@ class PitstopView {
   /// [urgent] `null` = ikuti `controller.urgent`.
   factory PitstopView.from(NearbyPlacesController controller, {bool? urgent}) {
     final isUrgent = urgent ?? controller.urgent;
-    final label = isUrgent ? 'ISTIRAHAT SEKARANG' : 'REKOMENDASI PITSTOP';
+    final label = isUrgent ? (LanguageService.instance.isEnglish ? 'REST NOW' : 'ISTIRAHAT SEKARANG') : (LanguageService.instance.isEnglish ? 'PITSTOP RECOMMENDATION' : 'REKOMENDASI PITSTOP');
     final what = isUrgent ? 'tempat berhenti' : 'tempat terdekat';
 
     switch (controller.status) {
@@ -198,13 +200,13 @@ class PitstopView {
   static String readySubtitle(NearbyPlace place, {bool stale = false}) {
     final parts = <String>[
       place.ahead == false
-          ? '${place.distanceText} di belakang'
-          : '${place.distanceText} lagi',
-      place.categoryText,
+          ? '${place.distanceText} ${LanguageService.instance.isEnglish ? "behind" : "di belakang"}'
+          : '${place.distanceText} ${LanguageService.instance.isEnglish ? "ahead" : "lagi"}',
+      (place.category != null ? (place.category == PlaceCategory.spbu ? (LanguageService.instance.isEnglish ? 'Gas Station' : 'SPBU') : place.category!.label) : place.categoryText),
     ];
-    if (place.openNow == true) parts.add('Buka');
-    if (place.openNow == false) parts.add('Tutup');
-    if (stale) parts.add('data lama');
+    if (place.openNow == true) parts.add(LanguageService.instance.isEnglish ? 'Open' : 'Buka');
+    if (place.openNow == false) parts.add(LanguageService.instance.isEnglish ? 'Closed' : 'Tutup');
+    if (stale) parts.add(LanguageService.instance.isEnglish ? 'old data' : 'data lama');
     return parts.join(' • ');
   }
 }

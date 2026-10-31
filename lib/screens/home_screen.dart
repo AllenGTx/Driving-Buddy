@@ -56,7 +56,7 @@ class _CockpitScreenState extends State<CockpitScreen>
   CameraController? _previewCamera;
   bool _isPreviewReady = false;
   bool _faceDetected = false;
-  String _previewStatus = 'Menghubungkan sensor optik...';
+  String _previewStatus = LanguageService.instance.isEnglish ? 'Connecting optical sensor...' : 'Menghubungkan sensor optik...';
   bool _isCameraExpanded = false;
 
   @override
@@ -105,7 +105,7 @@ class _CockpitScreenState extends State<CockpitScreen>
       if (mounted) {
         setState(() {
           _isPreviewReady = false;
-          _previewStatus = 'Kamera siaga';
+          _previewStatus = LanguageService.instance.isEnglish ? 'Camera standby' : 'Kamera siaga';
         });
       }
     }
@@ -127,7 +127,7 @@ class _CockpitScreenState extends State<CockpitScreen>
     try {
       final cameras = await availableCameras();
       if (cameras.isEmpty) {
-        if (mounted) setState(() => _previewStatus = 'Kamera tidak ditemukan');
+        if (mounted) setState(() => _previewStatus = LanguageService.instance.isEnglish ? 'Camera not found' : 'Kamera tidak ditemukan');
         return;
       }
       final front = cameras.firstWhere(
@@ -146,7 +146,7 @@ class _CockpitScreenState extends State<CockpitScreen>
         setState(() {
           _isPreviewReady = true;
           _faceDetected = false;
-          _previewStatus = 'Kamera siaga • Arahkan wajah ke lensa untuk kalibrasi';
+          _previewStatus = LanguageService.instance.isEnglish ? 'Camera standby • Align face with lens for calibration' : 'Kamera siaga • Arahkan wajah ke lensa untuk kalibrasi';
         });
       }
     } catch (e) {
@@ -293,10 +293,11 @@ class _CockpitScreenState extends State<CockpitScreen>
 
   String _greetingText() {
     final hour = DateTime.now().hour;
-    if (hour >= 4 && hour < 11) return 'Selamat Pagi';
-    if (hour >= 11 && hour < 15) return 'Selamat Siang';
-    if (hour >= 15 && hour < 18) return 'Selamat Sore';
-    return 'Selamat Malam';
+    final isEn = LanguageService.instance.isEnglish;
+    if (hour >= 4 && hour < 11) return isEn ? 'Good Morning' : 'Selamat Pagi';
+    if (hour >= 11 && hour < 15) return isEn ? 'Good Afternoon' : 'Selamat Siang';
+    if (hour >= 15 && hour < 18) return isEn ? 'Good Evening' : 'Selamat Sore';
+    return isEn ? 'Good Evening' : 'Selamat Malam';
   }
 
   @override
@@ -308,7 +309,7 @@ class _CockpitScreenState extends State<CockpitScreen>
 
         return Scaffold(
           backgroundColor: isDark ? AppColors.darkBackground : AppColors.background,
-          appBar: const DrivingBuddyAppBar(title: 'Beranda'),
+          appBar: DrivingBuddyAppBar(title: LanguageService.instance.s.navHome),
           body: SingleChildScrollView(
             physics: const BouncingScrollPhysics(),
             padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
@@ -372,10 +373,6 @@ class _CockpitScreenState extends State<CockpitScreen>
                     colors: [DbColors.navy, Color(0xFF1E293B)],
                   ),
                   borderRadius: BorderRadius.circular(14),
-                  border: Border.all(
-                    color: DbColors.orange.withValues(alpha: 0.5),
-                    width: 1.4,
-                  ),
                   boxShadow: [
                     BoxShadow(
                       color: DbColors.orange.withValues(alpha: 0.15),
@@ -383,6 +380,13 @@ class _CockpitScreenState extends State<CockpitScreen>
                       offset: const Offset(0, 2),
                     ),
                   ],
+                ),
+                foregroundDecoration: BoxDecoration(
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: DbColors.orange.withValues(alpha: 0.8),
+                    width: 1.5,
+                  ),
                 ),
                 clipBehavior: Clip.antiAlias,
                 child: hasGooglePhoto
@@ -746,7 +750,7 @@ class _CockpitScreenState extends State<CockpitScreen>
                                 ),
                                 const SizedBox(width: 6),
                                 Text(
-                                  _isCameraExpanded ? 'Ketuk untuk kecilkan' : 'Ketuk untuk perbesar',
+                                  _isCameraExpanded ? (LanguageService.instance.isEnglish ? 'Tap to collapse' : 'Ketuk untuk kecilkan') : (LanguageService.instance.isEnglish ? 'Tap to enlarge' : 'Ketuk untuk perbesar'),
                                   style: TextStyle(
                                     color: Colors.white.withValues(alpha: 0.45),
                                     fontSize: 9,
@@ -1070,9 +1074,9 @@ class _CockpitScreenState extends State<CockpitScreen>
                   children: [
                     Expanded(
                       child: _buildStravaMetricCol(
-                        label: 'DURASI TOTAL',
+                        label: LanguageService.instance.isEnglish ? 'TOTAL DURATION' : 'DURASI TOTAL',
                         value: animatedDuration,
-                        unit: 'jam',
+                        unit: LanguageService.instance.isEnglish ? 'hrs' : 'jam',
                         valueColor: isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A),
                       ),
                     ),
@@ -1083,7 +1087,7 @@ class _CockpitScreenState extends State<CockpitScreen>
                     ),
                     Expanded(
                       child: _buildStravaMetricCol(
-                        label: 'JARAK TEMPUH',
+                        label: LanguageService.instance.isEnglish ? 'TOTAL DISTANCE' : 'JARAK TEMPUH',
                         value: animatedDistance,
                         unit: 'km',
                         valueColor: isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A),
@@ -1098,7 +1102,7 @@ class _CockpitScreenState extends State<CockpitScreen>
                       child: _buildStravaMetricCol(
                         label: 'MICROSLEEP',
                         value: '$_totalMicrosleeps',
-                        unit: 'insiden',
+                        unit: LanguageService.instance.isEnglish ? 'incidents' : 'insiden',
                         valueColor: _totalMicrosleeps == 0 ? const Color(0xFF059669) : const Color(0xFFD94126),
                         unitColor: _totalMicrosleeps == 0 ? const Color(0xFF059669) : const Color(0xFFD94126),
                       ),
@@ -1142,15 +1146,15 @@ class _CockpitScreenState extends State<CockpitScreen>
                       children: [
                         Expanded(
                           child: _buildAvgSubItem(
-                            label: LanguageService.instance.s.avgSpeed.toUpperCase(),
-                            value: '${_avgSpeedKmH.toStringAsFixed(0)} km/j',
+                            label: LanguageService.instance.isEnglish ? 'AVG SPEED' : LanguageService.instance.s.avgSpeed.toUpperCase(),
+                            value: '${_avgSpeedKmH.toStringAsFixed(0)} ${LanguageService.instance.s.speedUnit}',
                             icon: Icons.speed_rounded,
                             isDark: isDark,
                           ),
                         ),
                         Expanded(
                           child: _buildAvgSubItem(
-                            label: 'AVG JARAK',
+                            label: LanguageService.instance.isEnglish ? 'AVG DISTANCE' : 'AVG JARAK',
                             value: '${_avgDistanceKm.toStringAsFixed(1)} km',
                             icon: Icons.straighten_rounded,
                             isDark: isDark,
@@ -1158,8 +1162,8 @@ class _CockpitScreenState extends State<CockpitScreen>
                         ),
                         Expanded(
                           child: _buildAvgSubItem(
-                            label: 'AVG DURASI',
-                            value: '${_avgDurationMinutes.toStringAsFixed(0)} mnt',
+                            label: LanguageService.instance.isEnglish ? 'AVG DURATION' : 'AVG DURASI',
+                            value: '${_avgDurationMinutes.toStringAsFixed(0)} ${LanguageService.instance.isEnglish ? "min" : "mnt"}',
                             icon: Icons.timer_outlined,
                             isDark: isDark,
                           ),
@@ -1192,7 +1196,7 @@ class _CockpitScreenState extends State<CockpitScreen>
                         ),
                         Expanded(
                           child: _buildAvgSubItem(
-                            label: 'AVG KEMIRINGAN',
+                            label: LanguageService.instance.isEnglish ? 'AVG HEAD TILT' : 'AVG KEMIRINGAN',
                             value: '${_avgHeadTiltHistory.toStringAsFixed(1)}°',
                             icon: Icons.screen_rotation_rounded,
                             isDark: isDark,
@@ -1341,7 +1345,7 @@ class _CockpitScreenState extends State<CockpitScreen>
                       ),
                     ),
                     child: Text(
-                      '${_userSessions.length} Selesai',
+                      '${_userSessions.length} ${LanguageService.instance.isEnglish ? "Completed" : "Selesai"}',
                       style: const TextStyle(
                         fontSize: 9.5,
                         fontWeight: FontWeight.w800,

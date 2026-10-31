@@ -1181,7 +1181,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
         Text(
-          'Kustomisasi Peringatan (Alert & Alarm)',
+          LanguageService.instance.isEnglish ? 'Alert & Alarm Customization' : 'Kustomisasi Peringatan (Alert & Alarm)',
           style: TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w800,
@@ -1190,7 +1190,9 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
         ),
         const SizedBox(height: 4),
         Text(
-          'Atur nada suara alarm bawaan dan gambar yang ditampilkan saat bahaya',
+          LanguageService.instance.isEnglish
+              ? 'Configure default alarm tones and warning images displayed during danger'
+              : 'Atur nada suara alarm bawaan dan gambar yang ditampilkan saat bahaya',
           style: TextStyle(
             fontSize: 12,
             color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
@@ -1235,7 +1237,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Suara Alarm Keselamatan',
+                          LanguageService.instance.isEnglish ? 'Safety Alarm Sound' : 'Suara Alarm Keselamatan',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w800,
@@ -1243,7 +1245,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                           ),
                         ),
                         Text(
-                          'Bawaan: Sirene Darurat (bisa diubah sesuai selera)',
+                          LanguageService.instance.isEnglish ? 'Default: Emergency Siren (customizable)' : 'Bawaan: Sirene Darurat (bisa diubah sesuai selera)',
                           style: TextStyle(
                               fontSize: 11, color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B)),
                         ),
@@ -1254,33 +1256,33 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
               ),
               const SizedBox(height: 14),
               _buildAudioOptionTile(
-                title: 'Sirene Darurat (Bawaan)',
-                subtitle: 'Suara sirene alarm standar darurat',
+                title: LanguageService.instance.isEnglish ? 'Emergency Siren (Default)' : 'Sirene Darurat (Bawaan)',
+                subtitle: LanguageService.instance.isEnglish ? 'Standard emergency alarm siren' : 'Suara sirene alarm standar darurat',
                 isSelected: _selectedAudioType == AlertAudioType.defaultSiren,
                 onTap: () => _selectAudioPreset(AlertAudioType.defaultSiren),
               ),
               const SizedBox(height: 6),
               _buildAudioOptionTile(
-                title: 'Beep Peringatan Cepat',
-                subtitle: 'Nada beep berulang frekuensi tinggi (1050 Hz)',
+                title: LanguageService.instance.isEnglish ? 'Fast Warning Beep' : 'Beep Peringatan Cepat',
+                subtitle: LanguageService.instance.isEnglish ? 'High-frequency repeating beep tone (1050 Hz)' : 'Nada beep berulang frekuensi tinggi (1050 Hz)',
                 isSelected: _selectedAudioType == AlertAudioType.loudBeep,
                 onTap: () => _selectAudioPreset(AlertAudioType.loudBeep),
               ),
               const SizedBox(height: 6),
               _buildAudioOptionTile(
-                title: 'Klakson / Buzzer Peringatan',
-                subtitle: 'Suara buzzer ganda kendaraan darurat',
+                title: LanguageService.instance.isEnglish ? 'Warning Horn / Buzzer' : 'Klakson / Buzzer Peringatan',
+                subtitle: LanguageService.instance.isEnglish ? 'Dual emergency vehicle buzzer sound' : 'Suara buzzer ganda kendaraan darurat',
                 isSelected: _selectedAudioType == AlertAudioType.buzzer,
                 onTap: () => _selectAudioPreset(AlertAudioType.buzzer),
               ),
               const SizedBox(height: 6),
               _buildAudioOptionTile(
                 title: _selectedAudioType == AlertAudioType.customFile
-                    ? 'File Kustom: $_audioDisplayName'
-                    : 'Pilih Audio dari File HP...',
+                    ? '${LanguageService.instance.isEnglish ? "Custom File:" : "File Kustom:"} $_audioDisplayName'
+                    : (LanguageService.instance.isEnglish ? 'Select Audio from Phone Storage...' : 'Pilih Audio dari File HP...'),
                 subtitle: _selectedAudioType == AlertAudioType.customFile
-                    ? 'Audio kustom tersimpan dari memori HP'
-                    : 'Cari atau masukkan path file audio MP3/WAV',
+                    ? (LanguageService.instance.isEnglish ? 'Saved custom audio from phone storage' : 'Audio kustom tersimpan dari memori HP')
+                    : (LanguageService.instance.isEnglish ? 'Browse or enter MP3/WAV audio file' : 'Cari atau masukkan path file audio MP3/WAV'),
                 isSelected: _selectedAudioType == AlertAudioType.customFile,
                 onTap: _pickCustomAudio,
                 trailingIcon: Icons.folder_open_rounded,
@@ -1301,7 +1303,9 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                             : const Color(0xFFF26B1D),
                       ),
                       label: Text(
-                        _isPlayingPreview ? 'Hentikan Contoh' : 'Tes Bunyi Alarm',
+                        _isPlayingPreview
+                            ? (LanguageService.instance.isEnglish ? 'Stop Preview' : 'Hentikan Contoh')
+                            : (LanguageService.instance.isEnglish ? 'Test Alarm Sound' : 'Tes Bunyi Alarm'),
                         style: TextStyle(
                           color: _isPlayingPreview
                               ? const Color(0xFFD94126)
@@ -1322,7 +1326,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                   if (_selectedAudioType != AlertAudioType.defaultSiren) ...[
                     const SizedBox(width: 8),
                     IconButton(
-                      tooltip: 'Kembalikan ke sirene bawaan',
+                      tooltip: LanguageService.instance.isEnglish ? 'Reset to default siren' : 'Kembalikan ke sirene bawaan',
                       onPressed: () =>
                           _selectAudioPreset(AlertAudioType.defaultSiren),
                       icon: const Icon(Icons.refresh_rounded,
@@ -1374,7 +1378,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          'Gambar Peringatan Visual',
+                          LanguageService.instance.isEnglish ? 'Visual Warning Image' : 'Gambar Peringatan Visual',
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w800,
@@ -1382,7 +1386,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                           ),
                         ),
                         Text(
-                          'Bawaan: Ikon Bahaya Standar',
+                          LanguageService.instance.isEnglish ? 'Default: Standard Hazard Icon' : 'Bawaan: Ikon Bahaya Standar',
                           style: TextStyle(
                               fontSize: 11, color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B)),
                         ),
@@ -1417,10 +1421,10 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                     child: ElevatedButton.icon(
                       onPressed: _pickCustomImage,
                       icon: const Icon(Icons.photo_library_rounded, size: 16),
-                      label: const Text(
-                        'Pilih Gambar Kustom',
+                      label: Text(
+                        LanguageService.instance.isEnglish ? 'Select Custom Image' : 'Pilih Gambar Kustom',
                         style:
-                            TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
+                            const TextStyle(fontSize: 12, fontWeight: FontWeight.w700),
                       ),
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 11),
@@ -1435,8 +1439,8 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                       onPressed: _removeAlertImage,
                       icon: const Icon(Icons.delete_outline_rounded,
                           size: 16, color: Color(0xFFD94126)),
-                      label: const Text('Hapus',
-                          style: TextStyle(
+                      label: Text(LanguageService.instance.isEnglish ? 'Delete' : 'Hapus',
+                          style: const TextStyle(
                               fontSize: 12, color: Color(0xFFD94126))),
                       style: OutlinedButton.styleFrom(
                         side: const BorderSide(color: Color(0xFFD94126)),
@@ -1709,7 +1713,9 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                         ),
                         const SizedBox(height: 2),
                         Text(
-                          'Memicu alarm saat terdeteksi 3x sentakan kepala jatuh mendadak dalam 5 menit (gejala microsleep berat).',
+                          LanguageService.instance.isEnglish
+                              ? 'Triggers alarm when 3 sudden head drops are detected within 5 minutes (severe microsleep symptom).'
+                              : 'Memicu alarm saat terdeteksi 3x sentakan kepala jatuh mendadak dalam 5 menit (gejala microsleep berat).',
                           style: TextStyle(
                             fontSize: 11,
                             color: isDark ? AppColors.darkTextSecondary : Colors.grey.shade600,
@@ -1949,16 +1955,18 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                     borderRadius: BorderRadius.circular(14),
                     border: Border.all(color: const Color(0xFF564339)),
                   ),
-                  child: const Row(
+                  child: Row(
                     children: [
                       Icon(Icons.psychology_rounded,
                           color: Color(0xFFF26B1D), size: 22),
                       SizedBox(width: 12),
                       Expanded(
                         child: Text(
-                          'Sensor AI Face Mesh aktif real-time. '
-                          'Koneksi internet digunakan untuk telemetri GPS, sinkronisasi riwayat sesi, dan darurat SOS.',
-                          style: TextStyle(
+                          LanguageService.instance.isEnglish
+                              ? 'Real-time AI Face Mesh sensor active. Internet connection is used for GPS telemetry, trip history sync, and emergency SOS.'
+                              : 'Sensor AI Face Mesh aktif real-time. '
+                                'Koneksi internet digunakan untuk telemetri GPS, sinkronisasi riwayat sesi, dan darurat SOS.',
+                          style: const TextStyle(
                             fontSize: 11.5,
                             color: Color(0xFFEAE0DD),
                             height: 1.35,

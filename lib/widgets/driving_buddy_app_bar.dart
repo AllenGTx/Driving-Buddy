@@ -3,6 +3,7 @@ import 'package:flutter/material.dart';
 import '../models/account_config.dart';
 import '../services/firebase_service.dart';
 import '../routes/app_routes.dart';
+import '../services/language_service.dart';
 
 // ============================================================================
 // LUXURY GT APP BAR WIDGET — Perfectly Centered Title, Edge-to-Edge Gradient
@@ -88,7 +89,7 @@ class _DrivingBuddyAppBarState extends State<DrivingBuddyAppBar> {
         ),
       ),
       title: Text(
-        widget.title,
+        (widget.title == 'Beranda' && LanguageService.instance.isEnglish) ? 'Home' : widget.title,
         textAlign: TextAlign.center,
         style: const TextStyle(
           fontSize: 18,

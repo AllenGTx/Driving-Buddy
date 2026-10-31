@@ -1089,13 +1089,13 @@ class MonitorScreenState extends State<MonitorScreen> {
     final distanceKm = (_totalDistanceMeters / 1000.0).toStringAsFixed(1);
     final speedStr = _isMonitoring ? _currentSpeedKmh.toStringAsFixed(0) : '0';
 
-    String fatigueLabel = 'RENDAH';
+    String fatigueLabel = LanguageService.instance.isEnglish ? 'LOW' : 'RENDAH';
     Color fatigueColor = const Color(0xFF059669);
     if (fatigueIndex >= 65) {
-      fatigueLabel = 'BAHAYA';
+      fatigueLabel = LanguageService.instance.isEnglish ? 'CRITICAL' : 'BAHAYA';
       fatigueColor = const Color(0xFFD94126);
     } else if (fatigueIndex >= 40) {
-      fatigueLabel = 'WASPADA';
+      fatigueLabel = LanguageService.instance.isEnglish ? 'WARNING' : 'WASPADA';
       fatigueColor = const Color(0xFFE5A938);
     }
 
@@ -1109,22 +1109,25 @@ class MonitorScreenState extends State<MonitorScreen> {
             unit: LanguageService.instance.s.speedUnit,
             isDark: isDark,
             bottomWidget: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1.5),
               decoration: BoxDecoration(
                 color: isDark ? AppColors.darkSuccessBg : const Color(0xFFECFDF5),
                 borderRadius: BorderRadius.circular(6),
                 border: Border.all(color: isDark ? const Color(0xFF059669) : const Color(0xFFA7F3D0)),
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.trending_flat_rounded, size: 12, color: Color(0xFF059669)),
-                  const SizedBox(width: 2),
-                  Text(
-                    LanguageService.instance.isEnglish ? 'STEADY' : 'STABIL',
-                    style: const TextStyle(fontSize: 8.5, fontWeight: FontWeight.w800, color: Color(0xFF065F46)),
-                  ),
-                ],
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.trending_flat_rounded, size: 11, color: Color(0xFF059669)),
+                    const SizedBox(width: 2),
+                    Text(
+                      LanguageService.instance.isEnglish ? 'STEADY' : 'STABIL',
+                      style: const TextStyle(fontSize: 8.0, fontWeight: FontWeight.w800, color: Color(0xFF065F46)),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -1139,22 +1142,25 @@ class MonitorScreenState extends State<MonitorScreen> {
             unit: LanguageService.instance.s.distUnit,
             isDark: isDark,
             bottomWidget: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+              padding: const EdgeInsets.symmetric(horizontal: 4, vertical: 1.5),
               decoration: BoxDecoration(
                 color: isDark ? AppColors.darkCardBgSoft : const Color(0xFFFFFFFF),
                 borderRadius: BorderRadius.circular(6),
                 border: Border.all(color: isDark ? AppColors.darkCardBorder : const Color(0xFFCBD5E1)),
               ),
-              child: Row(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Icon(Icons.gps_fixed_rounded, size: 10, color: Color(0xFFF26B1D)),
-                  const SizedBox(width: 2),
-                  Text(
-                    _totalDistanceMeters > 0 ? ' ${LanguageService.instance.s.speedUnit}' : (LanguageService.instance.isEnglish ? 'GPS READY' : 'GPS SIAGA'),
-                    style: TextStyle(fontSize: 8.5, fontWeight: FontWeight.w700, color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B)),
-                  ),
-                ],
+              child: FittedBox(
+                fit: BoxFit.scaleDown,
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    const Icon(Icons.gps_fixed_rounded, size: 9.5, color: Color(0xFFF26B1D)),
+                    const SizedBox(width: 2),
+                    Text(
+                      _totalDistanceMeters > 0 ? ' ${LanguageService.instance.s.speedUnit}' : (LanguageService.instance.isEnglish ? 'GPS READY' : 'GPS SIAGA'),
+                      style: TextStyle(fontSize: 8.0, fontWeight: FontWeight.w700, color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B)),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
@@ -1169,12 +1175,15 @@ class MonitorScreenState extends State<MonitorScreen> {
             unit: '%',
             valueColor: const Color(0xFFF26B1D),
             isDark: isDark,
-            bottomWidget: Text(
-              '$fatigueLabel · ${LanguageService.instance.isEnglish ? "THRESH 65%" : "AMBANG 65%"}',
-              style: TextStyle(
-                fontSize: 8,
-                fontWeight: FontWeight.w800,
-                color: fatigueColor,
+            bottomWidget: FittedBox(
+              fit: BoxFit.scaleDown,
+              child: Text(
+                '$fatigueLabel · ${LanguageService.instance.isEnglish ? "THRESH 65%" : "AMBANG 65%"}',
+                style: TextStyle(
+                  fontSize: 8,
+                  fontWeight: FontWeight.w800,
+                  color: fatigueColor,
+                ),
               ),
             ),
           ),
@@ -1192,7 +1201,7 @@ class MonitorScreenState extends State<MonitorScreen> {
     required bool isDark,
   }) {
     return Container(
-      padding: const EdgeInsets.all(10),
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 8),
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkCardBg : Colors.white,
         borderRadius: BorderRadius.circular(12),
@@ -1538,9 +1547,9 @@ class MonitorScreenState extends State<MonitorScreen> {
                                   shadowColor: const Color(0xFFF26B1D).withValues(alpha: 0.35),
                                 ),
                                 icon: const Icon(Icons.play_arrow_rounded, size: 24),
-                                label: const Text(
-                                  'MULAI PERJALANAN',
-                                  style: TextStyle(
+                                label: Text(
+                                  LanguageService.instance.s.startTrip.toUpperCase(),
+                                  style: const TextStyle(
                                     fontSize: 14,
                                     fontWeight: FontWeight.w800,
                                     letterSpacing: 0.5,
@@ -1682,7 +1691,9 @@ class MonitorScreenState extends State<MonitorScreen> {
                           ),
                           const SizedBox(width: 4),
                           Text(
-                            _result.ear < 0.22 ? '(Rendah)' : '(Optimal)',
+                            _result.ear < 0.22
+                                ? (LanguageService.instance.isEnglish ? '(Low)' : '(Rendah)')
+                                : (LanguageService.instance.isEnglish ? '(Optimal)' : '(Optimal)'),
                             style: const TextStyle(
                               fontSize: 10,
                               fontWeight: FontWeight.w600,
@@ -1745,9 +1756,9 @@ class MonitorScreenState extends State<MonitorScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Text(
-                                    'FREKUENSI KEDIP',
-                                    style: TextStyle(
+                                  Text(
+                                    LanguageService.instance.isEnglish ? 'BLINK FREQUENCY' : 'FREKUENSI KEDIP',
+                                    style: const TextStyle(
                                       fontSize: 7.5,
                                       fontWeight: FontWeight.w800,
                                       color: Color(0xFF64748B),
@@ -1766,9 +1777,9 @@ class MonitorScreenState extends State<MonitorScreen> {
                                             color: isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A),
                                           ),
                                         ),
-                                        const TextSpan(
-                                          text: ' / mnt',
-                                          style: TextStyle(
+                                        TextSpan(
+                                          text: LanguageService.instance.isEnglish ? ' / min' : ' / mnt',
+                                          style: const TextStyle(
                                             fontSize: 9.5,
                                             fontWeight: FontWeight.w600,
                                             color: Color(0xFF64748B),
@@ -1819,9 +1830,9 @@ class MonitorScreenState extends State<MonitorScreen> {
                                 crossAxisAlignment: CrossAxisAlignment.start,
                                 mainAxisSize: MainAxisSize.min,
                                 children: [
-                                  const Text(
-                                    'DETEKSI MENGUAP',
-                                    style: TextStyle(
+                                  Text(
+                                    LanguageService.instance.isEnglish ? 'YAWN DETECTION' : 'DETEKSI MENGUAP',
+                                    style: const TextStyle(
                                       fontSize: 7.5,
                                       fontWeight: FontWeight.w800,
                                       color: Color(0xFF64748B),
@@ -1840,9 +1851,9 @@ class MonitorScreenState extends State<MonitorScreen> {
                                             color: Color(0xFF059669),
                                           ),
                                         ),
-                                        const TextSpan(
-                                          text: ' dlm 30m',
-                                          style: TextStyle(
+                                        TextSpan(
+                                          text: LanguageService.instance.isEnglish ? ' in 30m' : ' dlm 30m',
+                                          style: const TextStyle(
                                             fontSize: 9.5,
                                             fontWeight: FontWeight.w600,
                                             color: Color(0xFF64748B),
@@ -1902,7 +1913,7 @@ class MonitorScreenState extends State<MonitorScreen> {
                                   Text(
                                     _isMonitoring
                                         ? '${_result.rollAngle.abs().toStringAsFixed(1)}°'
-                                        : 'Siaga',
+                                        : (LanguageService.instance.isEnglish ? 'Standby' : 'Siaga'),
                                     style: TextStyle(
                                       fontSize: 11,
                                       fontWeight: FontWeight.w800,
@@ -1953,8 +1964,8 @@ class MonitorScreenState extends State<MonitorScreen> {
                                   ),
                                   Text(
                                     _isMonitoring
-                                        ? '${_result.headBobCount}x / 5 mnt'
-                                        : 'Siaga',
+                                        ? '${_result.headBobCount}x / 5 ${LanguageService.instance.isEnglish ? "min" : "mnt"}'
+                                        : (LanguageService.instance.isEnglish ? 'Standby' : 'Siaga'),
                                     style: TextStyle(
                                       fontSize: 11,
                                       fontWeight: FontWeight.w800,
@@ -2195,8 +2206,12 @@ Future<void> _toggleNightVision() async {
                 const SizedBox(height: 1),
                 Text(
                   _isNightVisionEnabled
-                      ? 'Lampu aktif · Wajah terang di kabin gelap'
-                      : 'Bantu deteksi sensor AI di kondisi gelap',
+                      ? (LanguageService.instance.isEnglish
+                          ? 'Light active · Face illuminated in dark cabin'
+                          : 'Lampu aktif · Wajah terang di kabin gelap')
+                      : (LanguageService.instance.isEnglish
+                          ? 'Assists AI sensor in low-light conditions'
+                          : 'Bantu deteksi sensor AI di kondisi gelap'),
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w500,
