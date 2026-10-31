@@ -24,12 +24,48 @@ class SosService {
     String p2 = prefs.getString(_keySosPhone2) ?? '';
     String p3 = prefs.getString(_keySosPhone3) ?? '';
 
-    final email = userEmail ?? AuthService.currentUser?.email ?? '';
-    if (p1.trim().isEmpty && email.toLowerCase().trim() == debugEmail) {
-      p1 = debugPhone;
+    // Jika di cache lokal masih kosong, coba ambil dari Firestore user aktif
+    if (p1.trim().isEmpty && p2.trim().isEmpty && p3.trim().isEmpty) {
+      final user = AuthService.currentUser;
+      if (user != null) {
+        try {
+          final doc = await firestore.collection('users').doc(user.uid).get();
+          if (doc.exists) {
+            final data = doc.data();
+            final firestoreList = data?['sosPhones'] as List<dynamic>?;
+            if (firestoreList != null && firestoreList.isNotEmpty) {
+              p1 = firestoreList.isNotEmpty ? firestoreList[0].toString() : '';
+              p2 = firestoreList.length > 1 ? firestoreList[1].toString() : '';
+              p3 = firestoreList.length > 2 ? firestoreList[2].toString() : '';
+              await prefs.setString(_keySosPhone, p1.trim());
+              await prefs.setString(_keySosPhone1, p1.trim());
+              await prefs.setString(_keySosPhone2, p2.trim());
+              await prefs.setString(_keySosPhone3, p3.trim());
+            } else if (data?['sosPhone'] != null) {
+              p1 = data!['sosPhone'].toString();
+              await prefs.setString(_keySosPhone, p1.trim());
+              await prefs.setString(_keySosPhone1, p1.trim());
+            }
+          }
+        } catch (e) {
+          debugPrint('Gagal memuat kontak SOS dari Firestore: $e');
+        }
+      }
     }
 
     return [p1.trim(), p2.trim(), p3.trim()];
+  }
+
+  /// Cek apakah pengguna telah menyimpan minimal 1 nomor darurat SOS yang sah (minimal 8 digit)
+  static Future<bool> hasValidSosPhone({String? userEmail}) async {
+    final list = await getSosPhoneList(userEmail: userEmail);
+    for (final p in list) {
+      final digits = p.replaceAll(RegExp(r'[^0-9]'), '');
+      if (digits.length >= 8) {
+        return true;
+      }
+    }
+    return false;
   }
 
   /// Backward-compatibility: Mendapatkan nomor telepon SOS pertama

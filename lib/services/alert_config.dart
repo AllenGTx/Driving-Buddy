@@ -28,6 +28,28 @@ class AlertConfig {
   static const _keyEnableHeadTilt = 'enable_head_tilt';
   static const _keyEnableHeadBob = 'enable_head_bob';
 
+  // Toggle Optimasi Baterai Kamera AI & GPS
+  static const _keyEnableBatteryOptimization = 'enable_battery_optimization';
+
+  /// Status mode optimasi baterai (default: false)
+  static Future<bool> isBatteryOptimizationEnabled() async {
+    final prefs = await SharedPreferences.getInstance();
+    return prefs.getBool(_keyEnableBatteryOptimization) ?? false;
+  }
+
+  static Future<void> setBatteryOptimizationEnabled(bool enabled) async {
+    final prefs = await SharedPreferences.getInstance();
+    await prefs.setBool(_keyEnableBatteryOptimization, enabled);
+    final user = AuthService.currentUser;
+    if (user != null) {
+      try {
+        await firestore.collection('users').doc(user.uid).set({
+          'batteryOptimization': enabled,
+        }, SetOptions(merge: true));
+      } catch (_) {}
+    }
+  }
+
   /// Status aktifasi fitur Head Tilt (default: true)
   static Future<bool> isHeadTiltEnabled() async {
     final prefs = await SharedPreferences.getInstance();
