@@ -488,6 +488,7 @@ class _CockpitScreenState extends State<CockpitScreen>
           ),
         ],
       ),
+      clipBehavior: Clip.antiAlias,
       child: Column(
         children: [
           Container(
@@ -577,7 +578,7 @@ class _CockpitScreenState extends State<CockpitScreen>
                       border: Border.all(
                         color: _isCameraExpanded
                             ? const Color(0xFFF26B1D)
-                            : const Color(0xFFFFF1E8),
+                            : (isDark ? AppColors.darkCardBorder : const Color(0xFFECEEF2)),
                         width: _isCameraExpanded ? 1.5 : 1.0,
                       ),
                     ),

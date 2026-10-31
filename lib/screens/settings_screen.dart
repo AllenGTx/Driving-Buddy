@@ -617,7 +617,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                   ),
                   const SizedBox(width: 4),
                   Text(
-                    isDark ? 'Mode Gelap Aktif' : 'Mode Terang Aktif',
+                    isDark ? 'Gelap' : 'Terang',
                     style: const TextStyle(
                       fontSize: 10,
                       fontWeight: FontWeight.w800,
@@ -957,21 +957,25 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
   }
 
   Widget _buildAlertSettingsSection() {
+    final isDark = ThemeService.instance.isDarkMode;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Kustomisasi Peringatan (Alert & Alarm)',
           style: TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w800,
-            color: Color(0xFF0F172A),
+            color: isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A),
           ),
         ),
         const SizedBox(height: 4),
-        const Text(
+        Text(
           'Atur nada suara alarm bawaan dan gambar yang ditampilkan saat bahaya',
-          style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+          style: TextStyle(
+            fontSize: 12,
+            color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
+          ),
         ),
         const SizedBox(height: 14),
 
@@ -979,16 +983,12 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Color(0xFFFFFFFF), Color(0xFFFFFFFF)],
-            ),
+            color: isDark ? AppColors.darkCardBg : Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFECEEF2)),
+            border: Border.all(color: isDark ? AppColors.darkCardBorder : const Color(0xFFECEEF2)),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFFF26B1D).withValues(alpha: 0.04),
+                color: isDark ? Colors.black.withValues(alpha: 0.25) : const Color(0xFFF26B1D).withValues(alpha: 0.04),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -1003,15 +1003,15 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                     width: 36,
                     height: 36,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFFF1E8),
+                      color: isDark ? AppColors.darkCardBgSoft : const Color(0xFFFFF1E8),
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: const Color(0xFFECEEF2)),
+                      border: Border.all(color: isDark ? AppColors.darkCardBorder : const Color(0xFFECEEF2)),
                     ),
                     child: const Icon(Icons.volume_up_rounded,
                         color: Color(0xFFF26B1D), size: 20),
                   ),
                   const SizedBox(width: 12),
-                  const Expanded(
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -1020,13 +1020,13 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w800,
-                            color: Color(0xFF0F172A),
+                            color: isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A),
                           ),
                         ),
                         Text(
                           'Bawaan: Sirene Darurat (bisa diubah sesuai selera)',
                           style: TextStyle(
-                              fontSize: 11, color: Color(0xFF64748B)),
+                              fontSize: 11, color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B)),
                         ),
                       ],
                     ),
@@ -1122,16 +1122,12 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Color(0xFFFFFFFF), Color(0xFFFFFFFF)],
-            ),
+            color: isDark ? AppColors.darkCardBg : Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFECEEF2)),
+            border: Border.all(color: isDark ? AppColors.darkCardBorder : const Color(0xFFECEEF2)),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFFF26B1D).withValues(alpha: 0.04),
+                color: isDark ? Colors.black.withValues(alpha: 0.25) : const Color(0xFFF26B1D).withValues(alpha: 0.04),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -1146,15 +1142,15 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                     width: 36,
                     height: 36,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFFF1E8),
+                      color: isDark ? AppColors.darkCardBgSoft : const Color(0xFFFFF1E8),
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: const Color(0xFFECEEF2)),
+                      border: Border.all(color: isDark ? AppColors.darkCardBorder : const Color(0xFFECEEF2)),
                     ),
                     child: const Icon(Icons.image_rounded,
                         color: Color(0xFFF26B1D), size: 20),
                   ),
                   const SizedBox(width: 12),
-                  const Expanded(
+                  Expanded(
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
@@ -1163,13 +1159,13 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                           style: TextStyle(
                             fontSize: 14,
                             fontWeight: FontWeight.w800,
-                            color: Color(0xFF0F172A),
+                            color: isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A),
                           ),
                         ),
                         Text(
                           'Bawaan: Ikon Bahaya Standar',
                           style: TextStyle(
-                              fontSize: 11, color: Color(0xFF64748B)),
+                              fontSize: 11, color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B)),
                         ),
                       ],
                     ),
@@ -1184,9 +1180,9 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                   height: 130,
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    color: const Color(0xFFF9FAFB),
+                    color: isDark ? AppColors.darkCardBgSoft : const Color(0xFFF9FAFB),
                     borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: const Color(0xFFFFF1E8)),
+                    border: Border.all(color: isDark ? AppColors.darkCardBorder : const Color(0xFFFFF1E8)),
                   ),
                   clipBehavior: Clip.antiAlias,
                   child: _buildImagePreviewWidget(),
@@ -1270,22 +1266,23 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
     }
 
     // Default: Clean Safety Icon (No meme)
-    return const Column(
+    final isDark = ThemeService.instance.isDarkMode;
+    return Column(
       mainAxisAlignment: MainAxisAlignment.center,
       children: [
-        Icon(Icons.shield_outlined, size: 40, color: Color(0xFFF26B1D)),
-        SizedBox(height: 6),
+        const Icon(Icons.shield_outlined, size: 40, color: Color(0xFFF26B1D)),
+        const SizedBox(height: 6),
         Text(
           'Ikon Peringatan Standar Aktif',
           style: TextStyle(
             fontSize: 12,
             fontWeight: FontWeight.w700,
-            color: Color(0xFF0F172A),
+            color: isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A),
           ),
         ),
         Text(
           'Menampilkan animasi bahaya darurat',
-          style: TextStyle(fontSize: 10.5, color: Color(0xFF64748B)),
+          style: TextStyle(fontSize: 10.5, color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B)),
         ),
       ],
     );
@@ -1363,37 +1360,34 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
   }
 
   Widget _buildPostureSettingsSection() {
+    final isDark = ThemeService.instance.isDarkMode;
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        const Text(
+        Text(
           'Deteksi Postur Kepala (AI Advanced)',
           style: TextStyle(
             fontSize: 15,
             fontWeight: FontWeight.w800,
-            color: Color(0xFF0F172A),
+            color: isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A),
           ),
         ),
         const SizedBox(height: 4),
-        const Text(
+        Text(
           'Fitur pelengkap mata: pantau kemiringan dan sentakan kepala saat tertidur',
-          style: TextStyle(fontSize: 12, color: Color(0xFF64748B)),
+          style: TextStyle(fontSize: 12, color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B)),
         ),
         const SizedBox(height: 14),
 
         Container(
           padding: const EdgeInsets.all(16),
           decoration: BoxDecoration(
-            gradient: const LinearGradient(
-              begin: Alignment.topCenter,
-              end: Alignment.bottomCenter,
-              colors: [Color(0xFFFFFFFF), Color(0xFFFFFFFF)],
-            ),
+            color: isDark ? AppColors.darkCardBg : Colors.white,
             borderRadius: BorderRadius.circular(16),
-            border: Border.all(color: const Color(0xFFECEEF2)),
+            border: Border.all(color: isDark ? AppColors.darkCardBorder : const Color(0xFFECEEF2)),
             boxShadow: [
               BoxShadow(
-                color: const Color(0xFFF26B1D).withValues(alpha: 0.04),
+                color: isDark ? Colors.black.withValues(alpha: 0.25) : const Color(0xFFF26B1D).withValues(alpha: 0.04),
                 blurRadius: 8,
                 offset: const Offset(0, 2),
               ),
@@ -1409,9 +1403,9 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                     width: 36,
                     height: 36,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFFF1E8),
+                      color: isDark ? AppColors.darkCardBgSoft : const Color(0xFFFFF1E8),
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: const Color(0xFFECEEF2)),
+                      border: Border.all(color: isDark ? AppColors.darkCardBorder : const Color(0xFFECEEF2)),
                     ),
                     child: const Icon(
                       Icons.screen_rotation_rounded,
@@ -1424,12 +1418,12 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           'Deteksi Head Tilt (Kemiringan Kepala)',
                           style: TextStyle(
                             fontSize: 13.5,
                             fontWeight: FontWeight.w800,
-                            color: Color(0xFF0F172A),
+                            color: isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A),
                           ),
                         ),
                         const SizedBox(height: 2),
@@ -1437,7 +1431,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                           'Memicu alarm darurat saat kepala miring > 18° selama lebih dari 1.8 detik (indikasi tertidur ke samping).',
                           style: TextStyle(
                             fontSize: 11,
-                            color: Colors.grey.shade600,
+                            color: isDark ? AppColors.darkTextSecondary : Colors.grey.shade600,
                             height: 1.35,
                           ),
                         ),
@@ -1447,16 +1441,20 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                   const SizedBox(width: 8),
                   Switch(
                     value: _enableHeadTilt,
-                                        onChanged: (val) async {
+                    activeTrackColor: const Color(0xFFF26B1D),
+                    activeThumbColor: Colors.white,
+                    inactiveThumbColor: Colors.white,
+                    inactiveTrackColor: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
+                    onChanged: (val) async {
                       setState(() => _enableHeadTilt = val);
                       await AlertConfig.setHeadTiltEnabled(val);
                     },
                   ),
                 ],
               ),
-              const Padding(
-                padding: EdgeInsets.symmetric(vertical: 12),
-                child: Divider(color: Color(0xFFFFF1E8), height: 1),
+              Padding(
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                child: Divider(color: isDark ? AppColors.darkBorderLight : const Color(0xFFFFF1E8), height: 1),
               ),
 
               // 2. Head Bob Switch
@@ -1467,9 +1465,9 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                     width: 36,
                     height: 36,
                     decoration: BoxDecoration(
-                      color: const Color(0xFFFFF1E8),
+                      color: isDark ? AppColors.darkCardBgSoft : const Color(0xFFFFF1E8),
                       borderRadius: BorderRadius.circular(10),
-                      border: Border.all(color: const Color(0xFFECEEF2)),
+                      border: Border.all(color: isDark ? AppColors.darkCardBorder : const Color(0xFFECEEF2)),
                     ),
                     child: const Icon(
                       Icons.airline_seat_recline_extra_rounded,
@@ -1482,12 +1480,12 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
-                        const Text(
+                        Text(
                           'Deteksi Head Bob (Sentakan Menunduk)',
                           style: TextStyle(
                             fontSize: 13.5,
                             fontWeight: FontWeight.w800,
-                            color: Color(0xFF0F172A),
+                            color: isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A),
                           ),
                         ),
                         const SizedBox(height: 2),
@@ -1495,7 +1493,7 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                           'Memicu alarm saat terdeteksi 3x sentakan kepala jatuh mendadak dalam 5 menit (gejala microsleep berat).',
                           style: TextStyle(
                             fontSize: 11,
-                            color: Colors.grey.shade600,
+                            color: isDark ? AppColors.darkTextSecondary : Colors.grey.shade600,
                             height: 1.35,
                           ),
                         ),
@@ -1505,7 +1503,11 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                   const SizedBox(width: 8),
                   Switch(
                     value: _enableHeadBob,
-                                        onChanged: (val) async {
+                    activeTrackColor: const Color(0xFFF26B1D),
+                    activeThumbColor: Colors.white,
+                    inactiveThumbColor: Colors.white,
+                    inactiveTrackColor: isDark ? const Color(0xFF334155) : const Color(0xFFCBD5E1),
+                    onChanged: (val) async {
                       setState(() => _enableHeadBob = val);
                       await AlertConfig.setHeadBobEnabled(val);
                     },
@@ -1763,15 +1765,16 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
   }
 
   Widget _buildSosEmergencyCard() {
+    final isDark = ThemeService.instance.isDarkMode;
     return Container(
       padding: const EdgeInsets.all(16),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? AppColors.darkCardBg : Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFECEEF2)),
+        border: Border.all(color: isDark ? AppColors.darkCardBorder : const Color(0xFFECEEF2)),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFF26B1D).withValues(alpha: 0.08),
+            color: isDark ? Colors.black.withValues(alpha: 0.25) : const Color(0xFFF26B1D).withValues(alpha: 0.08),
             blurRadius: 10,
             offset: const Offset(0, 3),
           ),
@@ -1785,14 +1788,14 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
               Container(
                 padding: const EdgeInsets.all(8),
                 decoration: BoxDecoration(
-                  color: const Color(0xFFFEF2F2),
+                  color: isDark ? const Color(0xFF381E1E) : const Color(0xFFFEF2F2),
                   borderRadius: BorderRadius.circular(10),
-                  border: Border.all(color: const Color(0xFFFECACA)),
+                  border: Border.all(color: isDark ? const Color(0xFF7F1D1D) : const Color(0xFFFECACA)),
                 ),
                 child: const Icon(Icons.emergency_rounded, color: Color(0xFFD94126), size: 20),
               ),
               const SizedBox(width: 10),
-              const Expanded(
+              Expanded(
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
@@ -1801,12 +1804,12 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                       style: TextStyle(
                         fontSize: 13.5,
                         fontWeight: FontWeight.w800,
-                        color: Color(0xFF0F172A),
+                        color: isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A),
                       ),
                     ),
                     Text(
                       'Kirim GPS lokasi & sinyal darurat otomatis',
-                      style: TextStyle(fontSize: 10.5, color: Color(0xFF64748B)),
+                      style: TextStyle(fontSize: 10.5, color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B)),
                     ),
                   ],
                 ),
@@ -1826,9 +1829,9 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
             ],
           ),
           const SizedBox(height: 10),
-          const Text(
+          Text(
             'Jika alarm kantuk berbunyi selama 1 menit penuh tanpa respon tombol "Saya Sudah Bangun", sistem otomatis mengirimkan pesan darurat beserta tautan titik peta GPS ke seluruh kontak darurat di bawah ini.',
-            style: TextStyle(fontSize: 11, color: Color(0xFF475569), height: 1.4),
+            style: TextStyle(fontSize: 11, color: isDark ? AppColors.darkTextSecondary : const Color(0xFF475569), height: 1.4),
           ),
           const SizedBox(height: 12),
           if (_sosController1.text.trim().isEmpty)

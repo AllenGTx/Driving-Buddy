@@ -1,3 +1,4 @@
+import '../services/theme_service.dart';
 import 'dart:ui' as ui;
 import 'dart:async';
 import 'dart:io';
@@ -921,7 +922,7 @@ class MonitorScreenState extends State<MonitorScreen> {
                 color: const Color(0xFF0F172A),
                 borderRadius: BorderRadius.circular(20),
                 border: Border.all(
-                  color: const Color(0xFFF26B1D).withValues(alpha: 0.55),
+                  color: const Color(0xFFF26B1D),
                   width: 1.5,
                 ),
                 boxShadow: [
@@ -933,65 +934,71 @@ class MonitorScreenState extends State<MonitorScreen> {
                   ),
                 ],
               ),
-              clipBehavior: Clip.antiAlias,
-              child: Column(
-                children: [
-                  // Window Header Bar (Seperti referensi Deep Live Cam Preview)
-                  Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
-                    color: const Color(0xFF1E293B),
-                    child: Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                      children: [
-                        Row(
-                          children: [
-                            Container(
-                              width: 8,
-                              height: 8,
-                              decoration: const BoxDecoration(
-                                color: Color(0xFF10B981),
-                                shape: BoxShape.circle,
+              child: ClipRRect(
+                borderRadius: BorderRadius.circular(18.5),
+                child: Column(
+                  children: [
+                    // Window Header Bar
+                    Container(
+                      padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
+                      color: const Color(0xFF1E293B),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Row(
+                            children: [
+                              Container(
+                                width: 8,
+                                height: 8,
+                                decoration: const BoxDecoration(
+                                  color: Color(0xFF10B981),
+                                  shape: BoxShape.circle,
+                                ),
                               ),
-                            ),
-                            const SizedBox(width: 8),
-                            const Text(
-                              'Pratinjau Kamera AI Kabin',
-                              style: TextStyle(
-                                color: Colors.white,
-                                fontSize: 13,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: 0.3,
+                              const SizedBox(width: 8),
+                              const Text(
+                                'Kamera Kabin',
+                                style: TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 13,
+                                  fontWeight: FontWeight.w800,
+                                  letterSpacing: 0.3,
+                                ),
                               ),
-                            ),
-                          ],
-                        ),
-                        InkWell(
-                          onTap: () => setState(() => _showCameraModal = false),
-                          borderRadius: BorderRadius.circular(8),
-                          child: Container(
-                            padding: const EdgeInsets.all(4),
-                            decoration: BoxDecoration(
-                              color: Colors.white.withValues(alpha: 0.1),
-                              borderRadius: BorderRadius.circular(8),
-                            ),
-                            child: const Icon(Icons.close_rounded, color: Colors.white, size: 18),
+                            ],
                           ),
-                        ),
-                      ],
+                          Container(
+                            padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 2.5),
+                            decoration: BoxDecoration(
+                              color: const Color(0xFF10B981).withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(6),
+                              border: Border.all(color: const Color(0xFF10B981).withValues(alpha: 0.35)),
+                            ),
+                            child: const Text(
+                              'LIVE AI',
+                              style: TextStyle(
+                                color: Color(0xFF10B981),
+                                fontSize: 9.5,
+                                fontWeight: FontWeight.w800,
+                                letterSpacing: 0.5,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
                     ),
-                  ),
 
-                  // Center Viewport: Letterboxed Black Background dengan Kamera Penuh
-                  Expanded(
-                    child: Container(
-                      color: Colors.black, // Letterbox bars atas/bawah
-                      alignment: Alignment.center,
-                      child: AspectRatio(
-                        aspectRatio: _cameraController!.value.aspectRatio,
-                        child: Stack(
-                          fit: StackFit.expand,
-                          children: [
-                            _isNightVisionEnabled
+                    // Center Viewport: Letterboxed Black Background dengan Kamera Proporsional
+                    Expanded(
+                      child: Container(
+                        color: Colors.black, // Letterbox bars atas/bawah
+                        alignment: Alignment.center,
+                        child: FittedBox(
+                          fit: BoxFit.contain,
+                          child: SizedBox(
+                            width: _cameraController!.value.previewSize?.height.toDouble() ?? 360,
+                            height: _cameraController!.value.previewSize?.width.toDouble() ?? 480,
+                            child: _isNightVisionEnabled
                                 ? ColorFiltered(
                                     colorFilter: const ColorFilter.matrix(<double>[
                                       0.45, 0.65, 0.15, 0, 45,
@@ -1002,11 +1009,10 @@ class MonitorScreenState extends State<MonitorScreen> {
                                     child: CameraPreview(_cameraController!),
                                   )
                                 : CameraPreview(_cameraController!),
-                          ],
+                          ),
                         ),
                       ),
                     ),
-                  ),
 
                   // Window Footer Bar dengan Telemetri Wajah & Tombol Kembali
                   Container(
@@ -1037,7 +1043,8 @@ class MonitorScreenState extends State<MonitorScreen> {
               ),
             ),
           ),
-        ],
+        ),
+      ],
       ),
     );
   }
@@ -1069,9 +1076,9 @@ class MonitorScreenState extends State<MonitorScreen> {
   }
 
   Widget _buildTopLiveHudBar(int fatigueIndex) {
+    final isDark = ThemeService.instance.isDarkMode;
     final distanceKm = (_totalDistanceMeters / 1000.0).toStringAsFixed(1);
     final speedStr = _isMonitoring ? _currentSpeedKmh.toStringAsFixed(0) : '0';
-    final speed = int.tryParse(speedStr) ?? 0;
 
     String fatigueLabel = 'RENDAH';
     Color fatigueColor = const Color(0xFF059669);
@@ -1091,12 +1098,13 @@ class MonitorScreenState extends State<MonitorScreen> {
             label: 'KECEPATAN',
             value: speedStr,
             unit: 'km/j',
+            isDark: isDark,
             bottomWidget: Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                color: const Color(0xFFECFDF5),
+                color: isDark ? AppColors.darkSuccessBg : const Color(0xFFECFDF5),
                 borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: const Color(0xFFA7F3D0)),
+                border: Border.all(color: isDark ? const Color(0xFF059669) : const Color(0xFFA7F3D0)),
               ),
               child: const Row(
                 mainAxisSize: MainAxisSize.min,
@@ -1120,12 +1128,13 @@ class MonitorScreenState extends State<MonitorScreen> {
             label: 'JARAK',
             value: distanceKm,
             unit: 'km',
+            isDark: isDark,
             bottomWidget: Container(
               padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
               decoration: BoxDecoration(
-                color: const Color(0xFFFFFFFF),
+                color: isDark ? AppColors.darkCardBgSoft : const Color(0xFFFFFFFF),
                 borderRadius: BorderRadius.circular(6),
-                border: Border.all(color: const Color(0xFFCBD5E1)),
+                border: Border.all(color: isDark ? AppColors.darkCardBorder : const Color(0xFFCBD5E1)),
               ),
               child: Row(
                 mainAxisSize: MainAxisSize.min,
@@ -1133,8 +1142,8 @@ class MonitorScreenState extends State<MonitorScreen> {
                   const Icon(Icons.gps_fixed_rounded, size: 10, color: Color(0xFFF26B1D)),
                   const SizedBox(width: 2),
                   Text(
-                    _totalDistanceMeters > 0 ? '${speedStr} km/j' : 'GPS SIAGA',
-                    style: const TextStyle(fontSize: 8.5, fontWeight: FontWeight.w700, color: Color(0xFF64748B)),
+                    _totalDistanceMeters > 0 ? ' km/j' : 'GPS SIAGA',
+                    style: TextStyle(fontSize: 8.5, fontWeight: FontWeight.w700, color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B)),
                   ),
                 ],
               ),
@@ -1150,6 +1159,7 @@ class MonitorScreenState extends State<MonitorScreen> {
             value: '$fatigueIndex',
             unit: '%',
             valueColor: const Color(0xFFF26B1D),
+            isDark: isDark,
             bottomWidget: Text(
               '$fatigueLabel · AMBANG 65%',
               style: TextStyle(
@@ -1170,16 +1180,17 @@ class MonitorScreenState extends State<MonitorScreen> {
     required String unit,
     Color? valueColor,
     required Widget bottomWidget,
+    required bool isDark,
   }) {
     return Container(
       padding: const EdgeInsets.all(10),
       decoration: BoxDecoration(
-        color: Colors.white,
+        color: isDark ? AppColors.darkCardBg : Colors.white,
         borderRadius: BorderRadius.circular(12),
-        border: Border.all(color: const Color(0xFFECEEF2)),
+        border: Border.all(color: isDark ? AppColors.darkCardBorder : const Color(0xFFECEEF2)),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withValues(alpha: 0.02),
+            color: isDark ? Colors.black.withValues(alpha: 0.25) : Colors.black.withValues(alpha: 0.02),
             blurRadius: 6,
             offset: const Offset(0, 2),
           ),
@@ -1199,11 +1210,11 @@ class MonitorScreenState extends State<MonitorScreen> {
           ),
           Text(
             label,
-            style: const TextStyle(
+            style: TextStyle(
               fontSize: 8.5,
               fontWeight: FontWeight.w800,
               letterSpacing: 0.6,
-              color: Color(0xFF64748B),
+              color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
             ),
           ),
           const SizedBox(height: 2),
@@ -1217,17 +1228,17 @@ class MonitorScreenState extends State<MonitorScreen> {
                 style: TextStyle(
                   fontSize: 22,
                   fontWeight: FontWeight.w800,
-                  color: valueColor ?? const Color(0xFF0F172A),
+                  color: valueColor ?? (isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A)),
                   letterSpacing: -0.5,
                 ),
               ),
               const SizedBox(width: 2),
               Text(
                 unit,
-                style: const TextStyle(
+                style: TextStyle(
                   fontSize: 10,
                   fontWeight: FontWeight.w600,
-                  color: Color(0xFF64748B),
+                  color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
                 ),
               ),
             ],
@@ -1243,20 +1254,17 @@ class MonitorScreenState extends State<MonitorScreen> {
   // 2. AI FACE MONITORING GLASS COCKPIT
   // ──────────────────────────────────────────────────────────────────────────
   Widget _buildGlassCockpitCameraCard() {
+    final isDark = ThemeService.instance.isDarkMode;
     final isDanger = _result.status == DriverStatus.sleep || _result.status == DriverStatus.drowsy;
 
     return Container(
       decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          begin: Alignment.topCenter,
-          end: Alignment.bottomCenter,
-          colors: [Color(0xFFFFFFFF), Color(0xFFFFFFFF)],
-        ),
+        color: isDark ? AppColors.darkCardBg : Colors.white,
         borderRadius: BorderRadius.circular(16),
-        border: Border.all(color: const Color(0xFFECEEF2)),
+        border: Border.all(color: isDark ? AppColors.darkCardBorder : const Color(0xFFECEEF2)),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFFF26B1D).withValues(alpha: 0.08),
+            color: isDark ? Colors.black.withValues(alpha: 0.25) : const Color(0xFFF26B1D).withValues(alpha: 0.08),
             blurRadius: 14,
             offset: const Offset(0, 4),
           ),
@@ -1279,7 +1287,7 @@ class MonitorScreenState extends State<MonitorScreen> {
           Container(
             height: 240,
             width: double.infinity,
-            color: const Color(0xFFEDF2F7),
+            color: isDark ? AppColors.darkCardBgSoft : const Color(0xFFEDF2F7),
             child: Stack(
               fit: StackFit.expand,
               children: [
@@ -1367,12 +1375,12 @@ class MonitorScreenState extends State<MonitorScreen> {
                               ),
                             ),
                             const SizedBox(height: 10),
-                            const Text(
+                            Text(
                               'Kamera Standby',
                               style: TextStyle(
                                 fontSize: 14,
                                 fontWeight: FontWeight.w800,
-                                color: Color(0xFF334155),
+                                color: isDark ? AppColors.darkTextPrimary : const Color(0xFF334155),
                               ),
                             ),
                             const SizedBox(height: 4),
@@ -1431,7 +1439,7 @@ class MonitorScreenState extends State<MonitorScreen> {
                         },
                         borderRadius: BorderRadius.circular(10),
                         child: Container(
-                          padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                          padding: const EdgeInsets.all(7),
                           decoration: BoxDecoration(
                             color: Colors.black.withValues(alpha: 0.70),
                             borderRadius: BorderRadius.circular(10),
@@ -1446,24 +1454,10 @@ class MonitorScreenState extends State<MonitorScreen> {
                               ),
                             ],
                           ),
-                          child: const Row(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.open_in_full_rounded,
-                                color: Color(0xFFF26B1D),
-                                size: 14,
-                              ),
-                              SizedBox(width: 5),
-                              Text(
-                                'Pratinjau Layar Penuh',
-                                style: TextStyle(
-                                  color: Colors.white,
-                                  fontSize: 11,
-                                  fontWeight: FontWeight.w800,
-                                ),
-                              ),
-                            ],
+                          child: const Icon(
+                            Icons.fullscreen_rounded,
+                            color: Color(0xFFF26B1D),
+                            size: 20,
                           ),
                         ),
                       ),
@@ -1658,9 +1652,9 @@ class MonitorScreenState extends State<MonitorScreen> {
                   height: 36,
                   width: double.infinity,
                   decoration: BoxDecoration(
-                    color: Colors.white,
+                    color: isDark ? AppColors.darkCardBgSoft : Colors.white,
                     borderRadius: BorderRadius.circular(8),
-                    border: Border.all(color: const Color(0xFFFFF1E8)),
+                    border: Border.all(color: isDark ? AppColors.darkCardBorder : const Color(0xFFFFF1E8)),
                   ),
                   child: CustomPaint(
                     painter: _EarWaveformPainter(history: _earHistory),
@@ -1676,9 +1670,9 @@ class MonitorScreenState extends State<MonitorScreen> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: isDark ? AppColors.darkCardBgSoft : Colors.white,
                           borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: const Color(0xFFFFF1E8)),
+                          border: Border.all(color: isDark ? AppColors.darkCardBorder : const Color(0xFFFFF1E8)),
                         ),
                         child: Row(
                           children: [
@@ -1750,9 +1744,9 @@ class MonitorScreenState extends State<MonitorScreen> {
                       child: Container(
                         padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
                         decoration: BoxDecoration(
-                          color: Colors.white,
+                          color: isDark ? AppColors.darkCardBgSoft : Colors.white,
                           borderRadius: BorderRadius.circular(10),
-                          border: Border.all(color: const Color(0xFFFFF1E8)),
+                          border: Border.all(color: isDark ? AppColors.darkCardBorder : const Color(0xFFFFF1E8)),
                         ),
                         child: Row(
                           children: [
@@ -2063,20 +2057,21 @@ Future<void> _toggleNightVision() async {
   }
 
   Widget _buildNightVisionToggleBar() {
+    final isDark = ThemeService.instance.isDarkMode;
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 10),
       decoration: BoxDecoration(
-        color: _isNightVisionEnabled ? const Color(0xFF1E293B) : Colors.white,
+        color: _isNightVisionEnabled ? const Color(0xFF1E293B) : (isDark ? AppColors.darkCardBg : Colors.white),
         borderRadius: BorderRadius.circular(14),
         border: Border.all(
-          color: _isNightVisionEnabled ? const Color(0xFFF59E0B) : const Color(0xFFECEEF2),
+          color: _isNightVisionEnabled ? const Color(0xFFF59E0B) : (isDark ? AppColors.darkCardBorder : const Color(0xFFECEEF2)),
           width: _isNightVisionEnabled ? 1.5 : 1.0,
         ),
         boxShadow: [
           BoxShadow(
             color: _isNightVisionEnabled
                 ? const Color(0xFFF59E0B).withValues(alpha: 0.25)
-                : Colors.black.withValues(alpha: 0.03),
+                : (isDark ? Colors.black.withValues(alpha: 0.2) : Colors.black.withValues(alpha: 0.03)),
             blurRadius: 8,
             offset: const Offset(0, 2),
           ),
@@ -2089,7 +2084,7 @@ Future<void> _toggleNightVision() async {
             decoration: BoxDecoration(
               color: _isNightVisionEnabled
                   ? const Color(0xFFFEF3C7)
-                  : const Color(0xFFFFF1E8),
+                  : (isDark ? AppColors.darkCardBgSoft : const Color(0xFFFFF1E8)),
               borderRadius: BorderRadius.circular(10),
             ),
             child: Icon(
@@ -2113,7 +2108,7 @@ Future<void> _toggleNightVision() async {
                   style: TextStyle(
                     fontSize: 12,
                     fontWeight: FontWeight.w800,
-                    color: _isNightVisionEnabled ? Colors.white : const Color(0xFF0F172A),
+                    color: _isNightVisionEnabled ? Colors.white : (isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A)),
                   ),
                 ),
                 const SizedBox(height: 1),
@@ -2124,7 +2119,7 @@ Future<void> _toggleNightVision() async {
                   style: TextStyle(
                     fontSize: 10,
                     fontWeight: FontWeight.w500,
-                    color: _isNightVisionEnabled ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
+                    color: _isNightVisionEnabled ? const Color(0xFF94A3B8) : (isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B)),
                   ),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,

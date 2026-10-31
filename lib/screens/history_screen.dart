@@ -822,9 +822,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 );
               },
               style: OutlinedButton.styleFrom(
-                side: const BorderSide(color: Color(0xFFECEEF2)),
+                side: BorderSide(color: isDark ? AppColors.darkCardBorder : const Color(0xFFECEEF2)),
                 shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(10)),
-                backgroundColor: const Color(0xFFFFF1E8),
+                backgroundColor: isDark ? AppColors.darkCardBgSoft : const Color(0xFFFFF1E8),
                 padding: const EdgeInsets.symmetric(horizontal: 12),
               ),
               child: const Row(

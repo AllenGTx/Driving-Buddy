@@ -610,14 +610,14 @@ class _LoginScreenState extends State<LoginScreen>
           isDark
               ? 'assets/images/DrivingBuddyLogo_white_tight.png'
               : 'assets/images/DrivingBuddyLogo_tight.png',
-          height: 38,
+          height: 32,
           fit: BoxFit.contain,
         ),
         const SizedBox(height: 2),
         Text(
           'Telemetri Kabin & Monitoring Kelelahan',
           style: TextStyle(
-            fontSize: 11,
+            fontSize: 10,
             fontWeight: FontWeight.w600,
             color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
           ),
@@ -628,8 +628,8 @@ class _LoginScreenState extends State<LoginScreen>
 
   Widget _buildTabSelector(bool isDark) {
     return Container(
-      height: 38,
-      padding: const EdgeInsets.all(2.5),
+      height: 34,
+      padding: const EdgeInsets.all(2),
       decoration: BoxDecoration(
         color: isDark ? AppColors.darkCardBgSoft : const Color(0xFFF1F5F9),
         borderRadius: BorderRadius.circular(10),
@@ -774,7 +774,7 @@ class _LoginScreenState extends State<LoginScreen>
         const SizedBox(height: 12),
         SizedBox(
           width: double.infinity,
-          height: 48,
+          height: 42,
           child: OutlinedButton(
             onPressed: _googleLoading ? null : _doGoogleLogin,
             style: OutlinedButton.styleFrom(
@@ -805,7 +805,7 @@ class _LoginScreenState extends State<LoginScreen>
                         'Masuk dengan Google',
                         style: TextStyle(
                           color: isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A),
-                          fontSize: 13.5,
+                          fontSize: 12.5,
                           fontWeight: FontWeight.w800,
                           letterSpacing: 0.1,
                         ),
@@ -881,7 +881,7 @@ class _LoginScreenState extends State<LoginScreen>
           onTap: _loginLoading ? null : _doLogin,
           child: Container(
             width: double.infinity,
-            height: 48,
+            height: 42,
             decoration: BoxDecoration(
               color: DbColors.orange,
               borderRadius: BorderRadius.circular(12),
@@ -903,7 +903,7 @@ class _LoginScreenState extends State<LoginScreen>
                   : const Text(
                       'Masuk ke Cockpit',
                       style: TextStyle(
-                        fontSize: 14,
+                        fontSize: 13,
                         fontWeight: FontWeight.w800,
                         letterSpacing: 0.3,
                         color: Colors.white,
@@ -1027,7 +1027,7 @@ class _LoginScreenState extends State<LoginScreen>
           onTap: _regLoading ? null : _doRegister,
           child: Container(
             width: double.infinity,
-            height: 48,
+            height: 42,
             decoration: BoxDecoration(
               color: DbColors.orange,
               borderRadius: BorderRadius.circular(12),
@@ -1091,7 +1091,7 @@ class _LoginScreenState extends State<LoginScreen>
     return Text(
       text,
       style: TextStyle(
-        fontSize: 12,
+        fontSize: 11,
         fontWeight: FontWeight.w800,
         color: isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A),
       ),
@@ -1123,7 +1123,7 @@ class _LoginScreenState extends State<LoginScreen>
         cursorColor: const Color(0xFFF26B1D),
         style: TextStyle(
           color: isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A),
-          fontSize: 13.5,
+          fontSize: 12.5,
           fontWeight: FontWeight.w700,
         ),
         decoration: InputDecoration(
@@ -1136,11 +1136,11 @@ class _LoginScreenState extends State<LoginScreen>
           prefixIcon: Icon(
             icon,
             color: isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B),
-            size: 18,
+            size: 16,
           ),
           suffixIcon: suffix,
           border: InputBorder.none,
-          contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 12),
+          contentPadding: const EdgeInsets.symmetric(horizontal: 10, vertical: 9),
         ),
       ),
     );

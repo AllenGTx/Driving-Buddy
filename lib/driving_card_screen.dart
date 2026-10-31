@@ -77,14 +77,14 @@ class _ScoreRingPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
-    final radius = size.width / 2 - 6;
+    final radius = size.width / 2 - 5;
 
     canvas.drawCircle(
       center,
       radius,
       Paint()
         ..color = Colors.white.withValues(alpha: 0.08)
-        ..strokeWidth = 6
+        ..strokeWidth = 5
         ..style = PaintingStyle.stroke,
     );
 
@@ -95,7 +95,7 @@ class _ScoreRingPainter extends CustomPainter {
       false,
       Paint()
         ..color = color
-        ..strokeWidth = 6
+        ..strokeWidth = 5
         ..style = PaintingStyle.stroke
         ..strokeCap = StrokeCap.round,
     );
@@ -246,7 +246,7 @@ class _PolaroidMapCard extends StatelessWidget {
             ClipRRect(
               borderRadius: BorderRadius.circular(4),
               child: AspectRatio(
-                aspectRatio: 1.0,
+                aspectRatio: 1.32,
                 child: Stack(
                   fit: StackFit.expand,
                   children: [
@@ -1035,20 +1035,20 @@ class _DrivingCardScreenState extends State<DrivingCardScreen>
                                         mainAxisSize: MainAxisSize.min,
                                         children: [
                                           SizedBox(
-                                            width: 58,
-                                            height: 58,
+                                            width: 66,
+                                            height: 66,
                                             child: Stack(
                                               alignment: Alignment.center,
                                               children: [
                                                 CustomPaint(
-                                                  size: const Size(58, 58),
+                                                  size: const Size(66, 66),
                                                   painter: _ScoreRingPainter(progress, _scoreColor),
                                                 ),
                                                 Text(
                                                   '${(widget.drivingScore * _scoreAnim.value).round()}',
                                                   style: TextStyle(
                                                     color: _scoreColor,
-                                                    fontSize: 19,
+                                                    fontSize: 15,
                                                     fontWeight: FontWeight.w900,
                                                     height: 1.0,
                                                   ),
