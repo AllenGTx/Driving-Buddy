@@ -115,38 +115,51 @@ class AuthService {
       } catch (_) {}
 
       GoogleSignInAccount? googleUser;
+      GoogleSignInAuthentication? googleAuth;
+
       try {
         googleUser = await _googleSignIn.signIn();
+        if (googleUser == null) {
+          throw FirebaseAuthException(
+            code: 'popup-closed-by-user',
+            message: 'Login Google dibatalkan.',
+          );
+        }
+
+        lastAttemptedGoogleEmail = googleUser.email;
+        googleAuth = await googleUser.authentication;
       } catch (nativeErr) {
-        debugPrint('Native GoogleSignIn error: $nativeErr');
+        debugPrint('Native GoogleSignIn / auth error: $nativeErr');
+        final errStr = nativeErr.toString().toLowerCase();
+
+        if (nativeErr is FirebaseAuthException && nativeErr.code == 'popup-closed-by-user') {
+          rethrow;
+        }
+        if (errStr.contains('popup-closed-by-user') ||
+            errStr.contains('closed by user') ||
+            errStr.contains('cancel') ||
+            errStr.contains('12501')) {
+          throw FirebaseAuthException(
+            code: 'popup-closed-by-user',
+            message: 'Login Google dibatalkan.',
+          );
+        }
+
+        // Jika terjadi error sertifikat hash paket pada microG / Play Services,
+        // langsung fallback otomatis ke Browser OAuth Provider
+        debugPrint('Falling back seamlessly to auth.signInWithProvider...');
         final googleProvider = GoogleAuthProvider();
+        googleProvider.addScope('email');
+        googleProvider.addScope('profile');
         return await auth.signInWithProvider(googleProvider);
       }
 
-      if (googleUser == null) {
-        throw FirebaseAuthException(
-          code: 'popup-closed-by-user',
-          message: 'Login Google dibatalkan.',
-        );
-      }
-
-      lastAttemptedGoogleEmail = googleUser.email;
-      final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-      debugPrint('GoogleSignIn user: ${googleUser.email}, idToken: ${googleAuth.idToken != null ? "EXISTS" : "NULL"}, accessToken: ${googleAuth.accessToken != null ? "EXISTS" : "NULL"}');
-
-      // Jika idToken null (misal pada microG tanpa sertifikat SHA-1), coba fallback ke browser provider
       if (googleAuth.idToken == null) {
         debugPrint('Google idToken is null, trying fallback to browser OAuth...');
-        try {
-          final googleProvider = GoogleAuthProvider();
-          return await auth.signInWithProvider(googleProvider);
-        } catch (providerErr) {
-          debugPrint('signInWithProvider fallback failed: $providerErr');
-          throw FirebaseAuthException(
-            code: 'missing-id-token',
-            message: 'Google ID Token tidak ditemukan dari perangkat. Silakan masuk menggunakan Email & Sandi atau daftarkan SHA-1 di Firebase.',
-          );
-        }
+        final googleProvider = GoogleAuthProvider();
+        googleProvider.addScope('email');
+        googleProvider.addScope('profile');
+        return await auth.signInWithProvider(googleProvider);
       }
 
       final OAuthCredential oAuthCredential = GoogleAuthProvider.credential(
