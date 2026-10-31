@@ -233,7 +233,8 @@ class _LoginScreenState extends State<LoginScreen>
                   : () async {
                       final email = emailCtrl.text.trim();
                       if (email.isEmpty) {
-                        setDState(() => dialogError = 'Email tidak boleh kosong.');
+                        final isEn = LanguageService.instance.isEnglish;
+                        setDState(() => dialogError = isEn ? 'Email cannot be empty.' : 'Email tidak boleh kosong.');
                         return;
                       }
                       setDState(() {
@@ -245,7 +246,7 @@ class _LoginScreenState extends State<LoginScreen>
                         await AuthService.resetPassword(email);
                         setDState(() {
                           dialogLoading = false;
-                          dialogSuccess = 'Tautan reset telah dikirim ke email kamu! Silakan cek kotak masuk.';
+                          dialogSuccess = LanguageService.instance.isEnglish ? 'Password reset link has been sent to your email! Please check your inbox.' : 'Tautan reset telah dikirim ke email kamu! Silakan cek kotak masuk.';
                         });
                       } on FirebaseAuthException catch (e) {
                         setDState(() {
@@ -255,7 +256,7 @@ class _LoginScreenState extends State<LoginScreen>
                       } catch (_) {
                         setDState(() {
                           dialogLoading = false;
-                          dialogError = 'Gagal mengirim email reset. Pastikan email benar.';
+                          dialogError = LanguageService.instance.isEnglish ? 'Failed to send reset email. Please ensure the email is correct.' : 'Gagal mengirim email reset. Pastikan email benar.';
                         });
                       }
                     },
@@ -279,23 +280,30 @@ class _LoginScreenState extends State<LoginScreen>
   // ── Validasi Pendaftaran ────────────────────
   String? _validateEmailAddress(String email) {
     final trimmed = email.trim();
-    if (trimmed.isEmpty) return 'Email tidak boleh kosong.';
+    final isEn = LanguageService.instance.isEnglish;
+    if (trimmed.isEmpty) {
+      return isEn ? 'Email cannot be empty.' : 'Email tidak boleh kosong.';
+    }
 
     // 1. Regex sintaks standar RFC email
     final emailRegex = RegExp(
       r'^[a-zA-Z0-9.!#$%&’*+/=?^_`{|}~-]+@[a-zA-Z0-9-]+(?:\.[a-zA-Z0-9-]+)+$',
     );
     if (!emailRegex.hasMatch(trimmed)) {
-      return 'Format email tidak valid (contoh: nama@gmail.com).';
+      return isEn
+          ? 'Invalid email format (example: name@gmail.com).'
+          : 'Format email tidak valid (contoh: nama@gmail.com).';
     }
 
     final parts = trimmed.split('@');
-    if (parts.length != 2) return 'Format email tidak valid.';
+    if (parts.length != 2) {
+      return isEn ? 'Invalid email format.' : 'Format email tidak valid.';
+    }
     final userPart = parts[0];
     final domain = parts[1].toLowerCase();
 
     if (userPart.isEmpty || domain.isEmpty) {
-      return 'Format email tidak valid.';
+      return isEn ? 'Invalid email format.' : 'Format email tidak valid.';
     }
 
     // 2. Deteksi Typo Domain Populer yang Umum Terjadi (Mencegah email bodong)
@@ -322,18 +330,22 @@ class _LoginScreenState extends State<LoginScreen>
     };
 
     if (typoDomains.containsKey(domain)) {
-      return 'Domain tidak valid. Apakah maksud Anda @${typoDomains[domain]}?';
+      return isEn
+          ? 'Invalid domain. Did you mean @${typoDomains[domain]}?'
+          : 'Domain tidak valid. Apakah maksud Anda @${typoDomains[domain]}?';
     }
 
     // 3. Validasi Kelengkapan dan Ekstensi Domain (TLD)
     final domainParts = domain.split('.');
     if (domainParts.length < 2) {
-      return 'Domain email tidak lengkap (contoh: @gmail.com).';
+      return isEn
+          ? 'Incomplete email domain (example: @gmail.com).'
+          : 'Domain email tidak lengkap (contoh: @gmail.com).';
     }
 
     final tld = domainParts.last;
     if (tld.length < 2) {
-      return 'Ekstensi domain email tidak valid.';
+      return isEn ? 'Invalid email domain extension.' : 'Ekstensi domain email tidak valid.';
     }
 
     // Daftar TLD resmi dan umum di dunia nyata
@@ -351,33 +363,42 @@ class _LoginScreenState extends State<LoginScreen>
         : tld;
 
     if (!allowedTlds.contains(tld) && !allowedTlds.contains(fullTld)) {
-      return 'Ekstensi .$tld tidak dikenali. Gunakan email resmi (Gmail, Yahoo, Outlook, dsb).';
+      return isEn
+          ? 'Extension .$tld is not recognized. Please use an official email provider (Gmail, Yahoo, Outlook, etc.).'
+          : 'Ekstensi .$tld tidak dikenali. Gunakan email resmi (Gmail, Yahoo, Outlook, dsb).';
     }
 
     // 4. Pastikan nama domain sebelum TLD memiliki minimal 2 karakter
     final sld = domainParts[domainParts.length - 2];
     if (sld.length < 2) {
-      return 'Nama domain email terlalu pendek atau tidak valid.';
+      return isEn ? 'Email domain name is too short or invalid.' : 'Nama domain email terlalu pendek atau tidak valid.';
     }
 
     return null;
   }
 
   String? _validatePasswordFormat(String password) {
+    final isEn = LanguageService.instance.isEnglish;
     if (password.length < 8) {
-      return 'Kata sandi minimal 8 karakter.';
+      return isEn ? 'Password must be at least 8 characters.' : 'Kata sandi minimal 8 karakter.';
     }
     if (!password.contains(RegExp(r'[A-Z]'))) {
-      return 'Kata sandi harus mengandung minimal 1 huruf besar (A-Z).';
+      return isEn
+          ? 'Password must contain at least 1 uppercase letter (A-Z).'
+          : 'Kata sandi harus mengandung minimal 1 huruf besar (A-Z).';
     }
     if (!password.contains(RegExp(r'[a-z]'))) {
-      return 'Kata sandi harus mengandung minimal 1 huruf kecil (a-z).';
+      return isEn
+          ? 'Password must contain at least 1 lowercase letter (a-z).'
+          : 'Kata sandi harus mengandung minimal 1 huruf kecil (a-z).';
     }
     if (!password.contains(RegExp(r'[0-9]'))) {
-      return 'Kata sandi harus mengandung minimal 1 angka (0-9).';
+      return isEn ? 'Password must contain at least 1 number (0-9).' : 'Kata sandi harus mengandung minimal 1 angka (0-9).';
     }
     if (!password.contains(RegExp(r'[!@#$%^&*(),.?":{}|<>]'))) {
-      return 'Kata sandi harus mengandung minimal 1 simbol unik (!@#\$%^&* dll).';
+      return isEn
+          ? 'Password must contain at least 1 unique symbol (!@#\$%^&* etc).'
+          : 'Kata sandi harus mengandung minimal 1 simbol unik (!@#\$%^&* dll).';
     }
     return null;
   }
@@ -385,6 +406,7 @@ class _LoginScreenState extends State<LoginScreen>
   // ── Dialog Verifikasi Email ─────────────────
   void _showVerificationDialog(String email, {String? password}) {
     final isDark = ThemeService.instance.isDarkMode;
+    final isEn = LanguageService.instance.isEnglish;
     showDialog(
       context: context,
       barrierDismissible: false,
@@ -424,7 +446,7 @@ class _LoginScreenState extends State<LoginScreen>
                 const SizedBox(width: 12),
                 Expanded(
                   child: Text(
-                    'Verifikasi Email Dikirim',
+                    isEn ? 'Email Verification Sent' : 'Verifikasi Email Dikirim',
                     style: TextStyle(
                       fontWeight: FontWeight.w800,
                       fontSize: 16,
@@ -439,7 +461,7 @@ class _LoginScreenState extends State<LoginScreen>
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  'Tautan verifikasi telah kami kirimkan ke:',
+                  isEn ? 'A verification link has been sent to:' : 'Tautan verifikasi telah kami kirimkan ke:',
                   style: TextStyle(
                     fontSize: 13,
                     color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
@@ -481,7 +503,9 @@ class _LoginScreenState extends State<LoginScreen>
                       const SizedBox(width: 10),
                       Expanded(
                         child: Text(
-                          'PENTING: Jika tidak muncul di Kotak Masuk, silakan periksa Folder Spam / Promosi dan tandai "Bukan Spam".',
+                          isEn
+                              ? 'IMPORTANT: If it does not appear in your Inbox, please check Spam / Promotions folder and mark "Not Spam".'
+                              : 'PENTING: Jika tidak muncul di Kotak Masuk, silakan periksa Folder Spam / Promosi dan tandai "Bukan Spam".',
                           style: TextStyle(
                             fontSize: 11.5,
                             fontWeight: FontWeight.w600,
@@ -520,19 +544,19 @@ class _LoginScreenState extends State<LoginScreen>
                           }
                           setDState(() {
                             resending = false;
-                            resendMsg = 'Link verifikasi berhasil dikirim ulang!';
+                            resendMsg = isEn ? 'Verification link resent successfully!' : 'Link verifikasi berhasil dikirim ulang!';
                           });
                         } catch (e) {
                           setDState(() {
                             resending = false;
-                            resendMsg = 'Gagal kirim ulang. Tunggu 1 menit.';
+                            resendMsg = isEn ? 'Failed to resend. Please wait 1 minute.' : 'Gagal kirim ulang. Tunggu 1 menit.';
                           });
                         }
                       },
                 child: resending
                     ? const SizedBox(width: 14, height: 14, child: CircularProgressIndicator(strokeWidth: 2))
                     : Text(
-                        'Kirim Ulang Link',
+                        isEn ? 'Resend Link' : 'Kirim Ulang Link',
                         style: TextStyle(
                           color: isDark ? const Color(0xFF94A3B8) : const Color(0xFF64748B),
                           fontWeight: FontWeight.w600,
@@ -555,9 +579,9 @@ class _LoginScreenState extends State<LoginScreen>
                     _loginError = null;
                   });
                 },
-                child: const Text(
-                  'Kembali ke Masuk',
-                  style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
+                child: Text(
+                  isEn ? 'Back to Sign In' : 'Kembali ke Masuk',
+                  style: const TextStyle(color: Colors.white, fontWeight: FontWeight.bold, fontSize: 13),
                 ),
               ),
             ],
@@ -573,13 +597,14 @@ class _LoginScreenState extends State<LoginScreen>
     FocusScope.of(context).unfocus();
     final email = _loginEmail.text.trim();
     final password = _loginPassword.text;
+    final isEn = LanguageService.instance.isEnglish;
 
     if (email.isEmpty) {
-      _setError('Email tidak boleh kosong.');
+      _setError(isEn ? 'Email cannot be empty.' : 'Email tidak boleh kosong.');
       return;
     }
     if (password.isEmpty) {
-      _setError('Kata sandi tidak boleh kosong.');
+      _setError(isEn ? 'Password cannot be empty.' : 'Kata sandi tidak boleh kosong.');
       return;
     }
 
@@ -600,45 +625,77 @@ class _LoginScreenState extends State<LoginScreen>
         );
       }
     } on FirebaseAuthException catch (e) {
-      String errMsg = 'Kata sandi salah. Silakan periksa kembali.';
       final code = e.code.toLowerCase();
 
       if (code == 'email-not-verified') {
         _showVerificationDialog(email, password: password);
         return;
-      } else if (code == 'user-not-found') {
-        errMsg = 'Email tidak terdaftar di Driving Buddy.';
+      }
+
+      String errMsg;
+      if (code == 'user-not-found') {
+        errMsg = isEn
+            ? 'Email address is not registered. Please register first.'
+            : 'Alamat email belum terdaftar. Silakan lakukan registrasi terlebih dahulu.';
       } else if (code == 'wrong-password') {
-        errMsg = 'Kata sandi salah. Silakan periksa kembali.';
+        errMsg = isEn
+            ? 'Incorrect password. Please check and try again.'
+            : 'Kata sandi salah. Silakan periksa kembali.';
       } else if (code == 'invalid-email') {
-        errMsg = 'Format email tidak valid.';
+        errMsg = isEn
+            ? 'Invalid email format.'
+            : 'Format email tidak valid.';
       } else if (code == 'user-disabled') {
-        errMsg = 'Akun ini telah dinonaktifkan.';
+        errMsg = isEn
+            ? 'This account has been disabled.'
+            : 'Akun ini telah dinonaktifkan.';
       } else if (code == 'network-request-failed') {
-        errMsg = 'Koneksi internet bermasalah. Periksa jaringan Anda.';
+        errMsg = isEn
+            ? 'Network error. Please check your internet connection.'
+            : 'Koneksi internet bermasalah. Periksa jaringan Anda.';
       } else if (code == 'too-many-requests') {
-        errMsg = 'Terlalu banyak percobaan gagal. Silakan tunggu beberapa saat.';
-      } else if (code == 'invalid-credential') {
+        errMsg = isEn
+            ? 'Too many failed attempts. Please try again later.'
+            : 'Terlalu banyak percobaan gagal. Silakan tunggu beberapa saat.';
+      } else if (code == 'invalid-credential' || code == 'invalid_login_credentials') {
+        // Cek apakah email terdaftar di database Firestore terlebih dahulu!
+        bool emailExists = false;
         try {
           final snapshot = await firestore
               .collection('users')
-              .where('email', isEqualTo: email)
+              .where('email', isEqualTo: email.toLowerCase())
               .limit(1)
               .get();
-          if (snapshot.docs.isEmpty) {
-            errMsg = 'Email tidak terdaftar di Driving Buddy.';
-          } else {
-            errMsg = 'Kata sandi salah. Silakan periksa kembali.';
+          if (snapshot.docs.isNotEmpty) {
+            emailExists = true;
           }
-        } catch (_) {
-          errMsg = 'Email tidak terdaftar atau kata sandi salah.';
+        } catch (_) {}
+
+        if (!emailExists) {
+          try {
+            // ignore: deprecated_member_use
+            final methods = await FirebaseAuth.instance.fetchSignInMethodsForEmail(email);
+            if (methods.isNotEmpty) {
+              emailExists = true;
+            }
+          } catch (_) {}
+        }
+
+        if (emailExists) {
+          errMsg = isEn
+              ? 'Incorrect password. Please check and try again.'
+              : 'Kata sandi salah. Silakan periksa kembali.';
+        } else {
+          errMsg = isEn
+              ? 'Email address is not registered. Please register first.'
+              : 'Alamat email belum terdaftar. Silakan lakukan registrasi terlebih dahulu.';
         }
       } else {
         errMsg = _xlErr(e.code);
       }
       _setError(errMsg);
     } catch (_) {
-      _setError('Terjadi kesalahan saat masuk. Coba lagi.');
+      _setError(isEn ? 'Failed to sign in. Please try again.' : 'Terjadi kesalahan saat masuk. Coba lagi.');
     } finally {
       if (mounted) setState(() => _loginLoading = false);
     }
@@ -694,26 +751,30 @@ class _LoginScreenState extends State<LoginScreen>
         _showVerificationDialog(email, password: password);
       }
     } on FirebaseAuthException catch (e) {
-      String msg = 'Terjadi kesalahan pendaftaran.';
+      final isEn = LanguageService.instance.isEnglish;
+      String msg = isEn ? 'Registration error occurred.' : 'Terjadi kesalahan pendaftaran.';
       final code = e.code.toLowerCase();
       if (code == 'email-already-in-use') {
-        msg = 'Email ini sudah terdaftar namun mungkin belum diverifikasi. Silakan masuk atau cek email untuk verifikasi.';
+        msg = isEn
+            ? 'This email is already registered but may not be verified. Please sign in or check your email.'
+            : 'Email ini sudah terdaftar namun mungkin belum diverifikasi. Silakan masuk atau cek email untuk verifikasi.';
         if (mounted) {
           _showVerificationDialog(email, password: password);
         }
         return;
       } else if (code == 'invalid-email') {
-        msg = 'Format email tidak valid atau domain tidak dikenali.';
+        msg = isEn ? 'Invalid email format or domain not recognized.' : 'Format email tidak valid atau domain tidak dikenali.';
       } else if (code == 'weak-password') {
-        msg = 'Kata sandi terlalu lemah. Ikuti kriteria kombinasi karakter.';
+        msg = isEn ? 'Password is too weak. Please follow the character combination requirements.' : 'Kata sandi terlalu lemah. Ikuti kriteria kombinasi karakter.';
       } else if (code == 'network-request-failed') {
-        msg = 'Koneksi internet bermasalah. Periksa jaringan Anda.';
+        msg = isEn ? 'Network error. Please check your internet connection.' : 'Koneksi internet bermasalah. Periksa jaringan Anda.';
       } else {
         msg = _xlErr(e.code);
       }
       _setError(msg, isRegister: true);
     } catch (e) {
-      _setError('Terjadi kesalahan pendaftaran. Coba lagi.', isRegister: true);
+      final isEn = LanguageService.instance.isEnglish;
+      _setError(isEn ? 'Registration error. Please try again.' : 'Terjadi kesalahan pendaftaran. Coba lagi.', isRegister: true);
     } finally {
       if (mounted) setState(() => _regLoading = false);
     }
@@ -815,26 +876,51 @@ class _LoginScreenState extends State<LoginScreen>
   }
 
   String _xlErr(String m) {
+    final isEn = LanguageService.instance.isEnglish;
     final lower = m.toLowerCase();
     if (lower.contains('invalid-credential') || lower.contains('invalid login') || lower.contains('wrong-password')) {
-      return 'Kata sandi salah. Silakan periksa kembali.';
+      return isEn
+          ? 'Incorrect password. Please check and try again.'
+          : 'Kata sandi salah. Silakan periksa kembali.';
     }
     if (lower.contains('user-not-found') || lower.contains('user not found')) {
-      return 'Email tidak terdaftar di Driving Buddy.';
+      return isEn
+          ? 'Email address is not registered. Please register first.'
+          : 'Alamat email belum terdaftar. Silakan lakukan registrasi terlebih dahulu.';
     }
     if (lower.contains('email-already-in-use') || lower.contains('already registered')) {
-      return 'Email ini sudah terdaftar. Silakan langsung masuk.';
+      return isEn
+          ? 'This email is already registered. Please sign in.'
+          : 'Email ini sudah terdaftar. Silakan langsung masuk.';
     }
     if (lower.contains('weak-password') || lower.contains('weak password')) {
-      return 'Kata sandi terlalu lemah. Minimal 8 karakter dengan kombinasi lengkap.';
+      return isEn
+          ? 'Password is too weak. Minimum 8 characters with uppercase, lowercase, numbers, and symbols.'
+          : 'Kata sandi terlalu lemah. Minimal 8 karakter dengan kombinasi lengkap.';
     }
     if (lower.contains('invalid-email') || lower.contains('badly formatted')) {
-      return 'Format email tidak valid. Pastikan penulisan benar.';
+      return isEn
+          ? 'Invalid email format. Please check spelling.'
+          : 'Format email tidak valid. Pastikan penulisan benar.';
     }
     if (lower.contains('network') || lower.contains('connection')) {
-      return 'Koneksi internet bermasalah. Coba periksa koneksi kamu.';
+      return isEn
+          ? 'Network error. Please check your internet connection.'
+          : 'Koneksi internet bermasalah. Coba periksa koneksi Anda.';
     }
-    return 'Terjadi kendala. Silakan coba beberapa saat lagi.';
+    if (lower.contains('too-many-requests')) {
+      return isEn
+          ? 'Too many failed attempts. Please try again later.'
+          : 'Terlalu banyak percobaan gagal. Silakan tunggu beberapa saat.';
+    }
+    if (lower.contains('user-disabled')) {
+      return isEn
+          ? 'This account has been disabled.'
+          : 'Akun ini telah dinonaktifkan.';
+    }
+    return isEn
+        ? 'An error occurred. Please try again later.'
+        : 'Terjadi kendala. Silakan coba beberapa saat lagi.';
   }
 
   @override
@@ -1325,7 +1411,7 @@ class _LoginScreenState extends State<LoginScreen>
         const SizedBox(height: 6),
         _buildInputField(
           controller: _regPassword,
-          hint: 'Min. 8 karakter (Besar, Kecil, Angka, Simbol)',
+          hint: LanguageService.instance.isEnglish ? 'Min. 8 chars (Upper, Lower, Number, Symbol)' : 'Min. 8 karakter (Besar, Kecil, Angka, Simbol)',
           icon: Icons.lock_outline_rounded,
           obscureText: _regObscure,
           isDark: isDark,
@@ -1353,7 +1439,7 @@ class _LoginScreenState extends State<LoginScreen>
         const SizedBox(height: 6),
         _buildInputField(
           controller: _regConfirm,
-          hint: 'Ulangi kata sandi',
+          hint: LanguageService.instance.isEnglish ? 'Repeat password' : 'Ulangi kata sandi',
           icon: Icons.lock_outline_rounded,
           obscureText: _regObscure,
           isDark: isDark,
