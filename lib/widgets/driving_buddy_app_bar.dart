@@ -39,18 +39,22 @@ class _DrivingBuddyAppBarState extends State<DrivingBuddyAppBar> {
   }
 
   Future<void> _syncAvatarPhoto() async {
-    final curEmail = AuthService.currentUser?.email;
-    if (curEmail != null && curEmail.isNotEmpty) {
-      final cached = await AccountConfig.getPhotoUrl(userEmail: curEmail);
-      if (cached != null && cached.isNotEmpty) {
+    final curUser = AuthService.currentUser;
+    final curEmail = curUser?.email;
+    final curUid = curUser?.uid;
+    if (curUser != null) {
+      final cached = await AccountConfig.getCustomPhoto(userEmail: curEmail, uid: curUid);
+      if (cached != null && cached.isNotEmpty && cached != curUser.photoURL) {
         AccountConfig.photoNotifier.value = cached;
         return;
       }
       try {
         final profile = await AuthService.getUserProfile();
-        final p = profile?['photoUrl'] as String?;
-        if (p != null && p.isNotEmpty) {
-          await AccountConfig.setPhotoUrl(p, userEmail: curEmail);
+        final p = (profile?['customPhotoUrl'] ?? profile?['photoUrl']) as String?;
+        if (p != null && p.isNotEmpty && p != curUser.photoURL) {
+          await AccountConfig.setCustomPhoto(p, userEmail: curEmail, uid: curUid);
+        } else {
+          AccountConfig.photoNotifier.value = null;
         }
       } catch (_) {}
     }
@@ -142,11 +146,12 @@ class _DrivingBuddyAppBarState extends State<DrivingBuddyAppBar> {
                   valueListenable: AccountConfig.photoNotifier,
                   builder: (context, photoUrl, _) {
                     final customPhoto = AccountConfig.photoNotifier.value;
+                    // JANGAN PERNAH FALLBACK KE FOTO GOOGLE: Foto kanan atas khusus PP kustom Driving Buddy
                     final effectivePhoto = (customPhoto != null && customPhoto.isNotEmpty)
                         ? customPhoto
-                        : (photoUrl != null && photoUrl.isNotEmpty
+                        : (photoUrl != null && photoUrl.isNotEmpty && photoUrl != AuthService.currentUser?.photoURL
                             ? photoUrl
-                            : AuthService.currentUser?.photoURL);
+                            : null);
 
                     Widget imageWidget = const Icon(Icons.person_rounded, color: Colors.white, size: 20);
 

@@ -210,20 +210,18 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
       final name = await AuthService.getUserName();
       final email = user?.email ?? '';
       final profile = await AuthService.getUserProfile();
-      final cachedPhoto = await AccountConfig.getPhotoUrl(userEmail: email);
-      final firestorePhoto = profile?['photoUrl'] as String?;
-      // Prioritaskan foto kustom yang dipilih pengemudi (lokal / firestore) di atas foto Google
+      final cachedPhoto = await AccountConfig.getCustomPhoto(userEmail: email, uid: user?.uid);
+      final firestorePhoto = (profile?['customPhotoUrl'] ?? profile?['photoUrl']) as String?;
+      // Foto kustom hanya yang diunggah user, bukan foto Google otomatis
       String? photo;
-      if (cachedPhoto != null && cachedPhoto.trim().isNotEmpty) {
+      if (cachedPhoto != null && cachedPhoto.trim().isNotEmpty && cachedPhoto != user?.photoURL) {
         photo = cachedPhoto;
-      } else if (firestorePhoto != null && firestorePhoto.trim().isNotEmpty) {
+      } else if (firestorePhoto != null && firestorePhoto.trim().isNotEmpty && firestorePhoto != user?.photoURL) {
         photo = firestorePhoto;
-      } else if (user?.photoURL != null && user!.photoURL!.trim().isNotEmpty) {
-        photo = user.photoURL;
       }
 
       if (photo != null && photo.isNotEmpty) {
-        await AccountConfig.setPhotoUrl(photo, userEmail: email);
+        await AccountConfig.setCustomPhoto(photo, userEmail: email, uid: user?.uid);
       } else {
         AccountConfig.photoNotifier.value = null;
       }
@@ -289,9 +287,13 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
       final downloadUrl = await AuthService.uploadProfileImage(file);
       final finalUrl = downloadUrl ?? picked.path;
 
-      // Simpan juga ke local SharedPreferences agar persisten saat restart/offline untuk user ini
-      final currentUserEmail = AuthService.currentUser?.email;
-      await AccountConfig.setPhotoUrl(finalUrl, userEmail: currentUserEmail);
+      // Simpan juga ke local SharedPreferences per UID & email agar persisten saat restart/logout
+      final curUser = AuthService.currentUser;
+      await AccountConfig.setCustomPhoto(
+        finalUrl,
+        userEmail: curUser?.email,
+        uid: curUser?.uid,
+      );
 
       if (mounted) {
         setState(() {

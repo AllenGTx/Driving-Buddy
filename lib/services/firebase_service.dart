@@ -173,18 +173,23 @@ class AuthService {
 
     final user = credential.user;
     if (user != null) {
-      // JANGAN TIMPA FOTO PROFIL: Cek local cache terlebih dahulu, baru Firestore
-      final localPhoto = await AccountConfig.getPhotoUrl(userEmail: user.email);
-      bool hasExistingPhoto = (localPhoto != null && localPhoto.trim().isNotEmpty);
-      String? savedCustomPhoto = hasExistingPhoto ? localPhoto.trim() : null;
+      // 1. Catat foto akun Google (Tanjiro) untuk ditampilkan di samping nama di Welcome card
+      if (user.photoURL != null && user.photoURL!.isNotEmpty) {
+        await AccountConfig.setGooglePhoto(user.photoURL, userEmail: user.email);
+      }
 
-      if (!hasExistingPhoto) {
+      // 2. Ambil foto kustom Driving Buddy yang tersimpan untuk user ini (lokal atau Firestore)
+      String? customPhoto = await AccountConfig.getCustomPhoto(userEmail: user.email, uid: user.uid);
+      if (customPhoto == null || customPhoto.isEmpty) {
         try {
           final existingDoc = await firestore.collection('users').doc(user.uid).get();
-          final existingPhoto = existingDoc.data()?['photoUrl'] as String?;
+          final data = existingDoc.data();
+          final existingPhoto = (data?['customPhotoUrl'] ?? data?['photoUrl']) as String?;
           if (existingPhoto != null && existingPhoto.trim().isNotEmpty) {
-            hasExistingPhoto = true;
-            savedCustomPhoto = existingPhoto.trim();
+            // Pastikan bukan foto Google yang disimpan sebagai kustom
+            if (existingPhoto.trim() != user.photoURL?.trim()) {
+              customPhoto = existingPhoto.trim();
+            }
           }
         } catch (_) {}
       }
@@ -193,15 +198,18 @@ class AuthService {
         'uid': user.uid,
         'email': user.email,
         'displayName': user.displayName ?? 'Pengemudi',
-        if (!hasExistingPhoto && user.photoURL != null && user.photoURL!.isNotEmpty)
-          'photoUrl': user.photoURL,
+        if (user.photoURL != null && user.photoURL!.isNotEmpty)
+          'googlePhotoUrl': user.photoURL,
+        if (customPhoto != null && customPhoto.isNotEmpty)
+          'customPhotoUrl': customPhoto,
         'lastLogin': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
 
-      // SINKRONKAN LANGSUNG KE AccountConfig SEGERA (Cegah munculnya foto Tanjiro)
-      final photoToSet = hasExistingPhoto ? savedCustomPhoto : user.photoURL;
-      if (photoToSet != null && photoToSet.isNotEmpty) {
-        await AccountConfig.setPhotoUrl(photoToSet, userEmail: user.email);
+      // JANGAN TIMPA FOTO PROFIL KANAN ATAS: Hanya set jika user memiliki foto kustom
+      if (customPhoto != null && customPhoto.isNotEmpty) {
+        await AccountConfig.setCustomPhoto(customPhoto, userEmail: user.email, uid: user.uid);
+      } else {
+        AccountConfig.photoNotifier.value = null;
       }
     }
 
@@ -286,6 +294,7 @@ class AuthService {
       await user.updatePhotoURL(downloadUrl);
       await firestore.collection('users').doc(user.uid).set({
         'photoUrl': downloadUrl,
+        'customPhotoUrl': downloadUrl,
         'updatedAt': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
 

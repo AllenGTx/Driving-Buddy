@@ -103,52 +103,107 @@ class _MainShellState extends State<MainShell> {
               top: false,
               child: SizedBox(
                 height: 68,
-                child: Row(
-                  children: [
-                    Expanded(
-                      child: _NavItem(
-                        icon: Icons.home_outlined,
-                        activeIcon: Icons.home_rounded,
-                        label: s.navHome,
-                        isSelected: _currentIndex == 0,
-                        onTap: () => _switchToTab(0),
-                      ),
-                    ),
-                    Semantics(
-                      button: true,
-                      label: s.navDriveMode,
-                      child: DbPressable(
-                        onTap: () => _switchToTab(1),
-                        pressedScale: 0.92,
-                        child: AnimatedContainer(
-                          duration: DbMotion.of(context, DbMotion.base),
-                          curve: DbMotion.out,
-                          width: 64,
-                          height: 46,
-                          decoration: BoxDecoration(
-                            color: driveActive
-                                ? (isDark ? Colors.white : DbColors.ink)
-                                : DbColors.orange,
-                            borderRadius: BorderRadius.circular(DbRadius.pill),
-                          ),
-                          child: Icon(
-                            driveActive ? Icons.videocam_rounded : Icons.play_arrow_rounded,
-                            color: driveActive && isDark ? DbColors.ink : Colors.white,
-                            size: 26,
+                child: LayoutBuilder(
+                  builder: (context, constraints) {
+                    final totalWidth = constraints.maxWidth;
+                    // Lebar tombol tengah play = 64
+                    final sideWidth = (totalWidth - 64) / 2;
+                    final double targetX;
+                    final bool showDot;
+
+                    if (_currentIndex == 0) {
+                      // Titik tepat di bawah tab Beranda
+                      targetX = (sideWidth / 2) - 2.5;
+                      showDot = true;
+                    } else if (_currentIndex == 2) {
+                      // Titik tepat di bawah tab Riwayat
+                      targetX = sideWidth + 64 + (sideWidth / 2) - 2.5;
+                      showDot = true;
+                    } else {
+                      // Saat mode berkendara (tengah)
+                      targetX = (totalWidth / 2) - 2.5;
+                      showDot = false;
+                    }
+
+                    return Stack(
+                      children: [
+                        Row(
+                          children: [
+                            Expanded(
+                              child: _NavItem(
+                                icon: Icons.home_outlined,
+                                activeIcon: Icons.home_rounded,
+                                label: s.navHome,
+                                isSelected: _currentIndex == 0,
+                                onTap: () => _switchToTab(0),
+                              ),
+                            ),
+                            Semantics(
+                              button: true,
+                              label: s.navDriveMode,
+                              child: DbPressable(
+                                onTap: () => _switchToTab(1),
+                                pressedScale: 0.92,
+                                child: AnimatedContainer(
+                                  duration: DbMotion.of(context, DbMotion.base),
+                                  curve: DbMotion.out,
+                                  width: 64,
+                                  height: 46,
+                                  decoration: BoxDecoration(
+                                    color: driveActive
+                                        ? (isDark ? Colors.white : DbColors.ink)
+                                        : DbColors.orange,
+                                    borderRadius: BorderRadius.circular(DbRadius.pill),
+                                  ),
+                                  child: Icon(
+                                    driveActive ? Icons.videocam_rounded : Icons.play_arrow_rounded,
+                                    color: driveActive && isDark ? DbColors.ink : Colors.white,
+                                    size: 26,
+                                  ),
+                                ),
+                              ),
+                            ),
+                            Expanded(
+                              child: _NavItem(
+                                icon: Icons.insights_outlined,
+                                activeIcon: Icons.insights_rounded,
+                                label: s.navHistory,
+                                isSelected: _currentIndex == 2,
+                                onTap: () => _switchToTab(2),
+                              ),
+                            ),
+                          ],
+                        ),
+
+                        // Titik bergerak animasi halus meluncur antar Beranda & Riwayat
+                        AnimatedPositioned(
+                          duration: const Duration(milliseconds: 320),
+                          curve: Curves.easeInOutCubicEmphasized,
+                          left: targetX,
+                          bottom: 7,
+                          child: AnimatedOpacity(
+                            duration: const Duration(milliseconds: 200),
+                            opacity: showDot ? 1.0 : 0.0,
+                            child: Container(
+                              width: 5,
+                              height: 5,
+                              decoration: BoxDecoration(
+                                color: DbColors.orange,
+                                shape: BoxShape.circle,
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: DbColors.orange.withValues(alpha: 0.75),
+                                    blurRadius: 4,
+                                    spreadRadius: 1,
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
                         ),
-                      ),
-                    ),
-                    Expanded(
-                      child: _NavItem(
-                        icon: Icons.insights_outlined,
-                        activeIcon: Icons.insights_rounded,
-                        label: s.navHistory,
-                        isSelected: _currentIndex == 2,
-                        onTap: () => _switchToTab(2),
-                      ),
-                    ),
-                  ],
+                      ],
+                    );
+                  },
                 ),
               ),
             ),
@@ -194,12 +249,7 @@ class _NavItem extends StatelessWidget {
             ),
           ),
           const SizedBox(height: 3),
-          AnimatedContainer(
-            duration: DbMotion.of(context, DbMotion.fast),
-            width: isSelected ? 4 : 0,
-            height: 4,
-            decoration: const BoxDecoration(color: DbColors.orange, shape: BoxShape.circle),
-          ),
+          const SizedBox(height: 4),
         ],
       ),
     );

@@ -353,32 +353,67 @@ class _CockpitScreenState extends State<CockpitScreen>
       ),
       child: Row(
         children: [
-          // Driver Avatar Initial
-          Container(
-            width: 44,
-            height: 44,
-            decoration: BoxDecoration(
-              gradient: const LinearGradient(
-                begin: Alignment.topLeft,
-                end: Alignment.bottomRight,
-                colors: [DbColors.navy, Color(0xFF1E293B)],
-              ),
-              borderRadius: BorderRadius.circular(14),
-              border: Border.all(
-                color: DbColors.orange.withValues(alpha: 0.35),
-                width: 1.2,
-              ),
-            ),
-            child: Center(
-              child: Text(
-                initial,
-                style: const TextStyle(
-                  fontSize: 18,
-                  fontWeight: FontWeight.w800,
-                  color: Colors.white,
+          // Driver Avatar: Foto Akun Google jika login Google, atau Inisial jika akun biasa
+          ValueListenableBuilder<String?>(
+            valueListenable: AccountConfig.googlePhotoNotifier,
+            builder: (context, gPhoto, _) {
+              final googlePhoto = (gPhoto != null && gPhoto.isNotEmpty)
+                  ? gPhoto
+                  : (AuthService.currentUser?.photoURL);
+              final hasGooglePhoto = googlePhoto != null && googlePhoto.isNotEmpty;
+
+              return Container(
+                width: 44,
+                height: 44,
+                decoration: BoxDecoration(
+                  gradient: const LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [DbColors.navy, Color(0xFF1E293B)],
+                  ),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(
+                    color: DbColors.orange.withValues(alpha: 0.5),
+                    width: 1.4,
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: DbColors.orange.withValues(alpha: 0.15),
+                      blurRadius: 8,
+                      offset: const Offset(0, 2),
+                    ),
+                  ],
                 ),
-              ),
-            ),
+                clipBehavior: Clip.antiAlias,
+                child: hasGooglePhoto
+                    ? Image.network(
+                        googlePhoto,
+                        fit: BoxFit.cover,
+                        width: 44,
+                        height: 44,
+                        errorBuilder: (_, __, ___) => Center(
+                          child: Text(
+                            initial,
+                            style: const TextStyle(
+                              fontSize: 18,
+                              fontWeight: FontWeight.w800,
+                              color: Colors.white,
+                            ),
+                          ),
+                        ),
+                      )
+                    : Center(
+                        child: Text(
+                          initial,
+                          style: const TextStyle(
+                            fontSize: 18,
+                            fontWeight: FontWeight.w800,
+                            color: Colors.white,
+                          ),
+                        ),
+                      ),
+              );
+            },
           ),
           const SizedBox(width: 12),
           // Greeting & Name
@@ -597,15 +632,18 @@ class _CockpitScreenState extends State<CockpitScreen>
                     curve: Curves.easeInOut,
                     height: _isCameraExpanded ? 300 : 180,
                     width: double.infinity,
-                    decoration: BoxDecoration(
-                      color: const Color(0xFF0F172A),
+                    foregroundDecoration: BoxDecoration(
                       borderRadius: BorderRadius.circular(16),
                       border: Border.all(
                         color: _isCameraExpanded
                             ? const Color(0xFFF26B1D)
                             : (isDark ? AppColors.darkCardBorder : const Color(0xFFECEEF2)),
-                        width: _isCameraExpanded ? 1.5 : 1.0,
+                        width: _isCameraExpanded ? 2.0 : 1.2,
                       ),
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF0F172A),
+                      borderRadius: BorderRadius.circular(16),
                     ),
                     clipBehavior: Clip.antiAlias,
                     child: Stack(
@@ -911,28 +949,99 @@ class _CockpitScreenState extends State<CockpitScreen>
                             ],
                           ),
                           const SizedBox(height: 4),
-                          Container(
-                            padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
-                            decoration: BoxDecoration(
-                              color: animatedScore >= 80
-                                  ? (isDark ? AppColors.darkSuccessBg : const Color(0xFFECFDF5))
-                                  : (isDark ? AppColors.darkCardBgSoft : const Color(0xFFFFF1E8)),
-                              borderRadius: BorderRadius.circular(10),
-                              border: Border.all(
-                                color: animatedScore >= 80 ? const Color(0xFFA7F3D0) : const Color(0xFFECEEF2),
-                              ),
-                            ),
-                            child: Text(
-                              _userSessions.isEmpty ? 'BELUM ADA DATA' : (animatedScore >= 80 ? 'STATUS PRIMA' : 'PERLU ISTIRAHAT'),
-                              style: TextStyle(
-                                fontSize: 7.5,
-                                fontWeight: FontWeight.w800,
-                                letterSpacing: 0.3,
-                                color: _userSessions.isEmpty
-                                    ? (isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B))
-                                    : (animatedScore >= 80 ? const Color(0xFF065F46) : const Color(0xFFD9560F)),
-                              ),
-                            ),
+                          // Glow in the dark Status Pill (Hijau = Prima, Kuning = Waspada, Merah = Istirahat)
+                          Builder(
+                            builder: (context) {
+                              final isEn = LanguageService.instance.isEnglish;
+                              final Color glowColor;
+                              final String statusText;
+
+                              if (_userSessions.isEmpty) {
+                                glowColor = const Color(0xFF64748B);
+                                statusText = isEn ? 'NO DATA YET' : 'BELUM ADA DATA';
+                              } else if (animatedScore >= 80) {
+                                // Hijau Neon Glow
+                                glowColor = const Color(0xFF10B981);
+                                statusText = isEn ? 'PRIME STATUS' : 'STATUS PRIMA';
+                              } else if (animatedScore >= 50) {
+                                // Kuning / Amber Neon Glow
+                                glowColor = const Color(0xFFF59E0B);
+                                statusText = isEn ? 'CAUTION' : 'WASPADA';
+                              } else {
+                                // Merah Neon Glow
+                                glowColor = const Color(0xFFEF4444);
+                                statusText = isEn ? 'NEED REST' : 'PERLU ISTIRAHAT';
+                              }
+
+                              final hasData = _userSessions.isNotEmpty;
+
+                              return Container(
+                                padding: const EdgeInsets.symmetric(horizontal: 7, vertical: 2.5),
+                                decoration: BoxDecoration(
+                                  color: hasData
+                                      ? glowColor.withValues(alpha: isDark ? 0.22 : 0.12)
+                                      : (isDark ? AppColors.darkCardBgSoft : const Color(0xFFF1F5F9)),
+                                  borderRadius: BorderRadius.circular(10),
+                                  border: Border.all(
+                                    color: hasData
+                                        ? glowColor.withValues(alpha: isDark ? 0.85 : 0.6)
+                                        : (isDark ? AppColors.darkCardBorder : const Color(0xFFCBD5E1)),
+                                    width: hasData ? 1.2 : 1.0,
+                                  ),
+                                  boxShadow: hasData
+                                      ? [
+                                          BoxShadow(
+                                            color: glowColor.withValues(alpha: isDark ? 0.55 : 0.25),
+                                            blurRadius: isDark ? 10 : 6,
+                                            spreadRadius: isDark ? 1.0 : 0.2,
+                                          ),
+                                        ]
+                                      : null,
+                                ),
+                                child: Row(
+                                  mainAxisSize: MainAxisSize.min,
+                                  children: [
+                                    if (hasData) ...[
+                                      Container(
+                                        width: 5,
+                                        height: 5,
+                                        decoration: BoxDecoration(
+                                          color: glowColor,
+                                          shape: BoxShape.circle,
+                                          boxShadow: [
+                                            BoxShadow(
+                                              color: glowColor.withValues(alpha: 0.9),
+                                              blurRadius: 6,
+                                              spreadRadius: 1,
+                                            ),
+                                          ],
+                                        ),
+                                      ),
+                                      const SizedBox(width: 4),
+                                    ],
+                                    Text(
+                                      statusText,
+                                      style: TextStyle(
+                                        fontSize: 7.5,
+                                        fontWeight: FontWeight.w900,
+                                        letterSpacing: 0.4,
+                                        color: hasData
+                                            ? (isDark ? glowColor : glowColor.withValues(alpha: 0.95))
+                                            : (isDark ? AppColors.darkTextSecondary : const Color(0xFF64748B)),
+                                        shadows: hasData && isDark
+                                            ? [
+                                                Shadow(
+                                                  color: glowColor.withValues(alpha: 0.9),
+                                                  blurRadius: 8,
+                                                ),
+                                              ]
+                                            : null,
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            },
                           ),
                         ],
                       ),

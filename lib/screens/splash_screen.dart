@@ -30,7 +30,7 @@ class _SplashScreenState extends State<SplashScreen>
       duration: const Duration(milliseconds: 1200),
     )..repeat(reverse: true);
 
-    _scaleAnimation = Tween<double>(begin: 0.85, end: 1.0).animate(
+    _scaleAnimation = Tween<double>(begin: 0.82, end: 1.0).animate(
       CurvedAnimation(
         parent: _controller,
         curve: const Interval(0.0, 0.65, curve: Curves.easeOutBack),
@@ -102,11 +102,15 @@ class _SplashScreenState extends State<SplashScreen>
             ),
           ),
 
-          // Center Logo + Title + Animation
+          // Center Logo + Title + Dynamic Automotive Animation
           Center(
             child: AnimatedBuilder(
-              animation: _controller,
+              animation: Listenable.merge([_controller, _pulseController]),
               builder: (context, _) {
+                // Micro-breathing oscillation simulating engine idling
+                final idleScale = 1.0 + (0.025 * _pulseController.value);
+                final glowRadius = 140.0 + (30.0 * _pulseController.value);
+
                 return FadeTransition(
                   opacity: _fadeAnimation,
                   child: ScaleTransition(
@@ -114,14 +118,38 @@ class _SplashScreenState extends State<SplashScreen>
                     child: Column(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        // Clean single Driving Buddy logo (contains tire emblem + text)
-                        SizedBox(
-                          width: 220,
-                          height: 120,
-                          child: Image.asset(
-                            'assets/images/DrivingBuddyLogo_white_tight.png',
-                            fit: BoxFit.contain,
-                          ),
+                        // Logo container dengan dynamic amber engine glow
+                        Stack(
+                          alignment: Alignment.center,
+                          children: [
+                            // Ambient breathing radial aura
+                            Container(
+                              width: glowRadius,
+                              height: glowRadius * 0.7,
+                              decoration: BoxDecoration(
+                                shape: BoxShape.circle,
+                                gradient: RadialGradient(
+                                  colors: [
+                                    const Color(0xFFF26B1D).withValues(alpha: 0.28 + 0.15 * _pulseController.value),
+                                    Colors.transparent,
+                                  ],
+                                ),
+                              ),
+                            ),
+
+                            // Driving Buddy Logo with idle pulse
+                            Transform.scale(
+                              scale: idleScale,
+                              child: SizedBox(
+                                width: 230,
+                                height: 125,
+                                child: Image.asset(
+                                  'assets/images/DrivingBuddyLogo_white_tight.png',
+                                  fit: BoxFit.contain,
+                                ),
+                              ),
+                            ),
+                          ],
                         ),
                         const SizedBox(height: 16),
 
