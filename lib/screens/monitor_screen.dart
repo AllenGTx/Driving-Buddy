@@ -107,6 +107,8 @@ class MonitorScreenState extends State<MonitorScreen> {
   int _drowsyCount = 0;
   int _yawnCount = 0;
   int _microsleepCount = 0;
+  bool _isCurrentlySleeping = false;
+  bool _isCurrentlyDrowsy = false;
 
   @override
   void initState() {
@@ -124,12 +126,23 @@ class MonitorScreenState extends State<MonitorScreen> {
     if (!mounted) return;
     final fix = _nearby.fix;
     if (fix != null) {
+      final mps = fix.speedMps;
+      // Filter noise GPS saat diam: threshold 0.8 m/s ≈ 2.88 km/jam
+      if (mps != null && mps >= 0.8) {
+        _currentSpeedKmh = mps * 3.6;
+        if (_currentSpeedKmh > _topSpeedKmh) {
+          _topSpeedKmh = _currentSpeedKmh;
+        }
+      } else {
+        _currentSpeedKmh = 0.0;
+      }
+
       if (_lastDriverFix != null && _isMonitoring) {
         final dMeters = haversineM(_lastDriverFix!.lat, _lastDriverFix!.lng, fix.lat, fix.lng);
-        // Filter out GPS jitter if stationary (< 2 meters)
-        if (dMeters >= 2.0 && dMeters < 500.0) {
+        // Hanya akumulasi jarak jika kendaraan benar-benar bergerak (speed >= 2.5 km/j atau delta > 12m)
+        if ((_currentSpeedKmh >= 2.5 || dMeters >= 12.0) && dMeters < 500.0) {
           _totalDistanceMeters += dMeters;
-          // Rekam breadcrumb jika berpindah minimal 8 meter atau interval wajar
+          // Rekam breadcrumb jika berpindah minimal 8 meter
           if (_routeBreadcrumbs.isEmpty ||
               haversineM(_routeBreadcrumbs.last['lat']!, _routeBreadcrumbs.last['lng']!, fix.lat, fix.lng) >= 8.0) {
             _routeBreadcrumbs.add({'lat': fix.lat, 'lng': fix.lng});
@@ -139,14 +152,7 @@ class MonitorScreenState extends State<MonitorScreen> {
         _routeBreadcrumbs.add({'lat': fix.lat, 'lng': fix.lng});
       }
       _lastDriverFix = fix;
-      
-      final mps = fix.speedMps;
-      if (mps != null && mps >= 0) {
-        _currentSpeedKmh = mps * 3.6;
-        if (_currentSpeedKmh > _topSpeedKmh) {
-          _topSpeedKmh = _currentSpeedKmh;
-        }
-      }
+
       if (_isMonitoring) {
         setState(() {});
       }
@@ -249,6 +255,8 @@ class MonitorScreenState extends State<MonitorScreen> {
     setState(() {
       _isMonitoring = true;
       _isCameraExpanded = false;
+      _isCurrentlySleeping = false;
+      _isCurrentlyDrowsy = false;
       _totalDistanceMeters = 0.0;
       _currentSpeedKmh = 0.0;
       _topSpeedKmh = 0.0;
@@ -427,22 +435,36 @@ class MonitorScreenState extends State<MonitorScreen> {
         }
       }
 
-      if (isSleep && !_isAlertShowing) {
-        _microsleepCount++;
-        if (AuthService.isLoggedIn && _currentSessionId != null) {
-          SessionService.logEvent(
-            sessionId: _currentSessionId!,
-            eventType: 'microsleep',
-          );
+      // Event Microsleep (Hanya dihitung 1x per episode penutupan mata, bukan berulang tiap frame)
+      if (isSleep) {
+        if (!_isCurrentlySleeping) {
+          _isCurrentlySleeping = true;
+          _microsleepCount++;
+          if (AuthService.isLoggedIn && _currentSessionId != null) {
+            SessionService.logEvent(
+              sessionId: _currentSessionId!,
+              eventType: 'microsleep',
+            );
+          }
         }
-      } else if (isDrowsy && !_isAlertShowing) {
-        _drowsyCount++;
-        if (AuthService.isLoggedIn && _currentSessionId != null) {
-          SessionService.logEvent(
-            sessionId: _currentSessionId!,
-            eventType: 'drowsy',
-          );
+      } else {
+        _isCurrentlySleeping = false;
+      }
+
+      // Event Kantuk / Drowsy (Hanya dihitung 1x per episode)
+      if (isDrowsy && !isSleep) {
+        if (!_isCurrentlyDrowsy) {
+          _isCurrentlyDrowsy = true;
+          _drowsyCount++;
+          if (AuthService.isLoggedIn && _currentSessionId != null) {
+            SessionService.logEvent(
+              sessionId: _currentSessionId!,
+              eventType: 'drowsy',
+            );
+          }
         }
+      } else if (!isDrowsy) {
+        _isCurrentlyDrowsy = false;
       }
 
       if (!isSnoozed && (isSleep || isExcessiveYawn) && !_isAlertShowing) {
@@ -519,12 +541,20 @@ class MonitorScreenState extends State<MonitorScreen> {
     final double avgBlink = _result.blinkCount.toDouble();
     final DateTime sessionStart = _sessionStartTime ?? DateTime.now();
 
-    // Hitung kecepatan rata-rata: jika ada pergerakan jarak, hitung distance / time
+    // Hitung kecepatan rata-rata:
+    // Proteksi sesi pendek (< 15 detik atau jarak < 50 meter) dari artefak pembagian waktu kecil
     double calculatedAvgSpeed = _currentSpeedKmh;
-    if (_totalDistanceMeters > 5.0 && finalDuration > 2) {
+    if (_totalDistanceMeters > 50.0 && finalDuration >= 15) {
       final speedFromDistance = (_totalDistanceMeters / 1000.0) / (finalDuration / 3600.0);
       if (calculatedAvgSpeed <= 1.0 || speedFromDistance > calculatedAvgSpeed) {
         calculatedAvgSpeed = speedFromDistance;
+      }
+    } else if (finalDuration < 15 && _totalDistanceMeters < 50.0) {
+      // Sesi uji coba sangat singkat / diam: bersihkan jitter koordinat
+      if (_sessionSpeedSamples.isEmpty || _sessionSpeedSamples.every((s) => s < 2.5)) {
+        calculatedAvgSpeed = 0.0;
+        _totalDistanceMeters = 0.0;
+        _topSpeedKmh = 0.0;
       }
     }
 
@@ -544,8 +574,10 @@ class MonitorScreenState extends State<MonitorScreen> {
       if (spdAvg > calculatedAvgSpeed) calculatedAvgSpeed = spdAvg;
     }
     double realTopSpeed = _topSpeedKmh;
-    if (realTopSpeed < calculatedAvgSpeed) {
-      realTopSpeed = calculatedAvgSpeed > 0 ? calculatedAvgSpeed * 1.15 : 0.0;
+    if (calculatedAvgSpeed > 0 && realTopSpeed < calculatedAvgSpeed) {
+      realTopSpeed = calculatedAvgSpeed * 1.15;
+    } else if (calculatedAvgSpeed == 0.0 && _totalDistanceMeters < 30.0) {
+      realTopSpeed = 0.0;
     }
 
     // Hitung driving score (0-100)
