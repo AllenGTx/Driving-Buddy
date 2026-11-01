@@ -150,7 +150,7 @@ class GeolocatorLocationProvider implements LocationProvider {
     try {
       final position = await Geolocator.getCurrentPosition(
         desiredAccuracy: LocationAccuracy.bestForNavigation,
-        forceAndroidLocationManager: false,
+        forceAndroidLocationManager: true,
         timeLimit: timeout,
       );
       return _toFix(position);
@@ -167,7 +167,7 @@ class GeolocatorLocationProvider implements LocationProvider {
           ? AndroidSettings(
               accuracy: LocationAccuracy.bestForNavigation,
               distanceFilter: 0,
-              forceLocationManager: false,
+              forceLocationManager: true,
               intervalDuration: const Duration(seconds: 1),
             )
           : LocationSettings(

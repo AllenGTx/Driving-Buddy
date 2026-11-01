@@ -2077,13 +2077,16 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.center,
                       children: [
-                        Text(
-                          isEn ? 'Battery Optimization Mode' : 'Mode Optimasi Baterai',
-                          style: TextStyle(
-                            fontSize: 13.5,
-                            fontWeight: FontWeight.w800,
-                            color: isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A),
+                        Expanded(
+                          child: Text(
+                            isEn ? 'Battery Optimization Mode' : 'Mode Optimasi Baterai',
+                            style: TextStyle(
+                              fontSize: 13.5,
+                              fontWeight: FontWeight.w800,
+                              color: isDark ? AppColors.darkTextPrimary : const Color(0xFF0F172A),
+                            ),
                           ),
                         ),
                         const SizedBox(width: 6),

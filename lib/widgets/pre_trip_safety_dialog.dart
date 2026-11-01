@@ -187,11 +187,11 @@ class _PreTripSafetyDialogState extends State<PreTripSafetyDialog>
         borderRadius: BorderRadius.circular(22),
         side: BorderSide(color: Colors.white.withValues(alpha: 0.12)),
       ),
-      insetPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 24),
+      insetPadding: const EdgeInsets.symmetric(horizontal: 14, vertical: 20),
       child: ConstrainedBox(
         constraints: const BoxConstraints(maxWidth: 420),
         child: Padding(
-          padding: const EdgeInsets.fromLTRB(20, 22, 20, 18),
+          padding: const EdgeInsets.fromLTRB(16, 20, 16, 16),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             crossAxisAlignment: CrossAxisAlignment.stretch,
@@ -364,7 +364,7 @@ class _PreTripSafetyDialogState extends State<PreTripSafetyDialog>
     required Color accentColor,
   }) {
     return Container(
-      padding: const EdgeInsets.all(12),
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 10),
       decoration: BoxDecoration(
         color: const Color(0xFF1E293B).withValues(alpha: 0.9),
         borderRadius: BorderRadius.circular(14),
@@ -375,6 +375,7 @@ class _PreTripSafetyDialogState extends State<PreTripSafetyDialog>
         ),
       ),
       child: Row(
+        crossAxisAlignment: CrossAxisAlignment.center,
         children: [
           // Icon Box
           Container(
@@ -398,6 +399,7 @@ class _PreTripSafetyDialogState extends State<PreTripSafetyDialog>
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
+              mainAxisSize: MainAxisSize.min,
               children: [
                 Text(
                   title,
@@ -406,8 +408,10 @@ class _PreTripSafetyDialogState extends State<PreTripSafetyDialog>
                     fontSize: 12.5,
                     fontWeight: FontWeight.w700,
                   ),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
                 ),
-                const SizedBox(height: 2),
+                const SizedBox(height: 3),
                 Row(
                   children: [
                     Container(
@@ -419,12 +423,16 @@ class _PreTripSafetyDialogState extends State<PreTripSafetyDialog>
                       ),
                     ),
                     const SizedBox(width: 5),
-                    Text(
-                      statusText,
-                      style: TextStyle(
-                        color: isReady ? const Color(0xFF10B981) : const Color(0xFFF87171),
-                        fontSize: 10.5,
-                        fontWeight: FontWeight.w700,
+                    Expanded(
+                      child: Text(
+                        statusText,
+                        style: TextStyle(
+                          color: isReady ? const Color(0xFF10B981) : const Color(0xFFF87171),
+                          fontSize: 10,
+                          fontWeight: FontWeight.w700,
+                        ),
+                        maxLines: 1,
+                        overflow: TextOverflow.ellipsis,
                       ),
                     ),
                   ],
@@ -432,6 +440,7 @@ class _PreTripSafetyDialogState extends State<PreTripSafetyDialog>
               ],
             ),
           ),
+          const SizedBox(width: 6),
 
           // Action Button if not ready
           if (!isReady)
@@ -440,7 +449,7 @@ class _PreTripSafetyDialogState extends State<PreTripSafetyDialog>
               style: ElevatedButton.styleFrom(
                 backgroundColor: accentColor,
                 foregroundColor: Colors.white,
-                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                padding: const EdgeInsets.symmetric(horizontal: 9, vertical: 6),
                 minimumSize: Size.zero,
                 tapTargetSize: MaterialTapTargetSize.shrinkWrap,
                 shape: RoundedRectangleBorder(
@@ -451,7 +460,7 @@ class _PreTripSafetyDialogState extends State<PreTripSafetyDialog>
               child: Text(
                 actionText,
                 style: const TextStyle(
-                  fontSize: 11,
+                  fontSize: 10.5,
                   fontWeight: FontWeight.w800,
                 ),
               ),
