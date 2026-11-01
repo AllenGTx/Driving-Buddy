@@ -57,7 +57,7 @@ enum NearbyStatus {
 /// Semua angka kebijakan ada di sini supaya gampang dituning.
 class NearbyPolicy {
   const NearbyPolicy({
-    this.limit = 6,
+    this.limit = 15,
     this.autoRefreshEvery = const Duration(minutes: 10),
     this.autoRefreshAfterMovingM = 10000,
     this.freshFor = const Duration(minutes: 3),
@@ -674,6 +674,12 @@ class NearbyPlacesController extends ChangeNotifier {
   /// Tempat terbaik: yang di depan (atau arahnya belum diketahui) dulu, lalu yang di belakang.
   static NearbyPlace? _pick(List<NearbyPlace> primary, List<NearbyPlace> fallback) {
     for (final p in primary) {
+      if (p.distanceM <= 1000) return p;
+    }
+    for (final p in fallback) {
+      if (p.distanceM <= 1000) return p;
+    }
+    for (final p in primary) {
       if (p.ahead != false) return p;
     }
     for (final p in fallback) {
@@ -688,10 +694,13 @@ class NearbyPlacesController extends ChangeNotifier {
   static List<NearbyPlace> _rank(List<NearbyPlace> places) {
     final sorted = List<NearbyPlace>.of(places);
     sorted.sort((a, b) {
-      final groupA = a.ahead == false ? 1 : 0;
-      final groupB = b.ahead == false ? 1 : 0;
-      if (groupA != groupB) return groupA - groupB;
-      final byDistance = a.distanceM.compareTo(b.distanceM);
+      final distA = (a.ahead == false && a.distanceM > 1000)
+          ? a.distanceM + 2500
+          : a.distanceM;
+      final distB = (b.ahead == false && b.distanceM > 1000)
+          ? b.distanceM + 2500
+          : b.distanceM;
+      final byDistance = distA.compareTo(distB);
       if (byDistance != 0) return byDistance;
       return a.id.compareTo(b.id);
     });

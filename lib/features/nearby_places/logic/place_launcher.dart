@@ -4,7 +4,7 @@ import '../models/nearby_place.dart';
 
 // ============================================================================
 // PELUNCUR — membuka Google Maps ke tempat yang dipilih. Tidak memakai API key
-// dan tidak ada biaya: cukup membuka link `google.com/maps/dir/?api=1&...`.
+// dan tidak ada biaya: cukup membuka link `google.com/maps/...`.
 // ============================================================================
 
 /// Pembuka URL (diganti versi palsu di tes).
@@ -31,25 +31,30 @@ class PlaceLauncher {
   }
 
   /// Link navigasi mobil ke [place]. Memakai `navigate_url` dari server kalau
-  /// aman, kalau tidak dibuat sendiri dari koordinat.
+  /// aman, kalau tidak dibuat sendiri dari nama & koordinat resmi.
   static Uri navigationUri(NearbyPlace place) {
     final given = Uri.tryParse(place.navigateUrl);
     if (_isAllowed(given)) return given!;
+    final dest = place.name.isNotEmpty
+        ? '${place.name}, ${place.lat.toStringAsFixed(6)},${place.lng.toStringAsFixed(6)}'
+        : '${place.lat.toStringAsFixed(6)},${place.lng.toStringAsFixed(6)}';
     return Uri.https('www.google.com', '/maps/dir/', <String, String>{
       'api': '1',
-      'destination':
-          '${place.lat.toStringAsFixed(6)},${place.lng.toStringAsFixed(6)}',
+      'destination': dest,
       'travelmode': 'driving',
     });
   }
 
-  /// Link halaman tempat (bukan navigasi). Cadangan: pencarian koordinat di Google Maps.
+  /// Link halaman tempat (bukan navigasi). Menampilkan kartu profil bisnis resmi di Google Maps.
   static Uri placePageUri(NearbyPlace place) {
     final given = Uri.tryParse(place.mapsUrl);
     if (_isAllowed(given)) return given!;
+    final query = place.name.isNotEmpty
+        ? '${place.name}, ${place.lat.toStringAsFixed(6)},${place.lng.toStringAsFixed(6)}'
+        : '${place.lat.toStringAsFixed(6)},${place.lng.toStringAsFixed(6)}';
     return Uri.https('www.google.com', '/maps/search/', <String, String>{
       'api': '1',
-      'query': '${place.lat.toStringAsFixed(6)},${place.lng.toStringAsFixed(6)}',
+      'query': query,
     });
   }
 

@@ -46,7 +46,7 @@ class DirectOsmPlacesApi implements PlacesApi {
     required double lat,
     required double lng,
     PlaceCategory? category,
-    int limit = 5,
+    int limit = 15,
     int? radiusM,
     double? headingDeg,
     double? speedMps,
@@ -282,8 +282,8 @@ class DirectOsmPlacesApi implements PlacesApi {
       if (detectedCat == null) continue;
       if (requestedCategory != null && detectedCat != requestedCategory) continue;
 
-      // Filter nama bengkel / salah tag
-      if (detectedCat == PlaceCategory.restArea && _isInvalidRestArea(tags)) {
+      final name = _resolveName(tags, detectedCat);
+      if (name.isEmpty || _isInvalidOrGhostPlace(tags, name, detectedCat)) {
         continue;
       }
 
@@ -299,12 +299,13 @@ class DirectOsmPlacesApi implements PlacesApi {
         headingDeg: headingDeg,
       );
 
-      final name = _resolveName(tags, detectedCat);
       final address = _resolveAddress(tags);
 
       final placeId = 'osm:$type/$idNum';
-      final navUrl = 'google.navigation:q=$pLat,$pLng&mode=d';
-      final mapsUrl = 'https://www.google.com/maps/search/?api=1&query=$pLat,$pLng';
+      final placeQuery = '$name, ${pLat.toStringAsFixed(6)},${pLng.toStringAsFixed(6)}';
+      final encodedQuery = Uri.encodeComponent(placeQuery);
+      final mapsUrl = 'https://www.google.com/maps/search/?api=1&query=$encodedQuery';
+      final navUrl = 'https://www.google.com/maps/dir/?api=1&destination=$encodedQuery&travelmode=driving';
 
       list.add(
         NearbyPlace(
@@ -325,14 +326,18 @@ class DirectOsmPlacesApi implements PlacesApi {
       );
     }
 
-    // Urutkan: preferAhead jika aktif dan arah gerak diketahui, lalu jarak terdekat
+    // Urutkan: tempat sangat dekat (< 1 km) selalu diprioritaskan utama
+    // (mudah putar balik/belok 150m daripada dipaksa jalan 5km ke depan).
+    // Untuk jarak lebih jauh (> 1 km), tempat di depan (ahead) diprioritaskan.
     list.sort((a, b) {
       if (preferAhead && headingDeg != null) {
-        final aAhead = a.ahead ?? false;
-        final bAhead = b.ahead ?? false;
-        if (aAhead != bAhead) {
-          return aAhead ? -1 : 1;
-        }
+        final distA = (a.ahead == false && a.distanceM > 1000)
+            ? a.distanceM + 2500
+            : a.distanceM;
+        final distB = (b.ahead == false && b.distanceM > 1000)
+            ? b.distanceM + 2500
+            : b.distanceM;
+        return distA.compareTo(distB);
       }
       return a.distanceM.compareTo(b.distanceM);
     });
@@ -416,6 +421,84 @@ class DirectOsmPlacesApi implements PlacesApi {
     return false;
   }
 
+  bool _isInvalidOrGhostPlace(
+    Map<String, dynamic> tags,
+    String name,
+    PlaceCategory cat,
+  ) {
+    final lowerName = name.trim().toLowerCase();
+    if (lowerName.length < 3) return true;
+
+    // Filter nama generic tanpa nama cabang spesifik
+    if (lowerName == 'hotel' ||
+        lowerName == 'motel' ||
+        lowerName == 'guest house' ||
+        lowerName == 'guesthouse' ||
+        lowerName == 'homestay' ||
+        lowerName == 'penginapan' ||
+        lowerName == 'spbu' ||
+        lowerName == 'spbu pertamina' ||
+        lowerName == 'pom bensin' ||
+        lowerName == 'rest area' ||
+        lowerName == 'minimarket' ||
+        lowerName == 'market' ||
+        lowerName == 'ruko' ||
+        lowerName == 'toko' ||
+        lowerName == 'warung') {
+      final branch = tags['branch']?.toString().trim() ?? '';
+      if (branch.isEmpty) return true;
+    }
+
+    final combined = '$lowerName ${tags.toString().toLowerCase()}';
+
+    // 1. FILTER KOST / KOS-KOSAN / ASRAMA / STUDENT ACCOMMODATION
+    // Pengemudi yang kelelahan butuh hotel/motel komersial, BUKAN kos-kosan privat
+    final isKost = RegExp(
+      r"\b(kost|kos|kosan|indekos|asrama|kontrakan|paviliun|pondokan|pesantren|boarding)\b",
+      caseSensitive: false,
+    ).hasMatch(combined);
+
+    if (isKost ||
+        combined.contains('student_accommodation') ||
+        combined.contains('wisma putri') ||
+        combined.contains('wisma putra') ||
+        combined.contains('kost putri') ||
+        combined.contains('kost putra') ||
+        combined.contains('kos putri') ||
+        combined.contains('kos putra') ||
+        combined.contains('rumah pak') ||
+        combined.contains('rumah mbak') ||
+        combined.contains('rumah bu') ||
+        combined.contains('rumah kaka')) {
+      return true;
+    }
+
+    // 2. FILTER POM MINI / PERTAMINI (Bukan SPBU Resmi)
+    if (combined.contains('pom mini') ||
+        combined.contains('pertamini') ||
+        combined.contains('pompa bensin mini') ||
+        combined.contains('eceran') ||
+        combined.contains('botol')) {
+      return true;
+    }
+
+    // 3. FILTER MINIMARKET (Hanya minimarket ritel resmi, bukan toko kelontong/vape/kerupuk)
+    if (cat == PlaceCategory.minimarket) {
+      final isBadShop = RegExp(
+        r'\b(vape|computer|komputer|kerupuk|kwaci|mandi|baking|kelontong|sembako|warung|ruko|fotocopy|kios)\b',
+        caseSensitive: false,
+      ).hasMatch(lowerName);
+      if (isBadShop) return true;
+    }
+
+    // 4. FILTER REST AREA (Bukan bengkel / tambal ban / cuci motor)
+    if (cat == PlaceCategory.restArea && _isInvalidRestArea(tags)) {
+      return true;
+    }
+
+    return false;
+  }
+
   String _resolveName(Map<String, dynamic> tags, PlaceCategory cat) {
     String baseName = '';
     for (final key in ['name', 'name:id', 'brand', 'operator']) {
@@ -425,7 +508,7 @@ class DirectOsmPlacesApi implements PlacesApi {
         break;
       }
     }
-    if (baseName.isEmpty) baseName = cat.label;
+    if (baseName.isEmpty) return '';
 
     final branch = tags['branch']?.toString().trim();
     if (branch != null &&
