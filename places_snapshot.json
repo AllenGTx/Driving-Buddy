@@ -27538,6 +27538,1929 @@
         "verified": "google_maps_verified",
         "tourism": "hotel"
       }
+    },
+    {
+      "type": "node",
+      "id": 1175390216,
+      "lat": -7.0365347,
+      "lon": 110.458749,
+      "tags": {
+        "name": "SPBU",
+        "addr:street": "",
+        "addr:city": "Kota Semarang",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 12666296120,
+      "lat": -7.5862525,
+      "lon": 110.8340109,
+      "tags": {
+        "name": "Halte SPBU Semanggi A",
+        "addr:street": "Jalan Kyai Maja",
+        "addr:city": "Surakarta",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 12624591147,
+      "lat": -7.5804555,
+      "lon": 110.8151423,
+      "tags": {
+        "name": "Halte SPBU Bunderan A",
+        "addr:street": "Jalan Veteran",
+        "addr:city": "Surakarta",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13482967581,
+      "lat": -7.5681438,
+      "lon": 110.7867078,
+      "tags": {
+        "name": "SPBU Pajang A",
+        "addr:street": "Jalan Dokter Rajiman Widiodiningrat",
+        "addr:city": "Surakarta",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 894257756,
+      "lat": -6.9247685,
+      "lon": 109.1874293,
+      "tags": {
+        "name": "SPBU Pertamina 44.521.10 Tangkil Mindaka",
+        "addr:street": "Jalan Raya Mindaka",
+        "addr:city": "Tegal",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 814574662,
+      "lat": -6.8809265,
+      "lon": 109.1874119,
+      "tags": {
+        "name": "SPBU Pertamina 44.521.18 Bongkok",
+        "addr:street": "Jalan Garuda",
+        "addr:city": "Tegal",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 339173624,
+      "lat": -7.060868,
+      "lon": 109.2403232,
+      "tags": {
+        "name": "SPBU 44.524.01",
+        "addr:street": "Jalan Pancasila",
+        "addr:city": "Tegal",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1409523832,
+      "lat": -6.9205737,
+      "lon": 109.1516783,
+      "tags": {
+        "name": "SPBU Pertamina 45.521.01 Bengle Talang",
+        "addr:street": "Jalan Projosumarto 2",
+        "addr:city": "Tegal",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 879562441,
+      "lat": -6.9039246,
+      "lon": 109.1879338,
+      "tags": {
+        "name": "SPBU Pertamina 44.521.19 Tarub",
+        "addr:street": "Jalan Raya Mindaka",
+        "addr:city": "Tegal",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 857364239,
+      "lat": -6.9440497,
+      "lon": 109.1843173,
+      "tags": {
+        "name": "SPBU 4552127 KARANGJATI TARUB",
+        "addr:street": "Jalan Raya Balamoa",
+        "addr:city": "Tegal",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4126300393,
+      "lat": -6.8613783,
+      "lon": 109.16483,
+      "tags": {
+        "name": "spbu muri",
+        "addr:street": "Jalan Raya Tegal - Pemalang",
+        "addr:city": "Tegal",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4304119089,
+      "lat": -6.9629624,
+      "lon": 109.1386136,
+      "tags": {
+        "name": "SPBU Procot",
+        "addr:street": "Jalan Mangga ",
+        "addr:city": "Tegal",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3463010178,
+      "lat": -7.4825279,
+      "lon": 110.2333959,
+      "tags": {
+        "name": "SPBU",
+        "addr:street": "Jalan Jenderal Urip Sumoharjo",
+        "addr:city": "Kota Magelang",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3463010410,
+      "lat": -7.4880803,
+      "lon": 110.2345584,
+      "tags": {
+        "name": "SPBU",
+        "addr:street": "Jalan Soekarno Hatta",
+        "addr:city": "Kota Magelang",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 528623281,
+      "lat": -7.60242,
+      "lon": 110.2996551,
+      "tags": {
+        "name": "SPBU",
+        "addr:street": "Jalan Magelang",
+        "addr:city": "Magelang",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3445985781,
+      "lat": -7.5737963,
+      "lon": 110.2735523,
+      "tags": {
+        "name": "SPBU",
+        "addr:street": "Jalan Tentara Pelajar",
+        "addr:city": "Magelang",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 834299850,
+      "lat": -6.8185986,
+      "lon": 110.8374118,
+      "tags": {
+        "name": "SPBU MATAHARI",
+        "addr:street": "Jalan Lukmonohadi",
+        "addr:city": "Kudus",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 14008616195,
+      "lat": -6.8405546,
+      "lon": 110.8323836,
+      "tags": {
+        "name": "SPBU Tanjung",
+        "addr:street": "Jalan Lingkar Timur Kudus",
+        "addr:city": "Kudus",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3011767702,
+      "lat": -7.3204565,
+      "lon": 110.4942945,
+      "tags": {
+        "name": "SPBU",
+        "addr:street": "Jalan Imam Bonjol",
+        "addr:city": "Salatiga",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 737501561,
+      "lat": -7.5676235,
+      "lon": 108.8955585,
+      "tags": {
+        "name": "SPBU",
+        "addr:street": "Jalan S. Parman",
+        "addr:city": "Desa Rawajaya",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 12458529848,
+      "lat": -7.707966,
+      "lon": 109.3690062,
+      "tags": {
+        "name": "SPBU Pertamina 44.532.16 Jetis",
+        "addr:street": "Jalan Diponegoro",
+        "addr:city": "Cilacap",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 962734815,
+      "lat": -7.7423227,
+      "lon": 109.5868056,
+      "tags": {
+        "name": "SPBU",
+        "addr:street": "Jalan Daendels",
+        "addr:city": "Kebumen",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 8421849791,
+      "lat": -7.7612442,
+      "lon": 109.668424,
+      "tags": {
+        "name": "SPBU",
+        "addr:street": "Gang Pasar Bocor",
+        "addr:city": "Kebumen",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5993873482,
+      "lat": -7.6643657,
+      "lon": 109.6605447,
+      "tags": {
+        "name": "SPBU Wonoyoso",
+        "addr:street": "Jalan HM Sarbini",
+        "addr:city": "Kebumen",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5993873481,
+      "lat": -7.6648774,
+      "lon": 109.6715981,
+      "tags": {
+        "name": "SPBU Kawedusan",
+        "addr:street": "Jalan Tentara Pelajar",
+        "addr:city": "Kebumen",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6611833247,
+      "lat": -7.7185743,
+      "lon": 109.7807126,
+      "tags": {
+        "name": "SPBU Tersobo",
+        "addr:street": "7",
+        "addr:city": "Kebumen",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 11905866749,
+      "lat": -7.6024887,
+      "lon": 109.5040567,
+      "tags": {
+        "name": "Pertamina SPBU 44.544.03",
+        "addr:street": "172",
+        "addr:city": "Kebumen",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7968495361,
+      "lat": -7.6448899,
+      "lon": 109.5814057,
+      "tags": {
+        "name": "spbu candisari",
+        "addr:street": "Jalan Raya Sruweng",
+        "addr:city": "Kebumen",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5805019402,
+      "lat": -7.7160842,
+      "lon": 109.7568941,
+      "tags": {
+        "name": "SPBU Pertamina",
+        "addr:street": "7",
+        "addr:city": "Kebumen",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1194649554,
+      "lat": -7.682043,
+      "lon": 110.6891137,
+      "tags": {
+        "name": "SPBU Pertamina 44.574.12 Kurung",
+        "addr:street": "SPBU Pertamina 44.574.12 Kurung",
+        "addr:city": "Klaten",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1345303785,
+      "lat": -7.6789314,
+      "lon": 110.6034274,
+      "tags": {
+        "name": "SPBU Pertamina 44.574.17 Jebugan",
+        "addr:street": "Jalan Ki Ageng Gribig",
+        "addr:city": "Klaten",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 466322864,
+      "lat": -7.6900114,
+      "lon": 110.6180602,
+      "tags": {
+        "name": "SPBU Pertamina 44.574.03 Jonggrangan",
+        "addr:street": "Jalan Jogja - Solo",
+        "addr:city": "Klaten",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1064208623,
+      "lat": -7.6748437,
+      "lon": 110.6538153,
+      "tags": {
+        "name": "SPBU Pertamina 44.574.02 Karangwuni",
+        "addr:street": "17",
+        "addr:city": "Klaten",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 12533292560,
+      "lat": -7.6585079,
+      "lon": 110.6285585,
+      "tags": {
+        "name": "SPBU Pertamina 45.574.31 Tarubasan",
+        "addr:street": "Jalan Karangan - Pasar Senggol",
+        "addr:city": "Klaten",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 12533292551,
+      "lat": -7.6750881,
+      "lon": 110.535595,
+      "tags": {
+        "name": "SPBU Pertamina 44.574.25 Karangnongko",
+        "addr:street": "Jalan Basin - Mipitan",
+        "addr:city": "Klaten",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10110676543,
+      "lat": -7.6624043,
+      "lon": 110.5909495,
+      "tags": {
+        "name": "SPBU Pertamina 44.574.23 Ngupit",
+        "addr:street": "Jalan Totogan - Banjarrejo",
+        "addr:city": "Klaten",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 20598079,
+      "lat": -7.6864474,
+      "lon": 110.7088946,
+      "tags": {
+        "name": "SPBU Pertamina 44.574.38 Troketon",
+        "addr:street": "Jalan Karangwungu - Pedan",
+        "addr:city": "Klaten",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1266483988,
+      "lat": -7.7059314,
+      "lon": 110.6592837,
+      "tags": {
+        "name": "SPBU Pertamina 44.574.29 Trucuk",
+        "addr:street": "Jalan Ngaran - Telukan",
+        "addr:city": "Klaten",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 12894115372,
+      "lat": -7.0935665,
+      "lon": 110.0837079,
+      "tags": {
+        "name": "SPBU",
+        "addr:street": "Jalan Curug Sewu",
+        "addr:city": "Kendal",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 368853914,
+      "lat": -7.6525634,
+      "lon": 110.3735365,
+      "tags": {
+        "name": "SPBU Pertamina 44.555.12 Kembang Arum",
+        "addr:street": "Jalan Turi",
+        "addr:city": "Sleman",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 592229742,
+      "lat": -7.1063622,
+      "lon": 110.2820768,
+      "tags": {
+        "name": "SPBU Pertamina",
+        "addr:street": "Jalan Raya Tampingan",
+        "addr:city": "Kendal",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 629413182,
+      "lat": -6.9545097,
+      "lon": 110.090331,
+      "tags": {
+        "name": "Toilet SPBU",
+        "addr:street": "Jalan Raya Batang - Kendal",
+        "addr:city": "Kendal",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 8158524977,
+      "lat": -7.0765362,
+      "lon": 110.0448587,
+      "tags": {
+        "name": "SPBU SUMBER",
+        "addr:street": "Jalan Raya Bawang - Sukorejo",
+        "addr:city": "Kendal",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 12950006088,
+      "lat": -7.0424381,
+      "lon": 110.5162489,
+      "tags": {
+        "name": "SPBU",
+        "addr:street": "Jalan Sukaimi",
+        "addr:city": "Demak",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1059441463,
+      "lat": -6.7560913,
+      "lon": 111.0211878,
+      "tags": {
+        "name": "SPBU Pertamina",
+        "addr:street": "Jalan Raya Pati",
+        "addr:city": "Pati",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 11754907870,
+      "lat": -6.8828689,
+      "lon": 110.9924911,
+      "tags": {
+        "name": "SPBU Pertamina",
+        "addr:street": "211",
+        "addr:city": "Pati",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1298328993,
+      "lat": -6.6951445,
+      "lon": 111.339191,
+      "tags": {
+        "name": "spbu",
+        "addr:street": "Jalan Dorang",
+        "addr:city": "Rembang",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 11865440380,
+      "lat": -6.8710106,
+      "lon": 108.8395882,
+      "tags": {
+        "name": "SPBU Pertamina",
+        "addr:street": "Jalan Raya Cirebon - Brebes",
+        "addr:city": "Brebes",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 704247344,
+      "lat": -7.0422564,
+      "lon": 109.3751916,
+      "tags": {
+        "name": "SPBU Bantarbolang",
+        "addr:street": "158",
+        "addr:city": "Pemalang",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 704250413,
+      "lat": -7.0988102,
+      "lon": 109.3481293,
+      "tags": {
+        "name": "SPBU Karangmoncol",
+        "addr:street": "158",
+        "addr:city": "Pemalang",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5263243856,
+      "lat": -7.4009355,
+      "lon": 109.8892315,
+      "tags": {
+        "name": "SPBU",
+        "addr:street": "Jalan Raya Wonosobo - Banjarnegara",
+        "addr:city": "Wonosobo",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1283101352,
+      "lat": -7.2936627,
+      "lon": 110.1062425,
+      "tags": {
+        "name": "SPBU",
+        "addr:street": "",
+        "addr:city": "Temanggung",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 270039324,
+      "lat": -7.2707844,
+      "lon": 110.0910608,
+      "tags": {
+        "name": "SPBU",
+        "addr:street": "176",
+        "addr:city": "Temanggung",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3463005668,
+      "lat": -7.2259754,
+      "lon": 110.058686,
+      "tags": {
+        "name": "SPBU",
+        "addr:street": "176",
+        "addr:city": "Temanggung",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3463010484,
+      "lat": -7.3752524,
+      "lon": 110.220098,
+      "tags": {
+        "name": "SPBU",
+        "addr:street": "Jalan Raya Temanggung - Magelang",
+        "addr:city": "Temanggung",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3463010487,
+      "lat": -7.1837443,
+      "lon": 110.0640694,
+      "tags": {
+        "name": "SPBU",
+        "addr:street": "176",
+        "addr:city": "Temanggung",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6089952646,
+      "lat": -7.8167755,
+      "lon": 110.0170975,
+      "tags": {
+        "name": "spbu",
+        "addr:street": "Jalan Wates - Purworejo",
+        "addr:city": "Purworejo",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1103040632,
+      "lat": -7.1976391,
+      "lon": 111.5897562,
+      "tags": {
+        "name": "SPBU Pertamina 54.621.22 Kerdu",
+        "addr:street": "Jalan Raya Ngawi - Bojonegoro",
+        "addr:city": "Bojonegoro",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 949372248,
+      "lat": -7.7254427,
+      "lon": 109.8776321,
+      "tags": {
+        "name": "SPBU Andong",
+        "addr:street": "7",
+        "addr:city": "Purworejo",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 948935305,
+      "lat": -7.7206783,
+      "lon": 109.8392957,
+      "tags": {
+        "name": "Pertamina Spbu 44 54107",
+        "addr:street": "7",
+        "addr:city": "Purworejo",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1211951354,
+      "lat": -7.8083272,
+      "lon": 109.9056607,
+      "tags": {
+        "name": "SPBU AGLIK",
+        "addr:street": "Kuatoarjo - Ketawang",
+        "addr:city": "Purworejo",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10178928144,
+      "lat": -7.8135284,
+      "lon": 109.996337,
+      "tags": {
+        "name": "SPBU Pertamina Purwodadi",
+        "addr:street": "Jalan Panembahan Senopati",
+        "addr:city": "Purworejo",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1076762237,
+      "lat": -7.4310669,
+      "lon": 111.0046444,
+      "tags": {
+        "name": "SPBU Pertamina 44.572.02 Sine",
+        "addr:street": "Jalan Sukowati",
+        "addr:city": "Sragen",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1093752171,
+      "lat": -7.4348422,
+      "lon": 111.0242039,
+      "tags": {
+        "name": "SPBU Pertamina Taman Asri",
+        "addr:street": "Jalan Veteran",
+        "addr:city": "Sragen",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5872990202,
+      "lat": -7.3974093,
+      "lon": 111.0650833,
+      "tags": {
+        "name": "SPBU 44.572.22",
+        "addr:street": "Jalan Raya Solo - Ngawi",
+        "addr:city": "Sragen",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2049289684,
+      "lat": -7.3849968,
+      "lon": 111.0883844,
+      "tags": {
+        "name": "SPBU 44.572.03",
+        "addr:street": "Jalan Raya Solo - Ngawi",
+        "addr:city": "Sragen",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 12249326309,
+      "lat": -7.4310698,
+      "lon": 111.0521657,
+      "tags": {
+        "name": "SPBU Pertamina Gumitar",
+        "addr:street": "17",
+        "addr:city": "Sragen",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 14239111877,
+      "lat": -7.3333544,
+      "lon": 111.0579061,
+      "tags": {
+        "name": "SPBU Tangen",
+        "addr:street": "Jalan Sragen - Tangen",
+        "addr:city": "Sragen",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Pertamina",
+        "amenity": "fuel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1409523842,
+      "lat": -6.9121773,
+      "lon": 109.1877555,
+      "tags": {
+        "name": "Indomaret",
+        "addr:street": "Jalan Raya Mindaka",
+        "addr:city": "Tegal",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Indomaret",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 863314710,
+      "lat": -6.9006954,
+      "lon": 109.156838,
+      "tags": {
+        "name": "Indomaret",
+        "addr:street": "Jalan Projosumarto 1",
+        "addr:city": "Tegal",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Indomaret",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1409523834,
+      "lat": -6.919538,
+      "lon": 109.1427707,
+      "tags": {
+        "name": "Indomaret",
+        "addr:street": "Jalan Projosumarto 2",
+        "addr:city": "Tegal",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Indomaret",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 999987443,
+      "lat": -6.9436621,
+      "lon": 109.1730056,
+      "tags": {
+        "name": "Indomaret",
+        "addr:street": "Jalan Tol Pejagan–Pemalang",
+        "addr:city": "Tegal",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Indomaret",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6693787404,
+      "lat": -6.9372151,
+      "lon": 109.2723062,
+      "tags": {
+        "name": "Indomaret",
+        "addr:street": "Jalan Tol Pejagan–Pemalang",
+        "addr:city": "Tegal",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Indomaret",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 637407897,
+      "lat": -6.8940379,
+      "lon": 109.6173459,
+      "tags": {
+        "name": "Indomaret Mayjen sutoyo",
+        "addr:street": "Jalan Mayjend. Sutoyo",
+        "addr:city": "Pekalongan",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Indomaret",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2018015545,
+      "lat": -7.4193531,
+      "lon": 109.2220106,
+      "tags": {
+        "name": "Indomaret",
+        "addr:street": "Jalan Stasiun",
+        "addr:city": "Purwokerto",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Indomaret",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 11173244938,
+      "lat": -7.4415454,
+      "lon": 109.2371621,
+      "tags": {
+        "name": "Indomaret",
+        "addr:street": "Jalan Gerilya",
+        "addr:city": "Purwokerto",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Indomaret",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 11683477369,
+      "lat": -7.4222492,
+      "lon": 109.2443115,
+      "tags": {
+        "name": "Indomaret",
+        "addr:street": "Jalan Overste Isdiman",
+        "addr:city": "Purwokerto",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Indomaret",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13724458023,
+      "lat": -6.7609536,
+      "lon": 110.8422642,
+      "tags": {
+        "name": "Indomaret",
+        "addr:street": "Jalan Besito-Sudimoro",
+        "addr:city": "Kudus",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Indomaret",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9797931936,
+      "lat": -7.7547682,
+      "lon": 110.4998078,
+      "tags": {
+        "name": "Indomaret",
+        "addr:street": "Jalan Jogja - Solo",
+        "addr:city": "Klaten",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Indomaret",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9797931828,
+      "lat": -7.7505506,
+      "lon": 110.5197219,
+      "tags": {
+        "name": "Indomaret",
+        "addr:street": "Jalan Jogja - Solo",
+        "addr:city": "Klaten",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Indomaret",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9797929161,
+      "lat": -7.6893874,
+      "lon": 110.6068104,
+      "tags": {
+        "name": "Indomaret",
+        "addr:street": "Jalan Mayor Kusmanto",
+        "addr:city": "Klaten",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Indomaret",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9797933279,
+      "lat": -7.6662431,
+      "lon": 110.664132,
+      "tags": {
+        "name": "Indomaret",
+        "addr:street": "Jalan Jogja - Solo",
+        "addr:city": "Klaten",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Indomaret",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9797911733,
+      "lat": -7.6598293,
+      "lon": 110.67424,
+      "tags": {
+        "name": "Indomaret",
+        "addr:street": "Jalan Jogja - Solo",
+        "addr:city": "Klaten",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Indomaret",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9797926908,
+      "lat": -7.6560539,
+      "lon": 110.6792849,
+      "tags": {
+        "name": "Indomaret",
+        "addr:street": "Jalan Jogja - Solo",
+        "addr:city": "Klaten",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Indomaret",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9797929923,
+      "lat": -7.6894319,
+      "lon": 110.6214255,
+      "tags": {
+        "name": "Indomaret",
+        "addr:street": "Jalan Jogja - Solo",
+        "addr:city": "Klaten",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Indomaret",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9797912866,
+      "lat": -7.7546845,
+      "lon": 110.5028558,
+      "tags": {
+        "name": "Indomaret",
+        "addr:street": "Jalan Jogja - Solo",
+        "addr:city": "Klaten",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Indomaret",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1317302654,
+      "lat": -7.6720394,
+      "lon": 110.7526127,
+      "tags": {
+        "name": "Indomaret",
+        "addr:street": "Jalan Karangwungu - Tanjung",
+        "addr:city": "Klaten",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Indomaret",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9797908850,
+      "lat": -7.7235836,
+      "lon": 110.5575975,
+      "tags": {
+        "name": "Indomaret",
+        "addr:street": "Jalan Jogja - Solo",
+        "addr:city": "Klaten",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Indomaret",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 12852402870,
+      "lat": -7.7038344,
+      "lon": 110.5939004,
+      "tags": {
+        "name": "Indomaret",
+        "addr:street": "Jalan Tentara Pelajar",
+        "addr:city": "Klaten",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Indomaret",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9797929860,
+      "lat": -7.7198954,
+      "lon": 110.5689727,
+      "tags": {
+        "name": "Indomaret",
+        "addr:street": "Jalan Jogja - Solo",
+        "addr:city": "Klaten",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Indomaret",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9824781891,
+      "lat": -7.7273703,
+      "lon": 110.5496724,
+      "tags": {
+        "name": "Indomaret",
+        "addr:street": "Jalan Jogja - Solo",
+        "addr:city": "Klaten",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Indomaret",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9797922262,
+      "lat": -7.686912,
+      "lon": 110.6350632,
+      "tags": {
+        "name": "Indomaret",
+        "addr:street": "Jalan Ahmad Dahlan",
+        "addr:city": "Klaten",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Indomaret",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9797934914,
+      "lat": -7.7155124,
+      "lon": 110.5883945,
+      "tags": {
+        "name": "Indomaret",
+        "addr:street": "Jalan Jogja - Solo",
+        "addr:city": "Klaten",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Indomaret",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13823031954,
+      "lat": -7.6509516,
+      "lon": 110.3687874,
+      "tags": {
+        "name": "Indomaret Wonokerto Turi",
+        "addr:street": "Jalan Turi",
+        "addr:city": "Sleman",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Indomaret",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 866825954,
+      "lat": -6.920255,
+      "lon": 109.1591599,
+      "tags": {
+        "name": "Alfamart",
+        "addr:street": "Jalan Projosumarto 2",
+        "addr:city": "Tegal",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Alfamart",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1409523838,
+      "lat": -6.8894223,
+      "lon": 109.1877578,
+      "tags": {
+        "name": "Alfamart",
+        "addr:street": "Jalan Garuda",
+        "addr:city": "Tegal",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Alfamart",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 339173616,
+      "lat": -7.0614908,
+      "lon": 109.243172,
+      "tags": {
+        "name": "Alfamart",
+        "addr:street": "Jalan Pancasila",
+        "addr:city": "Tegal",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Alfamart",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 999077807,
+      "lat": -6.9711649,
+      "lon": 109.6057142,
+      "tags": {
+        "name": "Alfamart",
+        "addr:street": "Jalan Raya Bojong -  Kajen",
+        "addr:city": "Pekalongan",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Alfamart",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 11683470671,
+      "lat": -7.4235022,
+      "lon": 109.2474928,
+      "tags": {
+        "name": "Alfamart",
+        "addr:street": "Jalan Komisaris Bambang Suprapto",
+        "addr:city": "Purwokerto",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Alfamart",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 11683482969,
+      "lat": -7.4244705,
+      "lon": 109.2510796,
+      "tags": {
+        "name": "Alfamart",
+        "addr:street": "Jalan Letnan Jenderal MT. Haryono",
+        "addr:city": "Purwokerto",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Alfamart",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 11661938769,
+      "lat": -7.4296758,
+      "lon": 109.2492166,
+      "tags": {
+        "name": "Alfamart",
+        "addr:street": "Jalan Pramuka",
+        "addr:city": "Purwokerto",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Alfamart",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 476604829,
+      "lat": -6.7995908,
+      "lon": 110.8675277,
+      "tags": {
+        "name": "Alfamart",
+        "addr:street": "Gang V Dersalam",
+        "addr:city": "Kudus",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Alfamart",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 363856581,
+      "lat": -7.7519395,
+      "lon": 110.5003796,
+      "tags": {
+        "name": "Alfamart",
+        "addr:street": "Jalan Prambanan - Manisrenggo",
+        "addr:city": "Klaten",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Alfamart",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1064208622,
+      "lat": -7.6741725,
+      "lon": 110.6537043,
+      "tags": {
+        "name": "Alfamart",
+        "addr:street": "Jalan Jogja - Solo",
+        "addr:city": "Klaten",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Alfamart",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9797933273,
+      "lat": -7.754792,
+      "lon": 110.5092424,
+      "tags": {
+        "name": "Alfamart",
+        "addr:street": "Jalan Jogja - Solo",
+        "addr:city": "Klaten",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Alfamart",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9797919706,
+      "lat": -7.6895837,
+      "lon": 110.6206591,
+      "tags": {
+        "name": "Alfamart",
+        "addr:street": "Jalan Jogja - Solo",
+        "addr:city": "Klaten",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Alfamart",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9797935219,
+      "lat": -7.6889863,
+      "lon": 110.6158146,
+      "tags": {
+        "name": "Alfamart",
+        "addr:street": "Jalan Mayor Sunaryo",
+        "addr:city": "Klaten",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Alfamart",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9797935166,
+      "lat": -7.663109,
+      "lon": 110.6685448,
+      "tags": {
+        "name": "Alfamart",
+        "addr:street": "Jalan Jogja - Solo",
+        "addr:city": "Klaten",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Alfamart",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9824969601,
+      "lat": -7.6755444,
+      "lon": 110.6527648,
+      "tags": {
+        "name": "Alfamart",
+        "addr:street": "Jalan Jogja - Solo",
+        "addr:city": "Klaten",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Alfamart",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9824976852,
+      "lat": -7.6608939,
+      "lon": 110.6730887,
+      "tags": {
+        "name": "Alfamart",
+        "addr:street": "Jalan Jogja - Solo",
+        "addr:city": "Klaten",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Alfamart",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1348667788,
+      "lat": -7.6581044,
+      "lon": 110.7384635,
+      "tags": {
+        "name": "Alfamart",
+        "addr:street": "Jalan Juwiring - Tanjung",
+        "addr:city": "Klaten",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Alfamart",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1064029613,
+      "lat": -7.6720236,
+      "lon": 110.677006,
+      "tags": {
+        "name": "Alfamart",
+        "addr:street": "Jalan Besole - Ceper",
+        "addr:city": "Klaten",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Alfamart",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9797933275,
+      "lat": -7.7094612,
+      "lon": 110.594802,
+      "tags": {
+        "name": "Alfamart",
+        "addr:street": "Jalan Merbabu",
+        "addr:city": "Klaten",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Alfamart",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9797890376,
+      "lat": -7.7175473,
+      "lon": 110.5822118,
+      "tags": {
+        "name": "Alfamart",
+        "addr:street": "Jalan Jogja - Solo",
+        "addr:city": "Klaten",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Alfamart",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9797923474,
+      "lat": -7.7351313,
+      "lon": 110.5398123,
+      "tags": {
+        "name": "Alfamart",
+        "addr:street": "Jalan Jogja - Solo",
+        "addr:city": "Klaten",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Alfamart",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9873474525,
+      "lat": -7.7281477,
+      "lon": 110.5494309,
+      "tags": {
+        "name": "Alfamart",
+        "addr:street": "Jalan Jogja - Solo",
+        "addr:city": "Klaten",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Alfamart",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9824969079,
+      "lat": -7.6966247,
+      "lon": 110.6004061,
+      "tags": {
+        "name": "Alfamart",
+        "addr:street": "Jalan Mayor Kusmanto",
+        "addr:city": "Klaten",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "brand": "Alfamart",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 211268931,
+      "lat": -7.4925029,
+      "lon": 110.2230133,
+      "tags": {
+        "name": "Hotel Wisata Magelang",
+        "addr:street": "Jalan Panglima Besar Sudirman",
+        "addr:city": "Kota Magelang",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 819258199,
+      "lat": -6.8720694,
+      "lon": 109.3148478,
+      "tags": {
+        "name": "Hotel Solaris Tegal",
+        "addr:street": "Jalan Raya Tegal - Pemalang",
+        "addr:city": "Tegal",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10023119894,
+      "lat": -6.8707014,
+      "lon": 109.1176567,
+      "tags": {
+        "name": "Hotel Bahari Inn",
+        "addr:street": "Jalan Kolonel Sugiono",
+        "addr:city": "Tegal",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 735383759,
+      "lat": -6.905832,
+      "lon": 109.7005339,
+      "tags": {
+        "name": "Grand Sahid Mandarin Hotel",
+        "addr:street": "",
+        "addr:city": "Pekalongan",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 637416804,
+      "lat": -6.8915675,
+      "lon": 109.6211771,
+      "tags": {
+        "name": "Hotel Marlin",
+        "addr:street": "Jalan Ahmad Yani",
+        "addr:city": "Pekalongan",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1081162003,
+      "lat": -6.8855616,
+      "lon": 109.669081,
+      "tags": {
+        "name": "ASTON Pekalongan Syariah Hotel & Conference Center",
+        "addr:street": "Jalan Imam Bonjol",
+        "addr:city": "Pekalongan",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 555613341,
+      "lat": -6.9014902,
+      "lon": 109.6641779,
+      "tags": {
+        "name": "Hotel Dafam Pekalongan",
+        "addr:street": "Jalan Urip Sumoharjo",
+        "addr:city": "Pekalongan",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1000282413,
+      "lat": -6.8913068,
+      "lon": 109.6802467,
+      "tags": {
+        "name": "Hotel Nirwana Pekalongan",
+        "addr:street": "Jalan Dokter Wahidin",
+        "addr:city": "Pekalongan",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1080587316,
+      "lat": -6.8885865,
+      "lon": 109.664048,
+      "tags": {
+        "name": "Hotel Santika Pekalongan",
+        "addr:street": "Jalan Gajah Mada",
+        "addr:city": "Pekalongan",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4725799366,
+      "lat": -6.8885847,
+      "lon": 109.663362,
+      "tags": {
+        "name": "Hotel Horison Pekalongan",
+        "addr:street": "Jalan Gajah Mada",
+        "addr:city": "Pekalongan",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7021672087,
+      "lat": -6.8883163,
+      "lon": 109.6646119,
+      "tags": {
+        "name": "Hotel Damai",
+        "addr:street": "Jalan Gajah Mada",
+        "addr:city": "Pekalongan",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 415719628,
+      "lat": -7.3240233,
+      "lon": 110.5052545,
+      "tags": {
+        "name": "Bank Jateng",
+        "addr:street": "Jalan Pemuda",
+        "addr:city": "Salatiga",
+        "opening_hours": "24/7",
+        "verified": "osm_nominatim_verified",
+        "tourism": "hotel"
+      }
     }
   ]
 }
