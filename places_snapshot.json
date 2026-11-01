@@ -24399,6 +24399,614 @@
         "addr:city": "Indramayu",
         "description": "Rest stop legendaris Pantura Indramayu dengan area parkir bus/mobil luas, masjid besar, dan ratusan toilet"
       }
+    },
+    {
+      "type": "node",
+      "id": 77700001,
+      "lat": -6.9812,
+      "lon": 110.3245,
+      "tags": {
+        "highway": "rest_area",
+        "toilets": "yes",
+        "mosque": "yes",
+        "shop": "convenience",
+        "province": "Jawa Tengah",
+        "name": "Rest Point Gerbang Tol Kalikangkung",
+        "ref": "GT Kalikangkung"
+      }
+    },
+    {
+      "type": "node",
+      "id": 77700002,
+      "lat": -7.0015,
+      "lon": 110.3752,
+      "tags": {
+        "highway": "rest_area",
+        "amenity": "fuel",
+        "toilets": "yes",
+        "shop": "convenience",
+        "province": "Jawa Tengah",
+        "name": "Rest Stop Tol Manyaran Semarang",
+        "ref": "Tol Manyaran"
+      }
+    },
+    {
+      "type": "node",
+      "id": 77700003,
+      "lat": -6.985,
+      "lon": 110.358,
+      "tags": {
+        "highway": "rest_area",
+        "amenity": "fuel",
+        "shop": "convenience",
+        "toilets": "yes",
+        "province": "Jawa Tengah",
+        "name": "Rest Stop Tol Krapyak Semarang Barat",
+        "ref": "Krapyak"
+      }
+    },
+    {
+      "type": "node",
+      "id": 77700004,
+      "lat": -7.635,
+      "lon": 110.655,
+      "tags": {
+        "highway": "rest_area",
+        "toilets": "yes",
+        "mosque": "yes",
+        "shop": "convenience",
+        "province": "Jawa Tengah",
+        "name": "Rest Area KM 19 Tol Solo-Jogja (Klaten)",
+        "ref": "KM 19 Klaten"
+      }
+    },
+    {
+      "type": "node",
+      "id": 77700005,
+      "lat": -7.552,
+      "lon": 110.718,
+      "tags": {
+        "highway": "rest_area",
+        "toilets": "yes",
+        "shop": "convenience",
+        "province": "Jawa Tengah",
+        "name": "Rest Area Gerbang Tol Banyudono Tol Solo-Jogja",
+        "ref": "GT Banyudono"
+      }
+    },
+    {
+      "type": "node",
+      "id": 77700006,
+      "lat": -6.762,
+      "lon": 111.045,
+      "tags": {
+        "highway": "rest_area",
+        "amenity": "fuel",
+        "shop": "convenience",
+        "toilets": "yes",
+        "mosque": "yes",
+        "province": "Jawa Tengah",
+        "name": "Rest Area SPBU Gajahmati Lingkar Pati",
+        "ref": "Lingkar Pati"
+      }
+    },
+    {
+      "type": "node",
+      "id": 77700007,
+      "lat": -6.892,
+      "lon": 110.638,
+      "tags": {
+        "highway": "rest_area",
+        "amenity": "fuel",
+        "shop": "convenience",
+        "toilets": "yes",
+        "mosque": "yes",
+        "province": "Jawa Tengah",
+        "name": "Rest Area SPBU 44.595.04 Lingkar Demak",
+        "ref": "Lingkar Demak"
+      }
+    },
+    {
+      "type": "node",
+      "id": 77700008,
+      "lat": -6.825,
+      "lon": 110.842,
+      "tags": {
+        "highway": "rest_area",
+        "amenity": "fuel",
+        "shop": "convenience",
+        "toilets": "yes",
+        "mosque": "yes",
+        "province": "Jawa Tengah",
+        "name": "Rest Area SPBU 44.593.02 Lingkar Kudus (Jenang Kudus)",
+        "ref": "Lingkar Kudus"
+      }
+    },
+    {
+      "type": "node",
+      "id": 77700009,
+      "lat": -6.698,
+      "lon": 111.452,
+      "tags": {
+        "highway": "rest_area",
+        "amenity": "fuel",
+        "shop": "convenience",
+        "toilets": "yes",
+        "mosque": "yes",
+        "province": "Jawa Tengah",
+        "name": "Rest Area SPBU 44.592.01 Lasem Rembang (Pantura Timur)",
+        "ref": "Lasem Rembang"
+      }
+    },
+    {
+      "type": "node",
+      "id": 77700010,
+      "lat": -7.328,
+      "lon": 110.035,
+      "tags": {
+        "highway": "rest_area",
+        "shop": "convenience",
+        "toilets": "yes",
+        "mosque": "yes",
+        "description": "View Spektakuler Sindoro-Sumbing",
+        "province": "Jawa Tengah",
+        "name": "Rest Area Kledung Pass (Temanggung - Wonosobo)",
+        "ref": "Kledung Pass"
+      }
+    },
+    {
+      "type": "node",
+      "id": 77700011,
+      "lat": -7.318,
+      "lon": 110.052,
+      "tags": {
+        "highway": "rest_area",
+        "toilets": "yes",
+        "mosque": "yes",
+        "province": "Jawa Tengah",
+        "name": "Rest Area Jembatan Sigandul Temanggung",
+        "ref": "Sigandul"
+      }
+    },
+    {
+      "type": "node",
+      "id": 77700012,
+      "lat": -7.585,
+      "lon": 109.285,
+      "tags": {
+        "highway": "rest_area",
+        "amenity": "fuel",
+        "shop": "convenience",
+        "toilets": "yes",
+        "mosque": "yes",
+        "province": "Jawa Tengah",
+        "name": "Rest Area Buntu Banyumas (Simpang Buntu Jalur Selatan)",
+        "ref": "Simpang Buntu"
+      }
+    },
+    {
+      "type": "node",
+      "id": 77700013,
+      "lat": -7.632,
+      "lon": 109.575,
+      "tags": {
+        "highway": "rest_area",
+        "amenity": "fuel",
+        "shop": "convenience",
+        "toilets": "yes",
+        "mosque": "yes",
+        "province": "Jawa Tengah",
+        "name": "Rest Area SPBU Karanganyar Kebumen (Jalur Selatan)",
+        "ref": "Karanganyar Kebumen"
+      }
+    },
+    {
+      "type": "node",
+      "id": 77700014,
+      "lat": -7.735,
+      "lon": 109.985,
+      "tags": {
+        "highway": "rest_area",
+        "amenity": "fuel",
+        "shop": "convenience",
+        "toilets": "yes",
+        "mosque": "yes",
+        "province": "Jawa Tengah",
+        "name": "Rest Area SPBU Lingkar Selatan Purworejo",
+        "ref": "Lingkar Purworejo"
+      }
+    },
+    {
+      "type": "node",
+      "id": 77700015,
+      "lat": -7.9015,
+      "lon": 110.0585,
+      "tags": {
+        "highway": "rest_area",
+        "amenity": "fuel",
+        "shop": "convenience",
+        "toilets": "yes",
+        "mosque": "yes",
+        "province": "DIY Yogyakarta",
+        "name": "Rest Area Bandara YIA Kulon Progo",
+        "ref": "YIA Kulon Progo"
+      }
+    },
+    {
+      "type": "node",
+      "id": 77700016,
+      "lat": -7.535,
+      "lon": 110.228,
+      "tags": {
+        "highway": "rest_area",
+        "shop": "convenience",
+        "toilets": "yes",
+        "mosque": "yes",
+        "province": "Jawa Tengah",
+        "name": "Rest Area Pringsewu Magelang / Mertoyudan",
+        "ref": "Mertoyudan Magelang"
+      }
+    },
+    {
+      "type": "node",
+      "id": 77700017,
+      "lat": -7.5785,
+      "lon": 111.9125,
+      "tags": {
+        "highway": "rest_area",
+        "toilets": "yes",
+        "mosque": "yes",
+        "shop": "convenience",
+        "province": "Jawa Timur",
+        "name": "Rest Area KM 640A Tol Ngawi-Kertosono (Nganjuk)",
+        "ref": "KM 640A"
+      }
+    },
+    {
+      "type": "node",
+      "id": 77700018,
+      "lat": -7.5798,
+      "lon": 111.9141,
+      "tags": {
+        "highway": "rest_area",
+        "toilets": "yes",
+        "mosque": "yes",
+        "shop": "convenience",
+        "province": "Jawa Timur",
+        "name": "Rest Area KM 640B Tol Ngawi-Kertosono (Nganjuk)",
+        "ref": "KM 640B"
+      }
+    },
+    {
+      "type": "node",
+      "id": 77700019,
+      "lat": -7.635,
+      "lon": 112.865,
+      "tags": {
+        "highway": "rest_area",
+        "amenity": "fuel",
+        "shop": "convenience",
+        "toilets": "yes",
+        "mosque": "yes",
+        "province": "Jawa Timur",
+        "name": "Rest Area KM 792A Tol Gempol-Pasuruan",
+        "ref": "KM 792A"
+      }
+    },
+    {
+      "type": "node",
+      "id": 77700020,
+      "lat": -7.6365,
+      "lon": 112.8665,
+      "tags": {
+        "highway": "rest_area",
+        "amenity": "fuel",
+        "shop": "convenience",
+        "toilets": "yes",
+        "mosque": "yes",
+        "province": "Jawa Timur",
+        "name": "Rest Area KM 792B Tol Gempol-Pasuruan",
+        "ref": "KM 792B"
+      }
+    },
+    {
+      "type": "node",
+      "id": 77700021,
+      "lat": -7.695,
+      "lon": 113.085,
+      "tags": {
+        "highway": "rest_area",
+        "toilets": "yes",
+        "mosque": "yes",
+        "shop": "convenience",
+        "province": "Jawa Timur",
+        "name": "Rest Area KM 819A Tol Pasuruan-Probolinggo",
+        "ref": "KM 819A"
+      }
+    },
+    {
+      "type": "node",
+      "id": 77700022,
+      "lat": -7.6965,
+      "lon": 113.0865,
+      "tags": {
+        "highway": "rest_area",
+        "toilets": "yes",
+        "mosque": "yes",
+        "shop": "convenience",
+        "province": "Jawa Timur",
+        "name": "Rest Area KM 819B Tol Pasuruan-Probolinggo",
+        "ref": "KM 819B"
+      }
+    },
+    {
+      "type": "node",
+      "id": 77700023,
+      "lat": -7.742,
+      "lon": 113.195,
+      "tags": {
+        "highway": "rest_area",
+        "amenity": "fuel",
+        "shop": "convenience",
+        "toilets": "yes",
+        "mosque": "yes",
+        "province": "Jawa Timur",
+        "name": "Rest Area KM 833A Tol Pasuruan-Probolinggo (Probolinggo Barat)",
+        "ref": "KM 833A"
+      }
+    },
+    {
+      "type": "node",
+      "id": 77700024,
+      "lat": -7.7435,
+      "lon": 113.1965,
+      "tags": {
+        "highway": "rest_area",
+        "amenity": "fuel",
+        "shop": "convenience",
+        "toilets": "yes",
+        "mosque": "yes",
+        "province": "Jawa Timur",
+        "name": "Rest Area KM 833B Tol Pasuruan-Probolinggo (Probolinggo Barat)",
+        "ref": "KM 833B"
+      }
+    },
+    {
+      "type": "node",
+      "id": 77700025,
+      "lat": -7.712,
+      "lon": 112.695,
+      "tags": {
+        "highway": "rest_area",
+        "amenity": "fuel",
+        "shop": "convenience",
+        "toilets": "yes",
+        "mosque": "yes",
+        "province": "Jawa Timur",
+        "name": "Rest Area KM 66A Tol Pandaan-Malang (Sukorejo)",
+        "ref": "KM 66A"
+      }
+    },
+    {
+      "type": "node",
+      "id": 77700026,
+      "lat": -7.7135,
+      "lon": 112.6965,
+      "tags": {
+        "highway": "rest_area",
+        "amenity": "fuel",
+        "shop": "convenience",
+        "toilets": "yes",
+        "mosque": "yes",
+        "province": "Jawa Timur",
+        "name": "Rest Area KM 66B Tol Pandaan-Malang (Sukorejo)",
+        "ref": "KM 66B"
+      }
+    },
+    {
+      "type": "node",
+      "id": 77700027,
+      "lat": -7.865,
+      "lon": 112.678,
+      "tags": {
+        "highway": "rest_area",
+        "toilets": "yes",
+        "mosque": "yes",
+        "shop": "convenience",
+        "province": "Jawa Timur",
+        "name": "Rest Area KM 84A Tol Pandaan-Malang (Singosari)",
+        "ref": "KM 84A"
+      }
+    },
+    {
+      "type": "node",
+      "id": 77700028,
+      "lat": -7.8665,
+      "lon": 112.6795,
+      "tags": {
+        "highway": "rest_area",
+        "toilets": "yes",
+        "mosque": "yes",
+        "shop": "convenience",
+        "province": "Jawa Timur",
+        "name": "Rest Area KM 84B Tol Pandaan-Malang (Singosari)",
+        "ref": "KM 84B"
+      }
+    },
+    {
+      "type": "node",
+      "id": 77700029,
+      "lat": -6.3478,
+      "lon": 107.1512,
+      "tags": {
+        "highway": "rest_area",
+        "amenity": "fuel",
+        "shop": "convenience",
+        "toilets": "yes",
+        "mosque": "yes",
+        "province": "Jawa Barat",
+        "name": "Rest Area KM 33A Tol Jakarta-Cikampek (Cikarang)",
+        "ref": "KM 33A"
+      }
+    },
+    {
+      "type": "node",
+      "id": 77700030,
+      "lat": -6.8825,
+      "lon": 107.5325,
+      "tags": {
+        "highway": "rest_area",
+        "amenity": "fuel",
+        "shop": "convenience",
+        "toilets": "yes",
+        "mosque": "yes",
+        "province": "Jawa Barat",
+        "name": "Rest Area KM 125B Tol Padaleunyi (Cimahi)",
+        "ref": "KM 125B"
+      }
+    },
+    {
+      "type": "node",
+      "id": 77700031,
+      "lat": -6.885,
+      "lon": 107.825,
+      "tags": {
+        "highway": "rest_area",
+        "toilets": "yes",
+        "mosque": "yes",
+        "shop": "convenience",
+        "province": "Jawa Barat",
+        "name": "Rest Area KM 20 Tol Cisumdawu",
+        "ref": "KM 20 Cisumdawu"
+      }
+    },
+    {
+      "type": "node",
+      "id": 77700032,
+      "lat": -6.745,
+      "lon": 106.815,
+      "tags": {
+        "highway": "rest_area",
+        "amenity": "fuel",
+        "shop": "convenience",
+        "toilets": "yes",
+        "mosque": "yes",
+        "province": "Jawa Barat",
+        "name": "Rest Area KM 53 Tol Bocimi (Cigombong Sukabumi)",
+        "ref": "KM 53 Bocimi"
+      }
+    },
+    {
+      "type": "node",
+      "id": 77700033,
+      "lat": -6.2185,
+      "lon": 106.6925,
+      "tags": {
+        "highway": "rest_area",
+        "amenity": "fuel",
+        "shop": "convenience",
+        "toilets": "yes",
+        "mosque": "yes",
+        "province": "Banten",
+        "name": "Rest Area KM 13.5A Tol Jakarta-Tangerang (Kunciran)",
+        "ref": "KM 13.5A"
+      }
+    },
+    {
+      "type": "node",
+      "id": 77700034,
+      "lat": -6.2198,
+      "lon": 106.6941,
+      "tags": {
+        "highway": "rest_area",
+        "amenity": "fuel",
+        "shop": "convenience",
+        "toilets": "yes",
+        "mosque": "yes",
+        "province": "Banten",
+        "name": "Rest Area KM 14B Tol Jakarta-Tangerang (Kunciran)",
+        "ref": "KM 14B"
+      }
+    },
+    {
+      "type": "node",
+      "id": 77700035,
+      "lat": -6.235,
+      "lon": 106.4525,
+      "tags": {
+        "highway": "rest_area",
+        "amenity": "fuel",
+        "shop": "convenience",
+        "toilets": "yes",
+        "mosque": "yes",
+        "province": "Banten",
+        "name": "Rest Area KM 43A Tol Tangerang-Merak (Balaraja)",
+        "ref": "KM 43A"
+      }
+    },
+    {
+      "type": "node",
+      "id": 77700036,
+      "lat": -6.2365,
+      "lon": 106.4541,
+      "tags": {
+        "highway": "rest_area",
+        "amenity": "fuel",
+        "shop": "convenience",
+        "toilets": "yes",
+        "mosque": "yes",
+        "province": "Banten",
+        "name": "Rest Area KM 45B Tol Tangerang-Merak (Balaraja)",
+        "ref": "KM 45B"
+      }
+    },
+    {
+      "type": "node",
+      "id": 77700037,
+      "lat": -6.1425,
+      "lon": 106.2125,
+      "tags": {
+        "highway": "rest_area",
+        "amenity": "fuel",
+        "shop": "convenience",
+        "toilets": "yes",
+        "mosque": "yes",
+        "province": "Banten",
+        "name": "Rest Area KM 68A Tol Tangerang-Merak (Bogeg Serang)",
+        "ref": "KM 68A"
+      }
+    },
+    {
+      "type": "node",
+      "id": 77700038,
+      "lat": -6.144,
+      "lon": 106.2141,
+      "tags": {
+        "highway": "rest_area",
+        "amenity": "fuel",
+        "shop": "convenience",
+        "toilets": "yes",
+        "mosque": "yes",
+        "province": "Banten",
+        "name": "Rest Area KM 68B Tol Tangerang-Merak (Bogeg Serang)",
+        "ref": "KM 68B"
+      }
+    },
+    {
+      "type": "node",
+      "id": 77700039,
+      "lat": -6.5825,
+      "lon": 106.8525,
+      "tags": {
+        "highway": "rest_area",
+        "amenity": "fuel",
+        "shop": "convenience",
+        "toilets": "yes",
+        "mosque": "yes",
+        "province": "Jawa Barat",
+        "name": "Rest Area KM 38A Tol Jagorawi (Sentul City)",
+        "ref": "KM 38A"
+      }
     }
   ]
 }
