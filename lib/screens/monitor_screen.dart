@@ -1,5 +1,6 @@
 import '../services/theme_service.dart';
 import '../services/road_matching_service.dart';
+import '../services/gps_kalman_filter.dart';
 import '../services/language_service.dart';
 
 import 'dart:ui' as ui;
@@ -107,6 +108,7 @@ class MonitorScreenState extends State<MonitorScreen> {
   DriverFix? _lastDriverFix;
   DriverFix? _lastDistanceAnchorFix;
   int _consecutiveMovingSamples = 0;
+  final GpsKalmanFilter _kalmanFilter = GpsKalmanFilter();
 
   // Snooze alert state
   DateTime? _snoozeUntil;
@@ -263,19 +265,29 @@ class MonitorScreenState extends State<MonitorScreen> {
         _totalDistanceMeters += dFromAnchor;
         _lastDistanceAnchorFix = fix;
 
+        // 2D Kinematic Kalman Filter untuk koordinat yang mulus bebas zigzag/loncatan
+        final kCoord = _kalmanFilter.process(
+          rawLat: fix.lat,
+          rawLng: fix.lng,
+          accuracyM: fix.accuracyM,
+          timestamp: fix.timestamp,
+        );
+        final kLat = kCoord['lat'] ?? fix.lat;
+        final kLng = kCoord['lng'] ?? fix.lng;
+
         // Rekam breadcrumb rute hanya saat bergerak nyata
         if (_routeBreadcrumbs.isEmpty) {
-          _routeBreadcrumbs.add({'lat': fix.lat, 'lng': fix.lng});
+          _routeBreadcrumbs.add({'lat': kLat, 'lng': kLng});
         } else {
           final lastPt = _routeBreadcrumbs.last;
           final dBreadcrumb = haversineM(
             lastPt['lat']!,
             lastPt['lng']!,
-            fix.lat,
-            fix.lng,
+            kLat,
+            kLng,
           );
           if (dBreadcrumb >= 5.0 && dBreadcrumb < 350.0) {
-            _routeBreadcrumbs.add({'lat': fix.lat, 'lng': fix.lng});
+            _routeBreadcrumbs.add({'lat': kLat, 'lng': kLng});
           }
         }
       }
@@ -419,6 +431,7 @@ class MonitorScreenState extends State<MonitorScreen> {
       _lastDriverFix = _nearby.fix;
       _lastDistanceAnchorFix = _nearby.fix;
       _consecutiveMovingSamples = 0;
+      _kalmanFilter.reset();
       _routeBreadcrumbs.clear();
       _startLat = _nearby.fix?.lat;
       _startLng = _nearby.fix?.lng;
@@ -801,13 +814,20 @@ class MonitorScreenState extends State<MonitorScreen> {
     score -= (finalMicro * 10).clamp(0, 40);
     score = score.clamp(0, 100);
 
-    // Map Matching (OSRM Snap-to-Roads): Tempelkan rute ke garis aspal jalan raya (100% Gratis)
+    // 1. Ramer-Douglas-Peucker (RDP) Simplification: Bersihkan titik redundan saat berhenti/lurus
+    // 2. OSRM Map Matching: Tempelkan rute ke garis aspal jalan raya (100% Gratis & Presisi)
     List<Map<String, double>> processedRoute = List.from(_routeBreadcrumbs);
     if (_totalDistanceMeters >= 30.0 && processedRoute.length >= 2) {
       try {
-        final snapped = await RoadMatchingService.snapToRoads(processedRoute);
+        final rdpCleaned = RoadMatchingService.simplifyRdp(
+          processedRoute,
+          epsilonMeters: 2.0,
+        );
+        final snapped = await RoadMatchingService.snapToRoads(rdpCleaned);
         if (snapped.length >= 2) {
           processedRoute = snapped;
+        } else if (rdpCleaned.length >= 2) {
+          processedRoute = rdpCleaned;
         }
       } catch (_) {}
     }

@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:math' as math;
 
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
@@ -131,6 +132,68 @@ class RoadMatchingService {
     return rawPoints;
   }
 
+  /// Algoritma Ramer-Douglas-Peucker (RDP): Menyederhanakan polyline GPS dengan membuang
+  /// titik-titik redundan saat jalan lurus atau berhenti di lampu merah,
+  /// tanpa merusak bentuk lekukan tikungan asli rute.
+  static List<Map<String, double>> simplifyRdp(
+    List<Map<String, double>> points, {
+    double epsilonMeters = 2.5,
+  }) {
+    if (points.length < 3) return points;
+
+    double dMax = 0.0;
+    int index = 0;
+    final int end = points.length - 1;
+
+    for (int i = 1; i < end; i++) {
+      final d = _perpendicularDistanceM(points[i], points.first, points.last);
+      if (d > dMax) {
+        index = i;
+        dMax = d;
+      }
+    }
+
+    if (dMax > epsilonMeters) {
+      final rec1 = simplifyRdp(
+        points.sublist(0, index + 1),
+        epsilonMeters: epsilonMeters,
+      );
+      final rec2 = simplifyRdp(
+        points.sublist(index),
+        epsilonMeters: epsilonMeters,
+      );
+      return [...rec1.sublist(0, rec1.length - 1), ...rec2];
+    } else {
+      return [points.first, points.last];
+    }
+  }
+
+  static double _perpendicularDistanceM(
+    Map<String, double> pt,
+    Map<String, double> lineStart,
+    Map<String, double> lineEnd,
+  ) {
+    final x0 = pt['lat']!;
+    final y0 = pt['lng']!;
+    final x1 = lineStart['lat']!;
+    final y1 = lineStart['lng']!;
+    final x2 = lineEnd['lat']!;
+    final y2 = lineEnd['lng']!;
+
+    final dx = x2 - x1;
+    final dy = y2 - y1;
+
+    if (dx == 0 && dy == 0) {
+      return haversineM(x0, y0, x1, y1);
+    }
+
+    final numerator = (dy * x0 - dx * y0 + x2 * y1 - y2 * x1).abs();
+    final denominator = math.sqrt(dx * dx + dy * dy);
+
+    // 1 derajat lat ~ 111,319.5 meter
+    return (numerator / denominator) * 111319.5;
+  }
+
   /// Downsample list koordinat agar tidak melebihi kapasitas URL GET OSRM,
   /// dengan tetap mempertahankan titik Start, Finish, dan tikungan rute.
   static List<Map<String, double>> _downsamplePoints(
@@ -138,17 +201,19 @@ class RoadMatchingService {
     required int maxPoints,
     required double minSpacingM,
   }) {
-    if (points.length <= maxPoints) {
-      return points;
+    // 1. Bersihkan titik redundan dengan Ramer-Douglas-Peucker (RDP) terlebih dahulu
+    final cleaned = simplifyRdp(points, epsilonMeters: 2.0);
+    if (cleaned.length <= maxPoints) {
+      return cleaned;
     }
 
     final List<Map<String, double>> sampled = [];
-    sampled.add(points.first);
+    sampled.add(cleaned.first);
 
     // Filter berdasarkan jarak minimum dari titik terakhir yang diambil
-    for (int i = 1; i < points.length - 1; i++) {
+    for (int i = 1; i < cleaned.length - 1; i++) {
       final last = sampled.last;
-      final current = points[i];
+      final current = cleaned[i];
       final dist = haversineM(
         last['lat']!,
         last['lng']!,
@@ -167,13 +232,13 @@ class RoadMatchingService {
       for (int i = 0; i < sampled.length - 1; i += stride) {
         strided.add(sampled[i]);
       }
-      strided.add(points.last);
+      strided.add(cleaned.last);
       return strided;
     }
 
     // Pastikan titik Finish selalu ada di ujung
-    if (sampled.last != points.last) {
-      sampled.add(points.last);
+    if (sampled.last != cleaned.last) {
+      sampled.add(cleaned.last);
     }
 
     return sampled;
