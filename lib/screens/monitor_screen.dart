@@ -1,4 +1,5 @@
 import '../services/theme_service.dart';
+import '../services/road_matching_service.dart';
 import '../services/language_service.dart';
 
 import 'dart:ui' as ui;
@@ -147,7 +148,8 @@ class MonitorScreenState extends State<MonitorScreen> {
     if (fix == null || !fix.isValid) return;
 
     // Gate 1: Akurasi GPS (jika akurasi > 25 meter, ada pantulan sinyal/multipath; abaikan data jitter)
-    final bool hasDecentAccuracy = fix.accuracyM == null || fix.accuracyM! <= 25.0;
+    final bool hasDecentAccuracy =
+        fix.accuracyM == null || fix.accuracyM! <= 25.0;
 
     // Inisialisasi titik awal
     if (_lastDriverFix == null) {
@@ -182,7 +184,8 @@ class MonitorScreenState extends State<MonitorScreen> {
 
     // 3. Batas Plausibilitas Akselerasi Fisik Kendaraan (~4.5 m/s^2 ≈ 16 km/j per detik)
     // Mencegah glitch koordinat GPS melonjak dari 0 km/j langsung ke 56 km/j saat diam
-    final double maxPossibleSpeedJump = (dtSeconds > 0 ? dtSeconds : 1.0) * 16.0;
+    final double maxPossibleSpeedJump =
+        (dtSeconds > 0 ? dtSeconds : 1.0) * 16.0;
 
     // 4. Sensor Fusion & Deadband Filter (Strava / Garmin Standard)
     double rawSpeedKmh = 0.0;
@@ -206,7 +209,8 @@ class MonitorScreenState extends State<MonitorScreen> {
       }
     } else {
       // Doppler Hardware null (fallback kinematik dengan deadband ketat)
-      if (dMeters < 2.5 || (kinematicSpeedKmh != null && kinematicSpeedKmh < 2.5)) {
+      if (dMeters < 2.5 ||
+          (kinematicSpeedKmh != null && kinematicSpeedKmh < 2.5)) {
         rawSpeedKmh = 0.0;
         isStationary = true;
       } else if (kinematicSpeedKmh != null && kinematicSpeedKmh <= 220.0) {
@@ -248,7 +252,8 @@ class MonitorScreenState extends State<MonitorScreen> {
       final anchor = _lastDistanceAnchorFix!;
       final dFromAnchor = haversineM(anchor.lat, anchor.lng, fix.lat, fix.lng);
 
-      final bool isRealMovement = hasDecentAccuracy &&
+      final bool isRealMovement =
+          hasDecentAccuracy &&
           !isStationary &&
           _currentSpeedKmh >= 2.5 &&
           dFromAnchor >= 4.5 &&
@@ -796,6 +801,17 @@ class MonitorScreenState extends State<MonitorScreen> {
     score -= (finalMicro * 10).clamp(0, 40);
     score = score.clamp(0, 100);
 
+    // Map Matching (OSRM Snap-to-Roads): Tempelkan rute ke garis aspal jalan raya (100% Gratis)
+    List<Map<String, double>> processedRoute = List.from(_routeBreadcrumbs);
+    if (_totalDistanceMeters >= 30.0 && processedRoute.length >= 2) {
+      try {
+        final snapped = await RoadMatchingService.snapToRoads(processedRoute);
+        if (snapped.length >= 2) {
+          processedRoute = snapped;
+        }
+      } catch (_) {}
+    }
+
     // 2. Simpan sesi (tersimpan ke lokal seketika & tersinkron ke cloud jika online)
     if (AuthService.isLoggedIn && _currentSessionId != null) {
       try {
@@ -817,7 +833,7 @@ class MonitorScreenState extends State<MonitorScreen> {
           startLng: _startLng,
           endLat: _nearby.fix?.lat ?? _startLat,
           endLng: _nearby.fix?.lng ?? _startLng,
-          routePoints: List.from(_routeBreadcrumbs),
+          routePoints: processedRoute,
         );
       } catch (e) {
         debugPrint('Gagal simpan sesi online (aman di lokal): ');
@@ -967,7 +983,7 @@ class MonitorScreenState extends State<MonitorScreen> {
               lastLng: _nearby.fix?.lng,
               startLat: _startLat,
               startLng: _startLng,
-              routePoints: List.from(_routeBreadcrumbs),
+              routePoints: processedRoute,
             ),
           ),
         );

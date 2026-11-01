@@ -12,6 +12,7 @@ import 'package:share_plus/share_plus.dart';
 
 import 'services/firebase_service.dart';
 import 'services/language_service.dart';
+import 'services/road_matching_service.dart';
 import 'features/nearby_places/nearby_places.dart';
 
 // ─────────────────────────────────────────────
@@ -1077,6 +1078,19 @@ class _DrivingCardScreenState extends State<DrivingCardScreen>
         _resolvedRoutePoints!.isNotEmpty) {
       _resolvedLastLat = _resolvedRoutePoints!.last['lat'];
       _resolvedLastLng = _resolvedRoutePoints!.last['lng'];
+    }
+
+    // Map Matching (OSRM Snap-to-Roads): Presisi garis aspal jalan raya
+    if (_resolvedRoutePoints != null &&
+        _resolvedRoutePoints!.length >= 2 &&
+        widget.distanceKm >= 0.03) {
+      RoadMatchingService.snapToRoads(_resolvedRoutePoints!).then((snapped) {
+        if (mounted && snapped.length >= 2) {
+          setState(() {
+            _resolvedRoutePoints = snapped;
+          });
+        }
+      });
     }
 
     // 1. Cek apakah koordinat sudah ada dan valid
