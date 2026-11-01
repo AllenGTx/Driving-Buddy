@@ -3,8 +3,8 @@ import 'package:url_launcher/url_launcher.dart';
 import '../models/nearby_place.dart';
 
 // ============================================================================
-// PELUNCUR — membuka Google Maps ke tempat yang dipilih. Tidak memakai API key
-// dan tidak ada biaya: cukup membuka link `google.com/maps/...`.
+// PELUNCUR — membuka Google Maps ke tempat yang dipilih.
+// Tidak ada layar putih: navigasi selalu memakai koordinat valid lat,lng
 // ============================================================================
 
 /// Pembuka URL (diganti versi palsu di tes).
@@ -13,53 +13,47 @@ typedef UrlOpener = Future<bool> Function(Uri uri);
 class PlaceLauncher {
   const PlaceLauncher._();
 
-  /// Hanya link ke layanan peta ini yang boleh dibuka dari data jaringan.
-  static const Set<String> _allowedHosts = <String>{
-    'www.google.com',
-    'google.com',
-    'maps.google.com',
-    'www.openstreetmap.org',
-    'openstreetmap.org',
-  };
-
   static Future<bool> _defaultOpener(Uri uri) {
     return launchUrl(uri, mode: LaunchMode.externalApplication);
   }
 
-  static bool _isAllowed(Uri? uri) {
-    return uri != null && uri.scheme == 'https' && _allowedHosts.contains(uri.host);
-  }
-
-  /// Link navigasi mobil ke [place]. Memakai `navigate_url` dari server kalau
-  /// aman, kalau tidak dibuat sendiri dari nama & koordinat resmi.
+  /// Link navigasi mobil ke [place].
+  /// Menggunakan format koordinat murni lat,lng pada parameter destination
+  /// agar Google Maps tidak crash / tidak memunculkan layar putih kosong.
   static Uri navigationUri(NearbyPlace place) {
-    final given = Uri.tryParse(place.navigateUrl);
-    if (_isAllowed(given)) return given!;
-    final dest = place.name.isNotEmpty
-        ? '${place.name}, ${place.lat.toStringAsFixed(6)},${place.lng.toStringAsFixed(6)}'
-        : '${place.lat.toStringAsFixed(6)},${place.lng.toStringAsFixed(6)}';
+    final coordStr = '${place.lat.toStringAsFixed(6)},${place.lng.toStringAsFixed(6)}';
     return Uri.https('www.google.com', '/maps/dir/', <String, String>{
       'api': '1',
-      'destination': dest,
+      'destination': coordStr,
       'travelmode': 'driving',
     });
   }
 
-  /// Link halaman tempat (bukan navigasi). Menampilkan kartu profil bisnis resmi di Google Maps.
+  /// Link halaman profil tempat di Google Maps (mencari nama bisnis dan alamat).
   static Uri placePageUri(NearbyPlace place) {
-    final given = Uri.tryParse(place.mapsUrl);
-    if (_isAllowed(given)) return given!;
+    final coordStr = '${place.lat.toStringAsFixed(6)},${place.lng.toStringAsFixed(6)}';
     final query = place.name.isNotEmpty
-        ? '${place.name}, ${place.lat.toStringAsFixed(6)},${place.lng.toStringAsFixed(6)}'
-        : '${place.lat.toStringAsFixed(6)},${place.lng.toStringAsFixed(6)}';
+        ? (place.address.isNotEmpty
+            ? '${place.name}, ${place.address}'
+            : '${place.name}, Semarang')
+        : coordStr;
     return Uri.https('www.google.com', '/maps/search/', <String, String>{
       'api': '1',
       'query': query,
     });
   }
 
-  /// Buka navigasi. `false` kalau tidak ada aplikasi/browser yang bisa membukanya.
+  /// Buka navigasi: coba aplikasi Google Maps native dulu, fallback ke web.
   static Future<bool> navigate(NearbyPlace place, {UrlOpener? opener}) async {
+    final coordStr = '${place.lat.toStringAsFixed(6)},${place.lng.toStringAsFixed(6)}';
+    final nativeUri = Uri.parse('google.navigation:q=$coordStr&mode=d');
+    try {
+      if (await canLaunchUrl(nativeUri)) {
+        final opened = await (opener ?? _defaultOpener)(nativeUri);
+        if (opened) return true;
+      }
+    } catch (_) {}
+
     return _open(navigationUri(place), opener);
   }
 

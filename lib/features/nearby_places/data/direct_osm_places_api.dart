@@ -302,10 +302,10 @@ class DirectOsmPlacesApi implements PlacesApi {
       final address = _resolveAddress(tags);
 
       final placeId = 'osm:$type/$idNum';
-      final placeQuery = '$name, ${pLat.toStringAsFixed(6)},${pLng.toStringAsFixed(6)}';
-      final encodedQuery = Uri.encodeComponent(placeQuery);
-      final mapsUrl = 'https://www.google.com/maps/search/?api=1&query=$encodedQuery';
-      final navUrl = 'https://www.google.com/maps/dir/?api=1&destination=$encodedQuery&travelmode=driving';
+      final coordStr = '${pLat.toStringAsFixed(6)},${pLng.toStringAsFixed(6)}';
+      final searchQuery = address.isNotEmpty ? '$name, $address' : '$name, Semarang';
+      final mapsUrl = 'https://www.google.com/maps/search/?api=1&query=${Uri.encodeComponent(searchQuery)}';
+      final navUrl = 'https://www.google.com/maps/dir/?api=1&destination=$coordStr&travelmode=driving';
 
       list.add(
         NearbyPlace(

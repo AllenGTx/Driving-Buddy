@@ -8,78 +8,51 @@
   "elements": [
     {
       "type": "node",
-      "id": 88800103,
-      "lat": -6.9561,
-      "lon": 110.4089,
+      "id": 9900001,
+      "lat": -6.95385,
+      "lon": 110.40932,
       "tags": {
-        "name": "Indomaret Muara Mas",
+        "name": "Smart Budget Hotel",
+        "brand": "Smart Budget",
+        "tourism": "hotel",
+        "hotel": "yes",
+        "addr:street": "Jl. Taman Muara Mas / Jl. Muara Mas XIII",
+        "addr:city": "Semarang",
+        "addr:suburb": "Panggung Lor, Tanah Mas",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 88800101,
+      "lat": -6.9588426,
+      "lon": 110.4092821,
+      "tags": {
+        "name": "Indomaret Telaga Mas Raya",
         "brand": "Indomaret",
-        "branch": "Muara Mas",
+        "branch": "Telaga Mas Raya",
         "shop": "convenience",
-        "addr:street": "Jl. Muara Mas Raya No. 12",
+        "addr:street": "Jl. Telaga Mas Raya No. 7-8",
         "addr:city": "Semarang",
         "opening_hours": "24/7",
+        "toilets": "yes",
         "verified": "google_maps_verified"
       }
     },
     {
       "type": "node",
-      "id": 88800105,
-      "lat": -6.97499,
-      "lon": 110.41857,
+      "id": 88800102,
+      "lat": -6.95892,
+      "lon": 110.4081,
       "tags": {
-        "name": "SPBU 44.501.41 Tanjung Mas",
-        "brand": "Pertamina",
-        "amenity": "fuel",
-        "addr:street": "Jl. Tanjung Mas Raya / Hasanudin",
-        "addr:city": "Semarang",
-        "opening_hours": "24/7",
-        "verified": "google_maps_verified"
-      }
-    },
-    {
-      "type": "node",
-      "id": 88800106,
-      "lat": -6.95635,
-      "lon": 110.4158,
-      "tags": {
-        "name": "Indomaret SPBU Arteri Utara",
-        "brand": "Indomaret",
-        "branch": "SPBU Arteri Utara",
+        "name": "Alfamart Telaga Mas Raya",
+        "brand": "Alfamart",
+        "branch": "Telaga Mas Raya",
         "shop": "convenience",
-        "addr:street": "Jl. Arteri Utara",
+        "addr:street": "Jl. Telaga Mas Raya Blok B1",
         "addr:city": "Semarang",
-        "opening_hours": "24/7",
-        "verified": "google_maps_verified"
-      }
-    },
-    {
-      "type": "node",
-      "id": 88800107,
-      "lat": -6.9562,
-      "lon": 110.4156,
-      "tags": {
-        "name": "SPBU Pertamina Arteri Yos Sudarso",
-        "brand": "Pertamina",
-        "amenity": "fuel",
-        "addr:street": "Jl. Arteri Utara Yos Sudarso",
-        "addr:city": "Semarang",
-        "opening_hours": "24/7",
-        "verified": "google_maps_verified"
-      }
-    },
-    {
-      "type": "node",
-      "id": 88800108,
-      "lat": -6.9705,
-      "lon": 110.3925,
-      "tags": {
-        "name": "SPBU 44.501.35 Puri Anjasmoro",
-        "brand": "Pertamina",
-        "amenity": "fuel",
-        "addr:street": "Jl. Puri Anjasmoro Blok B",
-        "addr:city": "Semarang",
-        "opening_hours": "24/7",
+        "opening_hours": "07:00-22:00",
         "verified": "google_maps_verified"
       }
     },
@@ -493,36 +466,6 @@
         "brand": "Whiz Hotel",
         "addr:street": "Jl. Pierre Tendean No. 9",
         "addr:city": "Semarang",
-        "verified": "google_maps_verified"
-      }
-    },
-    {
-      "type": "node",
-      "id": 9900003,
-      "lat": -6.95651,
-      "lon": 110.41215,
-      "tags": {
-        "name": "Homestay Tanah Mas Indah",
-        "tourism": "guest_house",
-        "addr:street": "Jl. Tambak Mas Raya",
-        "addr:city": "Semarang",
-        "verified": "google_maps_verified"
-      }
-    },
-    {
-      "type": "node",
-      "id": 9900001,
-      "lat": -6.95385,
-      "lon": 110.40932,
-      "tags": {
-        "name": "Smart Budget Hotel",
-        "tourism": "hotel",
-        "hotel": "yes",
-        "addr:street": "Jl. Taman Muara Mas / Jl. Muara Mas XIII",
-        "addr:suburb": "Panggung Lor, Tanah Mas",
-        "addr:city": "Semarang",
-        "opening_hours": "24/7",
-        "description": "Smart Budget Hotel Tanah Mas Semarang Utara",
         "verified": "google_maps_verified"
       }
     },
@@ -19870,135 +19813,6 @@
     },
     {
       "type": "node",
-      "id": 88800101,
-      "lat": -6.9588426,
-      "lon": 110.4092821,
-      "tags": {
-        "name": "Indomaret Telaga Mas Raya",
-        "brand": "Indomaret",
-        "branch": "Telaga Mas Raya",
-        "shop": "convenience",
-        "addr:street": "Jl. Telaga Mas Raya No. 7-8",
-        "addr:city": "Semarang",
-        "opening_hours": "24/7",
-        "toilets": "yes",
-        "verified": "google_maps_verified"
-      }
-    },
-    {
-      "type": "node",
-      "id": 88800102,
-      "lat": -6.95892,
-      "lon": 110.4081,
-      "tags": {
-        "name": "Alfamart Telaga Mas Raya",
-        "brand": "Alfamart",
-        "branch": "Telaga Mas Raya",
-        "shop": "convenience",
-        "addr:street": "Jl. Telaga Mas Raya No. B1",
-        "addr:city": "Semarang",
-        "opening_hours": "07:00-22:00",
-        "verified": "google_maps_verified"
-      }
-    },
-    {
-      "type": "node",
-      "id": 88800103,
-      "lat": -6.9576,
-      "lon": 110.4055,
-      "tags": {
-        "name": "Indomaret Roda Mas",
-        "brand": "Indomaret",
-        "branch": "Tanah Mas",
-        "shop": "convenience",
-        "addr:street": "Jl. Roda Mas Raya No. 15",
-        "addr:city": "Semarang",
-        "opening_hours": "24/7",
-        "verified": "google_maps_verified"
-      }
-    },
-    {
-      "type": "node",
-      "id": 88800104,
-      "lat": -6.9615,
-      "lon": 110.4132,
-      "tags": {
-        "name": "Alfamart Hasanudin",
-        "brand": "Alfamart",
-        "branch": "Hasanudin",
-        "shop": "convenience",
-        "addr:street": "Jl. Hasanudin No. 25",
-        "addr:city": "Semarang",
-        "opening_hours": "24/7",
-        "verified": "google_maps_verified"
-      }
-    },
-    {
-      "type": "node",
-      "id": 88800105,
-      "lat": -6.9631,
-      "lon": 110.4138,
-      "tags": {
-        "name": "Indomaret Hasanudin",
-        "brand": "Indomaret",
-        "branch": "Hasanudin",
-        "shop": "convenience",
-        "addr:street": "Jl. Hasanudin No. 45",
-        "addr:city": "Semarang",
-        "opening_hours": "24/7",
-        "verified": "google_maps_verified"
-      }
-    },
-    {
-      "type": "node",
-      "id": 88800106,
-      "lat": -6.9625,
-      "lon": 110.4135,
-      "tags": {
-        "name": "SPBU Pertamina Hasanudin",
-        "brand": "Pertamina",
-        "amenity": "fuel",
-        "ref": "44.501.12",
-        "addr:street": "Jl. Hasanudin No. 99",
-        "addr:city": "Semarang",
-        "opening_hours": "24/7",
-        "toilets": "yes",
-        "verified": "google_maps_verified"
-      }
-    },
-    {
-      "type": "node",
-      "id": 88800107,
-      "lat": -6.9538,
-      "lon": 110.4072,
-      "tags": {
-        "name": "Indomaret Muara Mas",
-        "brand": "Indomaret",
-        "branch": "Muara Mas",
-        "shop": "convenience",
-        "addr:street": "Jl. Muara Mas Raya",
-        "addr:city": "Semarang",
-        "opening_hours": "24/7",
-        "verified": "google_maps_verified"
-      }
-    },
-    {
-      "type": "node",
-      "id": 88800108,
-      "lat": -6.9542,
-      "lon": 110.4068,
-      "tags": {
-        "name": "Alfamart Muara Mas",
-        "brand": "Alfamart",
-        "branch": "Muara Mas",
-        "shop": "convenience",
-        "addr:street": "Jl. Muara Mas Raya No. 10",
-        "addr:city": "Semarang",
-        "verified": "google_maps_verified"
-      }
-    },
-    {
-      "type": "node",
       "id": 88800202,
       "lat": -7.131,
       "lon": 110.4255,
@@ -21722,201 +21536,6 @@
     },
     {
       "type": "node",
-      "id": 9500001,
-      "lat": -6.965412,
-      "lon": 110.392518,
-      "tags": {
-        "name": "Indomaret Puri Anjasmoro Raya",
-        "brand": "Indomaret",
-        "shop": "convenience",
-        "addr:street": "Jl. Puri Anjasmoro Raya Blok B",
-        "addr:city": "Semarang",
-        "opening_hours": "24/7",
-        "verified": "google_maps_verified"
-      }
-    },
-    {
-      "type": "node",
-      "id": 9500002,
-      "lat": -6.967845,
-      "lon": 110.393214,
-      "tags": {
-        "name": "Indomaret Point Puri Anjasmoro",
-        "brand": "Indomaret Point",
-        "shop": "convenience",
-        "addr:street": "Jl. Puri Anjasmoro Raya No. 38",
-        "addr:city": "Semarang",
-        "opening_hours": "24/7",
-        "verified": "google_maps_verified"
-      }
-    },
-    {
-      "type": "node",
-      "id": 9500003,
-      "lat": -6.966532,
-      "lon": 110.392845,
-      "tags": {
-        "name": "Alfamart Puri Anjasmoro Raya",
-        "brand": "Alfamart",
-        "shop": "convenience",
-        "addr:street": "Jl. Puri Anjasmoro Raya Blok EE",
-        "addr:city": "Semarang",
-        "opening_hours": "24/7",
-        "verified": "google_maps_verified"
-      }
-    },
-    {
-      "type": "node",
-      "id": 9500004,
-      "lat": -6.974821,
-      "lon": 110.395812,
-      "tags": {
-        "name": "Alfamidi Super Anjasmoro",
-        "brand": "Alfamidi",
-        "shop": "convenience",
-        "addr:street": "Jl. Anjasmoro Raya No. 34",
-        "addr:city": "Semarang",
-        "opening_hours": "24/7",
-        "verified": "google_maps_verified"
-      }
-    },
-    {
-      "type": "node",
-      "id": 9500005,
-      "lat": -6.973541,
-      "lon": 110.395218,
-      "tags": {
-        "name": "Indomaret Anjasmoro Raya",
-        "brand": "Indomaret",
-        "shop": "convenience",
-        "addr:street": "Jl. Anjasmoro Raya No. 12",
-        "addr:city": "Semarang",
-        "opening_hours": "24/7",
-        "verified": "google_maps_verified"
-      }
-    },
-    {
-      "type": "node",
-      "id": 9500006,
-      "lat": -6.968214,
-      "lon": 110.398512,
-      "tags": {
-        "name": "Alfamart Madukoro",
-        "brand": "Alfamart",
-        "shop": "convenience",
-        "addr:street": "Jl. Madukoro Raya Blok A",
-        "addr:city": "Semarang",
-        "opening_hours": "24/7",
-        "verified": "google_maps_verified"
-      }
-    },
-    {
-      "type": "node",
-      "id": 9500007,
-      "lat": -6.964125,
-      "lon": 110.391845,
-      "tags": {
-        "name": "Indomaret Fresh Puri Anjasmoro",
-        "brand": "Indomaret",
-        "shop": "convenience",
-        "addr:street": "Jl. Puri Anjasmoro Blok G1",
-        "addr:city": "Semarang",
-        "opening_hours": "24/7",
-        "verified": "google_maps_verified"
-      }
-    },
-    {
-      "type": "node",
-      "id": 9500008,
-      "lat": -6.958214,
-      "lon": 110.401215,
-      "tags": {
-        "name": "Indomaret Arteri Yos Sudarso",
-        "brand": "Indomaret",
-        "shop": "convenience",
-        "addr:street": "Jl. Arteri Yos Sudarso No. 11",
-        "addr:city": "Semarang",
-        "opening_hours": "24/7",
-        "verified": "google_maps_verified"
-      }
-    },
-    {
-      "type": "node",
-      "id": 9500009,
-      "lat": -6.958941,
-      "lon": 110.396512,
-      "tags": {
-        "name": "Alfamart Arteri Yos Sudarso",
-        "brand": "Alfamart",
-        "shop": "convenience",
-        "addr:street": "Jl. Arteri Yos Sudarso",
-        "addr:city": "Semarang",
-        "opening_hours": "24/7",
-        "verified": "google_maps_verified"
-      }
-    },
-    {
-      "type": "node",
-      "id": 9500010,
-      "lat": -6.960814,
-      "lon": 110.393825,
-      "tags": {
-        "name": "SPBU Pertamina 44.501.35 Tawangsari / Puri Anjasmoro",
-        "brand": "Pertamina",
-        "amenity": "fuel",
-        "addr:street": "Jl. Arteri Yos Sudarso / Puri Anjasmoro",
-        "addr:city": "Semarang",
-        "opening_hours": "24/7",
-        "verified": "google_maps_verified"
-      }
-    },
-    {
-      "type": "node",
-      "id": 9500011,
-      "lat": -6.983215,
-      "lon": 110.385214,
-      "tags": {
-        "name": "SPBU Pertamina 44.501.27 Kalibanteng Kulon",
-        "brand": "Pertamina",
-        "amenity": "fuel",
-        "addr:street": "Jl. Jend. Sudirman / Kalibanteng",
-        "addr:city": "Semarang",
-        "opening_hours": "24/7",
-        "verified": "google_maps_verified"
-      }
-    },
-    {
-      "type": "node",
-      "id": 9500012,
-      "lat": -6.985512,
-      "lon": 110.378512,
-      "tags": {
-        "name": "SPBU Pertamina 44.501.16 Siliwangi / Krapyak",
-        "brand": "Pertamina",
-        "amenity": "fuel",
-        "addr:street": "Jl. Siliwangi No. 496",
-        "addr:city": "Semarang",
-        "opening_hours": "24/7",
-        "verified": "google_maps_verified"
-      }
-    },
-    {
-      "type": "node",
-      "id": 9500013,
-      "lat": -6.987512,
-      "lon": 110.392845,
-      "tags": {
-        "name": "SPBU Pertamina 44.501.02 Pamularsih",
-        "brand": "Pertamina",
-        "amenity": "fuel",
-        "addr:street": "Jl. Pamularsih Raya No. 8",
-        "addr:city": "Semarang",
-        "opening_hours": "24/7",
-        "verified": "google_maps_verified"
-      }
-    },
-    {
-      "type": "node",
       "id": 9500014,
       "lat": -6.963245,
       "lon": 110.390512,
@@ -21938,19 +21557,6 @@
         "brand": "Favehotel",
         "tourism": "hotel",
         "addr:street": "Jl. Jendral Sudirman No. 363",
-        "addr:city": "Semarang",
-        "verified": "google_maps_verified"
-      }
-    },
-    {
-      "type": "node",
-      "id": 9500017,
-      "lat": -6.961512,
-      "lon": 110.394512,
-      "tags": {
-        "name": "RedDoorz near PRPP Semarang",
-        "tourism": "guest_house",
-        "addr:street": "Jl. Puri Anjasmoro Blok E1",
         "addr:city": "Semarang",
         "verified": "google_maps_verified"
       }
