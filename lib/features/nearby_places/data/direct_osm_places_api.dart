@@ -20,7 +20,7 @@ import 'places_api.dart';
 class DirectOsmPlacesApi implements PlacesApi {
   DirectOsmPlacesApi({
     http.Client? client,
-    this.timeout = const Duration(seconds: 12),
+    this.timeout = const Duration(seconds: 4),
   })  : _client = client ?? http.Client(),
         _ownsClient = client == null;
 
@@ -32,6 +32,7 @@ class DirectOsmPlacesApi implements PlacesApi {
   static const List<String> _overpassEndpoints = [
     'https://overpass-api.de/api/interpreter',
     'https://overpass.kumi.systems/api/interpreter',
+    'https://overpass.private.coffee/api/interpreter',
   ];
 
   static const String _userAgent =
@@ -380,13 +381,24 @@ class DirectOsmPlacesApi implements PlacesApi {
   }
 
   String _resolveName(Map<String, dynamic> tags, PlaceCategory cat) {
+    String baseName = '';
     for (final key in ['name', 'name:id', 'brand', 'operator']) {
       final val = tags[key]?.toString().trim();
       if (val != null && val.isNotEmpty) {
-        return val;
+        baseName = val;
+        break;
       }
     }
-    return cat.label;
+    if (baseName.isEmpty) baseName = cat.label;
+
+    final branch = tags['branch']?.toString().trim();
+    if (branch != null &&
+        branch.isNotEmpty &&
+        !baseName.toLowerCase().contains(branch.toLowerCase())) {
+      return '$baseName $branch';
+    }
+
+    return baseName;
   }
 
   String _resolveAddress(Map<String, dynamic> tags) {
