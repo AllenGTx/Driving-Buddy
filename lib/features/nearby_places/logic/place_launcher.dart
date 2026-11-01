@@ -29,13 +29,12 @@ class PlaceLauncher {
     });
   }
 
-  /// Link halaman profil tempat di Google Maps (mencari nama bisnis dan alamat).
+  /// Link halaman profil tempat di Google Maps.
+  /// Membawa koordinat presisi agar Google Maps langsung menampilkan pin merah di lokasi aslinya.
   static Uri placePageUri(NearbyPlace place) {
     final coordStr = '${place.lat.toStringAsFixed(6)},${place.lng.toStringAsFixed(6)}';
     final query = place.name.isNotEmpty
-        ? (place.address.isNotEmpty
-            ? '${place.name}, ${place.address}'
-            : '${place.name}, Semarang')
+        ? '$coordStr (${place.name})'
         : coordStr;
     return Uri.https('www.google.com', '/maps/search/', <String, String>{
       'api': '1',
@@ -54,10 +53,30 @@ class PlaceLauncher {
       }
     } catch (_) {}
 
+    // Fallback native geo
+    final geoUri = Uri.parse('geo:$coordStr?q=$coordStr(${Uri.encodeComponent(place.name)})');
+    try {
+      if (await canLaunchUrl(geoUri)) {
+        final opened = await (opener ?? _defaultOpener)(geoUri);
+        if (opened) return true;
+      }
+    } catch (_) {}
+
     return _open(navigationUri(place), opener);
   }
 
+  /// Buka detail / pin lokasi: coba Google Maps native (geo:) terlebih dahulu
+  /// agar tidak membuka browser web yang rentan memunculkan layar putih kosong.
   static Future<bool> openPlacePage(NearbyPlace place, {UrlOpener? opener}) async {
+    final coordStr = '${place.lat.toStringAsFixed(6)},${place.lng.toStringAsFixed(6)}';
+    final nativeGeoUri = Uri.parse('geo:$coordStr?q=$coordStr(${Uri.encodeComponent(place.name)})');
+    try {
+      if (await canLaunchUrl(nativeGeoUri)) {
+        final opened = await (opener ?? _defaultOpener)(nativeGeoUri);
+        if (opened) return true;
+      }
+    } catch (_) {}
+
     return _open(placePageUri(place), opener);
   }
 

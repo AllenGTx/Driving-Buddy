@@ -1824,7 +1824,7 @@ class MonitorScreenState extends State<MonitorScreen> with WidgetsBindingObserve
                         ),
                       ),
                       const SizedBox(width: 6),
-                      Flexible(
+                      Expanded(
                         child: Text(
                           !_isMonitoring
                               ? (LanguageService.instance.isEnglish
@@ -1919,7 +1919,7 @@ class MonitorScreenState extends State<MonitorScreen> with WidgetsBindingObserve
                       borderRadius: BorderRadius.circular(8),
                       child: Container(
                         padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
+                          horizontal: 8,
                           vertical: 4.5,
                         ),
                         decoration: BoxDecoration(
