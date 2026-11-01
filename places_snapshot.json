@@ -8,6 +8,134 @@
   "elements": [
     {
       "type": "node",
+      "id": 9900010,
+      "lat": -6.971215,
+      "lon": 110.425845,
+      "tags": {
+        "name": "Metro Park View Hotel Kota Lama Semarang",
+        "tourism": "hotel",
+        "addr:street": "Jl. KH Agus Salim No. 2-4",
+        "addr:city": "Semarang"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9900009,
+      "lat": -6.968215,
+      "lon": 110.427845,
+      "tags": {
+        "name": "Kotta Hotel Semarang",
+        "tourism": "hotel",
+        "addr:street": "Jl. Taman Srigunting No. 14, Kota Lama",
+        "addr:city": "Semarang"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9900008,
+      "lat": -6.969512,
+      "lon": 110.428514,
+      "tags": {
+        "name": "Bobobox Pods Kota Lama Semarang",
+        "tourism": "hotel",
+        "brand": "Bobobox",
+        "addr:street": "Jl. Letjen Suprapto No. 7",
+        "addr:city": "Semarang"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9900007,
+      "lat": -6.978125,
+      "lon": 110.421512,
+      "tags": {
+        "name": "Hotel Chanti Semarang Managed by TENTREM",
+        "tourism": "hotel",
+        "addr:street": "Jl. Gajah Mada No. 40",
+        "addr:city": "Semarang"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9900006,
+      "lat": -6.976512,
+      "lon": 110.415842,
+      "tags": {
+        "name": "Novotel Semarang",
+        "tourism": "hotel",
+        "brand": "Novotel",
+        "addr:street": "Jl. Pemuda No. 123",
+        "addr:city": "Semarang"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9900005,
+      "lat": -6.973215,
+      "lon": 110.413845,
+      "tags": {
+        "name": "ibis budget Semarang Tendean",
+        "tourism": "hotel",
+        "brand": "ibis budget",
+        "addr:street": "Jl. Kapten Piere Tendean No. 21",
+        "addr:city": "Semarang"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9900004,
+      "lat": -6.974512,
+      "lon": 110.414215,
+      "tags": {
+        "name": "Whiz Hotel Pemuda Semarang",
+        "tourism": "hotel",
+        "brand": "Whiz Hotel",
+        "addr:street": "Jl. Pierre Tendean No. 9",
+        "addr:city": "Semarang"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9900003,
+      "lat": -6.95651,
+      "lon": 110.41215,
+      "tags": {
+        "name": "Homestay Tanah Mas Indah",
+        "tourism": "guest_house",
+        "addr:street": "Jl. Tambak Mas Raya",
+        "addr:city": "Semarang"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9900002,
+      "lat": -6.95412,
+      "lon": 110.40821,
+      "tags": {
+        "name": "Kost & Guest House Muara Mas",
+        "tourism": "guest_house",
+        "addr:street": "Jl. Muara Mas Raya",
+        "addr:city": "Semarang"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9900001,
+      "lat": -6.95385,
+      "lon": 110.40932,
+      "tags": {
+        "name": "Smart Budget Hotel",
+        "tourism": "hotel",
+        "hotel": "yes",
+        "addr:street": "Jl. Taman Muara Mas / Jl. Muara Mas XIII",
+        "addr:suburb": "Panggung Lor, Tanah Mas",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "description": "Smart Budget Hotel Tanah Mas Semarang Utara"
+      }
+    },
+    {
+      "type": "node",
       "id": 259665172,
       "lat": -7.012213,
       "lon": 110.4202369,
@@ -25297,6 +25425,5223 @@
         "tourism": "hotel",
         "addr:street": "Jl. Slamet Riyadi No. 562",
         "addr:city": "Surakarta"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10265606010,
+      "lat": -7.00786,
+      "lon": 110.369241,
+      "tags": {
+        "addr:housenumber": "349",
+        "addr:postcode": "50182",
+        "addr:street": "Jalan Candi Sukuh Utara I",
+        "name": "Kost Asri Pasadena",
+        "tourism": "apartment"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13166833368,
+      "lat": -7.0609875,
+      "lon": 110.4425255,
+      "tags": {
+        "addr:city": "semarang",
+        "addr:district": "tembalang",
+        "addr:housename": "Wisma Andalusia",
+        "addr:province": "jawa tengah",
+        "addr:street": "Gondang Timur 1",
+        "addr:subdistrict": "gondang timur",
+        "name": "Wisma Andalusia",
+        "tourism": "apartment"
+      }
+    },
+    {
+      "type": "node",
+      "id": 14139375168,
+      "lat": -7.0370181,
+      "lon": 110.4285165,
+      "tags": {
+        "addr:city": "Semarang",
+        "addr:district": "Banyumanik",
+        "addr:housename": "Kost Putra Fosil 22",
+        "addr:neighbourhood": "RT:04, RW 08",
+        "addr:postcode": "50261",
+        "addr:province": "Jawa Tengah",
+        "addr:street": "jalan jrobang raya",
+        "addr:subdistrict": "Ngesrep",
+        "internet_access": "yes",
+        "name": "Kost Putra Fosil 22",
+        "phone": "+62 812 2858 528",
+        "tourism": "apartment"
+      }
+    },
+    {
+      "type": "node",
+      "id": 342555349,
+      "lat": -6.9815165,
+      "lon": 110.4156752,
+      "tags": {
+        "building": "yes",
+        "name": "Kos Pria 33",
+        "tourism": "apartment"
+      }
+    },
+    {
+      "type": "node",
+      "id": 530846887,
+      "lat": -6.9921341,
+      "lon": 110.4296585,
+      "tags": {
+        "access:roof": "yes",
+        "addr:full": "Jalan Ki Mangunsarkoro No. 36",
+        "backup_generator": "yes",
+        "building": "yes",
+        "building:condition": "good",
+        "building:floor": "ceramics",
+        "building:levels": "14",
+        "building:material": "brick",
+        "building:roof": "concrete",
+        "building:structure": "confined_masonry",
+        "capacity:persons": ">500",
+        "name": "Harris Hotel Sentraland",
+        "tourism": "apartment"
+      }
+    },
+    {
+      "type": "node",
+      "id": 577927007,
+      "lat": -7.0608633,
+      "lon": 110.4396717,
+      "tags": {
+        "addr:city": "Semarang",
+        "addr:housenumber": "39",
+        "addr:postcode": "50275",
+        "addr:street": "Gang Iwenisari Timur I",
+        "building": "yes",
+        "internet_access": "wlan",
+        "internet_access:fee": "yes",
+        "name": "Kos Bapak Sunarto",
+        "operator": "Ardi Setyo",
+        "rooms": "4",
+        "smoking": "no",
+        "tourism": "apartment"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2130372735,
+      "lat": -6.6034619,
+      "lon": 110.6787775,
+      "tags": {
+        "amenity": "fuel",
+        "brand": "Pertamina",
+        "brand:wikidata": "Q1641044",
+        "fuel:GTL_diesel": "yes",
+        "fuel:biodiesel": "yes",
+        "fuel:diesel": "yes",
+        "fuel:lpg": "yes",
+        "fuel:octane_92": "yes",
+        "fuel:octane_95": "yes",
+        "name": "SPBU Bapangan",
+        "opening_hours": "24/7"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2149754352,
+      "lat": -6.7683155,
+      "lon": 110.7752137,
+      "tags": {
+        "amenity": "fuel",
+        "name": "SPBU Papringan",
+        "source": "Bing"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2649760321,
+      "lat": -6.9679096,
+      "lon": 111.4148334,
+      "tags": {
+        "name": "HOTEL KURNIA",
+        "tourism": "motel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3912936915,
+      "lat": -6.7008383,
+      "lon": 111.3368554,
+      "tags": {
+        "name": "pelabuhan perikanan pantai",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4432067264,
+      "lat": -6.7219591,
+      "lon": 111.1471614,
+      "tags": {
+        "addr:city": "Juwana",
+        "addr:postcode": "59185",
+        "addr:street": "Jalan Jepuro - Bumirejo",
+        "name": "Toko Barokah",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4447981090,
+      "lat": -6.7431587,
+      "lon": 111.0271733,
+      "tags": {
+        "addr:city": "Pati",
+        "addr:housenumber": "2A",
+        "addr:postcode": "59112",
+        "addr:street": "Jalan Kolonel Sugiono",
+        "air_conditioning": "yes",
+        "internet_access": "wlan",
+        "internet_access:fee": "no",
+        "name": "Hotel Winong Asri",
+        "opening_hours": "24/7",
+        "phone": "+6287837097500",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4592319789,
+      "lat": -6.6295195,
+      "lon": 110.706038,
+      "tags": {
+        "addr:postcode": "59427",
+        "addr:street": "jalan Amarta 3",
+        "internet_access": "wlan",
+        "name": "House of Nisa",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5053343545,
+      "lat": -6.7514489,
+      "lon": 111.0304381,
+      "tags": {
+        "name": "Pati Hotel",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6691049635,
+      "lat": -6.6184746,
+      "lon": 110.6886657,
+      "tags": {
+        "guest_house": "house",
+        "internet_access": "no",
+        "name": "rumah kaka",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10203306089,
+      "lat": -6.6806507,
+      "lon": 110.7218167,
+      "tags": {
+        "name": "rengging rt18/rw03, pecangaan, jepara",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10763328700,
+      "lat": -6.7112811,
+      "lon": 111.3612069,
+      "tags": {
+        "name": "Wisma Syariah Wilujeng",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10763463125,
+      "lat": -6.7100888,
+      "lon": 111.3657793,
+      "tags": {
+        "name": "GRAHA DAF",
+        "tourism": "hostel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10763481759,
+      "lat": -6.7101976,
+      "lon": 111.3624293,
+      "tags": {
+        "name": "RUMAH KOST",
+        "tourism": "hostel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10816832062,
+      "lat": -6.7364024,
+      "lon": 111.3552668,
+      "tags": {
+        "name": "RedDoorz Syariah near Rumah Sakit Bhina Bhakti Husada",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10816881755,
+      "lat": -6.7441198,
+      "lon": 111.3602175,
+      "tags": {
+        "name": "Maharani Kost Putra Putri",
+        "tourism": "hostel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10816920645,
+      "lat": -6.7330854,
+      "lon": 111.3554195,
+      "tags": {
+        "name": "Kost Hijau",
+        "tourism": "hostel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10817052106,
+      "lat": -6.7321291,
+      "lon": 111.3530105,
+      "tags": {
+        "name": "KOST 5 PLUS 1",
+        "tourism": "hostel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10817055348,
+      "lat": -6.7311358,
+      "lon": 111.3552027,
+      "tags": {
+        "name": "Amanda Guest House Syariah",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10817075129,
+      "lat": -6.734155,
+      "lon": 111.3440381,
+      "tags": {
+        "name": "Farma Kost",
+        "tourism": "hostel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10817144679,
+      "lat": -6.7127599,
+      "lon": 111.3863757,
+      "tags": {
+        "amenity": "fuel",
+        "brand": "Pertamina",
+        "brand:wikidata": "Q1641044",
+        "fuel:diesel": "yes",
+        "fuel:octane_90": "yes",
+        "fuel:octane_92": "yes",
+        "fuel:octane_98": "yes",
+        "name": "SPBU Pertamina 44.592.23",
+        "self_service": "no"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10817165476,
+      "lat": -6.7169817,
+      "lon": 111.3778762,
+      "tags": {
+        "name": "Kost Bu Kolil",
+        "tourism": "hostel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 11846545266,
+      "lat": -6.6525547,
+      "lon": 110.8649752,
+      "tags": {
+        "name": "Hotel Abiyasa Inn",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 12525775396,
+      "lat": -6.6887729,
+      "lon": 110.7213184,
+      "tags": {
+        "addr:city": "Jepara",
+        "addr:district": "Jepara",
+        "addr:housename": "MAFASAKA",
+        "addr:housenumber": "-",
+        "addr:neighbourhood": "-",
+        "addr:postcode": "59462",
+        "addr:province": "Jawa Tengah",
+        "addr:street": "persatuan",
+        "addr:subdistrict": "Pecangaan",
+        "addr:unit": "-",
+        "internet_access": "wlan",
+        "name": "Toko Bu Salam",
+        "operator": "-",
+        "payment:cash": "yes",
+        "phone": "+62 813-9014-9915",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 12597671193,
+      "lat": -6.7583805,
+      "lon": 111.0459561,
+      "tags": {
+        "amenity": "fuel",
+        "name": "SPBU PERTAMINA GAJAH MATI",
+        "opening_hours": "Mo-Su 07:00-14:00"
+      }
+    },
+    {
+      "type": "node",
+      "id": 12597713900,
+      "lat": -6.76885,
+      "lon": 111.0534319,
+      "tags": {
+        "amenity": "fuel",
+        "name": "SPBU PERTAMINA NGANTRU",
+        "opening_hours": "Mo-Su 07:00-06:25"
+      }
+    },
+    {
+      "type": "node",
+      "id": 12640025361,
+      "lat": -6.7399494,
+      "lon": 111.0248052,
+      "tags": {
+        "name": "Hotel Sartika",
+        "name:en": "Sartika Hotel",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 12787563166,
+      "lat": -6.732905,
+      "lon": 111.3532028,
+      "tags": {
+        "addr:street": "Jalan Lingkar Rembang",
+        "name": "Kos'an Jembut PK",
+        "tourism": "motel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 12802298258,
+      "lat": -6.7151831,
+      "lon": 111.3466459,
+      "tags": {
+        "addr:street": "Jl Perum Syahdu Tengah",
+        "name": "toko syahdu",
+        "opening_hours": "Mo-Su 09:00-21:00",
+        "payment:cash": "yes",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13503287478,
+      "lat": -6.6007792,
+      "lon": 110.6649164,
+      "tags": {
+        "amenity": "fuel",
+        "brand": "Pertamina",
+        "fuel:diesel": "yes",
+        "fuel:octane_90": "yes",
+        "fuel:octane_92": "yes",
+        "name": "SPBU Krapyak"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13504049994,
+      "lat": -6.7581265,
+      "lon": 110.766081,
+      "tags": {
+        "amenity": "fuel",
+        "brand": "Pertamina",
+        "fuel:diesel": "yes",
+        "fuel:octane_90": "yes",
+        "fuel:octane_92": "yes",
+        "fuel:octane_98": "yes",
+        "name": "SPBU Nalumsari"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13946747760,
+      "lat": -6.7159361,
+      "lon": 111.1548185,
+      "tags": {
+        "amenity": "fuel",
+        "name": "SPBU Ngebruk Juwana"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13946811291,
+      "lat": -6.7578807,
+      "lon": 111.1555864,
+      "tags": {
+        "amenity": "fuel",
+        "name": "SPBU Jakenan"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13946854538,
+      "lat": -6.7753829,
+      "lon": 111.235609,
+      "tags": {
+        "amenity": "fuel",
+        "name": "SPBU Jaken"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13946989179,
+      "lat": -6.7015803,
+      "lon": 110.7633247,
+      "tags": {
+        "amenity": "fuel",
+        "name": "SPBU Ngroto"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13946991205,
+      "lat": -6.6625548,
+      "lon": 110.7543097,
+      "tags": {
+        "amenity": "fuel",
+        "name": "SPBU Mindahan Kidul"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13985936301,
+      "lat": -6.6259497,
+      "lon": 110.6404627,
+      "tags": {
+        "name": "Blue garden boutique hotel",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 14027696572,
+      "lat": -6.7683808,
+      "lon": 110.7249327,
+      "tags": {
+        "addr:city": "Jepara",
+        "addr:district": "Welahan",
+        "addr:housename": "SPBU Welahan",
+        "addr:postcode": "59464",
+        "addr:province": "Jawa Tengah",
+        "addr:street": "Jalan Welahan",
+        "addr:subdistrict": "Kalipucang Kulon",
+        "amenity": "fuel",
+        "name": "SPBU Welahan"
+      }
+    },
+    {
+      "type": "node",
+      "id": 14027813343,
+      "lat": -6.7341867,
+      "lon": 110.7243846,
+      "tags": {
+        "amenity": "fuel",
+        "name": "SPBU Pertamina Kriyan"
+      }
+    },
+    {
+      "type": "node",
+      "id": 14027813344,
+      "lat": -6.7337331,
+      "lon": 110.7327278,
+      "tags": {
+        "amenity": "fuel",
+        "brand": "Pertamina",
+        "name": "SPBU Sengon"
+      }
+    },
+    {
+      "type": "node",
+      "id": 14027813345,
+      "lat": -6.7169796,
+      "lon": 110.7164987,
+      "tags": {
+        "amenity": "fuel",
+        "brand": "Pertamina",
+        "name": "SPBU Krasak"
+      }
+    },
+    {
+      "type": "node",
+      "id": 14027834512,
+      "lat": -6.6704778,
+      "lon": 110.7116906,
+      "tags": {
+        "amenity": "fuel",
+        "brand": "Pertamina",
+        "name": "SPBU Troso"
+      }
+    },
+    {
+      "type": "node",
+      "id": 14027834519,
+      "lat": -6.6481359,
+      "lon": 110.7104776,
+      "tags": {
+        "amenity": "fuel",
+        "brand": "Pertamina",
+        "name": "SPBU Ngabul"
+      }
+    },
+    {
+      "type": "node",
+      "id": 14027907556,
+      "lat": -6.6325002,
+      "lon": 110.7045756,
+      "tags": {
+        "amenity": "fuel",
+        "name": "SPBU Kalitekuk"
+      }
+    },
+    {
+      "type": "node",
+      "id": 14155917402,
+      "lat": -6.9703194,
+      "lon": 111.4217348,
+      "tags": {
+        "name": "SUMBER REJEKI",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 14166428302,
+      "lat": -6.9727467,
+      "lon": 111.4152612,
+      "tags": {
+        "name": "ARUMDALU",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 14166433301,
+      "lat": -6.9710769,
+      "lon": 111.4087029,
+      "tags": {
+        "name": "abaca red dorz",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 14285308501,
+      "lat": -6.6270151,
+      "lon": 110.6387359,
+      "tags": {
+        "name": "Hotel Horison Jepara",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 14329744455,
+      "lat": -6.7389784,
+      "lon": 110.7233853,
+      "tags": {
+        "addr:city": "Jepara",
+        "addr:district": "Kalinyamatan",
+        "addr:postcode": "59467",
+        "addr:province": "Jawa Tengah",
+        "addr:street": "Jalan Welahan",
+        "addr:subdistrict": "Robayan",
+        "branch": "Robayan",
+        "name": "Royyan Mart",
+        "payment:app": "yes",
+        "payment:cash": "yes",
+        "payment:debit_cards": "yes",
+        "shop": "convenience",
+        "website": "https://royyanmart.inolab.id"
+      }
+    },
+    {
+      "type": "node",
+      "id": 304379083,
+      "lat": -6.7454645,
+      "lon": 110.7524489,
+      "tags": {
+        "amenity": "fuel",
+        "name": "SPBU MAYONG",
+        "operator": "PERTAMINA"
+      }
+    },
+    {
+      "type": "node",
+      "id": 304379729,
+      "lat": -6.6927192,
+      "lon": 110.7145438,
+      "tags": {
+        "amenity": "fuel",
+        "building": "yes",
+        "layer": "1",
+        "name": "SPBU PULODARAT",
+        "operator": "PERTAMINA"
+      }
+    },
+    {
+      "type": "node",
+      "id": 645525740,
+      "lat": -6.6742226,
+      "lon": 111.4570416,
+      "tags": {
+        "amenity": "fuel",
+        "brand": "Pertamina",
+        "brand:wikidata": "Q1641044",
+        "name": "SPBU 44.592.12"
+      }
+    },
+    {
+      "type": "node",
+      "id": 648356654,
+      "lat": -6.70579,
+      "lon": 111.3499535,
+      "tags": {
+        "building": "yes",
+        "name": "Hotel Rantina",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 980808699,
+      "lat": -6.6599814,
+      "lon": 111.0241185,
+      "tags": {
+        "amenity": "fuel",
+        "name": "Pompa Bensin Mini Pertamax"
+      }
+    },
+    {
+      "type": "node",
+      "id": 980808700,
+      "lat": -6.7075352,
+      "lon": 111.0140518,
+      "tags": {
+        "amenity": "fuel",
+        "brand": "Pertamina",
+        "brand:wikidata": "Q1641044",
+        "brand:wikipedia": "en:Pertamina",
+        "name": "Pompa bensin Tlogowungu"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1083551046,
+      "lat": -6.7037098,
+      "lon": 111.3266653,
+      "tags": {
+        "building": "yes",
+        "name": "Penginapan",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1085493304,
+      "lat": -6.6996289,
+      "lon": 111.3121309,
+      "tags": {
+        "building": "yes",
+        "name": "Hotel",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1136681162,
+      "lat": -6.7000205,
+      "lon": 111.4462099,
+      "tags": {
+        "addr:city": "Lasem",
+        "addr:housenumber": "11",
+        "addr:street": "Karangturi Gang 4",
+        "building": "yes",
+        "internet_access": "yes",
+        "name": "Rumah Merah Tiongkok Kecil Heritage",
+        "operator": "Laut Bonang",
+        "rooms": "4",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1136688868,
+      "lat": -6.689696,
+      "lon": 111.4277589,
+      "tags": {
+        "amenity": "fuel",
+        "brand": "Pertamina",
+        "brand:wikidata": "Q1641044",
+        "name": "SPBU 44.592.18",
+        "self_service": "no"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1136796864,
+      "lat": -6.7338099,
+      "lon": 111.3546503,
+      "tags": {
+        "amenity": "fuel",
+        "brand": "Pertamina",
+        "brand:wikidata": "Q1641044",
+        "name": "SPBU Pertamina 44.592.08",
+        "self_service": "no"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1137022240,
+      "lat": -6.6996939,
+      "lon": 111.4478662,
+      "tags": {
+        "building": "yes",
+        "name": "Rumah Oei",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1138421053,
+      "lat": -6.6899792,
+      "lon": 111.4217722,
+      "tags": {
+        "amenity": "fuel",
+        "brand": "Pertamina",
+        "brand:wikidata": "Q1641044",
+        "name": "SPBU 44.592.04"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1163127291,
+      "lat": -6.7057057,
+      "lon": 111.3640705,
+      "tags": {
+        "amenity": "fuel",
+        "name": "SPBU Pertamina 44.592.15"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1163340983,
+      "lat": -6.7066308,
+      "lon": 111.3794999,
+      "tags": {
+        "amenity": "fuel",
+        "name": "SPBU Pertamina 44.592.10"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1227685849,
+      "lat": -6.7053964,
+      "lon": 111.448748,
+      "tags": {
+        "amenity": "fuel",
+        "brand": "Pertamina",
+        "brand:wikidata": "Q1641044",
+        "name": "SPBU 44.592.25"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1286831088,
+      "lat": -6.7011154,
+      "lon": 111.3284541,
+      "tags": {
+        "amenity": "fuel",
+        "building": "yes",
+        "name": "Pertamini"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1287975644,
+      "lat": -6.70036,
+      "lon": 111.3121015,
+      "tags": {
+        "name": "Hotel Pantura",
+        "plot": "yes",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 448090099,
+      "lat": -7.592564,
+      "lon": 109.279923,
+      "tags": {
+        "name": "Arrya Guna Hotel",
+        "note": "175kR fan, c. mandi, b/f. AC 250kR+. Spotless & comfy. Bikes under cover & guard. Jl Raya Buntu KM 01, Banyumas. Ph. 0282-5291199. 27-MAY-09",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 448090104,
+      "lat": -7.4514004,
+      "lon": 109.4711694,
+      "tags": {
+        "amenity": "fuel",
+        "compressed_air": "yes",
+        "name": "SPBU Pertamina 44.534.02",
+        "opening_hours": "24/7"
+      }
+    },
+    {
+      "type": "node",
+      "id": 448090109,
+      "lat": -7.3963354,
+      "lon": 109.6393055,
+      "tags": {
+        "amenity": "fuel",
+        "compressed_air": "yes",
+        "name": "SPBU Blambangan",
+        "opening_hours": "24/7",
+        "operator": "Pertamina"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1884688755,
+      "lat": -7.4463211,
+      "lon": 109.3150483,
+      "tags": {
+        "amenity": "fuel",
+        "brand": "Pertamina",
+        "fuel:biodiesel": "yes",
+        "fuel:diesel": "yes",
+        "fuel:lpg": "yes",
+        "fuel:octane_91": "yes",
+        "fuel:octane_98": "yes",
+        "name": "SPBU Klahang"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2013717999,
+      "lat": -7.4176354,
+      "lon": 109.251719,
+      "tags": {
+        "addr:street": "Jalan Profesor Doktor Soeharso",
+        "designation": "Gorland Mart",
+        "name": "Gorland Mart",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2021349401,
+      "lat": -7.3159589,
+      "lon": 109.2285026,
+      "tags": {
+        "designation": "Rosenda Hotel",
+        "name": "Rosenda Hotel",
+        "source": "hotelrosenda.blogspot.com/",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2055544297,
+      "lat": -7.4279935,
+      "lon": 109.2472265,
+      "tags": {
+        "designation": "Hotel Mulia Purwokerto",
+        "name": "Hotel Mulia",
+        "source": "www.agoda.co.id/",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2070967760,
+      "lat": -7.3123135,
+      "lon": 109.2385093,
+      "tags": {
+        "designation": "Queen Garden Hotel Baturraden",
+        "name": "Queen Garden Hotel",
+        "source": "www.queen-hotels.com/",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2071475217,
+      "lat": -7.316506,
+      "lon": 109.2312427,
+      "tags": {
+        "addr:street": "Jalan Pariwisata Baturaden",
+        "name": "Nirwana Resort",
+        "source": "booking.com",
+        "tourism": "hotel",
+        "website": "hotelardikencana.blogspot.com/"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2074492209,
+      "lat": -7.3374054,
+      "lon": 109.2309141,
+      "tags": {
+        "addr:street": "Jalan Raya Baturaden",
+        "name": "Green Valley Hotel Baturraden",
+        "source": "tripadvisor",
+        "tourism": "hotel",
+        "website": "greenvalley-hotel.com/"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2320237854,
+      "lat": -7.4176681,
+      "lon": 109.339834,
+      "tags": {
+        "addr:city": "Kalimanah Kulon",
+        "addr:postcode": "53371",
+        "addr:street": "Jalan Mayor Jenderal Sungkono",
+        "amenity": "fuel",
+        "brand": "Pertamina",
+        "fuel:biodiesel": "yes",
+        "fuel:lpg": "yes",
+        "fuel:octane_100": "yes",
+        "fuel:octane_95": "yes",
+        "fuel:octane_98": "yes",
+        "name": "SPBU Kalimanah",
+        "operator": "Pertamina"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2751368734,
+      "lat": -7.5923135,
+      "lon": 109.2721123,
+      "tags": {
+        "addr:city": "Buntu",
+        "addr:postcode": "53194",
+        "addr:street": "Jalan Raya Buntu",
+        "amenity": "fuel",
+        "name": "SPBU Buntu"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4236938891,
+      "lat": -7.4388916,
+      "lon": 109.2673201,
+      "tags": {
+        "addr:housenumber": "6",
+        "addr:postcode": "53146",
+        "addr:street": "sunan kalijaga 1",
+        "name": "as shofi kost",
+        "operator": "pak kusworo",
+        "phone": "+62 281 6844031",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4348282810,
+      "lat": -7.5924598,
+      "lon": 109.2791694,
+      "tags": {
+        "internet_access": "wlan",
+        "internet_access:password": "123456789",
+        "name": "Hotel Garunda",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4484391392,
+      "lat": -7.43485,
+      "lon": 109.2486817,
+      "tags": {
+        "name": "Kost Tri",
+        "opening_hours": "Mo-Su 07:00-18:00,07:00-18:00",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4485478491,
+      "lat": -7.4404251,
+      "lon": 109.2482915,
+      "tags": {
+        "name": "Windy Kost",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4503871490,
+      "lat": -7.4578722,
+      "lon": 109.2451041,
+      "tags": {
+        "addr:street": "jalan pamujan indah",
+        "name": "Rumah Pamujan Indah A2",
+        "tourism": "hostel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 8514914711,
+      "lat": -7.3174464,
+      "lon": 109.2419986,
+      "tags": {
+        "name": "Pondok Kopi",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10184832988,
+      "lat": -7.3182152,
+      "lon": 109.2271804,
+      "tags": {
+        "name": "Hotel MBORO",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10184846993,
+      "lat": -7.3174388,
+      "lon": 109.2274126,
+      "tags": {
+        "name": "Grand Kanaya Baturraden",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10588760990,
+      "lat": -7.3980587,
+      "lon": 109.667736,
+      "tags": {
+        "name": "Hotel Nyaman",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 10819016274,
+      "lat": -7.3475851,
+      "lon": 109.3394432,
+      "tags": {
+        "amenity": "fuel",
+        "name": "BRILink Pom mini Ari"
+      }
+    },
+    {
+      "type": "node",
+      "id": 11002588744,
+      "lat": -7.4036484,
+      "lon": 109.3472211,
+      "tags": {
+        "name": "SMEGA MART",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 11662050169,
+      "lat": -7.4309477,
+      "lon": 109.246891,
+      "tags": {
+        "name": "Saré",
+        "name:id": "Sare Guesthouse",
+        "tourism": "motel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 11705798669,
+      "lat": -7.4416208,
+      "lon": 109.2380813,
+      "tags": {
+        "name": "Alfanart",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 12865200149,
+      "lat": -7.4619848,
+      "lon": 109.4354572,
+      "tags": {
+        "amenity": "fuel",
+        "name": "Spbu klampok"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13840536958,
+      "lat": -7.36912,
+      "lon": 109.6240931,
+      "tags": {
+        "name": "Indomaret Wanadadi",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13943027801,
+      "lat": -7.5993742,
+      "lon": 109.333642,
+      "tags": {
+        "addr:street": "Jalan Raya Sumpiuh",
+        "amenity": "fuel",
+        "name": "SPBU Pertamina 44.531.28 Kedungpring Kemranjen",
+        "opening_hours": "24/7",
+        "operator": "Pertamina"
+      }
+    },
+    {
+      "type": "node",
+      "id": 13954726201,
+      "lat": -7.5953167,
+      "lon": 109.3215055,
+      "tags": {
+        "addr:postcode": "53194",
+        "addr:street": "Jl. Raya Wijahan No.1",
+        "name": "Alfamart Kecila-Kemranjen",
+        "opening_hours": "24/7",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 195047915,
+      "lat": -7.4252473,
+      "lon": 109.2367157,
+      "tags": {
+        "addr:city": "Purwokerto",
+        "addr:street": "Jalan Merdeka",
+        "air_conditioning": "yes",
+        "building": "yes",
+        "name": "Wisata Niaga",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 197310018,
+      "lat": -7.3233441,
+      "lon": 109.2280701,
+      "tags": {
+        "addr:street": "Jalan Raya Baturaden",
+        "name": "Puri Wisata Hotel",
+        "source": "momenku.com",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 197310019,
+      "lat": -7.3242447,
+      "lon": 109.2290086,
+      "tags": {
+        "addr:street": "Jalan Raya Baturaden",
+        "building": "yes",
+        "name": "Hotel Legend",
+        "source": "foursquare",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 197310020,
+      "lat": -7.3207734,
+      "lon": 109.2295119,
+      "tags": {
+        "name": "Hotel Moro Seneng",
+        "source": "banyumase.com",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 197310036,
+      "lat": -7.3223001,
+      "lon": 109.2287994,
+      "tags": {
+        "addr:street": "Jalan Raya Baturaden",
+        "name": "Hotel Irby",
+        "source": "foursquare",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 197310048,
+      "lat": -7.325584,
+      "lon": 109.2284721,
+      "tags": {
+        "addr:street": "Jalan Raya Baturaden",
+        "name": "Hotel Mawar Agung",
+        "network": "Hotel Mawar Agung",
+        "source": "foursquare",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 211428998,
+      "lat": -7.4235378,
+      "lon": 109.2271266,
+      "tags": {
+        "building": "yes",
+        "name": "Hotel Borobudur Purwokerto",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 311211065,
+      "lat": -7.3978219,
+      "lon": 109.2446911,
+      "tags": {
+        "building": "yes",
+        "name": "Kost Putri Kenanga",
+        "tourism": "hostel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 311211067,
+      "lat": -7.3970325,
+      "lon": 109.2446543,
+      "tags": {
+        "building": "yes",
+        "name": "Wisma Sinatrya(kost putri)",
+        "tourism": "hostel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 629934302,
+      "lat": -7.389099,
+      "lon": 109.3415787,
+      "tags": {
+        "amenity": "fuel",
+        "name": "Pom Bensin Babakan"
+      }
+    },
+    {
+      "type": "node",
+      "id": 722001424,
+      "lat": -7.4229323,
+      "lon": 109.2467433,
+      "tags": {
+        "addr:city": "Purwokerto",
+        "addr:housenumber": "39-41",
+        "addr:postcode": "53111",
+        "addr:street": "Jalan Komisaris Bambang Suprapto",
+        "air_conditioning": "yes",
+        "building": "yes",
+        "internet_access": "wlan",
+        "name": "Dominic Hotel",
+        "phone": "+62 281 657488",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 722243136,
+      "lat": -7.4154618,
+      "lon": 109.2387816,
+      "tags": {
+        "addr:city": "Purwokerto",
+        "addr:street": "Doktor Angka",
+        "air_conditioning": "yes",
+        "name": "Java Heritage Purwokerto",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 850429151,
+      "lat": -7.4125267,
+      "lon": 109.2427134,
+      "tags": {
+        "building": "yes",
+        "name": "Guest House CENDANA",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 850833910,
+      "lat": -7.4239661,
+      "lon": 109.2346911,
+      "tags": {
+        "building": "yes",
+        "name": "D'Ben Hotel Purwokerto",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 850912317,
+      "lat": -7.425489,
+      "lon": 109.2328955,
+      "tags": {
+        "building": "yes",
+        "name": "Halona Guest House Jendral Sudirman",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 851028333,
+      "lat": -7.5701393,
+      "lon": 109.3625397,
+      "tags": {
+        "brand": "Park Inn",
+        "brand:wikidata": "Q60711675",
+        "brand:wikipedia": "ru:Park Inn by Radisson",
+        "building": "yes",
+        "name": "Park Inn",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 851051626,
+      "lat": -7.5195345,
+      "lon": 109.2944211,
+      "tags": {
+        "addr:city": "Sudagaran Kecamatan Banyumas Kabupaten Banyumas",
+        "addr:district": "Banyumas",
+        "addr:housename": "Kanaka Kost Sudagaran Banyumas",
+        "addr:neighbourhood": "1",
+        "addr:postcode": "53192",
+        "addr:province": "Jawa Tengah",
+        "addr:street": "Jalan Pramuka",
+        "addr:subdistrict": "Sudagaran",
+        "building": "yes",
+        "email": "uvomaruvo@gmail.com",
+        "guest_house": "guest_house",
+        "internet_access": "wlan",
+        "internet_access:fee": "customers",
+        "layer": "1",
+        "name": "Kanaka Kost Sudagaran Banyumas",
+        "operator": "Ahmad Nuari Zulfikri",
+        "phone": "+62 812-2828-8864",
+        "rooms": "10",
+        "tourism": "hostel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 854314394,
+      "lat": -7.4176897,
+      "lon": 109.24497,
+      "tags": {
+        "brand": "Aston Imperium",
+        "building": "yes",
+        "building:levels": "12",
+        "internet_access": "yes",
+        "layer": "1",
+        "name": "Aston Imperium Hotel Purwokerto",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 854314416,
+      "lat": -7.4190658,
+      "lon": 109.2442255,
+      "tags": {
+        "building": "yes",
+        "name": "Hotel Gunung Slamet",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 870942472,
+      "lat": -7.4227969,
+      "lon": 109.2539412,
+      "tags": {
+        "building": "yes",
+        "layer": "-1",
+        "name": "Hotel Roda Mas",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 870942983,
+      "lat": -7.4272027,
+      "lon": 109.2444468,
+      "tags": {
+        "building": "yes",
+        "name": "COR Hotel Purwokerto",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 872692125,
+      "lat": -7.3925171,
+      "lon": 109.3613129,
+      "tags": {
+        "addr:city": "Purbalingga, Jawa Tengah, Indonesia",
+        "building": "yes",
+        "name": "Red Doorz near Alun-alun Purbalingga",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 874096198,
+      "lat": -7.4267793,
+      "lon": 109.24538,
+      "tags": {
+        "addr:city": "Purwokerto",
+        "addr:housenumber": "17",
+        "addr:postcode": "53114",
+        "addr:street": "Jalan Letnan Jenderal Suprapto Gg. I",
+        "building": "yes",
+        "internet_access": "no",
+        "name": "Kos Asri Kebondalem",
+        "tourism": "motel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 908485788,
+      "lat": -7.399035,
+      "lon": 109.3752841,
+      "tags": {
+        "building": "yes",
+        "name": "Braling Grand Hotel Purbalingga",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1073559522,
+      "lat": -7.4262848,
+      "lon": 109.2468135,
+      "tags": {
+        "addr:city": "Purwokerto",
+        "addr:postcode": "53531",
+        "addr:street": "Kauman Lama",
+        "air_conditioning": "yes",
+        "building": "yes",
+        "internet_access": "yes",
+        "internet_access:fee": "no",
+        "layer": "1",
+        "name": "Hotel Asri Baru",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1083399793,
+      "lat": -7.3901197,
+      "lon": 109.3659197,
+      "tags": {
+        "brand": "Hotel Utama",
+        "building": "yes",
+        "name": "Hotel Utama",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1097928333,
+      "lat": -7.3690863,
+      "lon": 109.3559947,
+      "tags": {
+        "amenity": "fuel",
+        "name": "SPBU Gembong"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1097929420,
+      "lat": -7.358382,
+      "lon": 109.3558579,
+      "tags": {
+        "amenity": "fuel",
+        "name": "SPBU Bojongsari"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1124922180,
+      "lat": -7.3975152,
+      "lon": 109.2278524,
+      "tags": {
+        "building": "yes",
+        "name": "Kost An-Nafi",
+        "tourism": "hostel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1125427519,
+      "lat": -7.3978361,
+      "lon": 109.2315409,
+      "tags": {
+        "amenity": "fuel",
+        "compressed_air": "yes",
+        "name": "SPBU Pertamina 44.531.33",
+        "opening_hours": "24/7"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1162508105,
+      "lat": -7.3464556,
+      "lon": 109.3436346,
+      "tags": {
+        "amenity": "fuel",
+        "name": "Pertashop Beji"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1305261972,
+      "lat": -7.4158998,
+      "lon": 109.5936387,
+      "tags": {
+        "addr:city": "banjarnegara",
+        "addr:district": "banjarnegara",
+        "addr:housename": "desa gumiwang",
+        "addr:neighbourhood": "Desa",
+        "addr:postcode": "53472",
+        "addr:province": "jawa tengah",
+        "addr:street": "jl.campur salam",
+        "addr:subdistrict": "purwanegara",
+        "building": "yes",
+        "building:levels": "1",
+        "height": "10",
+        "name": "Kost Pak NoNo (하숙집)",
+        "tourism": "motel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1305420190,
+      "lat": -7.4148861,
+      "lon": 109.593204,
+      "tags": {
+        "addr:city": "banjarnegara",
+        "addr:district": "banjarnegara",
+        "addr:housename": "Kost Pak Sugeng (하숙집 )",
+        "addr:postcode": "53472",
+        "addr:province": "jawa tengah",
+        "addr:street": "HHPV+27F, Gumiwang, Kec. Purwanegara, Kab. Banjarnegara, Jawa Tengah 53472",
+        "addr:subdistrict": "purwanegara",
+        "building": "house",
+        "building:levels": "1",
+        "height": "10",
+        "name": "Kost Pak Sugeng (하숙집 )",
+        "tourism": "motel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 448834564,
+      "lat": -7.819927,
+      "lon": 110.370827,
+      "tags": {
+        "name": "Metro",
+        "note": "100kR fan, bath, b/f, pool. Clean, comfy, quiet. Bikes in the open in the yard.",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 492167658,
+      "lat": -7.7853525,
+      "lon": 110.363624,
+      "tags": {
+        "name": "Griya Sentana",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1358383726,
+      "lat": -7.7735077,
+      "lon": 110.3151245,
+      "tags": {
+        "amenity": "fuel",
+        "brand": "Pertamina",
+        "brand:wikidata": "Q1641044",
+        "name": "SPBU Pertamina 44.555.06 Godean"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1359116507,
+      "lat": -7.7804558,
+      "lon": 110.3670381,
+      "tags": {
+        "building:levels": "2",
+        "building:roof": "tile",
+        "building:structure": "reinforced_masonry",
+        "building:use": "commercial",
+        "building:walls": "brick",
+        "name": "Hotel Trim Tiga",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1360220733,
+      "lat": -7.7389926,
+      "lon": 110.3625989,
+      "tags": {
+        "amenity": "fuel",
+        "brand": "Pertamina",
+        "brand:wikidata": "Q1641044",
+        "compressed_air": "yes",
+        "name": "SPBU Pertamina 44.555.19 Mlati Baru"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1366438107,
+      "lat": -7.8189478,
+      "lon": 110.3715471,
+      "tags": {
+        "name": "Perwita Sari",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1370749559,
+      "lat": -7.8356195,
+      "lon": 110.3680377,
+      "tags": {
+        "name": "Ros In Hotel",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1517554691,
+      "lat": -7.7700978,
+      "lon": 110.3730744,
+      "tags": {
+        "name": "Talenta 3 Motel",
+        "tourism": "motel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1640323394,
+      "lat": -7.819688,
+      "lon": 110.369418,
+      "tags": {
+        "internet_access": "wlan",
+        "name": "Delta Homestay",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1640328040,
+      "lat": -7.8196933,
+      "lon": 110.368702,
+      "tags": {
+        "name": "Mercury",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1640508693,
+      "lat": -7.7900951,
+      "lon": 110.3638906,
+      "tags": {
+        "name": "Asia Afrika",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1640515471,
+      "lat": -7.7795395,
+      "lon": 110.3752202,
+      "tags": {
+        "name": "Indraloka",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1640517334,
+      "lat": -7.8242207,
+      "lon": 110.3688366,
+      "tags": {
+        "name": "Dusun Jogja Village inn",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1652912717,
+      "lat": -7.782535,
+      "lon": 110.4234932,
+      "tags": {
+        "addr:city": "Yogyakarta",
+        "addr:housenumber": "48",
+        "addr:postcode": "55282",
+        "addr:street": "Jalan Laksda Adisucipto",
+        "brand": "Grand Diamond Hotel Yogyakarta",
+        "email": "info-jogja@diamond-hotels.com",
+        "internet_access": "wlan",
+        "internet_access:fee": "customers",
+        "name": "Grand Diamond Hotel Yogyakarta",
+        "phone": "+62 274 485005",
+        "rooms": "193",
+        "tourism": "hotel",
+        "website": "https://diamond-hotels.com/"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1652969654,
+      "lat": -7.7327152,
+      "lon": 110.3771558,
+      "tags": {
+        "name": "Villa Hanis",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1652990181,
+      "lat": -7.8172496,
+      "lon": 110.3642294,
+      "tags": {
+        "name": "Pondok terra",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1654007743,
+      "lat": -7.8245175,
+      "lon": 110.3672995,
+      "tags": {
+        "amenity": "fuel",
+        "brand": "Pertamina",
+        "brand:wikidata": "Q1641044",
+        "fuel:biodiesel": "yes",
+        "name": "SPBU Pertamina 44.551.08 Jogokariyan"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1654009037,
+      "lat": -7.821921,
+      "lon": 110.367988,
+      "tags": {
+        "addr:street": "Jalan Parangtritis",
+        "name": "Matahari",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1654014636,
+      "lat": -7.8212136,
+      "lon": 110.3619557,
+      "tags": {
+        "addr:street": "Jalan Mangkuyudan",
+        "name": "Ruba Graha",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1654015340,
+      "lat": -7.8179876,
+      "lon": 110.3619048,
+      "tags": {
+        "addr:city": "Yogyakarta",
+        "addr:housenumber": "53",
+        "addr:street": "Jalan Mayor Jendral DI Panjaitan",
+        "name": "Maga swalayan",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1654016151,
+      "lat": -7.8190266,
+      "lon": 110.3559127,
+      "tags": {
+        "amenity": "fuel",
+        "brand": "Pertamina",
+        "brand:wikidata": "Q1641044",
+        "name": "SPBU Pertamina 44.551.01 Dukuh",
+        "old_name": "SPBU 44-55101"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1654016379,
+      "lat": -7.8123508,
+      "lon": 110.3514093,
+      "tags": {
+        "amenity": "fuel",
+        "brand": "Pertamina",
+        "brand:wikidata": "Q1641044",
+        "name": "SPBU Pertamina 44.551.04 Bugisan"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1654208565,
+      "lat": -7.7408272,
+      "lon": 110.3687121,
+      "tags": {
+        "addr:city": "Yogjakarta",
+        "addr:country": "ID",
+        "addr:postcode": "55581",
+        "addr:street": "Jl. Palagan Tentara Pelajar",
+        "email": "rumahmertua@yahoo.com",
+        "fax": "+62 274 4361015",
+        "name": "Rumah Mertua",
+        "phone": "+62 274 866680",
+        "tourism": "hotel",
+        "website": "www.rumahmertua.com"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1663629332,
+      "lat": -7.7546342,
+      "lon": 110.320303,
+      "tags": {
+        "amenity": "fuel",
+        "name": "SPBU Sidomoyo"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1769198150,
+      "lat": -7.7361861,
+      "lon": 110.3945182,
+      "tags": {
+        "amenity": "fuel",
+        "brand": "Pertamina",
+        "brand:wikidata": "Q1641044",
+        "name": "SPBU Pertamina 44.555.05 Prujakan"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1769202454,
+      "lat": -7.7235407,
+      "lon": 110.401344,
+      "tags": {
+        "amenity": "fuel",
+        "brand": "Pertamina",
+        "brand:wikidata": "Q1641044",
+        "name": "SPBU Pertamina 44.555.08 Ngaglik"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1769538027,
+      "lat": -7.7320593,
+      "lon": 110.3832218,
+      "tags": {
+        "name": "Rumah Palagan",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1795213872,
+      "lat": -7.7584522,
+      "lon": 110.6943042,
+      "tags": {
+        "amenity": "fuel",
+        "brand": "Pertamina",
+        "brand:wikidata": "Q1641044",
+        "fuel:biodiesel": "yes",
+        "fuel:diesel": "yes",
+        "name": "SPBU Pertamina 44.574.22 Cawas"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1795220386,
+      "lat": -7.747541,
+      "lon": 110.7647595,
+      "tags": {
+        "amenity": "fuel",
+        "brand": "Pertamina",
+        "fuel:diesel": "yes",
+        "fuel:octane_90": "yes",
+        "fuel:octane_92": "yes",
+        "name": "SPBU 44.575.08 Kedungjambal",
+        "opening_hours": "Mo-Th,Sa-Su 06:00-21:00; Fr 06:00-12:00,12:45-21:00"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1836609616,
+      "lat": -7.8376189,
+      "lon": 110.4745462,
+      "tags": {
+        "addr:housename": "Indomart",
+        "name": "Mini Market (Indomart) Piyungan",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1836612609,
+      "lat": -7.8322142,
+      "lon": 110.461162,
+      "tags": {
+        "amenity": "fuel",
+        "brand": "Pertamina",
+        "brand:wikidata": "Q1641044",
+        "fuel:lpg": "yes",
+        "name": "SPBU Pertamina 44.557.08 Payak"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1836620000,
+      "lat": -7.8280742,
+      "lon": 110.4475039,
+      "tags": {
+        "amenity": "fuel",
+        "brand": "Pertamina",
+        "brand:wikidata": "Q1641044",
+        "fuel:biodiesel": "yes",
+        "fuel:lpg": "yes",
+        "name": "SPBU Pertamina 44.557.04 Tegalyoso"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1836627702,
+      "lat": -7.8246332,
+      "lon": 110.4792399,
+      "tags": {
+        "name": "Minimarket Alfamart",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1836630400,
+      "lat": -7.8205504,
+      "lon": 110.480692,
+      "tags": {
+        "amenity": "fuel",
+        "brand": "Pertamina",
+        "brand:wikidata": "Q1641044",
+        "name": "SPBU Pertamina 44.557.02 Piyungan"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1847959752,
+      "lat": -7.7326602,
+      "lon": 110.3634275,
+      "tags": {
+        "amenity": "fuel",
+        "brand": "Pertamina",
+        "brand:wikidata": "Q1641044",
+        "name": "SPBU Pertamina 44.552.01 Mulungan",
+        "operator": "Pertamina"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1847978909,
+      "lat": -7.7436528,
+      "lon": 110.3622581,
+      "tags": {
+        "name": "Hotel Graha Buana",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1847997726,
+      "lat": -7.7502036,
+      "lon": 110.3625482,
+      "tags": {
+        "name": "Hotel Melati",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1848000010,
+      "lat": -7.7524293,
+      "lon": 110.3611659,
+      "tags": {
+        "name": "Sahid Rich Jogja Hotel",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1848015107,
+      "lat": -7.7555402,
+      "lon": 110.3619364,
+      "tags": {
+        "air_conditioning": "yes",
+        "brand": "Circle K",
+        "brand:wikidata": "Q3268010",
+        "brand:wikipedia": "id:Circle K",
+        "currency:IDR": "yes",
+        "name": "Circle K",
+        "name:en": "Circle K",
+        "name:ja": "サークルK",
+        "owner": "PT. Circleka Indonesia Utama",
+        "payment:cash": "yes",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1895864289,
+      "lat": -7.8206421,
+      "lon": 110.4215837,
+      "tags": {
+        "amenity": "fuel",
+        "brand": "Pertamina",
+        "brand:wikidata": "Q1641044",
+        "fuel:biogas": "yes",
+        "name": "SPBU Pertamina 44.551.10 Mantup"
+      }
+    },
+    {
+      "type": "node",
+      "id": 1988455488,
+      "lat": -7.79491,
+      "lon": 110.3979795,
+      "tags": {
+        "addr:city": "Yogyakarta",
+        "addr:housenumber": "75",
+        "addr:postcode": "55198",
+        "addr:street": "Jalan Puntodewo",
+        "email": "dyefacomp@yahoogroups.com",
+        "name": "Dyefa Computer",
+        "opening_hours": "Mo-Sa 08:00-16:00",
+        "operator": "Dicky",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2024675832,
+      "lat": -7.7798783,
+      "lon": 110.4284082,
+      "tags": {
+        "addr:city": "Yogyakarta",
+        "addr:postcode": "55282",
+        "addr:street": "Jalan Laksda Adisucipto",
+        "brand": "Sheraton",
+        "brand:wikidata": "Q634831",
+        "brand:wikipedia": "en:Sheraton Hotels and Resorts",
+        "check_date": "2025-08-01",
+        "name": "Sheraton Mustika Yogyakarta Resort & Spa",
+        "rooms": "248",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2037736373,
+      "lat": -7.7833491,
+      "lon": 110.445516,
+      "tags": {
+        "name": "Kalasan Inn",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2093265444,
+      "lat": -7.8168908,
+      "lon": 110.359734,
+      "tags": {
+        "name": "Hotel Brongto",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2257634218,
+      "lat": -7.8183158,
+      "lon": 110.3724939,
+      "tags": {
+        "name": "Indah Palace",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2360646864,
+      "lat": -7.8005099,
+      "lon": 110.3451438,
+      "tags": {
+        "amenity": "fuel",
+        "brand": "Pertamina",
+        "brand:wikidata": "Q1641044",
+        "building": "yes",
+        "compressed_air": "yes",
+        "name": "SPBU Pertamina 44.551.06 Kadipiro"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2360646879,
+      "lat": -7.8375931,
+      "lon": 110.3991398,
+      "tags": {
+        "addr:street": "Ring Road Selatan",
+        "amenity": "fuel",
+        "brand": "Pertamina",
+        "brand:wikidata": "Q1641044",
+        "name": "SPBU Pertamina 44.551.12 Singosaren"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2386022747,
+      "lat": -7.7677991,
+      "lon": 110.3877158,
+      "tags": {
+        "name": "Campus Inn Hotel",
+        "phone": "+62 274 8333116",
+        "tourism": "hostel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2415513216,
+      "lat": -7.7909254,
+      "lon": 110.3636914,
+      "tags": {
+        "addr:street": "Sosrowijayan Wetan Gang 2",
+        "contact:phone": "+62 818 0278 1500",
+        "name": "Betty losmen",
+        "phone": "+62 274 5123 01",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2524302492,
+      "lat": -7.8199325,
+      "lon": 110.3719783,
+      "tags": {
+        "name": "Agung",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 2564076662,
+      "lat": -7.7639032,
+      "lon": 110.3803462,
+      "tags": {
+        "name": "Hotel Ishiro Kencana",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3120386138,
+      "lat": -7.7801836,
+      "lon": 110.3870925,
+      "tags": {
+        "name": "Tiga Lima Homestay",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3176297864,
+      "lat": -7.7613299,
+      "lon": 110.3802596,
+      "tags": {
+        "name": "VIDI.net",
+        "tourism": "hostel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3256672764,
+      "lat": -7.8147168,
+      "lon": 110.3665892,
+      "tags": {
+        "name": "Puspita",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3305628217,
+      "lat": -7.7937659,
+      "lon": 110.3739488,
+      "tags": {
+        "name": "Trans Yogya",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3316034004,
+      "lat": -7.7085443,
+      "lon": 110.3547072,
+      "tags": {
+        "amenity": "fuel",
+        "brand": "Pertamina",
+        "brand:wikidata": "Q1641044",
+        "compressed_air": "yes",
+        "name": "SPBU Pertamina 44.555.02 Helsen",
+        "opening_hours": "24/7"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3320401562,
+      "lat": -7.6765683,
+      "lon": 110.3367646,
+      "tags": {
+        "amenity": "fuel",
+        "brand": "Pertamina",
+        "brand:wikidata": "Q1641044",
+        "compressed_air": "yes",
+        "name": "SPBU Pertamina 44.555.02 Medari"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3377547360,
+      "lat": -7.8188791,
+      "lon": 110.369487,
+      "tags": {
+        "name": "Tropis Homestay",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3396431274,
+      "lat": -7.7733918,
+      "lon": 110.3855843,
+      "tags": {
+        "name": "Kopma UNY",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3472798344,
+      "lat": -7.8014508,
+      "lon": 110.3882241,
+      "tags": {
+        "addr:housenumber": "91",
+        "addr:postcode": "55165",
+        "addr:street": "Jl. Kusumanegara",
+        "contact:phone": "+62 274 560111",
+        "contact:website": "http://www.favehotels.com/hotellist/eng/28/favehotel-kusumanegara/",
+        "name": "favehotel Kusumanegara",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3473031880,
+      "lat": -7.7795465,
+      "lon": 110.391168,
+      "tags": {
+        "name": "Homestay Ndalem Mbak Charly",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3473031886,
+      "lat": -7.7800918,
+      "lon": 110.3910186,
+      "tags": {
+        "name": "Midtown Xpress",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3473035399,
+      "lat": -7.7828531,
+      "lon": 110.3945734,
+      "tags": {
+        "name": "Wisma Pu",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3473955066,
+      "lat": -7.7735101,
+      "lon": 110.386842,
+      "tags": {
+        "name": "Kedai Mitra",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3487503064,
+      "lat": -7.8214794,
+      "lon": 110.3679537,
+      "tags": {
+        "addr:street": "Jalan Parangtritis",
+        "name": "Dhina Finny Graha",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3487503066,
+      "lat": -7.8206242,
+      "lon": 110.3659364,
+      "tags": {
+        "amenity": "cafe",
+        "name": "Homestay Ndalem MJ",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3487503068,
+      "lat": -7.8219341,
+      "lon": 110.3673655,
+      "tags": {
+        "addr:street": "Jalan Mangkuyudan",
+        "building": "yes",
+        "name": "Hotel Dewi Sri",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3487503069,
+      "lat": -7.821832,
+      "lon": 110.3663361,
+      "tags": {
+        "addr:street": "Jalan Mangkuyudan",
+        "building": "yes",
+        "name": "Hotel Puri Ganesha",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3487503084,
+      "lat": -7.8216489,
+      "lon": 110.3653899,
+      "tags": {
+        "addr:street": "Jalan Mangkuyudan",
+        "amenity": "restaurant",
+        "building": "yes",
+        "name": "Pramesthi Hotel",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3492884193,
+      "lat": -7.753663,
+      "lon": 110.3619242,
+      "tags": {
+        "name": "Kangen Hotel",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3504109242,
+      "lat": -7.8140001,
+      "lon": 110.348149,
+      "tags": {
+        "addr:city": "Yogyakarta",
+        "addr:housenumber": "366",
+        "addr:street": "Jalan Jomegatan Rt. 10",
+        "name": "House Of Nasi Bungkus",
+        "phone": "+62-817-9377100",
+        "smoking": "outside",
+        "tourism": "guest_house",
+        "wheelchair": "yes"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3530581765,
+      "lat": -7.7591302,
+      "lon": 110.3948305,
+      "tags": {
+        "name": "Citihub Hotel Gejayan",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3530590735,
+      "lat": -7.7835198,
+      "lon": 110.4043703,
+      "tags": {
+        "name": "Sriwedari Hotel and Cottage",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3530590736,
+      "lat": -7.7834848,
+      "lon": 110.4027952,
+      "tags": {
+        "name": "Hotel Paku Mas",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3530590737,
+      "lat": -7.7824029,
+      "lon": 110.4055656,
+      "tags": {
+        "name": "LPP Garden Hotel",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3530590738,
+      "lat": -7.7715261,
+      "lon": 110.409937,
+      "tags": {
+        "air_conditioning": "yes",
+        "internet_access": "wlan",
+        "name": "Merapi Merbabu Hotels",
+        "reservation": "yes",
+        "tourism": "hotel",
+        "wheelchair": "limited"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3557258188,
+      "lat": -7.7838761,
+      "lon": 110.3671107,
+      "tags": {
+        "name": "Hotel Kombokarno Utama",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3557258190,
+      "lat": -7.7843537,
+      "lon": 110.3665757,
+      "tags": {
+        "name": "The 101",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3557258192,
+      "lat": -7.780212,
+      "lon": 110.3676243,
+      "tags": {
+        "name": "Hotel Citradream Yogyakarta",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3557258293,
+      "lat": -7.7780727,
+      "lon": 110.3659077,
+      "tags": {
+        "name": "Monginsidi Guest House",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3557258296,
+      "lat": -7.7803009,
+      "lon": 110.3610956,
+      "tags": {
+        "name": "Laxston Hotel",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3557258298,
+      "lat": -7.7704671,
+      "lon": 110.3578036,
+      "tags": {
+        "name": "Acacia Guest House",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3557258299,
+      "lat": -7.7607878,
+      "lon": 110.3619963,
+      "tags": {
+        "name": "Crystal Lotus Hotel Yogyakarta Managed by Prabu",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3557258300,
+      "lat": -7.7601889,
+      "lon": 110.3606526,
+      "tags": {
+        "name": "Griya Kalimantan",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3557348913,
+      "lat": -7.7592304,
+      "lon": 110.3817488,
+      "tags": {
+        "name": "Wisma Anugrah Wisata",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3557380296,
+      "lat": -7.7600869,
+      "lon": 110.3808206,
+      "tags": {
+        "name": "Cakra Kusuma Hotel",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3557508868,
+      "lat": -7.7409592,
+      "lon": 110.3734285,
+      "tags": {
+        "name": "Hyatt Regency",
+        "phone": "+62274869123",
+        "tourism": "hotel",
+        "website": "https://m.hyatt.com/mt/yogyakarta.regency.hyatt.com"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3557508870,
+      "lat": -7.7786287,
+      "lon": 110.3926237,
+      "tags": {
+        "name": "LPP Convention Hotel",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3557508871,
+      "lat": -7.7824428,
+      "lon": 110.4029423,
+      "tags": {
+        "name": "Hotel Royal Ambarrukmo",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3557508872,
+      "lat": -7.7836203,
+      "lon": 110.4195542,
+      "tags": {
+        "name": "Hotel Jayakarta",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3585118450,
+      "lat": -7.8200358,
+      "lon": 110.3690878,
+      "tags": {
+        "name": "GreenHost Hotel",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3600247125,
+      "lat": -7.8119926,
+      "lon": 110.3515726,
+      "tags": {
+        "name": "Bugisan",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3601877724,
+      "lat": -7.7187253,
+      "lon": 110.5773056,
+      "tags": {
+        "amenity": "fuel",
+        "brand": "Pertamina",
+        "brand:wikidata": "Q1641044",
+        "name": "SPBU Pertamina 44.574.04 Kebon Arum"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3616854458,
+      "lat": -7.8189218,
+      "lon": 110.3245659,
+      "tags": {
+        "amenity": "fuel",
+        "brand": "Pertamina",
+        "brand:wikidata": "Q1641044",
+        "compressed_air": "yes",
+        "name": "SPBU Pertamina 44.551.14 Tamantirto"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3616855006,
+      "lat": -7.8241513,
+      "lon": 110.333326,
+      "tags": {
+        "name": "Pondok Gajah",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3621485952,
+      "lat": -7.7770418,
+      "lon": 110.3924836,
+      "tags": {
+        "addr:housenumber": "14",
+        "addr:postcode": "55281",
+        "addr:street": "Jalan Mrican Baru",
+        "name": "Amelia Hotel",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3630324587,
+      "lat": -7.8262747,
+      "lon": 110.3475353,
+      "tags": {
+        "name": "Fort Hotel",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3679274915,
+      "lat": -7.7676206,
+      "lon": 110.4172241,
+      "tags": {
+        "name": "Villa Alicia",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3732339032,
+      "lat": -7.8006644,
+      "lon": 110.3744796,
+      "tags": {
+        "name": "Puri Pangeran Hotel",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3765156964,
+      "lat": -7.7741531,
+      "lon": 110.394319,
+      "tags": {
+        "name": "Grand Omah Sastro",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3775290005,
+      "lat": -7.7466796,
+      "lon": 110.495785,
+      "tags": {
+        "name": "Rumah Desa",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3782251857,
+      "lat": -7.8103899,
+      "lon": 110.3771829,
+      "tags": {
+        "name": "Hotel Prime Syailendra",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3874348193,
+      "lat": -7.7750942,
+      "lon": 110.3827497,
+      "tags": {
+        "name": "Warung",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3884620633,
+      "lat": -7.776802,
+      "lon": 110.381828,
+      "tags": {
+        "name": "Hotel Asih",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 3921534721,
+      "lat": -7.8182969,
+      "lon": 110.3699774,
+      "tags": {
+        "name": "ViaVia",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4040128043,
+      "lat": -7.7797378,
+      "lon": 110.4049191,
+      "tags": {
+        "addr:city": "yogyakarta",
+        "addr:postcode": "55281",
+        "addr:street": "jalan laksda adisucipto km 6",
+        "description": "Hotel yang nyaman, aman dan strategis",
+        "name": "Tjiptorini Jaya Hotel",
+        "phone": "+62274485804",
+        "smoking": "yes",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4063417063,
+      "lat": -7.8204714,
+      "lon": 110.3680506,
+      "tags": {
+        "name": "Jogjamart",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4076139413,
+      "lat": -7.6610396,
+      "lon": 110.4071484,
+      "tags": {
+        "amenity": "fuel",
+        "brand": "Pertamina",
+        "brand:wikidata": "Q1641044",
+        "name": "SPBU Pertamina 44.555.07 Mangunan"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4113534818,
+      "lat": -7.7818456,
+      "lon": 110.3852788,
+      "tags": {
+        "name": "Sabana Homestay",
+        "phone": "+62 274 540442",
+        "tourism": "hotel",
+        "website": "https://www.sabanahomestay.com/"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4145328668,
+      "lat": -7.7760888,
+      "lon": 110.3435129,
+      "tags": {
+        "brand": "Hasty Market",
+        "brand:wikidata": "Q58022603",
+        "name": "Hasty Market",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4168500297,
+      "lat": -7.7966198,
+      "lon": 110.362985,
+      "tags": {
+        "addr:city": "Yogyakarta",
+        "addr:housenumber": "19",
+        "addr:postcode": "55122",
+        "addr:street": "Jalan Sastrodipuran",
+        "email": "yogyakartabnb@gmail.com",
+        "guest_house": "bed_and_breakfast",
+        "internet_access": "yes",
+        "internet_access:fee": "no",
+        "name": "Yogyakarta BnB",
+        "opening_hours": "Mo-Su 07:00-19:00",
+        "operator": "YogyakartaBnB",
+        "phone": "+6281998471232",
+        "rooms": "7",
+        "smoking": "outside",
+        "tourism": "guest_house",
+        "website": "https://www.instagram.com/yogyakartabnb"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4177878362,
+      "lat": -7.8132093,
+      "lon": 110.3718549,
+      "tags": {
+        "name": "Puri Ageng",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4185448862,
+      "lat": -7.8447923,
+      "lon": 110.3610179,
+      "tags": {
+        "amenity": "fuel",
+        "brand": "Pertamina",
+        "brand:wikidata": "Q1641044",
+        "name": "SPBU Pertamina 44.551.18 Sewon"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4192940210,
+      "lat": -7.681403,
+      "lon": 110.8386239,
+      "tags": {
+        "addr:city": "Jetis, Sukoharjo, Surabaya",
+        "addr:housenumber": "12 RT 003/03",
+        "addr:postcode": "57511",
+        "addr:street": "Jl. Merbabu",
+        "name": "Edelweis Kost",
+        "tourism": "hostel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4194479189,
+      "lat": -7.818382,
+      "lon": 110.367547,
+      "tags": {
+        "name": "A&A B&B",
+        "tourism": "hostel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4212103389,
+      "lat": -7.7993491,
+      "lon": 110.3562715,
+      "tags": {
+        "name": "EDU",
+        "tourism": "hostel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4217400845,
+      "lat": -7.790796,
+      "lon": 110.3707421,
+      "tags": {
+        "internet_access": "wlan",
+        "name": "Laura's backpacker 523, nr 2",
+        "tourism": "hostel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4226633916,
+      "lat": -7.8028105,
+      "lon": 110.3565181,
+      "tags": {
+        "name": "Bunk Bed and Breakfast Hostel",
+        "tourism": "hostel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4242258089,
+      "lat": -7.7118641,
+      "lon": 110.4315395,
+      "tags": {
+        "name": "Tk Dani",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4269549591,
+      "lat": -7.8163132,
+      "lon": 110.3591907,
+      "tags": {
+        "internet_access": "wlan",
+        "name": "Luwabica Art n Coffee House",
+        "phone": "+628995089123",
+        "tourism": "guest_house",
+        "website": "luwabica.com"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4271041096,
+      "lat": -7.8152776,
+      "lon": 110.348414,
+      "tags": {
+        "addr:housenumber": "343",
+        "addr:postcode": "55182",
+        "addr:street": "Jalan Bugisan",
+        "email": "andy.amr30@gmail.com",
+        "internet_access": "wlan",
+        "name": "Omah Guyub",
+        "phone": "+62-818-02740204",
+        "tourism": "hotel",
+        "website": "http://omahguyubjogja.blogspot.co.id/"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4278281582,
+      "lat": -7.8020279,
+      "lon": 110.3787707,
+      "tags": {
+        "name": "Hotel Panorama",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4279473389,
+      "lat": -7.8176918,
+      "lon": 110.3614606,
+      "tags": {
+        "addr:street": "Suryodiningratan",
+        "name": "OstiC hostel",
+        "tourism": "hostel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4292814790,
+      "lat": -7.7830255,
+      "lon": 110.3871283,
+      "tags": {
+        "addr:city": "Yogyakarta",
+        "addr:housenumber": "139 A",
+        "addr:postcode": "55222",
+        "addr:street": "Jalan Urip Sumoharjo",
+        "email": "info@de.laxstonhotel.com",
+        "fax": "+62 274 544 230",
+        "internet_access": "wlan",
+        "name": "De Laxston Hotel by Quinn's",
+        "phone": "+62 274 552 552",
+        "stars": "3",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4293952752,
+      "lat": -7.8185385,
+      "lon": 110.3938993,
+      "tags": {
+        "check_date": "2025-10-19",
+        "name": "Hotel BIFA (Bintang Fajar)",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4326459990,
+      "lat": -7.8186317,
+      "lon": 110.3608648,
+      "tags": {
+        "name": "Ma Casa Es Tu Casa",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4338038990,
+      "lat": -7.8205641,
+      "lon": 110.3665106,
+      "tags": {
+        "addr:housenumber": "55",
+        "addr:postcode": "55142",
+        "addr:street": "Jalan Surami",
+        "name": "Venezia Garden Homestay",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4361980601,
+      "lat": -7.7906474,
+      "lon": 110.3642042,
+      "tags": {
+        "addr:city": "Yogyakarta",
+        "addr:housenumber": "GT I/57",
+        "addr:neighbourhood": "Sosromenduran",
+        "addr:postcode": "55271",
+        "addr:province": "Daerah Istimewa Yogyakarta",
+        "addr:street": "Gang II Sosrowijayan Wetan",
+        "internet_access": "wlan",
+        "name": "Hotel 1001 Malam",
+        "phone": "+62274515087",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4364472392,
+      "lat": -7.7912429,
+      "lon": 110.3619542,
+      "tags": {
+        "name": "Wakeup Homestay",
+        "tourism": "hostel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4369642900,
+      "lat": -7.8025764,
+      "lon": 110.3451693,
+      "tags": {
+        "addr:housenumber": "311c;311 C",
+        "addr:postcode": "11582;55182",
+        "addr:street": "Jalan Nitipuran Gg. Klawu Bendo",
+        "email": "grapyak.homestay@gmail.com",
+        "internet_access": "wlan",
+        "name": "Grapyak Homestay",
+        "name:en": "Grapyak Homestay",
+        "name:ja": "グラピャクホームステイ",
+        "opening_hours": "24/7",
+        "operator": "M.haryo hutomo",
+        "phone": "+62 896 5069 1766",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4393626789,
+      "lat": -7.8181547,
+      "lon": 110.3581166,
+      "tags": {
+        "addr:housenumber": "646A",
+        "addr:street": "Jalan Suryodiningratan, Gang Subarman",
+        "description": "Small B&B",
+        "name": "Jogja Dreams Bed and Breakfast",
+        "phone": "+62 813-9035-8640",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4431678389,
+      "lat": -7.7793452,
+      "lon": 110.379242,
+      "tags": {
+        "addr:housenumber": "1027",
+        "addr:postcode": "55223",
+        "addr:street": "Jalan Sagan GK V",
+        "name": "Kost Orange",
+        "name:en": "Kost Orange",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4437071889,
+      "lat": -7.8241208,
+      "lon": 110.3569811,
+      "tags": {
+        "name": "Casa de Vicky Nono",
+        "tourism": "hostel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4438722097,
+      "lat": -7.7889685,
+      "lon": 110.3709409,
+      "tags": {
+        "addr:housenumber": "8",
+        "addr:street": "Jalan Abu Bakar Ali",
+        "name": "Hotel Sekar Ayu",
+        "phone": "+62 274 566688",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4441696190,
+      "lat": -7.8117611,
+      "lon": 110.3609385,
+      "tags": {
+        "name": "ichan house",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4547470989,
+      "lat": -7.7813215,
+      "lon": 110.3987209,
+      "tags": {
+        "name": "Students Dormitory",
+        "tourism": "hostel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4588967021,
+      "lat": -7.7538334,
+      "lon": 110.4118799,
+      "tags": {
+        "name": "Kosan Mbah Mulyoharjo",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4590099295,
+      "lat": -7.8148207,
+      "lon": 110.3429914,
+      "tags": {
+        "addr:housenumber": "87",
+        "addr:postcode": "55581",
+        "addr:street": "Jl. Nitiprayan",
+        "name": "Alamo Homestay Limasan",
+        "operator": "Tuti",
+        "phone": "+62-274-381604",
+        "tourism": "guest_house",
+        "website": "http://www.alamojogja.com"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4590296603,
+      "lat": -7.7542356,
+      "lon": 110.4086467,
+      "tags": {
+        "name": "Hotel Kusuma Condong Wisma Tamu",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4590296606,
+      "lat": -7.7562163,
+      "lon": 110.4106023,
+      "tags": {
+        "name": "Burjo Motel",
+        "tourism": "motel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4590296614,
+      "lat": -7.7652437,
+      "lon": 110.4110377,
+      "tags": {
+        "name": "Hotel Dafam Fortuna",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4590677769,
+      "lat": -7.785281,
+      "lon": 110.4272059,
+      "tags": {
+        "name": "Hotel Omahkoe",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4590677771,
+      "lat": -7.783604,
+      "lon": 110.4256113,
+      "tags": {
+        "name": "D'Salvatore Art & Boutique Hotel 4,1",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4590881638,
+      "lat": -7.7567647,
+      "lon": 110.4140963,
+      "tags": {
+        "name": "Omahe Winahyu Homestay",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4590940458,
+      "lat": -7.8143823,
+      "lon": 110.3919903,
+      "tags": {
+        "name": "Hotel Brawijaya",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4605820496,
+      "lat": -7.659445,
+      "lon": 110.427366,
+      "tags": {
+        "name": "Erista Garden",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4637978542,
+      "lat": -7.7830178,
+      "lon": 110.4455294,
+      "tags": {
+        "addr:city": "Yogyakarta",
+        "addr:housenumber": "20",
+        "addr:postcode": "55571",
+        "addr:street": "Jalan Jogja Solo",
+        "description": "Penginapan bersih, ramah, aman, nyaman dan tenang",
+        "name": "Penginapan BeOne House",
+        "phone": "+622742850373",
+        "tourism": "guest_house",
+        "website": "http://beonehouse.com"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4692238589,
+      "lat": -7.7938706,
+      "lon": 110.3674656,
+      "tags": {
+        "addr:housenumber": "181",
+        "addr:street": "Jalan Sosrokusuman",
+        "internet_access": "wlan",
+        "name": "Hotel Gaotama",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4693248299,
+      "lat": -7.7617833,
+      "lon": 110.3793242,
+      "tags": {
+        "name": "Vidi Hotel 2",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4706061490,
+      "lat": -7.787634,
+      "lon": 110.3942254,
+      "tags": {
+        "addr:housenumber": "Gk.3 nomor 613",
+        "addr:street": "Jalan Timoho",
+        "internet_access": "wlan",
+        "name": "Langkanae",
+        "opening_hours": "24/7",
+        "phone": "+62 852 9866 2961",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4755815022,
+      "lat": -7.8100077,
+      "lon": 110.3808299,
+      "tags": {
+        "name": "Asrama Lamandau",
+        "tourism": "motel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4771094725,
+      "lat": -7.7925747,
+      "lon": 110.3536371,
+      "tags": {
+        "amenity": "atm",
+        "opening_hours": "24/7",
+        "operator": "ATM BCA & BNI",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4782416223,
+      "lat": -7.8190907,
+      "lon": 110.3720421,
+      "tags": {
+        "name": "Eclipse hotel",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4794827154,
+      "lat": -7.7911654,
+      "lon": 110.3639277,
+      "tags": {
+        "name": "Losmen Rizki",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4795283938,
+      "lat": -7.76741,
+      "lon": 110.59906,
+      "tags": {
+        "name": "Pak Puji",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4795298321,
+      "lat": -7.7798275,
+      "lon": 110.3431886,
+      "tags": {
+        "addr:city": "Sleman",
+        "addr:district": "Gamping",
+        "addr:postcode": "55293",
+        "addr:province": "Yogyakarta",
+        "addr:street": "Jalan Godean",
+        "addr:subdistrict": "Banyuraden",
+        "amenity": "fuel",
+        "brand": "Pertamina",
+        "brand:wikidata": "Q1641044",
+        "name": "SPBU Pertamina 44.555.13 Banyuraden"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4799118025,
+      "lat": -7.7855758,
+      "lon": 110.3879231,
+      "tags": {
+        "addr:city": "Yogyakarta",
+        "addr:street": "Jalan Munggur",
+        "amenity": "fuel",
+        "brand": "Pertamina",
+        "brand:wikidata": "Q1641044",
+        "fuel:octane_90": "yes",
+        "name": "SPBU Pertamina 44.552.16 Munggur",
+        "operator": "Pertamina"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4799118029,
+      "lat": -7.7873875,
+      "lon": 110.3524824,
+      "tags": {
+        "name": "Toko Dolano",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4799118030,
+      "lat": -7.7887825,
+      "lon": 110.35116,
+      "tags": {
+        "name": "Pak Heru",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4799168327,
+      "lat": -7.7873556,
+      "lon": 110.351716,
+      "tags": {
+        "name": "Pak Bambang",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4815329721,
+      "lat": -7.8379779,
+      "lon": 110.3579882,
+      "tags": {
+        "addr:street": "Jalan KH Ali Maksum",
+        "email": "rizkydafa4@gmail.com",
+        "name": "Giyatna",
+        "operator": "Giyatna",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4819918121,
+      "lat": -7.8053983,
+      "lon": 110.349124,
+      "tags": {
+        "addr:housenumber": "25",
+        "addr:street": "Jalan Nakulo",
+        "internet_access": "wlan",
+        "name": "Boma House",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4847813021,
+      "lat": -7.667774,
+      "lon": 110.4288317,
+      "tags": {
+        "addr:street": "jln pakem kalasan",
+        "name": "griyakoe pakem",
+        "opening_hours": "24/7",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4851278881,
+      "lat": -7.7593574,
+      "lon": 110.3622608,
+      "tags": {
+        "addr:city": "Yogyakarta",
+        "addr:housenumber": "Km 5,2",
+        "addr:street": "Jalan Magelang",
+        "ele": "6",
+        "email": "booking@crystallotushotel.com",
+        "fax": "+62 274 6429788",
+        "internet_access": "wlan",
+        "level": "6",
+        "name": "Crystal Lotus",
+        "operator": "Prabu Management",
+        "phone": "+62 274 6429799",
+        "smoking": "separated",
+        "stars": "4",
+        "tourism": "hotel",
+        "website": "https://crystallotushotel.com/"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4851279316,
+      "lat": -7.7330193,
+      "lon": 110.3959832,
+      "tags": {
+        "name": "Dom",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4851279649,
+      "lat": -7.7593401,
+      "lon": 110.3926722,
+      "tags": {
+        "name": "Sunrise",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4936351521,
+      "lat": -7.8283706,
+      "lon": 110.3898757,
+      "tags": {
+        "name": "Dewaruci 2 hotel",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4939483122,
+      "lat": -7.8181482,
+      "lon": 110.3903283,
+      "tags": {
+        "amenity": "fuel",
+        "brand": "Pertamina",
+        "brand:wikidata": "Q1641044",
+        "fuel:biodiesel": "yes",
+        "fuel:diesel": "yes",
+        "fuel:octane_91": "yes",
+        "fuel:octane_92": "yes",
+        "name": "SPBU Pertamina 44.551.05 Gambiran"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4946698256,
+      "lat": -7.8191143,
+      "lon": 110.3689415,
+      "tags": {
+        "name": "Airlangga",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4946718522,
+      "lat": -7.8190654,
+      "lon": 110.3685937,
+      "tags": {
+        "name": "Wisam Gajah",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4955111621,
+      "lat": -7.8138272,
+      "lon": 110.3565452,
+      "tags": {
+        "addr:housenumber": "31",
+        "addr:postcode": "51411",
+        "addr:street": "Jl Pugeran 2",
+        "email": "rumahyogya123@gmail.com",
+        "internet_access": "wlan",
+        "name": "Rumah Yogya",
+        "operator": "Delia and Connor",
+        "phone": "+62-813-25901455",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4957171921,
+      "lat": -7.7894726,
+      "lon": 110.3580319,
+      "tags": {
+        "addr:housenumber": "57/123",
+        "addr:street": "Jalan Jlagran Lor",
+        "check_date": "2025-07-13",
+        "name": "Ismoyo",
+        "phone": "+62-274-5801532",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4959456824,
+      "lat": -7.7910787,
+      "lon": 110.3609986,
+      "tags": {
+        "name": "Pego Homestay",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 4975341823,
+      "lat": -7.8199975,
+      "lon": 110.3641881,
+      "tags": {
+        "addr:housenumber": "272",
+        "addr:postcode": "55143",
+        "addr:street": "Gg Yudodmioyo",
+        "email": "3dibackpacker@gmail.com",
+        "internet_access": "wlan",
+        "name": "3DI Backpacker Guesthouse",
+        "operator": "Dhika Surapati",
+        "phone": "+6281333879517",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5010530221,
+      "lat": -7.8163506,
+      "lon": 110.3640025,
+      "tags": {
+        "addr:housenumber": "63",
+        "addr:postcode": "55143",
+        "addr:street": "Gang Kenanga",
+        "email": "woodstonehostel@hotmail.com",
+        "internet_access": "wlan",
+        "name": "Wood Stone Hostel",
+        "opening_hours": "24/7",
+        "operator": "Mateus Bayu Laksana Jaya",
+        "phone": "+62 274 4221 215",
+        "tourism": "hostel",
+        "website": "http://www.woodstonehostel.com"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5056528162,
+      "lat": -7.8354383,
+      "lon": 110.3394202,
+      "tags": {
+        "addr:city": "Bantul",
+        "addr:postcode": "55184",
+        "addr:street": "Sembungan RT 02, Bangunjiwo, Kasihan",
+        "email": "andyzulfan@gmail.com",
+        "internet_access": "wlan",
+        "internet_access:fee": "no",
+        "internet_access:ssid": "SENJAKALA",
+        "name": "Rumah Senjakala",
+        "operator": "Andy Zulfan (Memet)",
+        "phone": "+6281225696099",
+        "rooms": "3",
+        "smoking": "yes",
+        "tourism": "guest_house",
+        "website": "https://facebook.com/rumahsenjakala"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5059843835,
+      "lat": -7.8169923,
+      "lon": 110.3402839,
+      "tags": {
+        "addr:housenumber": "65",
+        "addr:street": "Jalan Bekelan",
+        "name": "Jawajiwa Homestay",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5098735021,
+      "lat": -7.7904011,
+      "lon": 110.3698668,
+      "tags": {
+        "addr:housenumber": "dn2 621",
+        "addr:street": "Jalan Tukangan",
+        "email": "lie2030@yahoo.com",
+        "internet_access": "wlan",
+        "name": "Homey Home",
+        "opening_hours": "24/7",
+        "phone": "+6281212192111",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5225391851,
+      "lat": -7.8198679,
+      "lon": 110.3662969,
+      "tags": {
+        "addr:city": "Yogyakarta",
+        "addr:housenumber": "828",
+        "addr:postcode": "55143",
+        "addr:street": "Gang Sartono",
+        "internet_access": "wlan",
+        "internet_access:fee": "no",
+        "name": "Maturnuwun",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5243957704,
+      "lat": -7.7427823,
+      "lon": 110.3716567,
+      "tags": {
+        "name": "Omah Kaleva Syariah",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5270626866,
+      "lat": -7.7553934,
+      "lon": 110.4096668,
+      "tags": {
+        "name": "Zamart",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5302095619,
+      "lat": -7.7939545,
+      "lon": 110.3650732,
+      "tags": {
+        "addr:housenumber": "3",
+        "addr:street": "Jalan Dagen",
+        "breakfast": "7:00-10:00",
+        "internet_access": "wlan",
+        "name": "The Packer Lodge",
+        "phone": "+62-274-513872",
+        "tourism": "hostel",
+        "website": "http://yogya.thepackerlodge.com",
+        "wheelchair": "no"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5303125639,
+      "lat": -7.8006506,
+      "lon": 110.3577593,
+      "tags": {
+        "addr:housenumber": "915",
+        "addr:street": "Jalan Purwodiningratan",
+        "breakfast": "8:00-10:00",
+        "internet_access": "wlan",
+        "name": "Yogyakarta Backpacker - Casa Raffles",
+        "phone": "+62-274-514256",
+        "tourism": "hostel",
+        "wheelchair": "no"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5315171725,
+      "lat": -7.8193792,
+      "lon": 110.371549,
+      "tags": {
+        "addr:street": "Jalan Prawirotaman",
+        "internet_access": "wlan",
+        "name": "Agung Inn",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5318487964,
+      "lat": -7.8194868,
+      "lon": 110.372381,
+      "tags": {
+        "name": "Pandanaran",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5325463323,
+      "lat": -7.8171153,
+      "lon": 110.3655112,
+      "tags": {
+        "name": "Villa Pondok Terra",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5328446018,
+      "lat": -7.7467999,
+      "lon": 110.3539732,
+      "tags": {
+        "amenity": "fuel",
+        "brand": "Pertamina",
+        "brand:wikidata": "Q1641044",
+        "name": "SPBU Pertamina 43.552.18 Jombor"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5369895821,
+      "lat": -7.8123926,
+      "lon": 110.3646696,
+      "tags": {
+        "addr:housenumber": "10",
+        "addr:postcode": "55133",
+        "addr:street": "Jalan Langenastran Kidul",
+        "email": "thecozynesthostel@gmail.com",
+        "internet_access": "wlan",
+        "name": "cozy nest hostel",
+        "opening_hours": "24/7",
+        "operator": "Ades",
+        "phone": "+6281333572892",
+        "tourism": "hostel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5372687423,
+      "lat": -7.8125301,
+      "lon": 110.3651374,
+      "tags": {
+        "addr:housenumber": "10",
+        "addr:postcode": "55133",
+        "addr:street": "Jalan Langenastran Kidul",
+        "internet_access": "wlan",
+        "name": "The Cozy Nest",
+        "tourism": "hostel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5382393554,
+      "lat": -7.6627396,
+      "lon": 110.6692835,
+      "tags": {
+        "amenity": "fuel",
+        "brand": "Pertamina",
+        "brand:wikidata": "Q1641044",
+        "compressed_air": "yes",
+        "name": "SPBU Pertamina 44.574.22 Klepu"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5382406165,
+      "lat": -7.6878787,
+      "lon": 110.6333685,
+      "tags": {
+        "amenity": "fuel",
+        "brand": "Pertamina",
+        "brand:wikidata": "Q1641044",
+        "compressed_air": "yes",
+        "name": "SPBU Pertamina 44.574.14 Belangwetan"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5418151543,
+      "lat": -7.8407854,
+      "lon": 110.3183275,
+      "tags": {
+        "name": "Blue Steps",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5418151583,
+      "lat": -7.8460348,
+      "lon": 110.313297,
+      "tags": {
+        "addr:city": "Yogyakarta",
+        "addr:district": "Kasihan",
+        "addr:housename": "Blue Garden Yogyakarta",
+        "addr:neighbourhood": "Gendeng",
+        "addr:postcode": "55184",
+        "addr:province": "DIY",
+        "addr:street": "Jalan Bibis",
+        "addr:subdistrict": "Bangunjiwo",
+        "addr:unit": "3",
+        "air_conditioning": "yes",
+        "brand": "Blue Garden Yogyakarta",
+        "email": "bluegarden.jogja@gmail.com",
+        "internet_access": "yes",
+        "internet_access:fee": "no",
+        "name": "Blue Garden Yogyakarta",
+        "phone": "+6287895600700",
+        "reservation": "yes",
+        "rooms": "8",
+        "tourism": "guest_house",
+        "website": "https://bluegardenjogja.com"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5432547502,
+      "lat": -7.8168656,
+      "lon": 110.3648419,
+      "tags": {
+        "name": "Pondok Ijo",
+        "operator": "Villa Bougenville",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5468132496,
+      "lat": -7.7932823,
+      "lon": 110.361529,
+      "tags": {
+        "addr:housenumber": "2",
+        "addr:street": "Jalan Gandekan Lor",
+        "internet_access": "wlan",
+        "internet_access:fee": "no",
+        "name": "The Cabin",
+        "tourism": "hotel",
+        "website": "http://thecabinhoteljogja.com/"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5492419722,
+      "lat": -7.7534752,
+      "lon": 110.4061297,
+      "tags": {
+        "addr:housenumber": "4",
+        "addr:postcode": "55283",
+        "addr:street": "Jalan Gempol Baru",
+        "internet_access": "wlan",
+        "name": "Cornel Homestay",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5507247629,
+      "lat": -7.7914478,
+      "lon": 110.3650914,
+      "tags": {
+        "name": "Merbubu",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5551609423,
+      "lat": -7.7851084,
+      "lon": 110.4169476,
+      "tags": {
+        "name": "Arga Hotel actual location",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5566207901,
+      "lat": -7.8410293,
+      "lon": 110.320521,
+      "tags": {
+        "name": "Villa Tropicana",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5566324706,
+      "lat": -7.8358265,
+      "lon": 110.3382488,
+      "tags": {
+        "name": "Omah Sembungan",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5583703628,
+      "lat": -7.8190584,
+      "lon": 110.3701171,
+      "tags": {
+        "name": "MiniMarket",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5595942622,
+      "lat": -7.8197883,
+      "lon": 110.3675472,
+      "tags": {
+        "name": "Hotel Pulung",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5596159182,
+      "lat": -7.820524,
+      "lon": 110.3582823,
+      "tags": {
+        "addr:city": "Yogyakarta",
+        "addr:housenumber": "749",
+        "addr:postcode": "55141",
+        "addr:street": "Suryodiningratan",
+        "email": "hello@jempolhomestay.com",
+        "internet_access": "yes",
+        "name": "Jempol Homestay",
+        "phone": "+62 274 4285117",
+        "tourism": "guest_house",
+        "website": "http://jempolhomestay.com"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5650742207,
+      "lat": -7.7739826,
+      "lon": 110.4103696,
+      "tags": {
+        "addr:city": "Kledokan",
+        "addr:district": "Depok",
+        "addr:postcode": "55281",
+        "addr:province": "Yogyakarta",
+        "addr:street": "Jalan Babarsari Raya",
+        "addr:subdistrict": "Caturtunggal",
+        "amenity": "fuel",
+        "branch": "SPBU 44.55213 Babarsari",
+        "brand": "Pertamina",
+        "brand:wikidata": "Q1641044",
+        "check_date": "2026-05-05",
+        "internet_access": "no",
+        "name": "Pertamina Gas Station 44.552.13 Caturtunggal",
+        "opening_hours": "24/7",
+        "operator": "Pertamina",
+        "self_service": "no"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5650742364,
+      "lat": -7.7662575,
+      "lon": 110.4316601,
+      "tags": {
+        "addr:full": "Jalan Raya Tajem",
+        "amenity": "fuel",
+        "branch": "Tajem",
+        "brand": "Pertamina",
+        "brand:wikidata": "Q1641044",
+        "compressed_air": "yes",
+        "name": "SPBU Pertamina 44.552.17 Tajem",
+        "payment:cash": "yes",
+        "payment:credit_cards": "yes",
+        "self_service": "no",
+        "source": "survey"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5651175566,
+      "lat": -7.7598212,
+      "lon": 110.3946806,
+      "tags": {
+        "addr:full": "Jalan Affandi",
+        "amenity": "fuel",
+        "brand": "Pertamina",
+        "brand:wikidata": "Q1641044",
+        "name": "SPBU Pertamina 44.555.03 Gejayan",
+        "source": "survey"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5652796465,
+      "lat": -7.7601491,
+      "lon": 110.3792657,
+      "tags": {
+        "addr:city": "Sleman",
+        "addr:postcode": "55284",
+        "addr:street": "jalan dandanggulo",
+        "name": "Kosan Putri Fauzia",
+        "tourism": "hostel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5653520449,
+      "lat": -7.7813087,
+      "lon": 110.3519602,
+      "tags": {
+        "amenity": "fuel",
+        "atm": "yes",
+        "brand": "Pertamina",
+        "brand:wikidata": "Q1641044",
+        "fuel:diesel": "yes",
+        "fuel:octane_91": "yes",
+        "fuel:octane_95": "yes",
+        "fuel:octane_98": "yes",
+        "name": "SPBU Pertamina 44.552.11 Bener",
+        "opening_hours": "24/7",
+        "shop": "no",
+        "source": "survey"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5671317969,
+      "lat": -7.8241203,
+      "lon": 110.3779274,
+      "tags": {
+        "addr:full": "jalan lowanu",
+        "amenity": "fuel",
+        "brand": "Pertamina",
+        "brand:wikidata": "Q1641044",
+        "name": "SPBU Pertamina 44.551.13 Lowanu",
+        "source": "survey"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5738157722,
+      "lat": -7.8150881,
+      "lon": 110.364912,
+      "tags": {
+        "addr:city": "Yogyakarta",
+        "addr:housenumber": "MJ3 No 45",
+        "addr:street": "Lorong Barat Gang Cempaka",
+        "air_conditioning": "yes",
+        "brand": "Trava House - Villa Jogja",
+        "email": "travahouse@gmail.com",
+        "internet_access": "wlan",
+        "internet_access:fee": "customers",
+        "name": "Trava House",
+        "name:en": "Trava House",
+        "name:fr": "Trava House",
+        "opening_hours": "Mo-Su 11:00-15:00",
+        "phone": "+62 819 9847 1233",
+        "reservation": "required",
+        "rooms": "3",
+        "smoking": "outside",
+        "tourism": "hotel",
+        "website": "https://instagram.com/travahouse"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5742601471,
+      "lat": -7.6585409,
+      "lon": 110.8347394,
+      "tags": {
+        "name": "Sarila Hotel",
+        "tourism": "hotel",
+        "website": "https://www.sarilahotel.com/"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5833614473,
+      "lat": -7.7921597,
+      "lon": 110.3719753,
+      "tags": {
+        "brand": "RedDoorz",
+        "brand:wikidata": "Q78186049",
+        "name": "RedDoorz Plus near Lempuyangan Station 3",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5833839182,
+      "lat": -7.8041651,
+      "lon": 110.3706682,
+      "tags": {
+        "addr:housenumber": "10",
+        "internet_access": "yes",
+        "name": "Jasmine Heritage Homestay",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5835687804,
+      "lat": -7.8169289,
+      "lon": 110.3622399,
+      "tags": {
+        "addr:housenumber": "042",
+        "addr:street": "Jalan Mayor Jendral DI Panjaitan",
+        "name": "Rumah Panjaitan Homestay",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5838319686,
+      "lat": -7.8101354,
+      "lon": 110.3664476,
+      "tags": {
+        "name": "nDalem Gamelan",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5847948755,
+      "lat": -7.8219339,
+      "lon": 110.360282,
+      "tags": {
+        "name": "The Wayang Homestay",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5893704695,
+      "lat": -7.8158447,
+      "lon": 110.3551951,
+      "tags": {
+        "name": "Hoz Bed and breakfast",
+        "tourism": "hostel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5894541992,
+      "lat": -7.8072901,
+      "lon": 110.3697362,
+      "tags": {
+        "internet_access": "wlan",
+        "name": "KPY Creativ Space",
+        "opening_hours": "24/7",
+        "tourism": "hostel",
+        "website": "http://www.kelaspagiyogyakarta.com"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5903606985,
+      "lat": -7.8131109,
+      "lon": 110.3648338,
+      "tags": {
+        "addr:housenumber": "11",
+        "addr:street": "Jalan Langenarjan Lor",
+        "name": "Griya Asih",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5915697985,
+      "lat": -7.7860004,
+      "lon": 110.4168831,
+      "tags": {
+        "name": "Habibi Homestay",
+        "phone": "+62 857 2588 4457",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5927919186,
+      "lat": -7.8159408,
+      "lon": 110.3638593,
+      "tags": {
+        "internet_access": "wlan",
+        "name": "Reddoorz@Mantrijeron 2",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5931473889,
+      "lat": -7.6966252,
+      "lon": 110.6083991,
+      "tags": {
+        "name": "Hotel Bima",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5970560685,
+      "lat": -7.7989757,
+      "lon": 110.3926935,
+      "tags": {
+        "name": "Gaia Cosmo Hotel",
+        "name:en": "Gaia Cosmo Hotel",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 5977677785,
+      "lat": -7.8025978,
+      "lon": 110.3609832,
+      "tags": {
+        "name": "omah gerjen",
+        "tourism": "hostel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6009385282,
+      "lat": -7.7614723,
+      "lon": 110.3835068,
+      "tags": {
+        "name": "Athaya Hotel Jogja",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6039050685,
+      "lat": -7.7620745,
+      "lon": 110.3814793,
+      "tags": {
+        "addr:housenumber": "11B",
+        "addr:street": "Gang Srikaloka",
+        "internet_access": "wlan",
+        "name": "Onze de Lokaindo",
+        "opening_hours": "24/7",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6065814387,
+      "lat": -7.7937405,
+      "lon": 110.3623713,
+      "tags": {
+        "name": "Penginapan Kunthi",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6300830626,
+      "lat": -7.8186841,
+      "lon": 110.371004,
+      "tags": {
+        "addr:housenumber": "537c",
+        "addr:street": "Jalan Prawirotaman 1 MG III",
+        "facebook": "Happy-Buddha-Yogyakarta",
+        "name": "Happy Buddha",
+        "phone": "+622744221147",
+        "tourism": "hostel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6320266616,
+      "lat": -7.7794471,
+      "lon": 110.4079831,
+      "tags": {
+        "name": "Zen Rooms Depok Sleman Syariha",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6327278157,
+      "lat": -7.7792534,
+      "lon": 110.364178,
+      "tags": {
+        "brand": "RedDoorz",
+        "brand:wikidata": "Q78186049",
+        "name": "RedDoorz Plus Adya Nalendra",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6367176147,
+      "lat": -7.7952564,
+      "lon": 110.3532699,
+      "tags": {
+        "name": "Forriz",
+        "tourism": "hotel",
+        "website": "https://www.forrizhotels.com"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6426324790,
+      "lat": -7.8021073,
+      "lon": 110.360952,
+      "tags": {
+        "addr:city": "Yogyakarta",
+        "addr:housenumber": "17A",
+        "addr:postcode": "55122",
+        "addr:street": "Jalan Nyai Ahmad Dahlan",
+        "air_conditioning": "yes",
+        "alt_name": "SanteCommune",
+        "alt_name:id": "Hostel Sante Commune",
+        "email": "santecommune.manager@gmail.com",
+        "guest_house": "hostel",
+        "internet_access": "wlan",
+        "internet_access:fee": "no",
+        "level": "2",
+        "name": "Sante Commune Hostel Yogyakarta",
+        "opening_hours": "Mo-Su 07:00-23:00",
+        "phone": "+62 819 9847 1235",
+        "rooms": "6",
+        "smoking": "outside",
+        "tourism": "hostel",
+        "website": "https://www.instagram.com/santecommune",
+        "wheelchair": "no"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6596234985,
+      "lat": -7.8081751,
+      "lon": 110.3663795,
+      "tags": {
+        "addr:housenumber": "PB II/152",
+        "addr:street": "Jalan Panembahan Mangkurat",
+        "name": "Home@Ifa’s - Kitten",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6679862338,
+      "lat": -7.7909083,
+      "lon": 110.3652133,
+      "tags": {
+        "name": "105 Homestay",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6685767286,
+      "lat": -7.7660476,
+      "lon": 110.3919211,
+      "tags": {
+        "addr:housenumber": "53",
+        "addr:postcode": "55281",
+        "addr:street": "Jalan Gelayan / Affandi",
+        "internet_access": "wlan",
+        "name": "La Casa Jogja",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6730652819,
+      "lat": -7.7762579,
+      "lon": 110.3915717,
+      "tags": {
+        "addr:city": "Yogyakarta",
+        "addr:housenumber": "6",
+        "addr:street": "Jalan Mrican Baru",
+        "air_conditioning": "yes",
+        "guest_house": "bed_and_breakfast",
+        "internet_access": "yes",
+        "internet_access:fee": "no",
+        "name": "Embe Enem",
+        "rooms": "16",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6732315339,
+      "lat": -7.7559934,
+      "lon": 110.4017806,
+      "tags": {
+        "addr:city": "Condong Catur",
+        "addr:housenumber": "10",
+        "addr:street": "Jalan Harjosudiro",
+        "guest_house": "bed_and_breakfast",
+        "name": "Embe Joglo",
+        "rooms": "23",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6777660886,
+      "lat": -7.8185007,
+      "lon": 110.3718741,
+      "tags": {
+        "name": "Oke Baik Hostel",
+        "tourism": "hostel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6811218788,
+      "lat": -7.756268,
+      "lon": 110.4241017,
+      "tags": {
+        "addr:city": "Depok Sleman",
+        "addr:housenumber": "102",
+        "addr:postcode": "55281",
+        "addr:street": "Jl Paingan 7",
+        "internet_access": "wlan",
+        "name": "Samanta Pura",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6855834428,
+      "lat": -7.8169998,
+      "lon": 110.3690913,
+      "tags": {
+        "internet_access": "wlan",
+        "name": "Nextdoor Homestay",
+        "name:en": "Nextdoor Homestay",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6899266842,
+      "lat": -7.8200387,
+      "lon": 110.3670974,
+      "tags": {
+        "name": "Winatasastra",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 6899347341,
+      "lat": -7.8196522,
+      "lon": 110.3671904,
+      "tags": {
+        "name": "Ndaleman Mantrijeroan",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7063226686,
+      "lat": -7.8498362,
+      "lon": 110.3310707,
+      "tags": {
+        "addr:postcode": "55184",
+        "addr:street": "GESIK RT 03 Kalipucang, Kasongan Bangunjiwo, Kajen, Bangunjiwo, Kec. Kasihan,",
+        "email": "rumahinspirasijogja@gmail.com",
+        "internet_access": "wlan",
+        "name": "Filistay Homestay",
+        "opening_hours": "Mo-Su 08:00-20:00",
+        "phone": "+62 851-0181-9925",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7097539047,
+      "lat": -7.7959471,
+      "lon": 110.3688927,
+      "tags": {
+        "name": "Nueve Malioboro Hotel Yogyakarta",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7097544036,
+      "lat": -7.80196,
+      "lon": 110.351488,
+      "tags": {
+        "check_date": "2025-07-13",
+        "name": "Andika Putera",
+        "phone": "+62-274-375330",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7097566670,
+      "lat": -7.8080188,
+      "lon": 110.3408112,
+      "tags": {
+        "addr:housenumber": "482",
+        "addr:street": "Jalan Soboman",
+        "name": "The Edwin Syariah (OYO 611)",
+        "phone": "+62-822-25442577",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7099223696,
+      "lat": -7.8135499,
+      "lon": 110.377067,
+      "tags": {
+        "addr:postcode": "55151",
+        "addr:street": "Jalan Taman Siswa",
+        "name": "Omah Manis",
+        "opening_hours": "Mo-Su 05:00-22:00",
+        "tourism": "guest_house",
+        "website": "http://Booking.com"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7100528075,
+      "lat": -7.7938157,
+      "lon": 110.3626817,
+      "tags": {
+        "addr:housenumber": "71A",
+        "addr:street": "Jalan Dagen",
+        "name": "Kristina",
+        "phone": "+62-274-512076",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7117071984,
+      "lat": -7.8141081,
+      "lon": 110.370356,
+      "tags": {
+        "name": "Santai Sini",
+        "tourism": "hostel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7117116848,
+      "lat": -7.8088496,
+      "lon": 110.3626741,
+      "tags": {
+        "name": "Omah Konco Homestay",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7117184675,
+      "lat": -7.7923645,
+      "lon": 110.3680524,
+      "tags": {
+        "name": "Penak Malioboro",
+        "tourism": "hostel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7117199310,
+      "lat": -7.8119214,
+      "lon": 110.3675176,
+      "tags": {
+        "name": "Ndalem Diajeng",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7140531832,
+      "lat": -7.7699441,
+      "lon": 110.4303603,
+      "tags": {
+        "name": "D'HELOMI",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7152724240,
+      "lat": -7.759224,
+      "lon": 110.3874103,
+      "tags": {
+        "addr:street": "Jalan Padjajaran",
+        "name": "Hotel Lafayette",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7178810187,
+      "lat": -7.7830869,
+      "lon": 110.365171,
+      "tags": {
+        "name": "Hostel White Paal",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7528388785,
+      "lat": -7.7399821,
+      "lon": 110.4513688,
+      "tags": {
+        "name": "Kos Abu Abu",
+        "tourism": "hostel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7811256796,
+      "lat": -7.788263,
+      "lon": 110.3731828,
+      "tags": {
+        "name": "Ndalem Kotabaru",
+        "phone": "+62 274 5013993",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7811468605,
+      "lat": -7.7888489,
+      "lon": 110.3757752,
+      "tags": {
+        "name": "Toko Bu Warsito",
+        "shop": "convenience",
+        "wheelchair": "no"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7811503218,
+      "lat": -7.788345,
+      "lon": 110.3786027,
+      "tags": {
+        "changing_table": "no",
+        "name": "Prista Mart",
+        "opening_hours": "Mo-Sa 09:00-21:00; PH closed",
+        "organic": "no",
+        "shop": "convenience",
+        "wheelchair": "no"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7846239505,
+      "lat": -7.7872569,
+      "lon": 110.3706366,
+      "tags": {
+        "addr:housenumber": "1",
+        "addr:street": "Jalan Serma Taruna Ramli",
+        "name": "Hotel Graha Kinasih",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7859897351,
+      "lat": -7.7851703,
+      "lon": 110.3750892,
+      "tags": {
+        "changing_table": "no",
+        "name": "Kopel Bulog",
+        "organic": "no",
+        "shop": "convenience",
+        "wheelchair": "no"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7868743428,
+      "lat": -7.787137,
+      "lon": 110.3790727,
+      "tags": {
+        "changing_table": "no",
+        "name": "Toko 89",
+        "opening_hours": "Mo-Sa 09:00-16:00; PH closed",
+        "organic": "no",
+        "shop": "convenience",
+        "wheelchair": "no"
+      }
+    },
+    {
+      "type": "node",
+      "id": 7871339677,
+      "lat": -7.7892465,
+      "lon": 110.3778346,
+      "tags": {
+        "name": "Asrama Balai Pelatihan Teknik Traksi",
+        "operator": "PT Kereta Api Indonesia",
+        "tourism": "hostel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 8364772395,
+      "lat": -7.7613689,
+      "lon": 110.3719635,
+      "tags": {
+        "name": "Citrouli Jakal",
+        "opening_hours": "PH,Mo-Su 06:00-10:00",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 8484225117,
+      "lat": -7.7615135,
+      "lon": 110.3316585,
+      "tags": {
+        "addr:postcode": "55592",
+        "addr:street": "Jalan Masjid Patok Negoro",
+        "name": "Toko Annasr",
+        "name:en": "Annasr convenience store",
+        "opening_hours": "Mo-Su 09:00-23:00",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9002853900,
+      "lat": -7.8220413,
+      "lon": 110.3736496,
+      "tags": {
+        "name": "Hotel Olympic",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9025585287,
+      "lat": -7.8315706,
+      "lon": 110.3383718,
+      "tags": {
+        "internet_access": "wlan",
+        "internet_access:fee": "no",
+        "name": "Joglo Mandapa Boutique Hotel & Resto",
+        "smoking": "outside",
+        "tourism": "hotel",
+        "wheelchair": "no"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9084900661,
+      "lat": -7.6668508,
+      "lon": 110.7544392,
+      "tags": {
+        "amenity": "fuel",
+        "brand": "Pertamina",
+        "description": "Stasiun Pengisian Bahan Bakar Umum Pertamina: Tanjung",
+        "fuel:diesel": "yes",
+        "fuel:octane_90": "yes",
+        "fuel:octane_92": "yes",
+        "name": "SPBU 44.574.24",
+        "opening_hours": "Mo-Th, Sa, Su 06:00-22:00; Fr 06:00-11:30, 12:45-22:00"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9118787717,
+      "lat": -7.790026,
+      "lon": 110.3644978,
+      "tags": {
+        "name": "Royal Malioboro",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9158972452,
+      "lat": -7.7859743,
+      "lon": 110.3763419,
+      "tags": {
+        "changing_table": "no",
+        "name": "Hesti Mart",
+        "shop": "convenience",
+        "wheelchair": "no"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9175232116,
+      "lat": -7.7840128,
+      "lon": 110.3750648,
+      "tags": {
+        "name": "Kutus-Kutus",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9187445817,
+      "lat": -7.7982935,
+      "lon": 110.4051366,
+      "tags": {
+        "name": "Grand Rohan Jogja",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9189185619,
+      "lat": -7.6895041,
+      "lon": 110.4103239,
+      "tags": {
+        "name": "Kost Putra Adhiwangsa",
+        "tourism": "hostel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9194548224,
+      "lat": -7.7845538,
+      "lon": 110.3790882,
+      "tags": {
+        "changing_table": "no",
+        "name": "Putra Sehat",
+        "opening_hours": "Mo-Sa 09:00-20:00; PH closed",
+        "shop": "convenience",
+        "wheelchair": "no"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9194565895,
+      "lat": -7.7867014,
+      "lon": 110.378784,
+      "tags": {
+        "changing_table": "no",
+        "name": "Pop Mart",
+        "opening_hours": "Mo-Sa 09:00-21:00; PH closed",
+        "shop": "convenience",
+        "wheelchair": "no"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9198357819,
+      "lat": -7.7915918,
+      "lon": 110.3724311,
+      "tags": {
+        "changing_table": "no",
+        "name": "Toko Sinar Jaya",
+        "opening_hours": "Mo-Su 09:00-14:00,17:00-21:00; PH closed",
+        "shop": "convenience",
+        "wheelchair": "no"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9208542431,
+      "lat": -7.7861089,
+      "lon": 110.3841966,
+      "tags": {
+        "changing_table": "no",
+        "name": "Toko Mimi",
+        "shop": "convenience",
+        "wheelchair": "no"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9247001004,
+      "lat": -7.815548,
+      "lon": 110.3563386,
+      "tags": {
+        "addr:city": "Yogyakarta",
+        "addr:housenumber": "47",
+        "addr:postcode": "55142",
+        "addr:street": "Jalan Bantul",
+        "air_conditioning": "yes",
+        "floors": "3",
+        "name": "Tasik Jogja Hotel",
+        "pets": "no",
+        "rooms": "29",
+        "smoking": "designated",
+        "tourism": "hotel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9391539689,
+      "lat": -7.8226333,
+      "lon": 110.3583902,
+      "tags": {
+        "addr:city": "Kota Yogyakarta",
+        "addr:housenumber": "32 D",
+        "addr:postcode": "55141",
+        "addr:street": "Jalan Minggiran",
+        "guest_house": "guest_house",
+        "name": "KOS GRIYA MBAMBANGAN",
+        "operator": "Bambang",
+        "rooms": "2",
+        "tourism": "hostel"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9622538149,
+      "lat": -7.7738994,
+      "lon": 110.3819078,
+      "tags": {
+        "addr:housenumber": "I 8",
+        "addr:street": "Jalan Gang Kuningan",
+        "name": "Rumah Kost Putri",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9670072084,
+      "lat": -7.7449815,
+      "lon": 110.4812915,
+      "tags": {
+        "name": "Gangsar Swalayan",
+        "opening_hours": "Mo-Su 08:00-19:00",
+        "phone": "+62 274 7310 893",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9671798157,
+      "lat": -7.741461,
+      "lon": 110.4277425,
+      "tags": {
+        "name": "Toko Bu Hesti",
+        "opening_hours": "Mo-Su 07:00-21:00",
+        "phone": "+62 817 4115 131",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9671815982,
+      "lat": -7.752032,
+      "lon": 110.4344589,
+      "tags": {
+        "name": "Peni Ayu Swalayan",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9671827938,
+      "lat": -7.7738264,
+      "lon": 110.452178,
+      "tags": {
+        "name": "Ndalem Jogja Cupuwatu",
+        "tourism": "hotel",
+        "website": "https://www.oyorooms.com/id/hotels-in-Yogyakarta/"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9671851527,
+      "lat": -7.7387005,
+      "lon": 110.4323742,
+      "tags": {
+        "alt_name": "Mini Market Koperasi Pegawai UPN",
+        "name": "Koperasi UPN Wedo",
+        "opening_hours": "Mo-Su 08:00-19:45",
+        "phone": "+62 274 8702 99",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9671877618,
+      "lat": -7.736203,
+      "lon": 110.4800141,
+      "tags": {
+        "contact:facebook": "https://www.facebook.com/MedikoSwalayan",
+        "name": "Mediko Ringinsari Swalayan",
+        "opening_hours": "Mo-Su 07:00-21:00",
+        "phone": "+62 821 3378 2344",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9676530860,
+      "lat": -7.7406313,
+      "lon": 110.4340273,
+      "tags": {
+        "amenity": "fuel",
+        "brand": "Pertamina",
+        "brand:wikidata": "Q1641044",
+        "compressed_air": "yes",
+        "name": "SPBU Pertamina 44.555.20 Wedomartani"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9678902111,
+      "lat": -7.7440821,
+      "lon": 110.4713048,
+      "tags": {
+        "name": "Madinah Swalayan",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9678939805,
+      "lat": -7.7435381,
+      "lon": 110.4763946,
+      "tags": {
+        "name": "Toko Yeny",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9679002748,
+      "lat": -7.7438315,
+      "lon": 110.4809948,
+      "tags": {
+        "name": "Puri Cempaka Guest House",
+        "tourism": "guest_house"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9682376802,
+      "lat": -7.7443322,
+      "lon": 110.4711084,
+      "tags": {
+        "name": "Toko Muyegh",
+        "shop": "convenience"
       }
     }
   ]
