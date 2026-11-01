@@ -25866,6 +25866,216 @@
         "tourism": "guest_house",
         "verified": "google_maps_verified"
       }
+    },
+    {
+      "type": "node",
+      "id": 89000001,
+      "lat": -6.969816,
+      "lon": 110.391012,
+      "tags": {
+        "name": "SPBU Pertamina 44.501.07 Puri Anjasmoro",
+        "brand": "Pertamina",
+        "amenity": "fuel",
+        "addr:street": "Jl. Puri Anjasmoro Raya No. 6, Tawangsari",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 89000002,
+      "lat": -6.9745,
+      "lon": 110.4088,
+      "tags": {
+        "name": "Indomaret Hasanudin No. 17C",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "Jl. Hasanudin No. 17C, Panggung Kidul",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 89000003,
+      "lat": -6.9692,
+      "lon": 110.4105,
+      "tags": {
+        "name": "Indomaret Hasanudin No. 490B",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "Jl. Hasanudin No. 490B, Panggung Kidul",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 89000004,
+      "lat": -6.9665,
+      "lon": 110.4121,
+      "tags": {
+        "name": "Alfamart Hasanudin H037",
+        "brand": "Alfamart",
+        "shop": "convenience",
+        "addr:street": "Jl. Hasanudin No. 91, Plombokan",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 89000005,
+      "lat": -6.9535,
+      "lon": 110.4038,
+      "tags": {
+        "name": "SPBU Pertamina 44.501.16 Arteri Yos Sudarso",
+        "brand": "Pertamina",
+        "amenity": "fuel",
+        "addr:street": "Jl. Arteri Yos Sudarso, Bandarharjo",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 89000006,
+      "lat": -6.9854,
+      "lon": 110.3921,
+      "tags": {
+        "name": "SPBU Pertamina 44.501.24 Pamularsih",
+        "brand": "Pertamina",
+        "amenity": "fuel",
+        "addr:street": "Jl. Pamularsih Raya No. 15, Bongsari",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 89000007,
+      "lat": -6.9765,
+      "lon": 110.4072,
+      "tags": {
+        "name": "SPBU Pertamina 44.501.12 Indraprasta",
+        "brand": "Pertamina",
+        "amenity": "fuel",
+        "addr:street": "Jl. Indraprasta No. 87, Pendrikan Lor",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 89000008,
+      "lat": -6.9872,
+      "lon": 110.3665,
+      "tags": {
+        "name": "SPBU Pertamina 44.501.02 Siliwangi Krapyak",
+        "brand": "Pertamina",
+        "amenity": "fuel",
+        "addr:street": "Jl. Siliwangi No. 498, Krapyak",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 89000009,
+      "lat": -6.9682,
+      "lon": 110.3985,
+      "tags": {
+        "name": "Indomaret Madukoro Raya",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "Jl. Madukoro Raya No. 25, Krobokan",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 89000010,
+      "lat": -6.9675,
+      "lon": 110.3992,
+      "tags": {
+        "name": "Alfamart Madukoro Raya",
+        "brand": "Alfamart",
+        "shop": "convenience",
+        "addr:street": "Jl. Madukoro Raya, Krobokan",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 89000011,
+      "lat": -6.9825,
+      "lon": 110.3938,
+      "tags": {
+        "name": "Indomaret Pamularsih",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "Jl. Pamularsih No. 48, Bongsari",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 89000012,
+      "lat": -6.9839,
+      "lon": 110.3932,
+      "tags": {
+        "name": "Alfamart Pamularsih",
+        "brand": "Alfamart",
+        "shop": "convenience",
+        "addr:street": "Jl. Pamularsih No. 62, Bongsari",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 89000013,
+      "lat": -6.9851,
+      "lon": 110.3835,
+      "tags": {
+        "name": "Indomaret Siliwangi Kalibanteng",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "Jl. Siliwangi No. 12, Kalibanteng Kulon",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 89000014,
+      "lat": -6.9856,
+      "lon": 110.3812,
+      "tags": {
+        "name": "Alfamart Siliwangi Kalibanteng",
+        "brand": "Alfamart",
+        "shop": "convenience",
+        "addr:street": "Jl. Siliwangi No. 28, Kalibanteng Kulon",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified"
+      }
     }
   ]
 }

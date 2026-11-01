@@ -1,7 +1,10 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
+import 'package:url_launcher/url_launcher.dart';
 
+import '../../../services/theme_service.dart';
+import '../../../core/app_colors.dart';
 import '../data/places_api.dart';
 import '../logic/geo_math.dart';
 import '../logic/nearby_controller.dart';
@@ -159,7 +162,9 @@ class _NearbyPlacesSheetState extends State<NearbyPlacesSheet>
               _buildHeader(),
               const SizedBox(height: 12),
               _CategoryChips(selected: _selected, onSelected: _select),
-              const SizedBox(height: 8),
+              const SizedBox(height: 6),
+              _buildGoogleMapsActionCard(context),
+              const SizedBox(height: 4),
               if (_notice != null)
                 Padding(
                   padding: const EdgeInsets.fromLTRB(16, 0, 16, 8),
@@ -196,9 +201,15 @@ class _NearbyPlacesSheetState extends State<NearbyPlacesSheet>
             width: 40,
             height: 40,
             decoration: BoxDecoration(
-              color: Colors.white,
+              color: ThemeService.instance.isDarkMode
+                  ? AppColors.darkCardBgSoft
+                  : Colors.white,
               borderRadius: BorderRadius.circular(PlacesStyle.radiusXl),
-              border: Border.all(color: PlacesStyle.orange200),
+              border: Border.all(
+                color: ThemeService.instance.isDarkMode
+                    ? AppColors.darkCardBorder
+                    : PlacesStyle.orange200,
+              ),
               boxShadow: PlacesStyle.hairShadow,
             ),
             child: const Icon(
@@ -236,6 +247,147 @@ class _NearbyPlacesSheetState extends State<NearbyPlacesSheet>
         ],
       ),
     );
+  }
+
+
+  Widget _buildGoogleMapsActionCard(BuildContext context) {
+    final isDark = ThemeService.instance.isDarkMode;
+    final catName = switch (_selected) {
+      PlaceCategory.spbu => 'SPBU Pertamina/Shell',
+      PlaceCategory.minimarket => 'Indomaret / Alfamart',
+      PlaceCategory.lodging => 'Hotel / Penginapan',
+      PlaceCategory.restArea => 'Rest Area Jalan Tol',
+      _ => 'Tempat Istirahat',
+    };
+
+    return Container(
+      margin: const EdgeInsets.fromLTRB(16, 2, 16, 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 9),
+      decoration: BoxDecoration(
+        color: isDark ? const Color(0xFF1E293B) : const Color(0xFFEFF6FF),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(
+          color: isDark
+              ? const Color(0xFF3B82F6).withValues(alpha: 0.35)
+              : const Color(0xFFBFDBFE),
+        ),
+      ),
+      child: Row(
+        children: [
+          Container(
+            width: 34,
+            height: 34,
+            decoration: BoxDecoration(
+              color: const Color(0xFF2563EB).withValues(alpha: 0.15),
+              shape: BoxShape.circle,
+            ),
+            child: const Icon(
+              Icons.travel_explore_rounded,
+              color: Color(0xFF2563EB),
+              size: 19,
+            ),
+          ),
+          const SizedBox(width: 10),
+          Expanded(
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                Text(
+                  'Masih Ragu? Tanya Google Maps',
+                  style: TextStyle(
+                    fontSize: 11.5,
+                    fontWeight: FontWeight.w800,
+                    color: isDark ? Colors.white : const Color(0xFF1E3A8A),
+                  ),
+                ),
+                const SizedBox(height: 1),
+                Text(
+                  'Cari $catName live di app Maps bawaan HP',
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                  style: TextStyle(
+                    fontSize: 10,
+                    fontWeight: FontWeight.w500,
+                    color: isDark
+                        ? AppColors.darkTextSecondary
+                        : const Color(0xFF3B82F6),
+                  ),
+                ),
+              ],
+            ),
+          ),
+          const SizedBox(width: 8),
+          Material(
+            color: const Color(0xFF2563EB),
+            borderRadius: BorderRadius.circular(8),
+            child: InkWell(
+              borderRadius: BorderRadius.circular(8),
+              onTap: _openGoogleMapsLiveSearch,
+              child: const Padding(
+                padding: EdgeInsets.symmetric(horizontal: 9, vertical: 6),
+                child: Row(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    Icon(Icons.open_in_new_rounded, size: 13, color: Colors.white),
+                    SizedBox(width: 4),
+                    Text(
+                      'Buka Maps',
+                      style: TextStyle(
+                        fontSize: 10.5,
+                        fontWeight: FontWeight.w700,
+                        color: Colors.white,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Future<void> _openGoogleMapsLiveSearch() async {
+    final fix = _controller.fix;
+    final catQuery = switch (_selected) {
+      PlaceCategory.spbu => 'SPBU Pertamina terdekat',
+      PlaceCategory.minimarket => 'Minimarket Indomaret Alfamart terdekat',
+      PlaceCategory.lodging => 'Hotel penginapan terdekat',
+      PlaceCategory.restArea => 'Rest area terdekat',
+      _ => 'Tempat istirahat terdekat',
+    };
+
+    final lat = fix?.lat;
+    final lng = fix?.lng;
+
+    // 1. Coba native intent Google Maps Android
+    if (lat != null && lng != null) {
+      final nativeUri = Uri.parse('geo:$lat,$lng?q=${Uri.encodeComponent(catQuery)}');
+      try {
+        if (await canLaunchUrl(nativeUri)) {
+          await launchUrl(nativeUri, mode: LaunchMode.externalApplication);
+          return;
+        }
+      } catch (_) {}
+    } else {
+      final nativeUri = Uri.parse('geo:0,0?q=${Uri.encodeComponent(catQuery)}');
+      try {
+        if (await canLaunchUrl(nativeUri)) {
+          await launchUrl(nativeUri, mode: LaunchMode.externalApplication);
+          return;
+        }
+      } catch (_) {}
+    }
+
+    // 2. Fallback Google Maps search web
+    final webQuery = (lat != null && lng != null)
+        ? '$catQuery, ${lat.toStringAsFixed(6)},${lng.toStringAsFixed(6)}'
+        : '$catQuery, Semarang';
+    final webUri = Uri.https('www.google.com', '/maps/search/', {'api': '1', 'query': webQuery});
+    try {
+      await launchUrl(webUri, mode: LaunchMode.externalApplication);
+    } catch (_) {}
   }
 
   Widget _buildBody(BuildContext context) {
@@ -545,7 +697,17 @@ class _CategoryChip extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    final foreground = selected ? Colors.white : PlacesStyle.slate700;
+    final isDark = ThemeService.instance.isDarkMode;
+    final bg = selected
+        ? PlacesStyle.copper
+        : (isDark ? AppColors.darkCardBgSoft : Colors.white);
+    final border = selected
+        ? PlacesStyle.copper
+        : (isDark ? AppColors.darkCardBorder : PlacesStyle.orange200);
+    final foreground = selected
+        ? Colors.white
+        : (isDark ? AppColors.darkTextPrimary : const Color(0xFF334155));
+
     return Padding(
       padding: const EdgeInsets.only(right: 8),
       child: Semantics(
@@ -554,10 +716,10 @@ class _CategoryChip extends StatelessWidget {
         label: label,
         excludeSemantics: true,
         child: Material(
-          color: selected ? PlacesStyle.copper : Colors.white,
+          color: bg,
           shape: StadiumBorder(
             side: BorderSide(
-              color: selected ? PlacesStyle.copper : PlacesStyle.orange200,
+              color: border,
             ),
           ),
           child: InkWell(

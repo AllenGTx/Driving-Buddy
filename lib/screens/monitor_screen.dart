@@ -1,6 +1,7 @@
 import '../services/theme_service.dart';
 import '../services/road_matching_service.dart';
 import '../services/gps_kalman_filter.dart';
+import '../services/driving_notification_service.dart';
 import '../services/language_service.dart';
 
 import 'dart:ui' as ui;
@@ -48,7 +49,7 @@ class MonitorScreen extends StatefulWidget {
   MonitorScreenState createState() => MonitorScreenState();
 }
 
-class MonitorScreenState extends State<MonitorScreen> {
+class MonitorScreenState extends State<MonitorScreen> with WidgetsBindingObserver {
   bool get isMonitoring => _isMonitoring;
 
   // Timer kemudi
@@ -135,6 +136,7 @@ class MonitorScreenState extends State<MonitorScreen> {
   @override
   void initState() {
     super.initState();
+    WidgetsBinding.instance.addObserver(this);
     _ownsNearby = widget.nearbyController == null;
     _nearby = widget.nearbyController ?? NearbyPlacesController();
     if (_ownsNearby) {
@@ -142,6 +144,23 @@ class MonitorScreenState extends State<MonitorScreen> {
     }
     _nearby.addListener(_onNearbyUpdate);
     _loadPostureSettings();
+  }
+
+  
+  @override
+  void didChangeAppLifecycleState(AppLifecycleState state) {
+    if (_isMonitoring) {
+      if (state == AppLifecycleState.paused ||
+          state == AppLifecycleState.inactive) {
+        DrivingNotificationService.instance.showMonitoringNotification(
+          durationSeconds: _elapsedSeconds,
+        );
+      } else if (state == AppLifecycleState.resumed) {
+        DrivingNotificationService.instance.showMonitoringNotification(
+          durationSeconds: _elapsedSeconds,
+        );
+      }
+    }
   }
 
   void _onNearbyUpdate() {
@@ -378,6 +397,8 @@ class MonitorScreenState extends State<MonitorScreen> {
       _nearby.dispose();
     }
     WakelockPlus.disable();
+    WidgetsBinding.instance.removeObserver(this);
+    DrivingNotificationService.instance.cancelMonitoringNotification();
     super.dispose();
   }
 
@@ -727,6 +748,7 @@ class MonitorScreenState extends State<MonitorScreen> {
   }
 
   Future<void> _stopMonitoring() async {
+    DrivingNotificationService.instance.cancelMonitoringNotification();
     if (_isStopping) return;
     setState(() {
       _isStopping = true;

@@ -7,6 +7,7 @@ import 'models/account_config.dart';
 import 'firebase_options.dart';
 import 'services/theme_service.dart';
 import 'services/language_service.dart';
+import 'services/driving_notification_service.dart';
 import 'core/app_colors.dart';
 import 'core/app_theme.dart';
 import 'routes/app_routes.dart';
@@ -35,6 +36,7 @@ void main() async {
   // Inisialisasi service tema (otomatis jam 16:00 - 04:00 & cache preferensi)
   await ThemeService.instance.init();
   await LanguageService.instance.init();
+  await DrivingNotificationService.instance.initialize();
 
   // Inisialisasi Firebase
   try {
