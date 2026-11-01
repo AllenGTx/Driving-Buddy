@@ -1076,7 +1076,13 @@ class _DrivingCardScreenState extends State<DrivingCardScreen>
     _resolvedStartLng = widget.startLng;
     _resolvedLastLat = widget.lastLat;
     _resolvedLastLng = widget.lastLng;
-    _resolvedRoutePoints = widget.routePoints;
+
+    // TruePath Trajectory Engine: Mulus, presisi, 100% mengikuti jalur nyata tanpa halusinasi OSRM
+    if (widget.routePoints != null && widget.routePoints!.length >= 3) {
+      _resolvedRoutePoints = RoadMatchingService.smoothTrajectory(widget.routePoints!);
+    } else {
+      _resolvedRoutePoints = widget.routePoints;
+    }
 
     _resolveGpsCoordinates();
   }
@@ -1094,19 +1100,6 @@ class _DrivingCardScreenState extends State<DrivingCardScreen>
         _resolvedRoutePoints!.isNotEmpty) {
       _resolvedLastLat = _resolvedRoutePoints!.last['lat'];
       _resolvedLastLng = _resolvedRoutePoints!.last['lng'];
-    }
-
-    // Map Matching (OSRM Snap-to-Roads): Presisi garis aspal jalan raya (Hanya perjalanan berkendara nyata)
-    if (_resolvedRoutePoints != null &&
-        _resolvedRoutePoints!.length >= 4 &&
-        widget.distanceKm >= 0.15) {
-      RoadMatchingService.snapToRoads(_resolvedRoutePoints!).then((snapped) {
-        if (mounted && snapped.length >= 2) {
-          setState(() {
-            _resolvedRoutePoints = snapped;
-          });
-        }
-      });
     }
 
     // 1. Cek apakah koordinat sudah ada dan valid

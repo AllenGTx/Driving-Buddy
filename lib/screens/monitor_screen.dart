@@ -853,24 +853,13 @@ class MonitorScreenState extends State<MonitorScreen> {
     score -= (finalMicro * 10).clamp(0, 40);
     score = score.clamp(0, 100);
 
-    // 1. Ramer-Douglas-Peucker (RDP) Simplification: Bersihkan titik redundan saat berhenti/lurus
-    // 2. OSRM Map Matching: Tempelkan rute ke garis aspal jalan raya (Hanya untuk perjalanan berkendara nyata)
+    // 1. TruePath Trajectory Engine: Outlier Filter + RDP Simplification + Chaikin Spline
+    // Mulus mengikuti jalur jalan nyata tanpa router OSRM yang halusinasi belok ke gang atau jalan lain
     List<Map<String, double>> processedRoute = List.from(_routeBreadcrumbs);
     if (isValidVehicleTrip &&
         _totalDistanceMeters >= 120.0 &&
         processedRoute.length >= 3) {
-      try {
-        final rdpCleaned = RoadMatchingService.simplifyRdp(
-          processedRoute,
-          epsilonMeters: 2.0,
-        );
-        final snapped = await RoadMatchingService.snapToRoads(rdpCleaned);
-        if (snapped.length >= 2) {
-          processedRoute = snapped;
-        } else if (rdpCleaned.length >= 2) {
-          processedRoute = rdpCleaned;
-        }
-      } catch (_) {}
+      processedRoute = RoadMatchingService.smoothTrajectory(processedRoute);
     }
 
     final double effectiveStartLat = isValidVehicleTrip
@@ -1756,10 +1745,10 @@ class MonitorScreenState extends State<MonitorScreen> {
               ),
             ),
             child: Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
               children: [
-                // Status Deteksi Wajah
-                Container(
+                // Status Deteksi Wajah (Expanded agar fleksibel & tidak overflow saat mode ECO aktif)
+                Expanded(
+                  child: Container(
                   padding: const EdgeInsets.symmetric(
                     horizontal: 10,
                     vertical: 4.5,
@@ -1813,25 +1802,28 @@ class MonitorScreenState extends State<MonitorScreen> {
                         ),
                       ),
                       const SizedBox(width: 6),
-                      Text(
-                        !_isMonitoring
-                            ? (LanguageService.instance.isEnglish
-                                  ? 'Camera Sensor Ready'
-                                  : 'Sensor Kamera Siaga')
-                            : (isDanger
-                                  ? (LanguageService.instance.isEnglish
-                                        ? 'Drowsiness Warning!'
-                                        : 'Peringatan Kantuk!')
-                                  : (_eyeDetected
-                                        ? LanguageService
-                                              .instance
-                                              .s
-                                              .faceDetected
-                                        : LanguageService
-                                              .instance
-                                              .s
-                                              .faceNotDetected)),
-                        style: TextStyle(
+                      Flexible(
+                        child: Text(
+                          !_isMonitoring
+                              ? (LanguageService.instance.isEnglish
+                                    ? 'Camera Sensor Ready'
+                                    : 'Sensor Kamera Siaga')
+                              : (isDanger
+                                    ? (LanguageService.instance.isEnglish
+                                          ? 'Drowsiness Warning!'
+                                          : 'Peringatan Kantuk!')
+                                    : (_eyeDetected
+                                          ? LanguageService
+                                                .instance
+                                                .s
+                                                .faceDetected
+                                          : LanguageService
+                                                .instance
+                                                .s
+                                                .faceNotDetected)),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                          style: TextStyle(
                           fontSize: 10,
                           fontWeight: FontWeight.w800,
                           color: !_isMonitoring
@@ -1845,6 +1837,7 @@ class MonitorScreenState extends State<MonitorScreen> {
                                                 ? const Color(0xFF34D399)
                                                 : const Color(0xFF059669))
                                           : const Color(0xFFEF4444))),
+                          ),
                         ),
                       ),
                       if (_isBatteryOptimization) ...[
@@ -1888,6 +1881,8 @@ class MonitorScreenState extends State<MonitorScreen> {
                     ],
                   ),
                 ),
+                ),
+                const SizedBox(width: 8),
 
                 // Tombol Perbesar (Hanya aktif saat monitoring)
                 if (_isMonitoring)
