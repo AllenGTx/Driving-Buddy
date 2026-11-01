@@ -194,25 +194,25 @@ class MonitorScreenState extends State<MonitorScreen> {
     bool isStationary = false;
 
     if (hwSpeedKmh != null) {
-      // Kecepatan Doppler Hardware tersedia
-      if (hwSpeedKmh < 1.8) {
-        // Kendaraan berhenti / diam (Doppler = 0)
+      // Kecepatan Doppler Hardware dari satelit GNSS
+      if (hwSpeedKmh < 2.5) {
+        // Kendaraan berhenti / ponsel diam di meja / goyangan tangan (Doppler < 2.5 km/j)
         rawSpeedKmh = 0.0;
         isStationary = true;
       } else {
         // Kendaraan melaju menurut sensor satelit
         if (kinematicSpeedKmh != null &&
-            kinematicSpeedKmh >= 1.5 &&
+            kinematicSpeedKmh >= 2.0 &&
             kinematicSpeedKmh <= 220.0) {
-          rawSpeedKmh = (hwSpeedKmh * 0.80) + (kinematicSpeedKmh * 0.20);
+          rawSpeedKmh = (hwSpeedKmh * 0.85) + (kinematicSpeedKmh * 0.15);
         } else {
           rawSpeedKmh = hwSpeedKmh;
         }
       }
     } else {
       // Doppler Hardware null (fallback kinematik dengan deadband ketat)
-      if (dMeters < 2.5 ||
-          (kinematicSpeedKmh != null && kinematicSpeedKmh < 2.5)) {
+      if (dMeters < 3.5 ||
+          (kinematicSpeedKmh != null && kinematicSpeedKmh < 4.5)) {
         rawSpeedKmh = 0.0;
         isStationary = true;
       } else if (kinematicSpeedKmh != null && kinematicSpeedKmh <= 220.0) {
@@ -232,7 +232,7 @@ class MonitorScreenState extends State<MonitorScreen> {
     if (rawSpeedKmh > 220.0) rawSpeedKmh = _currentSpeedKmh;
 
     // 5. Low-pass filter (Exponential Moving Average) untuk speedometer yang mulus dan stabil
-    if (rawSpeedKmh < 1.0 || isStationary) {
+    if (rawSpeedKmh < 1.5 || isStationary) {
       _currentSpeedKmh = 0.0;
       _consecutiveMovingSamples = 0;
     } else {
@@ -242,10 +242,10 @@ class MonitorScreenState extends State<MonitorScreen> {
       _consecutiveMovingSamples++;
     }
 
-    // 6. Anchor-Point Distance Filter (Strava Deadband):
-    // Jarak HANYA diakumulasikan jika benar-benar bergerak (kecepatan >= 2.5 km/j)
-    // dan berpindah minimal 4.5 meter dari titik jangkar sebelumnya.
-    // Menghilangkan 100% akumulasi jarak palsu (jitter) saat kendaraan diam.
+    // 6. Anchor-Point Distance Filter & Departure Radius (Strava Deadband):
+    // Jarak HANYA diakumulasikan jika benar-benar melaju (kecepatan >= 3.0 km/j),
+    // berpindah melebihi radius noise akurasi GPS, dan telah keluar dari zona parkir / diam awal.
+    // Menghilangkan 100% akumulasi jarak palsu (jitter) saat kendaraan diam atau ponsel diguncang.
     if (_isMonitoring) {
       _startLat ??= fix.lat;
       _startLng ??= fix.lng;
@@ -253,12 +253,21 @@ class MonitorScreenState extends State<MonitorScreen> {
 
       final anchor = _lastDistanceAnchorFix!;
       final dFromAnchor = haversineM(anchor.lat, anchor.lng, fix.lat, fix.lng);
+      final dFromOrigin = haversineM(_startLat!, _startLng!, fix.lat, fix.lng);
+
+      // Batas toleransi GPS error
+      final double accuracy = fix.accuracyM ?? 10.0;
+      final double minAnchorStep = math.max(7.0, accuracy * 0.7);
+
+      // Zona parkir/diam awal: Jika belum pernah menjauh > 20 meter dari titik awal dan kecepatan < 12 km/j
+      final bool inOriginBubble = dFromOrigin < 20.0 && _currentSpeedKmh < 12.0;
 
       final bool isRealMovement =
           hasDecentAccuracy &&
           !isStationary &&
-          _currentSpeedKmh >= 2.5 &&
-          dFromAnchor >= 4.5 &&
+          !inOriginBubble &&
+          _currentSpeedKmh >= 3.0 &&
+          dFromAnchor >= minAnchorStep &&
           dFromAnchor < 350.0;
 
       if (isRealMovement) {
@@ -286,25 +295,28 @@ class MonitorScreenState extends State<MonitorScreen> {
             kLat,
             kLng,
           );
-          if (dBreadcrumb >= 5.0 && dBreadcrumb < 350.0) {
+          if (dBreadcrumb >= 6.0 && dBreadcrumb < 350.0) {
             _routeBreadcrumbs.add({'lat': kLat, 'lng': kLng});
           }
         }
       }
 
       // 7. Validasi Top Speed:
-      // Memerlukan sinyal GPS valid dan Doppler terkonfirmasi ATAU 2 sampel bergerak berturut-turut.
+      // Memerlukan sinyal GPS valid, di luar zona parkir awal, dan Doppler satelit terkonfirmasi
+      // ATAU 3 sampel berkendara berturut-turut pada kecepatan >= 8 km/j.
       if (hasDecentAccuracy &&
+          !inOriginBubble &&
           _currentSpeedKmh > _topSpeedKmh &&
           _currentSpeedKmh <= 200.0) {
-        final bool isHwVerified = (hwSpeedKmh != null && hwSpeedKmh >= 2.5);
-        final bool isSustained = _consecutiveMovingSamples >= 2;
+        final bool isHwVerified = (hwSpeedKmh != null && hwSpeedKmh >= 4.0);
+        final bool isSustained =
+            _consecutiveMovingSamples >= 3 && _currentSpeedKmh >= 8.0;
         if (isHwVerified || isSustained) {
           _topSpeedKmh = _currentSpeedKmh;
         }
       }
 
-      if (_currentSpeedKmh >= 2.0 && hasDecentAccuracy) {
+      if (_currentSpeedKmh >= 3.0 && hasDecentAccuracy && !inOriginBubble) {
         _sessionSpeedSamples.add(_currentSpeedKmh);
       }
     }
@@ -754,23 +766,50 @@ class MonitorScreenState extends State<MonitorScreen> {
     double calculatedAvgSpeed = 0.0;
     double realTopSpeed = _topSpeedKmh;
 
-    if (_totalDistanceMeters < 25.0) {
+    final double netDisplacement = (_startLat != null &&
+            _startLng != null &&
+            _nearby.fix != null)
+        ? haversineM(
+            _startLat!,
+            _startLng!,
+            _nearby.fix!.lat,
+            _nearby.fix!.lng,
+          )
+        : 0.0;
+
+    // Verifikasi perjalanan berkendara nyata (Vehicular Trip Qualifier):
+    // Sesi diam di meja / uji coba di rumah / guncangan HP tidak akan memenuhi syarat ini.
+    final bool isValidVehicleTrip =
+        _totalDistanceMeters >= 120.0 &&
+        netDisplacement >= 75.0 &&
+        realTopSpeed >= 15.0;
+
+    if (!isValidVehicleTrip) {
       // Sesi diam / uji coba di meja: bersihkan seluruh telemetri agar tetap 0.00 km & 0 km/j
       _totalDistanceMeters = 0.0;
       calculatedAvgSpeed = 0.0;
       realTopSpeed = 0.0;
-      if (_routeBreadcrumbs.length > 1) {
-        _routeBreadcrumbs.removeRange(1, _routeBreadcrumbs.length);
+      _routeBreadcrumbs.clear();
+      if (_nearby.fix != null) {
+        _routeBreadcrumbs.add({
+          'lat': _nearby.fix!.lat,
+          'lng': _nearby.fix!.lng,
+        });
+      } else if (_startLat != null && _startLng != null) {
+        _routeBreadcrumbs.add({
+          'lat': _startLat!,
+          'lng': _startLng!,
+        });
       }
     } else {
-      // Sesi perjalanan bergerak nyata (jarak >= 25 meter)
+      // Sesi perjalanan bergerak nyata (jarak >= 120 meter, perpindahan >= 75 meter, kecepatan >= 15 km/j)
       final overallAvgSpeed = finalDuration >= 5
           ? (_totalDistanceMeters / 1000.0) / (finalDuration / 3600.0)
           : 0.0;
 
       if (_sessionSpeedSamples.isNotEmpty) {
         final movingSamples = _sessionSpeedSamples
-            .where((s) => s >= 2.5)
+            .where((s) => s >= 3.0)
             .toList();
         if (movingSamples.isNotEmpty) {
           // Kecepatan rata-rata jelajah aktif (Moving Average Speed)
@@ -815,9 +854,11 @@ class MonitorScreenState extends State<MonitorScreen> {
     score = score.clamp(0, 100);
 
     // 1. Ramer-Douglas-Peucker (RDP) Simplification: Bersihkan titik redundan saat berhenti/lurus
-    // 2. OSRM Map Matching: Tempelkan rute ke garis aspal jalan raya (100% Gratis & Presisi)
+    // 2. OSRM Map Matching: Tempelkan rute ke garis aspal jalan raya (Hanya untuk perjalanan berkendara nyata)
     List<Map<String, double>> processedRoute = List.from(_routeBreadcrumbs);
-    if (_totalDistanceMeters >= 30.0 && processedRoute.length >= 2) {
+    if (isValidVehicleTrip &&
+        _totalDistanceMeters >= 120.0 &&
+        processedRoute.length >= 3) {
       try {
         final rdpCleaned = RoadMatchingService.simplifyRdp(
           processedRoute,
@@ -832,6 +873,18 @@ class MonitorScreenState extends State<MonitorScreen> {
       } catch (_) {}
     }
 
+    final double effectiveStartLat = isValidVehicleTrip
+        ? (_startLat ?? _nearby.fix?.lat ?? 0.0)
+        : (_nearby.fix?.lat ?? _startLat ?? 0.0);
+    final double effectiveStartLng = isValidVehicleTrip
+        ? (_startLng ?? _nearby.fix?.lng ?? 0.0)
+        : (_nearby.fix?.lng ?? _startLng ?? 0.0);
+    final double effectiveEndLat = _nearby.fix?.lat ?? effectiveStartLat;
+    final double effectiveEndLng = _nearby.fix?.lng ?? effectiveStartLng;
+    final double finalDistKm = isValidVehicleTrip
+        ? (_totalDistanceMeters / 1000.0).clamp(0.0, 9999.0)
+        : 0.0;
+
     // 2. Simpan sesi (tersimpan ke lokal seketika & tersinkron ke cloud jika online)
     if (AuthService.isLoggedIn && _currentSessionId != null) {
       try {
@@ -840,7 +893,7 @@ class MonitorScreenState extends State<MonitorScreen> {
           durationSeconds: finalDuration,
           avgSpeedKmh: calculatedAvgSpeed,
           maxSpeedKmh: realTopSpeed,
-          distanceKm: (_totalDistanceMeters / 1000.0).clamp(0.0, 9999.0),
+          distanceKm: finalDistKm,
           drivingScore: score,
           avgBlinkRate: avgBlink,
           totalYawns: finalYawn,
@@ -849,14 +902,14 @@ class MonitorScreenState extends State<MonitorScreen> {
           avgEar: computedAvgEar,
           avgMar: computedAvgMar,
           avgHeadTilt: computedAvgTilt,
-          startLat: _startLat,
-          startLng: _startLng,
-          endLat: _nearby.fix?.lat ?? _startLat,
-          endLng: _nearby.fix?.lng ?? _startLng,
+          startLat: effectiveStartLat,
+          startLng: effectiveStartLng,
+          endLat: effectiveEndLat,
+          endLng: effectiveEndLng,
           routePoints: processedRoute,
         );
       } catch (e) {
-        debugPrint('Gagal simpan sesi online (aman di lokal): ');
+        debugPrint('Gagal simpan sesi online (aman di lokal): $e');
       }
     }
 
@@ -986,6 +1039,7 @@ class MonitorScreenState extends State<MonitorScreen> {
           return;
         }
 
+        if (!mounted) return;
         await Navigator.push(
           context,
           MaterialPageRoute(
@@ -996,13 +1050,13 @@ class MonitorScreenState extends State<MonitorScreen> {
               totalDrowsy: finalDrowsy,
               totalYawns: finalYawn,
               startedAt: sessionStart,
-              distanceKm: (_totalDistanceMeters / 1000.0),
+              distanceKm: finalDistKm,
               avgSpeedKmh: calculatedAvgSpeed,
               maxSpeedKmh: realTopSpeed,
-              lastLat: _nearby.fix?.lat,
-              lastLng: _nearby.fix?.lng,
-              startLat: _startLat,
-              startLng: _startLng,
+              lastLat: effectiveEndLat,
+              lastLng: effectiveEndLng,
+              startLat: effectiveStartLat,
+              startLng: effectiveStartLng,
               routePoints: processedRoute,
             ),
           ),

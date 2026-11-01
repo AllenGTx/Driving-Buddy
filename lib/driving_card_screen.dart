@@ -239,21 +239,25 @@ class _PolaroidMapCardState extends State<_PolaroidMapCard> {
         widget.startLat ??
         (widget.routePoints != null && widget.routePoints!.isNotEmpty
             ? widget.routePoints!.first['lat']!
-            : (fLat - 0.003));
+            : fLat);
     double sLng =
         widget.startLng ??
         (widget.routePoints != null && widget.routePoints!.isNotEmpty
             ? widget.routePoints!.first['lng']!
-            : (fLng - 0.003));
+            : fLng);
 
+    final double sDisplacement = haversineM(sLat, sLng, fLat, fLng);
     final bool isStationary =
-        (widget.distanceKm != null && widget.distanceKm! < 0.03) ||
-        ((widget.routePoints == null || widget.routePoints!.length < 2) &&
-            (widget.distanceKm ?? 0.0) < 0.03);
+        widget.distanceKm == null ||
+        widget.distanceKm! < 0.10 ||
+        (widget.routePoints == null || widget.routePoints!.length < 2) ||
+        sDisplacement < 50.0;
 
-    // Jika start dan finish terlalu dekat / sama, HANYA beri offset visual jika perjalanan berkendara aktif (bukan diam di tempat)
-    if (!isStationary &&
-        (sLat - fLat).abs() < 0.00005 &&
+    // Jika diam di tempat, satukan titik awal dan akhir tanpa offset palsu
+    if (isStationary) {
+      sLat = fLat;
+      sLng = fLng;
+    } else if ((sLat - fLat).abs() < 0.00005 &&
         (sLng - fLng).abs() < 0.00005) {
       sLat = fLat - 0.0020;
       sLng = fLng - 0.0020;
@@ -293,12 +297,14 @@ class _PolaroidMapCardState extends State<_PolaroidMapCard> {
     final autoCenterLng = (minLng + maxLng) / 2.0;
 
     // Zoom adaptif default
-    final autoZoom = _calculateAdaptiveZoom(
-      minLat: minLat,
-      maxLat: maxLat,
-      minLng: minLng,
-      maxLng: maxLng,
-    );
+    final autoZoom = isStationary
+        ? 16
+        : _calculateAdaptiveZoom(
+            minLat: minLat,
+            maxLat: maxLat,
+            minLng: minLng,
+            maxLng: maxLng,
+          );
 
     // Titik tengah & zoom efektif (mempertahankan hasil geser/zoom pengguna)
     final mapCenterLat = _userCenterLat ?? autoCenterLat;
@@ -613,10 +619,20 @@ class _PolaroidMapCardState extends State<_PolaroidMapCard> {
               Row(
                 mainAxisSize: MainAxisSize.min,
                 children: [
-                  const Icon(Icons.gps_fixed_rounded, size: 11, color: _orange),
+                  Icon(
+                    isStationary
+                        ? Icons.my_location_rounded
+                        : Icons.gps_fixed_rounded,
+                    size: 11,
+                    color: _orange,
+                  ),
                   const SizedBox(width: 3.5),
                   Text(
-                    LanguageService.instance.s.travelRoute,
+                    isStationary
+                        ? (LanguageService.instance.isEnglish
+                            ? 'CURRENT LOCATION'
+                            : 'TITIK LOKASI')
+                        : LanguageService.instance.s.travelRoute,
                     style: GoogleFonts.plusJakartaSans(
                       fontSize: 9,
                       fontWeight: FontWeight.w800,
@@ -1080,10 +1096,10 @@ class _DrivingCardScreenState extends State<DrivingCardScreen>
       _resolvedLastLng = _resolvedRoutePoints!.last['lng'];
     }
 
-    // Map Matching (OSRM Snap-to-Roads): Presisi garis aspal jalan raya
+    // Map Matching (OSRM Snap-to-Roads): Presisi garis aspal jalan raya (Hanya perjalanan berkendara nyata)
     if (_resolvedRoutePoints != null &&
-        _resolvedRoutePoints!.length >= 2 &&
-        widget.distanceKm >= 0.03) {
+        _resolvedRoutePoints!.length >= 4 &&
+        widget.distanceKm >= 0.15) {
       RoadMatchingService.snapToRoads(_resolvedRoutePoints!).then((snapped) {
         if (mounted && snapped.length >= 2) {
           setState(() {

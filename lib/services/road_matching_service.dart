@@ -32,7 +32,21 @@ class RoadMatchingService {
   static Future<List<Map<String, double>>> snapToRoads(
     List<Map<String, double>> rawPoints,
   ) async {
-    if (rawPoints.length < 2) return rawPoints;
+    if (rawPoints.length < 3) return rawPoints;
+
+    final startPt = rawPoints.first;
+    final endPt = rawPoints.last;
+    final netDisplacement = haversineM(
+      startPt['lat']!,
+      startPt['lng']!,
+      endPt['lat']!,
+      endPt['lng']!,
+    );
+    // Jika perpindahan netto < 75 meter, ini bukan rute berkendara nyata di jalan raya
+    // (Mencegah OSRM memutar blok perumahan saat ponsel diam / di dalam ruangan)
+    if (netDisplacement < 75.0) {
+      return rawPoints;
+    }
 
     try {
       // 1. Bersihkan & Downsample titik agar tidak melebihi kapasitas URL HTTP GET (~60-75 titik optimal)
@@ -41,7 +55,7 @@ class RoadMatchingService {
         maxPoints: 75,
         minSpacingM: 10.0,
       );
-      if (sampledPoints.length < 2) return rawPoints;
+      if (sampledPoints.length < 3) return rawPoints;
 
       // 2. Format koordinat untuk OSRM: {lng},{lat};{lng},{lat}
       final coordsParam = sampledPoints
@@ -52,9 +66,9 @@ class RoadMatchingService {
           .join(';');
 
       // 3. Coba Endpoint Utama: OSRM Map Matching (/match)
-      // radiuses=45: toleransi simpangan GPS melenceng hingga 45m dari garis jalan
+      // radiuses=30: toleransi simpangan GPS melenceng hingga 30m dari garis jalan
       // gaps=ignore: jika ada celah GPS hilang, tetap sambungkan rute jalan raya
-      final radiusesParam = List.filled(sampledPoints.length, '45').join(';');
+      final radiusesParam = List.filled(sampledPoints.length, '30').join(';');
       final matchUri = Uri.parse(
         '$_osrmMatchUrl$coordsParam?overview=full&geometries=geojson&radiuses=$radiusesParam&gaps=ignore&tidy=true',
       );
@@ -103,7 +117,18 @@ class RoadMatchingService {
         if (data['code'] == 'Ok' &&
             data['routes'] is List &&
             (data['routes'] as List).isNotEmpty) {
-          final geom = data['routes'][0]['geometry'];
+          final routeData = data['routes'][0];
+          final double routeDistanceM =
+              (routeData['distance'] as num?)?.toDouble() ?? 0.0;
+          // Guard: Jangan pakai route jika rutenya memutar blok perumahan jauh melebihi jarak lurus
+          if (routeDistanceM > netDisplacement * 3.0 && netDisplacement < 300.0) {
+            debugPrint(
+              '[RoadMatching] Mengabaikan /route fallback karena memutar blok permukiman ($routeDistanceM m vs $netDisplacement m)',
+            );
+            return rawPoints;
+          }
+
+          final geom = routeData['geometry'];
           if (geom != null && geom['coordinates'] is List) {
             final List<Map<String, double>> result = [];
             for (final coord in geom['coordinates']) {
