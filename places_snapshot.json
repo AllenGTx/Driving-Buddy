@@ -25007,6 +25007,297 @@
         "name": "Rest Area KM 38A Tol Jagorawi (Sentul City)",
         "ref": "KM 38A"
       }
+    },
+    {
+      "type": "node",
+      "id": 9500001,
+      "lat": -6.965412,
+      "lon": 110.392518,
+      "tags": {
+        "name": "Indomaret Puri Anjasmoro Raya",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "Jl. Puri Anjasmoro Raya Blok B",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9500002,
+      "lat": -6.967845,
+      "lon": 110.393214,
+      "tags": {
+        "name": "Indomaret Point Puri Anjasmoro",
+        "brand": "Indomaret Point",
+        "shop": "convenience",
+        "addr:street": "Jl. Puri Anjasmoro Raya No. 38",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9500003,
+      "lat": -6.966532,
+      "lon": 110.392845,
+      "tags": {
+        "name": "Alfamart Puri Anjasmoro Raya",
+        "brand": "Alfamart",
+        "shop": "convenience",
+        "addr:street": "Jl. Puri Anjasmoro Raya Blok EE",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9500004,
+      "lat": -6.974821,
+      "lon": 110.395812,
+      "tags": {
+        "name": "Alfamidi Super Anjasmoro",
+        "brand": "Alfamidi",
+        "shop": "convenience",
+        "addr:street": "Jl. Anjasmoro Raya No. 34",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9500005,
+      "lat": -6.973541,
+      "lon": 110.395218,
+      "tags": {
+        "name": "Indomaret Anjasmoro Raya",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "Jl. Anjasmoro Raya No. 12",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9500006,
+      "lat": -6.968214,
+      "lon": 110.398512,
+      "tags": {
+        "name": "Alfamart Madukoro",
+        "brand": "Alfamart",
+        "shop": "convenience",
+        "addr:street": "Jl. Madukoro Raya Blok A",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9500007,
+      "lat": -6.964125,
+      "lon": 110.391845,
+      "tags": {
+        "name": "Indomaret Fresh Puri Anjasmoro",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "Jl. Puri Anjasmoro Blok G1",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9500008,
+      "lat": -6.958214,
+      "lon": 110.401215,
+      "tags": {
+        "name": "Indomaret Arteri Yos Sudarso",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "Jl. Arteri Yos Sudarso No. 11",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9500009,
+      "lat": -6.958941,
+      "lon": 110.396512,
+      "tags": {
+        "name": "Alfamart Arteri Yos Sudarso",
+        "brand": "Alfamart",
+        "shop": "convenience",
+        "addr:street": "Jl. Arteri Yos Sudarso",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9500010,
+      "lat": -6.960814,
+      "lon": 110.393825,
+      "tags": {
+        "name": "SPBU Pertamina 44.501.35 Tawangsari / Puri Anjasmoro",
+        "brand": "Pertamina",
+        "amenity": "fuel",
+        "addr:street": "Jl. Arteri Yos Sudarso / Puri Anjasmoro",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9500011,
+      "lat": -6.983215,
+      "lon": 110.385214,
+      "tags": {
+        "name": "SPBU Pertamina 44.501.27 Kalibanteng Kulon",
+        "brand": "Pertamina",
+        "amenity": "fuel",
+        "addr:street": "Jl. Jend. Sudirman / Kalibanteng",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9500012,
+      "lat": -6.985512,
+      "lon": 110.378512,
+      "tags": {
+        "name": "SPBU Pertamina 44.501.16 Siliwangi / Krapyak",
+        "brand": "Pertamina",
+        "amenity": "fuel",
+        "addr:street": "Jl. Siliwangi No. 496",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9500013,
+      "lat": -6.987512,
+      "lon": 110.392845,
+      "tags": {
+        "name": "SPBU Pertamina 44.501.02 Pamularsih",
+        "brand": "Pertamina",
+        "amenity": "fuel",
+        "addr:street": "Jl. Pamularsih Raya No. 8",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9500014,
+      "lat": -6.963245,
+      "lon": 110.390512,
+      "tags": {
+        "name": "Hotel Puri Garden Semarang",
+        "tourism": "hotel",
+        "addr:street": "Jl. Puri Anjasmoro Blok D4 No. 4",
+        "addr:city": "Semarang"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9500016,
+      "lat": -6.982514,
+      "lon": 110.391215,
+      "tags": {
+        "name": "Favehotel Siliwangi Semarang",
+        "brand": "Favehotel",
+        "tourism": "hotel",
+        "addr:street": "Jl. Jendral Sudirman No. 363",
+        "addr:city": "Semarang"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9500017,
+      "lat": -6.961512,
+      "lon": 110.394512,
+      "tags": {
+        "name": "RedDoorz near PRPP Semarang",
+        "tourism": "guest_house",
+        "addr:street": "Jl. Puri Anjasmoro Blok E1",
+        "addr:city": "Semarang"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9500018,
+      "lat": -6.978512,
+      "lon": 110.418215,
+      "tags": {
+        "name": "PO Hotel Semarang (Mall Paragon)",
+        "tourism": "hotel",
+        "addr:street": "Jl. Pemuda No. 118",
+        "addr:city": "Semarang"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9500019,
+      "lat": -6.981215,
+      "lon": 110.412514,
+      "tags": {
+        "name": "Rooms Inc Hotel Semarang",
+        "tourism": "hotel",
+        "addr:street": "Jl. Pemuda No. 150",
+        "addr:city": "Semarang"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9500020,
+      "lat": -6.864512,
+      "lon": 109.124512,
+      "tags": {
+        "name": "Hotel Bahari Inn Tegal (Pantura)",
+        "tourism": "hotel",
+        "addr:street": "Jl. Kolonel Sugiono No. 172",
+        "addr:city": "Tegal"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9500021,
+      "lat": -6.884512,
+      "lon": 109.675124,
+      "tags": {
+        "name": "Hotel Santika Pekalongan",
+        "tourism": "hotel",
+        "addr:street": "Jl. Gajah Mada No. 7A",
+        "addr:city": "Pekalongan"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9500022,
+      "lat": -7.561214,
+      "lon": 110.825124,
+      "tags": {
+        "name": "The Sunan Hotel Solo",
+        "tourism": "hotel",
+        "addr:street": "Jl. A. Yani No. 40",
+        "addr:city": "Surakarta"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9500023,
+      "lat": -7.568412,
+      "lon": 110.854125,
+      "tags": {
+        "name": "Alila Solo (Slamet Riyadi)",
+        "tourism": "hotel",
+        "addr:street": "Jl. Slamet Riyadi No. 562",
+        "addr:city": "Surakarta"
+      }
     }
   ]
 }

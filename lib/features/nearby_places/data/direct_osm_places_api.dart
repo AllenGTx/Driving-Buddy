@@ -200,14 +200,18 @@ class DirectOsmPlacesApi implements PlacesApi {
         case PlaceCategory.restArea:
           lines.add('node["highway"~"^(rest_area|services)\$"]$around;');
           lines.add('way["highway"~"^(rest_area|services)\$"]$around;');
+          lines.add('node["amenity"="rest_area"]$around;');
+          lines.add('way["amenity"="rest_area"]$around;');
           break;
         case PlaceCategory.minimarket:
           lines.add('node["shop"="convenience"]$around;');
           lines.add('way["shop"="convenience"]$around;');
+          lines.add('node["brand"~"^(Indomaret|Alfamart|Alfamidi|Circle K|FamilyMart)\$"]$around;');
+          lines.add('way["brand"~"^(Indomaret|Alfamart|Alfamidi|Circle K|FamilyMart)\$"]$around;');
           break;
         case PlaceCategory.lodging:
-          lines.add('node["tourism"~"^(hotel|motel|guest_house|hostel)\$"]$around;');
-          lines.add('way["tourism"~"^(hotel|motel|guest_house|hostel)\$"]$around;');
+          lines.add('node["tourism"~"^(hotel|motel|guest_house|hostel|chalet|apartment)\$"]$around;');
+          lines.add('way["tourism"~"^(hotel|motel|guest_house|hostel|chalet|apartment)\$"]$around;');
           break;
         case PlaceCategory.spbu:
           lines.add('node["amenity"="fuel"]$around;');
@@ -338,27 +342,59 @@ class DirectOsmPlacesApi implements PlacesApi {
 
   PlaceCategory? _detectCategory(Map<String, dynamic> tags) {
     final highway = tags['highway']?.toString().toLowerCase();
-    if (highway == 'rest_area' || highway == 'services') {
+    final amenity = tags['amenity']?.toString().toLowerCase();
+    final shop = tags['shop']?.toString().toLowerCase();
+    final tourism = tags['tourism']?.toString().toLowerCase();
+    final name = (tags['name'] ?? tags['brand'] ?? tags['operator'] ?? '').toString().toLowerCase();
+
+    // 1. Rest Area
+    if (highway == 'rest_area' ||
+        highway == 'services' ||
+        amenity == 'rest_area' ||
+        name.contains('rest area')) {
       return PlaceCategory.restArea;
     }
-    final shop = tags['shop']?.toString().toLowerCase();
-    if (shop == 'convenience') {
+
+    // 2. SPBU
+    if (amenity == 'fuel' ||
+        name.startsWith('spbu') ||
+        name.contains('pertamina') ||
+        name.contains('pom bensin') ||
+        name.contains('shell') ||
+        name.contains('bp akr')) {
+      return PlaceCategory.spbu;
+    }
+
+    // 3. Minimarket
+    if (shop == 'convenience' ||
+        name.contains('indomaret') ||
+        name.contains('alfamart') ||
+        name.contains('alfamidi') ||
+        name.contains('circle k') ||
+        name.contains('familymart') ||
+        name.contains('lawson')) {
       return PlaceCategory.minimarket;
     }
-    final tourism = tags['tourism']?.toString().toLowerCase();
+
+    // 4. Hotel / Lodging
     if (tourism == 'hotel' ||
         tourism == 'motel' ||
         tourism == 'guest_house' ||
-        tourism == 'hostel') {
+        tourism == 'hostel' ||
+        tourism == 'chalet' ||
+        tourism == 'apartment' ||
+        name.contains('hotel') ||
+        name.contains('guesthouse') ||
+        name.contains('guest house') ||
+        name.contains('homestay') ||
+        name.contains('motel') ||
+        name.contains('inn') ||
+        name.contains('resort')) {
       return PlaceCategory.lodging;
     }
-    final amenity = tags['amenity']?.toString().toLowerCase();
-    if (amenity == 'fuel') {
-      return PlaceCategory.spbu;
-    }
+
     return null;
   }
-
   bool _isInvalidRestArea(Map<String, dynamic> tags) {
     final shop = tags['shop']?.toString().toLowerCase();
     if (shop == 'car_repair' ||
