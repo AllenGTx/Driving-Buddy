@@ -20055,6 +20055,40 @@
         "toilets": "yes",
         "verified": "google_maps_verified"
       }
+    },
+    {
+      "type": "node",
+      "id": 9400085,
+      "lat": -6.9850552,
+      "lon": 110.3818418,
+      "tags": {
+        "name": "Indomaret Siliwangi 379",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "Jl. Siliwangi No. 379",
+        "addr:district": "Semarang Barat",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400086,
+      "lat": -6.9868003,
+      "lon": 110.3626916,
+      "tags": {
+        "name": "Alfamart Siliwangi Krapyak",
+        "brand": "Alfamart",
+        "shop": "convenience",
+        "addr:street": "Jl. Siliwangi, Krapyak",
+        "addr:district": "Semarang Barat",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
     }
   ]
 }
