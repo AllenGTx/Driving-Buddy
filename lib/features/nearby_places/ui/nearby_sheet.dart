@@ -1,7 +1,6 @@
 import 'dart:async';
 
 import 'package:flutter/material.dart';
-import 'package:url_launcher/url_launcher.dart';
 
 import '../../../services/theme_service.dart';
 import '../../../core/app_colors.dart';
@@ -125,19 +124,150 @@ class _NearbyPlacesSheetState extends State<NearbyPlacesSheet>
 
 
   Future<void> _navigate(NearbyPlace place) async {
-    final opened = await _controller.navigateTo(place);
-    if (!mounted) return;
-    setState(() => _notice = opened ? null : _noMapsMessage);
+    _showMapChooser(place: place, isNavigation: true);
   }
 
   Future<void> _openPlacePage(NearbyPlace place) async {
-    final opened = await PlaceLauncher.openPlacePage(place);
-    if (!mounted) return;
-    setState(() => _notice = opened ? null : _noMapsMessage);
+    _showMapChooser(place: place, isNavigation: false);
   }
 
-  static const String _noMapsMessage =
-      'Tidak bisa membuka Google Maps. Pasang aplikasi peta atau browser.';
+  void _showMapChooser({
+    required NearbyPlace place,
+    required bool isNavigation,
+  }) {
+    final isDark = ThemeService.instance.isDarkMode;
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) {
+        return Container(
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.darkCardBg : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.35),
+                blurRadius: 24,
+                offset: const Offset(0, -6),
+              ),
+            ],
+          ),
+          padding: EdgeInsets.fromLTRB(
+            20,
+            12,
+            20,
+            24 + MediaQuery.of(ctx).viewInsets.bottom,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 44,
+                  height: 4.5,
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.white24 : Colors.black12,
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: PlacesStyle.copper.withValues(alpha: 0.16),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Icon(
+                      isNavigation
+                          ? Icons.navigation_rounded
+                          : Icons.location_on_rounded,
+                      color: PlacesStyle.copper,
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          place.name,
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: isDark
+                                ? AppColors.darkTextPrimary
+                                : const Color(0xFF0F172A),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          isNavigation
+                              ? 'Pilih aplikasi peta / peramban navigasi'
+                              : 'Pilih metode untuk melihat titik lokasi',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: isDark
+                                ? AppColors.darkTextSecondary
+                                : const Color(0xFF64748B),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              _buildChooserOptionTile(
+                context: ctx,
+                icon: Icons.language_rounded,
+                iconColor: const Color(0xFF2563EB),
+                title: 'Google Maps Web (Chrome / Browser)',
+                subtitle:
+                    'Situs resmi Google Maps via peramban. Sangat direkomendasikan untuk HP Huawei / tanpa Google Play.',
+                badgeText: 'REKOMENDASI HUAWEI',
+                badgeColor: const Color(0xFF10B981),
+                isDark: isDark,
+                onTap: () {
+                  Navigator.pop(ctx);
+                  PlaceLauncher.openInBrowser(
+                    place,
+                    isNavigation: isNavigation,
+                  );
+                },
+              ),
+              const SizedBox(height: 10),
+              _buildChooserOptionTile(
+                context: ctx,
+                icon: Icons.map_rounded,
+                iconColor: PlacesStyle.copper,
+                title: 'Aplikasi Maps Bawaan HP',
+                subtitle:
+                    'Membuka aplikasi peta terpasang (Google Maps App atau Petal Maps bawaan HP).',
+                isDark: isDark,
+                onTap: () {
+                  Navigator.pop(ctx);
+                  PlaceLauncher.openInNativeApp(
+                    place,
+                    isNavigation: isNavigation,
+                  );
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
 
   // ---------------------------------------------------------------- tampilan
 
@@ -348,7 +478,8 @@ class _NearbyPlacesSheetState extends State<NearbyPlacesSheet>
     );
   }
 
-  Future<void> _openGoogleMapsLiveSearch() async {
+  void _openGoogleMapsLiveSearch() {
+    final isDark = ThemeService.instance.isDarkMode;
     final fix = _controller.fix;
     final catQuery = switch (_selected) {
       PlaceCategory.spbu => 'SPBU Pertamina terdekat',
@@ -357,37 +488,244 @@ class _NearbyPlacesSheetState extends State<NearbyPlacesSheet>
       PlaceCategory.restArea => 'Rest area terdekat',
       _ => 'Tempat istirahat terdekat',
     };
-
     final lat = fix?.lat;
     final lng = fix?.lng;
 
-    // 1. Coba native intent Google Maps Android
-    if (lat != null && lng != null) {
-      final nativeUri = Uri.parse('geo:$lat,$lng?q=${Uri.encodeComponent(catQuery)}');
-      try {
-        if (await canLaunchUrl(nativeUri)) {
-          await launchUrl(nativeUri, mode: LaunchMode.externalApplication);
-          return;
-        }
-      } catch (_) {}
-    } else {
-      final nativeUri = Uri.parse('geo:0,0?q=${Uri.encodeComponent(catQuery)}');
-      try {
-        if (await canLaunchUrl(nativeUri)) {
-          await launchUrl(nativeUri, mode: LaunchMode.externalApplication);
-          return;
-        }
-      } catch (_) {}
-    }
+    showModalBottomSheet<void>(
+      context: context,
+      backgroundColor: Colors.transparent,
+      isScrollControlled: true,
+      builder: (ctx) {
+        return Container(
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.darkCardBg : Colors.white,
+            borderRadius: const BorderRadius.vertical(top: Radius.circular(24)),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withValues(alpha: 0.35),
+                blurRadius: 24,
+                offset: const Offset(0, -6),
+              ),
+            ],
+          ),
+          padding: EdgeInsets.fromLTRB(
+            20,
+            12,
+            20,
+            24 + MediaQuery.of(ctx).viewInsets.bottom,
+          ),
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Center(
+                child: Container(
+                  width: 44,
+                  height: 4.5,
+                  decoration: BoxDecoration(
+                    color: isDark ? Colors.white24 : Colors.black12,
+                    borderRadius: BorderRadius.circular(3),
+                  ),
+                ),
+              ),
+              const SizedBox(height: 18),
+              Row(
+                children: [
+                  Container(
+                    width: 44,
+                    height: 44,
+                    decoration: BoxDecoration(
+                      color: const Color(0xFF2563EB).withValues(alpha: 0.16),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: const Icon(
+                      Icons.travel_explore_rounded,
+                      color: Color(0xFF2563EB),
+                      size: 24,
+                    ),
+                  ),
+                  const SizedBox(width: 14),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Cari Live di Google Maps',
+                          style: TextStyle(
+                            fontSize: 16,
+                            fontWeight: FontWeight.w800,
+                            color: isDark
+                                ? AppColors.darkTextPrimary
+                                : const Color(0xFF0F172A),
+                          ),
+                        ),
+                        const SizedBox(height: 3),
+                        Text(
+                          'Mencari "$catQuery" di sekitar Anda',
+                          style: TextStyle(
+                            fontSize: 12,
+                            color: isDark
+                                ? AppColors.darkTextSecondary
+                                : const Color(0xFF64748B),
+                          ),
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              const SizedBox(height: 18),
+              _buildChooserOptionTile(
+                context: ctx,
+                icon: Icons.language_rounded,
+                iconColor: const Color(0xFF2563EB),
+                title: 'Google Maps Web (Chrome / Browser)',
+                subtitle:
+                    'Membuka pencarian Google Maps resmi via browser. Paling akurat untuk HP Huawei / tanpa Google Play.',
+                badgeText: 'REKOMENDASI HUAWEI',
+                badgeColor: const Color(0xFF10B981),
+                isDark: isDark,
+                onTap: () {
+                  Navigator.pop(ctx);
+                  PlaceLauncher.openLiveSearchInBrowser(catQuery, lat, lng);
+                },
+              ),
+              const SizedBox(height: 10),
+              _buildChooserOptionTile(
+                context: ctx,
+                icon: Icons.map_rounded,
+                iconColor: PlacesStyle.copper,
+                title: 'Aplikasi Maps Bawaan HP',
+                subtitle:
+                    'Membuka kata kunci pencarian di aplikasi peta bawaan perangkat (Google Maps / Petal Maps).',
+                isDark: isDark,
+                onTap: () {
+                  Navigator.pop(ctx);
+                  PlaceLauncher.openLiveSearchInApp(catQuery, lat, lng);
+                },
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
 
-    // 2. Fallback Google Maps search web
-    final webQuery = (lat != null && lng != null)
-        ? '$catQuery, ${lat.toStringAsFixed(6)},${lng.toStringAsFixed(6)}'
-        : '$catQuery, Semarang';
-    final webUri = Uri.https('www.google.com', '/maps/search/', {'api': '1', 'query': webQuery});
-    try {
-      await launchUrl(webUri, mode: LaunchMode.externalApplication);
-    } catch (_) {}
+  Widget _buildChooserOptionTile({
+    required BuildContext context,
+    required IconData icon,
+    required Color iconColor,
+    required String title,
+    required String subtitle,
+    String? badgeText,
+    Color? badgeColor,
+    required bool isDark,
+    required VoidCallback onTap,
+  }) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(14),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+          decoration: BoxDecoration(
+            color: isDark ? AppColors.darkCardBgSoft : const Color(0xFFF8FAFC),
+            borderRadius: BorderRadius.circular(14),
+            border: Border.all(
+              color: isDark ? AppColors.darkCardBorder : const Color(0xFFE2E8F0),
+            ),
+          ),
+          child: Row(
+            children: [
+              Container(
+                width: 42,
+                height: 42,
+                decoration: BoxDecoration(
+                  color: iconColor.withValues(alpha: 0.12),
+                  shape: BoxShape.circle,
+                ),
+                child: Icon(icon, color: iconColor, size: 22),
+              ),
+              const SizedBox(width: 12),
+              Expanded(
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      children: [
+                        Flexible(
+                          child: Text(
+                            title,
+                            style: TextStyle(
+                              fontSize: 13,
+                              fontWeight: FontWeight.w700,
+                              color: isDark
+                                  ? AppColors.darkTextPrimary
+                                  : const Color(0xFF0F172A),
+                            ),
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                          ),
+                        ),
+                        if (badgeText != null) ...[
+                          const SizedBox(width: 6),
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 5,
+                              vertical: 1.5,
+                            ),
+                            decoration: BoxDecoration(
+                              color: (badgeColor ?? const Color(0xFF10B981))
+                                  .withValues(alpha: 0.15),
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(
+                                color: (badgeColor ?? const Color(0xFF10B981))
+                                    .withValues(alpha: 0.4),
+                              ),
+                            ),
+                            child: Text(
+                              badgeText,
+                              style: TextStyle(
+                                fontSize: 8.5,
+                                fontWeight: FontWeight.w900,
+                                color: badgeColor ?? const Color(0xFF10B981),
+                                letterSpacing: 0.2,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                    const SizedBox(height: 3),
+                    Text(
+                      subtitle,
+                      style: TextStyle(
+                        fontSize: 11,
+                        color: isDark
+                            ? AppColors.darkTextSecondary
+                            : const Color(0xFF64748B),
+                        height: 1.25,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(width: 8),
+              Icon(
+                Icons.chevron_right_rounded,
+                color: isDark
+                    ? AppColors.darkTextSecondary
+                    : const Color(0xFF94A3B8),
+                size: 20,
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 
   Widget _buildBody(BuildContext context) {
