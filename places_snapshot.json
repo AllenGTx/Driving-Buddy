@@ -17426,6 +17426,1392 @@
         "verified": "osm_verified",
         "tourism": "hotel"
       }
+    },
+    {
+      "type": "node",
+      "id": 9100002,
+      "lat": -7.0162,
+      "lon": 110.4215,
+      "tags": {
+        "name": "SPBU Pertamina 41.502.02 Sisingamangaraja",
+        "addr:street": "Jl. Sisingamangaraja No. 24",
+        "addr:city": "Semarang",
+        "addr:district": "Candisari",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Pertamina",
+        "toilets": "yes",
+        "amenity": "fuel",
+        "operator": "PT Pertamina"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100003,
+      "lat": -6.9968,
+      "lon": 110.4012,
+      "tags": {
+        "name": "SPBU Pertamina 41.502.14 Kaligarang",
+        "addr:street": "Jl. Kaligarang No. 16",
+        "addr:city": "Semarang",
+        "addr:district": "Gajahmungkur",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Pertamina",
+        "toilets": "yes",
+        "amenity": "fuel",
+        "operator": "PT Pertamina"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100004,
+      "lat": -7.0655,
+      "lon": 110.4132,
+      "tags": {
+        "name": "SPBU Pertamina 41.502.20 Srondol",
+        "addr:street": "Jl. Setia Budi No. 205",
+        "addr:city": "Semarang",
+        "addr:district": "Banyumanik",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Pertamina",
+        "toilets": "yes",
+        "amenity": "fuel",
+        "operator": "PT Pertamina"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100005,
+      "lat": -7.0225,
+      "lon": 110.4852,
+      "tags": {
+        "name": "SPBU Pertamina 41.501.28 Majapahit",
+        "addr:street": "Jl. Brigjen Sudiarto / Majapahit",
+        "addr:city": "Semarang",
+        "addr:district": "Pedurungan",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Pertamina",
+        "toilets": "yes",
+        "amenity": "fuel",
+        "operator": "PT Pertamina"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100006,
+      "lat": -7.0095,
+      "lon": 110.4421,
+      "tags": {
+        "name": "SPBU Pertamina 43.502.01 Lamper Tengah",
+        "addr:street": "Jl. Lamper Tengah No. 671E",
+        "addr:city": "Semarang",
+        "addr:district": "Semarang Selatan",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Pertamina",
+        "toilets": "yes",
+        "amenity": "fuel",
+        "operator": "PT Pertamina"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100007,
+      "lat": -6.9798,
+      "lon": 110.4072,
+      "tags": {
+        "name": "SPBU Pertamina 44.501.24 Indraprasta",
+        "addr:street": "Jl. Indraprasta No. 20-22",
+        "addr:city": "Semarang",
+        "addr:district": "Semarang Tengah",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Pertamina",
+        "toilets": "yes",
+        "amenity": "fuel",
+        "operator": "PT Pertamina"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100008,
+      "lat": -6.9792,
+      "lon": 110.4182,
+      "tags": {
+        "name": "SPBU Pertamina 44.501.41 Pemuda",
+        "addr:street": "Jl. Pemuda No. 59-63",
+        "addr:city": "Semarang",
+        "addr:district": "Semarang Tengah",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Pertamina",
+        "toilets": "yes",
+        "amenity": "fuel",
+        "operator": "PT Pertamina"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100009,
+      "lat": -6.9882,
+      "lon": 110.4185,
+      "tags": {
+        "name": "SPBU Pertamina 44.502.05 Pandanaran",
+        "addr:street": "Jl. Pandanaran No. 105B",
+        "addr:city": "Semarang",
+        "addr:district": "Semarang Selatan",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Pertamina",
+        "toilets": "yes",
+        "amenity": "fuel",
+        "operator": "PT Pertamina"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100010,
+      "lat": -6.9972,
+      "lon": 110.4255,
+      "tags": {
+        "name": "SPBU Pertamina 44.502.07 Sriwijaya",
+        "addr:street": "Jl. Sriwijaya No. 4",
+        "addr:city": "Semarang",
+        "addr:district": "Candisari",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Pertamina",
+        "toilets": "yes",
+        "amenity": "fuel",
+        "operator": "PT Pertamina"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100011,
+      "lat": -6.9825,
+      "lon": 110.4372,
+      "tags": {
+        "name": "SPBU Pertamina 44.501.21 Dr. Cipto",
+        "addr:street": "Jl. Dr. Cipto No. 152",
+        "addr:city": "Semarang",
+        "addr:district": "Semarang Timur",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Pertamina",
+        "toilets": "yes",
+        "amenity": "fuel",
+        "operator": "PT Pertamina"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100012,
+      "lat": -6.9745,
+      "lon": 110.4355,
+      "tags": {
+        "name": "SPBU Pertamina 44.501.37 Sarirejo",
+        "addr:street": "Jl. Dr. Cipto No. 29",
+        "addr:city": "Semarang",
+        "addr:district": "Semarang Timur",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Pertamina",
+        "toilets": "yes",
+        "amenity": "fuel",
+        "operator": "PT Pertamina"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100013,
+      "lat": -6.9845,
+      "lon": 110.3725,
+      "tags": {
+        "name": "SPBU Pertamina 44.501.23 Siliwangi",
+        "addr:street": "Jl. Siliwangi No. 576, Krapyak",
+        "addr:city": "Semarang",
+        "addr:district": "Semarang Barat",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Pertamina",
+        "toilets": "yes",
+        "amenity": "fuel",
+        "operator": "PT Pertamina"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100015,
+      "lat": -6.9925,
+      "lon": 110.3922,
+      "tags": {
+        "name": "SPBU Pertamina 44.501.19 Pamularsih",
+        "addr:street": "Jl. Pamularsih",
+        "addr:city": "Semarang",
+        "addr:district": "Semarang Barat",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Pertamina",
+        "toilets": "yes",
+        "amenity": "fuel",
+        "operator": "PT Pertamina"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100016,
+      "lat": -6.9985,
+      "lon": 110.3855,
+      "tags": {
+        "name": "SPBU Pertamina 44.501.20 Kalibanteng",
+        "addr:street": "Jl. Abdul Rahman Saleh",
+        "addr:city": "Semarang",
+        "addr:district": "Semarang Barat",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Pertamina",
+        "toilets": "yes",
+        "amenity": "fuel",
+        "operator": "PT Pertamina"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100017,
+      "lat": -7.0012,
+      "lon": 110.3552,
+      "tags": {
+        "name": "SPBU Pertamina 44.501.13 Ngaliyan",
+        "addr:street": "Jl. Prof. Dr. Hamka No. 60",
+        "addr:city": "Semarang",
+        "addr:district": "Ngaliyan",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Pertamina",
+        "toilets": "yes",
+        "amenity": "fuel",
+        "operator": "PT Pertamina"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100018,
+      "lat": -7.0125,
+      "lon": 110.3685,
+      "tags": {
+        "name": "SPBU Pertamina 44.501.33 Kalipancur",
+        "addr:street": "Jl. Untung Suropati Kav. 173",
+        "addr:city": "Semarang",
+        "addr:district": "Ngaliyan",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Pertamina",
+        "toilets": "yes",
+        "amenity": "fuel",
+        "operator": "PT Pertamina"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100019,
+      "lat": -7.0892,
+      "lon": 110.4095,
+      "tags": {
+        "name": "SPBU Pertamina 44.502.03 Pudakpayung",
+        "addr:street": "Jl. Perintis Kemerdekaan",
+        "addr:city": "Semarang",
+        "addr:district": "Banyumanik",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Pertamina",
+        "toilets": "yes",
+        "amenity": "fuel",
+        "operator": "PT Pertamina"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100020,
+      "lat": -7.0425,
+      "lon": 110.3325,
+      "tags": {
+        "name": "SPBU Pertamina 44.502.09 Mijen",
+        "addr:street": "Jl. Raya Semarang-Boja",
+        "addr:city": "Semarang",
+        "addr:district": "Mijen",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Pertamina",
+        "toilets": "yes",
+        "amenity": "fuel",
+        "operator": "PT Pertamina"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100022,
+      "lat": -6.9822,
+      "lon": 110.4112,
+      "tags": {
+        "name": "Hotel Citradream Semarang",
+        "addr:street": "Jl. Imam Bonjol No. 187",
+        "addr:city": "Semarang",
+        "addr:district": "Semarang Tengah",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Citradream",
+        "tourism": "hotel",
+        "hotel": "yes"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100023,
+      "lat": -6.9875,
+      "lon": 110.4192,
+      "tags": {
+        "name": "Hotel Pandanaran Simpang Lima",
+        "addr:street": "Jl. Pandanaran No. 58",
+        "addr:city": "Semarang",
+        "addr:district": "Semarang Tengah",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Pandanaran",
+        "tourism": "hotel",
+        "hotel": "yes"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100024,
+      "lat": -6.9902,
+      "lon": 110.4242,
+      "tags": {
+        "name": "Horison Inn Alaska Simpang Lima",
+        "addr:street": "Jl. K.H. Ahmad Dahlan No. 2",
+        "addr:city": "Semarang",
+        "addr:district": "Semarang Selatan",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Horison",
+        "tourism": "hotel",
+        "hotel": "yes"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100027,
+      "lat": -6.982,
+      "lon": 110.413,
+      "tags": {
+        "name": "Awann Sewu Boutique Hotel",
+        "addr:street": "Jl. Simpang No. 11, Sekayu",
+        "addr:city": "Semarang",
+        "addr:district": "Semarang Tengah",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Awann Sewu",
+        "tourism": "hotel",
+        "hotel": "yes"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100028,
+      "lat": -7.0055,
+      "lon": 110.4215,
+      "tags": {
+        "name": "Wimarion Hotel Semarang",
+        "addr:street": "Jl. Wilis No. 105, Tegalsari",
+        "addr:city": "Semarang",
+        "addr:district": "Candisari",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Wimarion",
+        "tourism": "hotel",
+        "hotel": "yes"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100029,
+      "lat": -6.9812,
+      "lon": 110.4225,
+      "tags": {
+        "name": "Artotel Gajahmada Semarang",
+        "addr:street": "Jl. Gajah Mada No. 101",
+        "addr:city": "Semarang",
+        "addr:district": "Semarang Tengah",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Artotel",
+        "tourism": "hotel",
+        "hotel": "yes"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100030,
+      "lat": -6.9625,
+      "lon": 110.3955,
+      "tags": {
+        "name": "Hotel Marina Airport Semarang",
+        "addr:street": "Jl. Madukoro Raya No. 4-A",
+        "addr:city": "Semarang",
+        "addr:district": "Semarang Barat",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Hotel Marina",
+        "tourism": "hotel",
+        "hotel": "yes"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100031,
+      "lat": -6.9835,
+      "lon": 110.4218,
+      "tags": {
+        "name": "Sumi Hotel Semarang",
+        "addr:street": "Jl. Gajah Mada No. 75",
+        "addr:city": "Semarang",
+        "addr:district": "Semarang Tengah",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Sumi Hotel",
+        "tourism": "hotel",
+        "hotel": "yes"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100032,
+      "lat": -6.9755,
+      "lon": 110.4145,
+      "tags": {
+        "name": "Hotel Olympic Semarang",
+        "addr:street": "Jl. Imam Bonjol No. 120",
+        "addr:city": "Semarang",
+        "addr:district": "Semarang Tengah",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Olympic Hotel",
+        "tourism": "hotel",
+        "hotel": "yes"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100033,
+      "lat": -6.9795,
+      "lon": 110.4235,
+      "tags": {
+        "name": "Indomaret Fresh Gajah Mada",
+        "addr:street": "Jl. Gajah Mada No. 180",
+        "addr:city": "Semarang",
+        "addr:district": "Semarang Tengah",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Indomaret",
+        "toilets": "yes",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100034,
+      "lat": -6.978,
+      "lon": 110.419,
+      "tags": {
+        "name": "Indomaret Fresh Pemuda",
+        "addr:street": "Jl. Pemuda, Sekayu",
+        "addr:city": "Semarang",
+        "addr:district": "Semarang Tengah",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Indomaret",
+        "toilets": "yes",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100035,
+      "lat": -7.0145,
+      "lon": 110.421,
+      "tags": {
+        "name": "Indomaret Fresh Sultan Agung",
+        "addr:street": "Jl. Sultan Agung No. 92",
+        "addr:city": "Semarang",
+        "addr:district": "Candisari",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Indomaret",
+        "toilets": "yes",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100036,
+      "lat": -7.0515,
+      "lon": 110.4385,
+      "tags": {
+        "name": "Indomaret Fresh Undip Tembalang",
+        "addr:street": "Jl. Prof. Sudarto No. 7",
+        "addr:city": "Semarang",
+        "addr:district": "Tembalang",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Indomaret",
+        "toilets": "yes",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100037,
+      "lat": -6.9985,
+      "lon": 110.4525,
+      "tags": {
+        "name": "Alfamart RS Bhayangkara Majapahit",
+        "addr:street": "Jl. Majapahit No. 140",
+        "addr:city": "Semarang",
+        "addr:district": "Gayamsari",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Alfamart",
+        "toilets": "yes",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100039,
+      "lat": -6.9885,
+      "lon": 110.3885,
+      "tags": {
+        "name": "Alfamart WR Supratman Kalibanteng",
+        "addr:street": "Jl. W.R. Supratman No. 24",
+        "addr:city": "Semarang",
+        "addr:district": "Semarang Barat",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Alfamart",
+        "toilets": "yes",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100040,
+      "lat": -7.0035,
+      "lon": 110.354,
+      "tags": {
+        "name": "Alfamart Raya Ngaliyan",
+        "addr:street": "Jl. Prof. Dr. Hamka No. 35",
+        "addr:city": "Semarang",
+        "addr:district": "Ngaliyan",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Alfamart",
+        "toilets": "yes",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100041,
+      "lat": -6.988,
+      "lon": 110.4205,
+      "tags": {
+        "name": "Indomaret Point Pandanaran",
+        "addr:street": "Jl. Pandanaran No. 45",
+        "addr:city": "Semarang",
+        "addr:district": "Semarang Tengah",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Indomaret",
+        "toilets": "yes",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100042,
+      "lat": -7.5512,
+      "lon": 110.8245,
+      "tags": {
+        "name": "SPBU Pertamina 41.571.01 Gilingan",
+        "addr:street": "Jl. A. Yani No. 191",
+        "addr:city": "Surakarta",
+        "addr:district": "Banjarsari",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Pertamina",
+        "toilets": "yes",
+        "amenity": "fuel",
+        "operator": "PT Pertamina"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100043,
+      "lat": -7.5542,
+      "lon": 110.7925,
+      "tags": {
+        "name": "SPBU Pertamina 43.571.01 Kerten",
+        "addr:street": "Jl. Adi Sucipto",
+        "addr:city": "Surakarta",
+        "addr:district": "Laweyan",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Pertamina",
+        "toilets": "yes",
+        "amenity": "fuel",
+        "operator": "PT Pertamina"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100045,
+      "lat": -7.5525,
+      "lon": 110.8095,
+      "tags": {
+        "name": "SPBU Pertamina 44.571.03 Manahan",
+        "addr:street": "Jl. M.T. Haryono No. 31",
+        "addr:city": "Surakarta",
+        "addr:district": "Banjarsari",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Pertamina",
+        "toilets": "yes",
+        "amenity": "fuel",
+        "operator": "PT Pertamina"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100047,
+      "lat": -7.5385,
+      "lon": 110.8195,
+      "tags": {
+        "name": "SPBU Pertamina 44.571.11 Banyuagung",
+        "addr:street": "Jl. Ki Mangun Sarkoro No. 154",
+        "addr:city": "Surakarta",
+        "addr:district": "Banjarsari",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Pertamina",
+        "toilets": "yes",
+        "amenity": "fuel",
+        "operator": "PT Pertamina"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100048,
+      "lat": -7.5412,
+      "lon": 110.8415,
+      "tags": {
+        "name": "SPBU Pertamina 44.571.16 Mojosongo",
+        "addr:street": "Jl. Sumpah Pemuda No. 198",
+        "addr:city": "Surakarta",
+        "addr:district": "Jebres",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Pertamina",
+        "toilets": "yes",
+        "amenity": "fuel",
+        "operator": "PT Pertamina"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100050,
+      "lat": -7.5592,
+      "lon": 110.8525,
+      "tags": {
+        "name": "SPBU Pertamina 44.571.19 Kentingan UNS",
+        "addr:street": "Jl. Ir. Sutami No. 11",
+        "addr:city": "Surakarta",
+        "addr:district": "Jebres",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Pertamina",
+        "toilets": "yes",
+        "amenity": "fuel",
+        "operator": "PT Pertamina"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100051,
+      "lat": -7.5565,
+      "lon": 110.8425,
+      "tags": {
+        "name": "SPBU Pertamina 44.571.21 Kolonel Sutarto",
+        "addr:street": "Jl. Kolonel Sutarto No. 159",
+        "addr:city": "Surakarta",
+        "addr:district": "Jebres",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Pertamina",
+        "toilets": "yes",
+        "amenity": "fuel",
+        "operator": "PT Pertamina"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100053,
+      "lat": -7.5575,
+      "lon": 110.8212,
+      "tags": {
+        "name": "SPBU Pertamina 44.571.24 Balapan",
+        "addr:street": "Jl. Wolter Monginsidi No. 88",
+        "addr:city": "Surakarta",
+        "addr:district": "Banjarsari",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Pertamina",
+        "toilets": "yes",
+        "amenity": "fuel",
+        "operator": "PT Pertamina"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100054,
+      "lat": -7.5725,
+      "lon": 110.7985,
+      "tags": {
+        "name": "SPBU Pertamina 44.571.27 Laweyan",
+        "addr:street": "Jl. Dr. Rajiman No. 469B",
+        "addr:city": "Surakarta",
+        "addr:district": "Laweyan",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Pertamina",
+        "toilets": "yes",
+        "amenity": "fuel",
+        "operator": "PT Pertamina"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100055,
+      "lat": -7.5712,
+      "lon": 110.8305,
+      "tags": {
+        "name": "The Royal Surakarta Heritage",
+        "addr:street": "Jl. Brigjen Slamet Riyadi No. 6",
+        "addr:city": "Surakarta",
+        "addr:district": "Pasar Kliwon",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Accor Handwritten",
+        "tourism": "hotel",
+        "hotel": "yes"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100056,
+      "lat": -7.5662,
+      "lon": 110.8185,
+      "tags": {
+        "name": "Novotel Solo",
+        "addr:street": "Jl. Brigjen Slamet Riyadi No. 272",
+        "addr:city": "Surakarta",
+        "addr:district": "Banjarsari",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Novotel",
+        "tourism": "hotel",
+        "hotel": "yes"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100057,
+      "lat": -7.5635,
+      "lon": 110.8012,
+      "tags": {
+        "name": "Megaland Hotel Solo",
+        "addr:street": "Jl. Brigjen Slamet Riyadi No. 354",
+        "addr:city": "Surakarta",
+        "addr:district": "Laweyan",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Megaland",
+        "tourism": "hotel",
+        "hotel": "yes"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100060,
+      "lat": -7.5655,
+      "lon": 110.8125,
+      "tags": {
+        "name": "De Solo Boutique Hotel",
+        "addr:street": "Jl. Brigjen Slamet Riyadi No. 273",
+        "addr:city": "Surakarta",
+        "addr:district": "Laweyan",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "De Solo",
+        "tourism": "hotel",
+        "hotel": "yes"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100062,
+      "lat": -7.5685,
+      "lon": 110.821,
+      "tags": {
+        "name": "Front One Cabin Slamet Riyadi Solo",
+        "addr:street": "Jl. Brigjen Slamet Riyadi",
+        "addr:city": "Surakarta",
+        "addr:district": "Serengan",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Front One",
+        "tourism": "hotel",
+        "hotel": "yes"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100063,
+      "lat": -7.5695,
+      "lon": 110.8252,
+      "tags": {
+        "name": "Bobopod Slamet Riyadi Solo",
+        "addr:street": "Jl. Brigjen Slamet Riyadi No. 101",
+        "addr:city": "Surakarta",
+        "addr:district": "Banjarsari",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Bobopod",
+        "tourism": "hotel",
+        "hotel": "yes"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100064,
+      "lat": -7.5642,
+      "lon": 110.8195,
+      "tags": {
+        "name": "Ibis Styles Solo",
+        "addr:street": "Jl. Gajah Mada No. 23",
+        "addr:city": "Surakarta",
+        "addr:district": "Banjarsari",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Ibis Styles",
+        "tourism": "hotel",
+        "hotel": "yes"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100065,
+      "lat": -7.5622,
+      "lon": 110.8092,
+      "tags": {
+        "name": "Solo Paragon Hotel & Residences",
+        "addr:street": "Jl. Dr. Soetomo",
+        "addr:city": "Surakarta",
+        "addr:district": "Banjarsari",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Solo Paragon",
+        "tourism": "hotel",
+        "hotel": "yes"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100067,
+      "lat": -7.5582,
+      "lon": 110.7842,
+      "tags": {
+        "name": "Alila Solo",
+        "addr:street": "Jl. Slamet Riyadi No. 562",
+        "addr:city": "Surakarta",
+        "addr:district": "Laweyan",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Alila Hyatt",
+        "tourism": "hotel",
+        "hotel": "yes"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100068,
+      "lat": -7.5632,
+      "lon": 110.802,
+      "tags": {
+        "name": "Indomaret Point Slamet Riyadi",
+        "addr:street": "Jl. Slamet Riyadi No. 4",
+        "addr:city": "Surakarta",
+        "addr:district": "Laweyan",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Indomaret",
+        "toilets": "yes",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100069,
+      "lat": -7.5642,
+      "lon": 110.8062,
+      "tags": {
+        "name": "Indomaret Fresh Purwotomo",
+        "addr:street": "Jl. Brigjen Slamet Riyadi No. 329",
+        "addr:city": "Surakarta",
+        "addr:district": "Laweyan",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Indomaret",
+        "toilets": "yes",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100070,
+      "lat": -7.562,
+      "lon": 110.7915,
+      "tags": {
+        "name": "Indomaret Slamet Riyadi Pajang",
+        "addr:street": "Jl. Slamet Riyadi No. 470",
+        "addr:city": "Surakarta",
+        "addr:district": "Laweyan",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Indomaret",
+        "toilets": "yes",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100071,
+      "lat": -7.5535,
+      "lon": 110.7932,
+      "tags": {
+        "name": "Indomaret Adi Sucipto Kerten",
+        "addr:street": "Jl. Adi Sucipto, Kerten",
+        "addr:city": "Surakarta",
+        "addr:district": "Laweyan",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Indomaret",
+        "toilets": "yes",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100072,
+      "lat": -7.5482,
+      "lon": 110.7815,
+      "tags": {
+        "name": "Alfamart Adi Sucipto Blulukan",
+        "addr:street": "Jl. Adi Sucipto, Blulukan",
+        "addr:city": "Karanganyar",
+        "addr:district": "Colomadu",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Alfamart",
+        "toilets": "yes",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100073,
+      "lat": -7.5475,
+      "lon": 110.7802,
+      "tags": {
+        "name": "Indomaret Bulukan Adi Sucipto",
+        "addr:street": "Jl. Adi Sucipto No. 15",
+        "addr:city": "Karanganyar",
+        "addr:district": "Colomadu",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Indomaret",
+        "toilets": "yes",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100074,
+      "lat": -7.5548,
+      "lon": 110.8052,
+      "tags": {
+        "name": "Alfamart Manahan Solo",
+        "addr:street": "Jl. Adi Sucipto No. 2",
+        "addr:city": "Surakarta",
+        "addr:district": "Banjarsari",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Alfamart",
+        "toilets": "yes",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100075,
+      "lat": -7.5652,
+      "lon": 110.8355,
+      "tags": {
+        "name": "Indomaret Urip Sumoharjo",
+        "addr:street": "Jl. Urip Sumoharjo No. 85",
+        "addr:city": "Surakarta",
+        "addr:district": "Jebres",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Indomaret",
+        "toilets": "yes",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100077,
+      "lat": -7.5802,
+      "lon": 110.8255,
+      "tags": {
+        "name": "Indomaret Gading Solo",
+        "addr:street": "Jl. Veteran No. 55",
+        "addr:city": "Surakarta",
+        "addr:district": "Pasar Kliwon",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "brand": "Indomaret",
+        "toilets": "yes",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100078,
+      "lat": -7.5985,
+      "lon": 110.8212,
+      "tags": {
+        "name": "Alfamidi Solo Baru",
+        "addr:street": "Jl. Ir. Soekarno No. 22",
+        "addr:city": "Sukoharjo",
+        "addr:district": "Grogol",
+        "opening_hours": "07:00-23:00",
+        "verified": "google_maps_verified",
+        "brand": "Alfamidi",
+        "toilets": "yes",
+        "shop": "convenience"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100079,
+      "lat": -7.1352,
+      "lon": 110.4285,
+      "tags": {
+        "name": "Rest Area KM 429 A Ungaran",
+        "addr:street": "Tol Semarang - Solo KM 429 A",
+        "addr:city": "Semarang",
+        "addr:district": "Ungaran",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "toilets": "yes",
+        "highway": "rest_area"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100080,
+      "lat": -7.136,
+      "lon": 110.427,
+      "tags": {
+        "name": "Rest Area KM 429 B Ungaran",
+        "addr:street": "Tol Solo - Semarang KM 429 B",
+        "addr:city": "Semarang",
+        "addr:district": "Ungaran",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "toilets": "yes",
+        "highway": "rest_area"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100081,
+      "lat": -7.3092,
+      "lon": 110.5185,
+      "tags": {
+        "name": "Rest Area KM 456 A Pendopo Salatiga",
+        "addr:street": "Tol Semarang - Solo KM 456 A",
+        "addr:city": "Salatiga",
+        "addr:district": "Pabelan",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "toilets": "yes",
+        "highway": "rest_area"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100082,
+      "lat": -7.3085,
+      "lon": 110.5175,
+      "tags": {
+        "name": "Rest Area KM 456 B Pendopo Salatiga",
+        "addr:street": "Tol Solo - Semarang KM 456 B",
+        "addr:city": "Salatiga",
+        "addr:district": "Pabelan",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "toilets": "yes",
+        "highway": "rest_area"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100083,
+      "lat": -7.5185,
+      "lon": 110.6385,
+      "tags": {
+        "name": "Rest Area KM 487 A Bale Nglaras Boyolali",
+        "addr:street": "Tol Semarang - Solo KM 487 A",
+        "addr:city": "Boyolali",
+        "addr:district": "Teras",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "toilets": "yes",
+        "highway": "rest_area"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100084,
+      "lat": -7.5192,
+      "lon": 110.6372,
+      "tags": {
+        "name": "Rest Area KM 487 B Bale Nglaras Boyolali",
+        "addr:street": "Tol Solo - Semarang KM 487 B",
+        "addr:city": "Boyolali",
+        "addr:district": "Teras",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "toilets": "yes",
+        "highway": "rest_area"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100085,
+      "lat": -7.4685,
+      "lon": 110.9525,
+      "tags": {
+        "name": "Rest Area KM 519 A Masaran Sragen",
+        "addr:street": "Tol Solo - Ngawi KM 519 A",
+        "addr:city": "Sragen",
+        "addr:district": "Masaran",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "toilets": "yes",
+        "highway": "rest_area"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100086,
+      "lat": -7.4695,
+      "lon": 110.9512,
+      "tags": {
+        "name": "Rest Area KM 519 B Masaran Sragen",
+        "addr:street": "Tol Ngawi - Solo KM 519 B",
+        "addr:city": "Sragen",
+        "addr:district": "Masaran",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "toilets": "yes",
+        "highway": "rest_area"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100087,
+      "lat": -7.4325,
+      "lon": 111.0855,
+      "tags": {
+        "name": "Rest Area KM 538 A Ngrampal Sragen",
+        "addr:street": "Tol Solo - Ngawi KM 538 A",
+        "addr:city": "Sragen",
+        "addr:district": "Ngrampal",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "toilets": "yes",
+        "highway": "rest_area"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100088,
+      "lat": -7.4335,
+      "lon": 111.0842,
+      "tags": {
+        "name": "Rest Area KM 538 B Ngrampal Sragen",
+        "addr:street": "Tol Ngawi - Solo KM 538 B",
+        "addr:city": "Sragen",
+        "addr:district": "Ngrampal",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "toilets": "yes",
+        "highway": "rest_area"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100089,
+      "lat": -7.3912,
+      "lon": 111.3855,
+      "tags": {
+        "name": "Rest Area KM 575 A Ngawi",
+        "addr:street": "Tol Solo - Ngawi KM 575 A",
+        "addr:city": "Ngawi",
+        "addr:district": "Ngawi",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "toilets": "yes",
+        "highway": "rest_area"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100090,
+      "lat": -7.3922,
+      "lon": 111.3842,
+      "tags": {
+        "name": "Rest Area KM 575 B Ngawi",
+        "addr:street": "Tol Ngawi - Solo KM 575 B",
+        "addr:city": "Ngawi",
+        "addr:district": "Ngawi",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "toilets": "yes",
+        "highway": "rest_area"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100091,
+      "lat": -6.9785,
+      "lon": 109.9925,
+      "tags": {
+        "name": "Rest Area KM 379 A Batang",
+        "addr:street": "Tol Batang - Semarang KM 379 A",
+        "addr:city": "Batang",
+        "addr:district": "Gringsing",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "toilets": "yes",
+        "highway": "rest_area"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100092,
+      "lat": -6.9825,
+      "lon": 109.8512,
+      "tags": {
+        "name": "Rest Area KM 360 B Batang",
+        "addr:street": "Tol Semarang - Batang KM 360 B",
+        "addr:city": "Batang",
+        "addr:district": "Gondang",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "toilets": "yes",
+        "highway": "rest_area"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100093,
+      "lat": -6.9745,
+      "lon": 110.0925,
+      "tags": {
+        "name": "Rest Area KM 391 A Kendal",
+        "addr:street": "Tol Batang - Semarang KM 391 A",
+        "addr:city": "Kendal",
+        "addr:district": "Rowosari",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "toilets": "yes",
+        "highway": "rest_area"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100094,
+      "lat": -6.9762,
+      "lon": 110.0715,
+      "tags": {
+        "name": "Rest Area KM 389 B Weleri",
+        "addr:street": "Tol Semarang - Batang KM 389 B",
+        "addr:city": "Kendal",
+        "addr:district": "Weleri",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "toilets": "yes",
+        "highway": "rest_area"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100095,
+      "lat": -6.9212,
+      "lon": 108.9725,
+      "tags": {
+        "name": "Rest Area KM 260 B Heritage Banjaratma",
+        "addr:street": "Tol Pejagan - Pemalang KM 260 B",
+        "addr:city": "Brebes",
+        "addr:district": "Bulakamba",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "toilets": "yes",
+        "highway": "rest_area"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9100096,
+      "lat": -6.9315,
+      "lon": 108.9055,
+      "tags": {
+        "name": "Rest Area KM 252 A Brebes",
+        "addr:street": "Tol Pejagan - Pemalang KM 252 A",
+        "addr:city": "Brebes",
+        "addr:district": "Tanjung",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified",
+        "toilets": "yes",
+        "highway": "rest_area"
+      }
     }
   ]
 }
