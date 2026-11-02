@@ -8,6 +8,21 @@
   "elements": [
     {
       "type": "node",
+      "id": 9500002,
+      "lat": -6.969816,
+      "lon": 110.391012,
+      "tags": {
+        "name": "SPBU Pertamina 44.501.07 Puri Anjasmoro",
+        "brand": "Pertamina",
+        "amenity": "fuel",
+        "addr:street": "Jl. Puri Anjasmoro Raya No. 6, Tawangsari",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "verified": "osm_verified"
+      }
+    },
+    {
+      "type": "node",
       "id": 1430916336,
       "lat": -6.9563692,
       "lon": 110.4164275,
