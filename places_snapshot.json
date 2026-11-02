@@ -18508,6 +18508,198 @@
         "addr:city": "Semarang",
         "verified": "google_travel_verified"
       }
+    },
+    {
+      "type": "node",
+      "id": 9800100,
+      "lat": -6.9742215,
+      "lon": 110.4191212,
+      "tags": {
+        "name": "Hotel Louis Kienne Pemuda",
+        "tourism": "hotel",
+        "addr:city": "Semarang",
+        "verified": "google_travel_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9800101,
+      "lat": -6.983795,
+      "lon": 110.412038,
+      "tags": {
+        "name": "Sewu Inn",
+        "tourism": "hotel",
+        "addr:city": "Semarang",
+        "verified": "google_travel_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9800102,
+      "lat": -6.9805985,
+      "lon": 110.420247,
+      "tags": {
+        "name": "Grand Setos Hotel",
+        "tourism": "hotel",
+        "addr:city": "Semarang",
+        "verified": "google_travel_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9800104,
+      "lat": -6.9604118,
+      "lon": 110.4147773,
+      "tags": {
+        "name": "Hotel Ruang Tidur",
+        "tourism": "hotel",
+        "addr:city": "Semarang",
+        "verified": "google_travel_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9800105,
+      "lat": -6.9830367,
+      "lon": 110.4119536,
+      "tags": {
+        "name": "Rooms Inc Hotel Pemuda Semarang",
+        "tourism": "hotel",
+        "addr:city": "Semarang",
+        "verified": "google_travel_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9800107,
+      "lat": -6.9750197,
+      "lon": 110.4204706,
+      "tags": {
+        "name": "Hotel Chanti managed by Tentrem Hotel Management Indonesia",
+        "tourism": "hotel",
+        "addr:city": "Semarang",
+        "verified": "google_travel_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9800108,
+      "lat": -6.97722,
+      "lon": 110.42058999,
+      "tags": {
+        "name": "Hotel Gumaya",
+        "tourism": "hotel",
+        "addr:city": "Semarang",
+        "verified": "google_travel_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9800109,
+      "lat": -6.9812735,
+      "lon": 110.3957397,
+      "tags": {
+        "name": "Kiyana Aularis Hotel",
+        "tourism": "hotel",
+        "addr:city": "Semarang",
+        "verified": "google_travel_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9800110,
+      "lat": -6.9817031,
+      "lon": 110.4253598,
+      "tags": {
+        "name": "Hotel PANTES Simpang lima",
+        "tourism": "hotel",
+        "addr:city": "Semarang",
+        "verified": "google_travel_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9800111,
+      "lat": -6.979531,
+      "lon": 110.419975,
+      "tags": {
+        "name": "SANS Hotels",
+        "tourism": "hotel",
+        "addr:city": "Semarang",
+        "verified": "google_travel_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9800112,
+      "lat": -6.9805781,
+      "lon": 110.4202063,
+      "tags": {
+        "name": "MG Setos Hotel",
+        "tourism": "hotel",
+        "addr:city": "Semarang",
+        "verified": "google_travel_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9800114,
+      "lat": -6.9710934,
+      "lon": 110.4184056,
+      "tags": {
+        "name": "Mess Inn Semarang",
+        "tourism": "hotel",
+        "addr:city": "Semarang",
+        "verified": "google_travel_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9800115,
+      "lat": -6.9711322,
+      "lon": 110.4288483,
+      "tags": {
+        "name": "Hotel Pantes Kota Lama Semarang",
+        "tourism": "hotel",
+        "addr:city": "Semarang",
+        "verified": "google_travel_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9800116,
+      "lat": -6.971387,
+      "lon": 110.4313879,
+      "tags": {
+        "name": "RedDoorz Near Kota Lama Semarang",
+        "tourism": "hotel",
+        "addr:city": "Semarang",
+        "verified": "google_travel_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9800118,
+      "lat": -6.9818373,
+      "lon": 110.4030635,
+      "tags": {
+        "name": "Edsamara Hotel Semarang",
+        "tourism": "hotel",
+        "addr:city": "Semarang",
+        "verified": "google_travel_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9800119,
+      "lat": -6.9841163,
+      "lon": 110.4124065,
+      "tags": {
+        "name": "AWANN SEWU Boutique Hotel & Suite",
+        "tourism": "hotel",
+        "addr:city": "Semarang",
+        "verified": "google_travel_verified"
+      }
     }
   ]
 }
