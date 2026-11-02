@@ -18417,6 +18417,97 @@
         "toilets": "yes",
         "highway": "rest_area"
       }
+    },
+    {
+      "type": "node",
+      "id": 9800001,
+      "lat": -6.9541231,
+      "lon": 110.4059359,
+      "tags": {
+        "name": "Hotel J & L Inn Semarang",
+        "tourism": "hotel",
+        "addr:street": "Jl. Tambak Mas Tim., Panggung Lor, Semarang Utara",
+        "addr:city": "Semarang",
+        "verified": "google_travel_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9800002,
+      "lat": -6.965256,
+      "lon": 110.41189,
+      "tags": {
+        "name": "Check Inn @ Permata Hijau",
+        "tourism": "hotel",
+        "addr:street": "Jl. Permata Hijau, Kuningan, Semarang Utara",
+        "addr:city": "Semarang",
+        "verified": "google_travel_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9800003,
+      "lat": -6.964815,
+      "lon": 110.412105,
+      "tags": {
+        "name": "Hello Inn @ Permata Hijau",
+        "tourism": "hotel",
+        "addr:street": "Jl. Permata Hijau No. DD-16, Kuningan, Semarang Utara",
+        "addr:city": "Semarang",
+        "verified": "google_travel_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9800004,
+      "lat": -6.966515,
+      "lon": 110.407302,
+      "tags": {
+        "name": "Mono Coliving Brotojoyo",
+        "tourism": "hotel",
+        "addr:street": "Jl. Brotojoyo Timur II No. 52, Panggung Kidul, Semarang Utara",
+        "addr:city": "Semarang",
+        "verified": "google_travel_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9800005,
+      "lat": -6.961302,
+      "lon": 110.41444299,
+      "tags": {
+        "name": "Hotel V Quin",
+        "tourism": "hotel",
+        "addr:street": "Jl. Hasanudin, Plombokan, Semarang Utara",
+        "addr:city": "Semarang",
+        "verified": "google_travel_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9800006,
+      "lat": -6.963909,
+      "lon": 110.38973399,
+      "tags": {
+        "name": "Mimpi Inn",
+        "tourism": "hotel",
+        "addr:street": "Jl. Puri Anjasmoro, Tawangsari, Semarang Barat",
+        "addr:city": "Semarang",
+        "verified": "google_travel_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9800008,
+      "lat": -6.979595,
+      "lon": 110.396903,
+      "tags": {
+        "name": "Nozz Hotel",
+        "tourism": "hotel",
+        "addr:street": "Jl. Amarta Raya No. 20, Krobokan, Semarang Barat",
+        "addr:city": "Semarang",
+        "verified": "google_travel_verified"
+      }
     }
   ]
 }
