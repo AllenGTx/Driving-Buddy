@@ -1986,20 +1986,23 @@
     {
       "type": "node",
       "id": 4395605692,
-      "lat": -6.976891,
-      "lon": 110.412178,
+      "lat": -6.976986999999999,
+      "lon": 110.4120937,
       "tags": {
-        "brand": "Alfamart",
+        "brand": "Indomaret",
         "brand:wikidata": "Q23745600",
-        "name": "Alfamart",
+        "name": "Indomaret Imam Bonjol 145",
         "operator": "PT Sumber Alfaria Trijaya,Tbk",
         "shop": "convenience",
         "toilets": "yes",
         "toilets:access": "permissive",
         "toilets:unisex": "yes",
         "website": "https://alfamart.co.id",
-        "verified": "osm_verified",
-        "addr:street": ""
+        "verified": "google_maps_verified",
+        "addr:street": "Jl. Imam Bonjol No.145",
+        "addr:full": "Indomaret Imam Bonjol 145, Jl. Imam Bonjol No.145, Pindrikan Lor, Kec. Semarang Tengah, Kota Semarang, Jawa Tengah 50131",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7"
       }
     },
     {
@@ -2052,14 +2055,14 @@
     {
       "type": "node",
       "id": 4395690039,
-      "lat": -6.977859,
-      "lon": 110.414917,
+      "lat": -6.9778132,
+      "lon": 110.4150348,
       "tags": {
         "air_conditioning": "yes",
         "brand": "Indomaret",
         "brand:wikidata": "Q4262825",
         "brand:wikipedia": "id:Indomaret",
-        "name": "Indomaret",
+        "name": "Indomaret Piere Tendean 11",
         "name:en": "Indomaret",
         "name:id": "Indomaret",
         "name:ja": "インドマレット",
@@ -2068,8 +2071,11 @@
         "toilets": "yes",
         "toilets:access": "permissive",
         "website": "https://www.klikindomaret.com",
-        "verified": "osm_verified",
-        "addr:street": ""
+        "verified": "google_maps_verified",
+        "addr:street": "Jl. Pemuda No.115",
+        "addr:full": "Indomaret Piere Tendean 11, Jl. Pemuda No.115, Sekayu, Kec. Semarang Tengah, Kota Semarang, Jawa Tengah 50132",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7"
       }
     },
     {
@@ -2094,14 +2100,14 @@
     {
       "type": "node",
       "id": 4397037790,
-      "lat": -6.993098,
-      "lon": 110.422778,
+      "lat": -6.9931424,
+      "lon": 110.42279339999999,
       "tags": {
         "air_conditioning": "yes",
         "brand": "Indomaret",
         "brand:wikidata": "Q4262825",
         "brand:wikipedia": "id:Indomaret",
-        "name": "Indomaret",
+        "name": "Indomaret Erlangga",
         "name:en": "Indomaret",
         "name:id": "Indomaret",
         "name:ja": "インドマレット",
@@ -2110,8 +2116,11 @@
         "toilets": "yes",
         "toilets:access": "permissive",
         "website": "https://www.klikindomaret.com",
-        "verified": "osm_verified",
-        "addr:street": ""
+        "verified": "google_maps_verified",
+        "addr:street": "Jl. Erlangga Barat 7 No.1",
+        "addr:full": "Indomaret Erlangga, Jl. Erlangga Barat 7 No.1, Pleburan, Semarang Selatan, Semarang City, Central Java 50241",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7"
       }
     },
     {
@@ -2485,13 +2494,17 @@
     {
       "type": "node",
       "id": 5030925798,
-      "lat": -6.9870916,
-      "lon": 110.3997992,
+      "lat": -6.9871057,
+      "lon": 110.3997634,
       "tags": {
-        "name": "Indomaret Puspanjolo Selatan",
+        "name": "Indomaret Pusponjolo Selatan",
         "shop": "convenience",
-        "verified": "osm_verified",
-        "addr:street": ""
+        "verified": "google_maps_verified",
+        "addr:street": "Jl. Pusponjolo Slt Raya No.45",
+        "brand": "Indomaret",
+        "addr:full": "Indomaret Pusponjolo Selatan, Jl. Pusponjolo Slt Raya No.45, RT.05/RW.03, Bojongsalaman, Kec. Semarang Barat, Kota Semarang, Jawa Tengah 50141",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7"
       }
     },
     {
@@ -2632,25 +2645,27 @@
     {
       "type": "node",
       "id": 5401600021,
-      "lat": -6.9790719,
-      "lon": 110.4241539,
+      "lat": -6.9790781,
+      "lon": 110.42415469999999,
       "tags": {
         "air_conditioning": "yes",
         "brand": "Indomaret",
         "brand:wikidata": "Q4262825",
         "brand:wikipedia": "id:Indomaret",
-        "name": "Indomaret",
+        "name": "Indomaret Wotgandul",
         "name:en": "Indomaret",
         "name:id": "Indomaret",
         "name:ja": "インドマレット",
-        "opening_hours": "Mo-Su 07:00-22:00",
+        "opening_hours": "24/7",
         "operator": "PT. Indomarco Prismatama",
         "shop": "convenience",
         "toilets": "yes",
         "toilets:access": "permissive",
         "website": "https://www.klikindomaret.com",
-        "verified": "osm_verified",
-        "addr:street": ""
+        "verified": "google_maps_verified",
+        "addr:street": "Jl. Wotgandul Barat",
+        "addr:full": "2CCF+9M6 Indomaret Wotgandul, Jl. Wotgandul Barat, Kranggan, Kec. Semarang Tengah, Kota Semarang, Jawa Tengah 50139",
+        "addr:city": "Semarang"
       }
     },
     {
@@ -4209,14 +4224,14 @@
     {
       "type": "node",
       "id": 8254939121,
-      "lat": -6.98692,
-      "lon": 110.4315433,
+      "lat": -6.9868269,
+      "lon": 110.4313408,
       "tags": {
         "air_conditioning": "yes",
         "brand": "Indomaret",
         "brand:wikidata": "Q4262825",
         "brand:wikipedia": "id:Indomaret",
-        "name": "Indomaret",
+        "name": "Indomaret MT Haryono 475",
         "name:en": "Indomaret",
         "name:id": "Indomaret",
         "name:ja": "インドマレット",
@@ -4225,8 +4240,11 @@
         "toilets": "yes",
         "toilets:access": "permissive",
         "website": "https://www.klikindomaret.com",
-        "verified": "osm_verified",
-        "addr:street": ""
+        "verified": "google_maps_verified",
+        "addr:street": "Karangkidul",
+        "addr:full": "Indomaret Mt Haryono 475, Karangkidul, Kec. Semarang Tengah, Kota Semarang, Jawa Tengah 50136",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7"
       }
     },
     {
@@ -7603,7 +7621,9 @@
         "website": "https://www.klikindomaret.com",
         "verified": "google_maps_verified",
         "addr:street": "Jl. Ariloka No.26 Kel",
-        "addr:full": "Indomaret Ariloka, Jl. Ariloka No.26 Kel, Krobokan, Semarang Barat, Semarang City, Central Java 50141"
+        "addr:full": "Indomaret Ariloka, Jl. Ariloka No.26 Kel, Krobokan, Semarang Barat, Semarang City, Central Java 50141",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7"
       }
     },
     {
@@ -8001,14 +8021,14 @@
     {
       "type": "node",
       "id": 12736375402,
-      "lat": -6.9879464,
-      "lon": 110.4169089,
+      "lat": -6.988074999999999,
+      "lon": 110.41684,
       "tags": {
         "air_conditioning": "yes",
         "brand": "Indomaret",
         "brand:wikidata": "Q4262825",
         "brand:wikipedia": "id:Indomaret",
-        "name": "Indomaret",
+        "name": "Indomaret Tri Lomba Juang",
         "name:en": "Indomaret",
         "name:id": "Indomaret",
         "name:ja": "インドマレット",
@@ -8017,8 +8037,11 @@
         "toilets": "yes",
         "toilets:access": "permissive",
         "website": "https://www.klikindomaret.com",
-        "verified": "osm_verified",
-        "addr:street": ""
+        "verified": "google_maps_verified",
+        "addr:street": "Jl. Mugas No.683",
+        "addr:full": "Indomaret Tri Lomba Juang, Jl. Mugas No.683, RT.01/RW.01, Mugassari, Kec. Semarang Sel., Kota Semarang, Jawa Tengah 50249",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7"
       }
     },
     {
@@ -13270,16 +13293,17 @@
     {
       "type": "node",
       "id": 339321211,
-      "lat": -6.9928422,
-      "lon": 110.3997964,
+      "lat": -6.9927513999999995,
+      "lon": 110.3997527,
       "tags": {
-        "name": "Indomaret Simongan",
-        "addr:street": "Jalan Simongan",
-        "addr:city": "Kota Semarang",
+        "name": "Indomaret Ngemplak - Simongan",
+        "addr:street": "Jl. Simongan No. 22",
+        "addr:city": "Semarang",
         "opening_hours": "24/7",
-        "verified": "osm_verified",
+        "verified": "google_maps_verified",
         "brand": "Indomaret",
-        "shop": "convenience"
+        "shop": "convenience",
+        "addr:full": "Indomaret Ngemplak - Simongan, Jl. Simongan No. 22, RT 01 / RW 06, Tlogomulyo, Pedurungan, Ngemplak Simongan, Kec. Semarang Barat, Kota Semarang, Jawa Tengah 50195"
       }
     },
     {
@@ -19566,16 +19590,16 @@
     {
       "type": "node",
       "id": 9400051,
-      "lat": -6.994564899999999,
-      "lon": 110.41097669999999,
+      "lat": -6.994679,
+      "lon": 110.4109641,
       "tags": {
-        "name": "Alfamart Kariadi",
-        "brand": "Alfamart",
+        "name": "Indomaret Depan RS Kariadi",
+        "brand": "Indomaret",
         "shop": "convenience",
-        "addr:street": "Jl. Dr. Kariadi",
-        "addr:full": "2C46+59H Alfamart Kariadi, Jl. Dr. Kariadi, Randusari, Kec. Semarang Sel., Kota Semarang, Jawa Tengah 50244",
+        "addr:street": "Jl. Dr. Kariadi No.90",
+        "addr:full": "indomaret Depan RS Kariadi, Jl. Dr. Kariadi No.90, Randusari, Kec. Semarang Sel., Kota Semarang, Jawa Tengah 50244",
         "addr:city": "Semarang",
-        "opening_hours": "07:00-22:00",
+        "opening_hours": "24/7",
         "toilets": "yes",
         "verified": "google_maps_verified"
       }
@@ -20084,6 +20108,414 @@
         "shop": "convenience",
         "addr:street": "Jl. Siliwangi, Krapyak",
         "addr:district": "Semarang Barat",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9500100,
+      "lat": -6.9897544,
+      "lon": 110.39466829999999,
+      "tags": {
+        "name": "Indomaret Point Coffee Pamularsih 88 DT",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "Jl. Pamularsih Raya No.79",
+        "addr:full": "Indomaret Point Coffe Pamularsih 88 DT, Jl. Pamularsih Raya No.79, Bongsari, Kec. Semarang Barat, Kota Semarang, Jawa Tengah 50148",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9500101,
+      "lat": -6.9855513,
+      "lon": 110.4358422,
+      "tags": {
+        "name": "Indomaret Karangtempel",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "Jl. RA. Kartini",
+        "addr:full": "Indomaret | Karangtempel, Jl. RA. Kartini, Karangtempel, Semarang, Kota Semarang, Jawa Tengah 50257",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9500102,
+      "lat": -6.9918555,
+      "lon": 110.4258784,
+      "tags": {
+        "name": "Indomaret Fresh Simpang Lima",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "Jl. Ahmad Yani No.151",
+        "addr:full": "Indomaret Fresh, Jl. Ahmad Yani No.151, Karangkidul, Kec. Semarang Tengah, Kota Semarang, Jawa Tengah 50241",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9500103,
+      "lat": -6.9729130999999995,
+      "lon": 110.41489729999999,
+      "tags": {
+        "name": "Indomaret Stasiun Semarang Poncol",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "St. Semarang Poncol",
+        "addr:full": "Indomaret Stasiun Semarang Poncol, St. Semarang Poncol, Jl. Imam Bonjol, Purwosari, Kec. Semarang Utara, Kota Semarang, Jawa Tengah 50172",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9500104,
+      "lat": -6.9880813999999996,
+      "lon": 110.3826508,
+      "tags": {
+        "name": "Indomaret Abdul Rahman Saleh 2",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "Jl. Sri Rejeki Utara No.28",
+        "addr:full": "Indomaret abdurahman saleh 2, Jl. Sri Rejeki Utara No.28, Kalibanteng Kidul, Kec. Semarang Barat, Kota Semarang, Jawa Tengah 50145",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9500105,
+      "lat": -6.9835237999999995,
+      "lon": 110.4279698,
+      "tags": {
+        "name": "Indomaret Pringgading 11B",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "Jl. Pringgading",
+        "addr:full": "2C8H+H5X Indomaret pringgading 11B, Jl. Pringgading, Brumbungan, Kec. Semarang Tengah, Kota Semarang, Jawa Tengah 50135",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9500106,
+      "lat": -6.9881964,
+      "lon": 110.4368453,
+      "tags": {
+        "name": "Indomaret Labuan",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "Jl. Labuan Raya Jl. Krakatau No.15",
+        "addr:full": "Indomaret Labuan, Jl. Labuan Raya Jl. Krakatau No.15, RT.2/RW.02, Karangtempel, Kec. Semarang Tim., Kota Semarang, Jawa Tengah 50232",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9500107,
+      "lat": -6.9673957,
+      "lon": 110.38591869999999,
+      "tags": {
+        "name": "Indomaret Puri Eksekutif",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "Tawangsari",
+        "addr:full": "29MP+29V Indomaret Puri Eksekutif, Tawangsari, Kec. Semarang Barat, Kota Semarang, Jawa Tengah 50144",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9500108,
+      "lat": -6.9826179999999995,
+      "lon": 110.41905709999999,
+      "tags": {
+        "name": "Indomaret Moh. Suyudi",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "Jl. Moh. Suyudi No.34",
+        "addr:full": "Indomaret Moh. Suyudi, Jl. Moh. Suyudi No.34, Miroto, Kec. Semarang Tengah, Kota Semarang, Jawa Tengah 50134",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9500109,
+      "lat": -6.9859952,
+      "lon": 110.4292907,
+      "tags": {
+        "name": "Indomaret Mayjend Sutoyo",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "Spbu 44.502.27",
+        "addr:full": "Indomaret Mayjend Sutoyo, Spbu 44.502.27, Karangkidul, Kec. Semarang Tengah, Kota Semarang, Jawa Tengah 50136",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9500110,
+      "lat": -6.9839459999999995,
+      "lon": 110.3977931,
+      "tags": {
+        "name": "Indomaret Pusponjolo",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "Jl. Pusponjolo Barat No.26",
+        "addr:full": "Indomaret Pusponjolo, Jl. Pusponjolo Barat No.26, Bojongsalaman, Kec. Semarang Barat, Kota Semarang, Jawa Tengah 50141",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9500111,
+      "lat": -6.9751708,
+      "lon": 110.43764279999999,
+      "tags": {
+        "name": "Indomaret Rejosari",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "Jl. Bugangan No.I-256",
+        "addr:full": "INDOMARET REJOSARI, Jl. Bugangan No.I-256, Bugangan, Semarang Timur, Semarang City, Central Java 50126",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9500112,
+      "lat": -6.9899049,
+      "lon": 110.43563239999999,
+      "tags": {
+        "name": "Indomaret Sidodadi",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "Jl. Sidodadi Timur No.23",
+        "addr:full": "Indomaret Sidodadi, Jl. Sidodadi Timur No.23, Karangtempel, Kec. Semarang Tim., Kota Semarang, Jawa Tengah 50232",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9500113,
+      "lat": -6.9894264999999995,
+      "lon": 110.4254122,
+      "tags": {
+        "name": "Indomaret Ahmad Dahlan",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "Jl. Kh Ahmad Dahlan No.33",
+        "addr:full": "Indomaret Ahmad Dahlan, Jl. Kh Ahmad Dahlan No.33, Karangkidul, Semarang Tengah, Semarang City, Central Java 50136",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9500114,
+      "lat": -6.993084199999999,
+      "lon": 110.4073013,
+      "tags": {
+        "name": "Indomaret RSUP Dr. Kariadi",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "Jl. DR. Sutomo No.1",
+        "addr:full": "Indomaret RSUP Dr. Kariadi, Jl. DR. Sutomo No.1, Randusari, Kec. Semarang Sel., Kota Semarang, Jawa Tengah 50244",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9500115,
+      "lat": -6.9833026,
+      "lon": 110.43034619999999,
+      "tags": {
+        "name": "Indomaret Pringgading",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "Jagalan",
+        "addr:full": "2C8J+M4H Indomaret Pringgading, Jagalan, Semarang, Kota Semarang, Jawa Tengah 50136",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9500116,
+      "lat": -6.9700412,
+      "lon": 110.437308,
+      "tags": {
+        "name": "Indomaret Point RS Pantiwilasa",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "2CHQ+WJ2Jl. CitarumBugangan",
+        "addr:full": "2CHP+XWM INDOMARET POIN RS PANTIWILASA, 2CHQ+WJ2Jl. CitarumBugangan, Kec. Semarang Tim., Kota Semarang, Jawa Tengah 50122",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9500117,
+      "lat": -6.9955704,
+      "lon": 110.4322177,
+      "tags": {
+        "name": "Indomaret MT Haryono 868",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "Jl. MT. Haryono No.868",
+        "addr:full": "Indomaret MT Haryono 868, Jl. MT. Haryono No.868, Peterongan, Kec. Semarang Sel., Kota Semarang, Jawa Tengah 50242",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9500118,
+      "lat": -6.9862272,
+      "lon": 110.3773872,
+      "tags": {
+        "name": "Indomaret Siliwangi 498",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "Jl. Siliwangi No.498",
+        "addr:full": "Indomaret SILIWANGI 498, Jl. Siliwangi No.498, Kalibanteng Kulon, Kec. Semarang Barat, Kota Semarang, Jawa Tengah 50183",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9500119,
+      "lat": -6.9585874,
+      "lon": 110.4450846,
+      "tags": {
+        "name": "Indomaret Kaligawe Raya II",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "Jl. Kaligawe Raya No.91",
+        "addr:full": "Indomaret Kaligawe Raya II, Jl. Kaligawe Raya No.91, Tambakrejo, Kec. Gayamsari, Kota Semarang, Jawa Tengah 50174",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9500120,
+      "lat": -6.9958985,
+      "lon": 110.40293159999999,
+      "tags": {
+        "name": "Indomaret Kaligarang 29",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "Jl. Kaligarang",
+        "addr:full": "2C33+J5V Indomaret Kaligarang 29, Jl. Kaligarang, Petompon, Kec. Gajahmungkur, Kota Semarang, Jawa Tengah 50237",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9500121,
+      "lat": -7.0107123,
+      "lon": 110.41591419999999,
+      "tags": {
+        "name": "Indomaret Fresh Sultan Agung Candisari Semarang",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "Wonotingal",
+        "addr:full": "Indomaret Fresh Sultan Agung Candisari Semarang, Wonotingal, Kec. Candisari, Kota Semarang, Jawa Tengah 50232",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9500122,
+      "lat": -6.971479599999999,
+      "lon": 110.45211839999999,
+      "tags": {
+        "name": "Indomaret Dempel Lor Semarang",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "Jl. Dempel Lor Raya",
+        "addr:full": "2FH2+CR5 Indomaret Dempel Lor Semarang, Jl. Dempel Lor Raya, Muktiharjo Kidul, Kec. Pedurungan, Kota Semarang, Jawa Tengah 50197",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9500123,
+      "lat": -6.9886453,
+      "lon": 110.3669735,
+      "tags": {
+        "name": "Indomaret Gatot Subroto 1",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "Jl. Gatot Subroto No.1a",
+        "addr:full": "Indomaret Gatot Subroto 1, Jl. Gatot Subroto No.1a, Purwoyoso, Kec. Ngaliyan, Kota Semarang, Jawa Tengah 50184",
         "addr:city": "Semarang",
         "opening_hours": "24/7",
         "toilets": "yes",
