@@ -73,17 +73,18 @@
     {
       "type": "node",
       "id": 88800102,
-      "lat": -6.95892,
-      "lon": 110.4081,
+      "lat": -6.9589799999999995,
+      "lon": 110.40809999999999,
       "tags": {
-        "name": "Alfamart Telaga Mas",
+        "name": "Alfamart Telaga Mas Raya",
         "brand": "Alfamart",
         "branch": "Telaga Mas Raya",
         "shop": "convenience",
-        "addr:street": "Jl. Telaga Mas Raya Blok B1",
+        "addr:street": "Jl. Telaga Mas Raya Utr No.14",
         "addr:city": "Semarang",
         "opening_hours": "07:00-22:00",
-        "verified": "osm_verified"
+        "verified": "google_maps_verified",
+        "addr:full": "Alfamart, Jl. Telaga Mas Raya Utr No.14, Panggung Lor, Utara, Kota Semarang, Jawa Tengah 50143"
       }
     },
     {
@@ -1307,17 +1308,17 @@
     {
       "type": "node",
       "id": 3476354568,
-      "lat": -6.9684582,
-      "lon": 110.4282691,
+      "lat": -6.968463,
+      "lon": 110.428249,
       "tags": {
         "addr:city": "Semarang",
-        "addr:street": "Jalan Letjen. Suprapto",
+        "addr:street": "Jl. Letjen Suprapto No.35",
         "air_conditioning": "yes",
         "brand": "Indomaret",
         "brand:wikidata": "Q4262825",
         "brand:wikipedia": "id:Indomaret",
         "description": "Unmarked",
-        "name": "Indomaret Letjen. Suprapto",
+        "name": "Indomaret Point Kota Lama",
         "name:en": "Indomaret",
         "name:id": "Indomaret",
         "name:ja": "インドマレット",
@@ -1326,7 +1327,8 @@
         "toilets": "yes",
         "toilets:access": "permissive",
         "website": "https://www.klikindomaret.com",
-        "verified": "osm_verified"
+        "verified": "google_maps_verified",
+        "addr:full": "Indomaret Point Kota Lama, Jl. Letjen Suprapto No.35, Purwodinatan, Kec. Semarang Tengah, Kota Semarang, Jawa Tengah 50137"
       }
     },
     {
@@ -2026,14 +2028,14 @@
     {
       "type": "node",
       "id": 4395634297,
-      "lat": -6.970988,
-      "lon": 110.41971,
+      "lat": -6.9709483,
+      "lon": 110.41999129999999,
       "tags": {
         "air_conditioning": "yes",
         "brand": "Indomaret",
         "brand:wikidata": "Q4262825",
         "brand:wikipedia": "id:Indomaret",
-        "name": "Indomaret",
+        "name": "Indomaret Imam Bonjol 39-41",
         "name:en": "Indomaret",
         "name:id": "Indomaret",
         "name:ja": "インドマレット",
@@ -2042,8 +2044,9 @@
         "toilets": "yes",
         "toilets:access": "permissive",
         "website": "https://www.klikindomaret.com",
-        "verified": "osm_verified",
-        "addr:street": ""
+        "verified": "google_maps_verified",
+        "addr:street": "Jl. Imam Bonjol No.39-41",
+        "addr:full": "Indomaret Imam Bonjol 39-41, Jl. Imam Bonjol No.39-41, Purwosari, Kec. Semarang Utara, Kota Semarang, Jawa Tengah 50172"
       }
     },
     {
@@ -2364,40 +2367,43 @@
     {
       "type": "node",
       "id": 4997993566,
-      "lat": -6.9666149,
-      "lon": 110.4065379,
+      "lat": -6.9666352,
+      "lon": 110.40639259999999,
       "tags": {
         "brand": "Alfamart",
         "brand:wikidata": "Q23745600",
-        "name": "Alfamart Hasanudin",
+        "name": "Alfamart Brotojoyo",
         "operator": "PT Sumber Alfaria Trijaya,Tbk",
         "shop": "convenience",
         "toilets": "yes",
         "toilets:access": "permissive",
         "toilets:unisex": "yes",
         "website": "https://alfamart.co.id",
-        "verified": "osm_verified",
-        "addr:street": "Jl. Hasanudin, Plombokan",
-        "addr:city": "Semarang"
+        "verified": "google_maps_verified",
+        "addr:street": "Jl. Brotojoyo Timur II No.72",
+        "addr:city": "Semarang",
+        "addr:full": "Alfamart Brotojoyo, Jl. Brotojoyo Timur II No.72, Panggung Kidul, Kec. Semarang Utara, Kota Semarang, Jawa Tengah 50143"
       }
     },
     {
       "type": "node",
       "id": 5019155152,
-      "lat": -6.9746833,
-      "lon": 110.4028586,
+      "lat": -6.97468,
+      "lon": 110.40268,
       "tags": {
-        "brand": "Alfamart",
+        "brand": "Indomaret",
         "brand:wikidata": "Q23745600",
-        "name": "Alfamart",
+        "name": "Indomaret Erowati",
         "operator": "PT Sumber Alfaria Trijaya,Tbk",
         "shop": "convenience",
         "toilets": "yes",
         "toilets:access": "permissive",
         "toilets:unisex": "yes",
         "website": "https://alfamart.co.id",
-        "verified": "osm_verified",
-        "addr:street": ""
+        "verified": "google_maps_verified",
+        "addr:street": "Jl. Erowati Raya No. 33, Bulu Lor, Semarang Utara",
+        "addr:district": "Semarang Utara",
+        "addr:city": "Semarang"
       }
     },
     {
@@ -5239,14 +5245,14 @@
     {
       "type": "node",
       "id": 9765815795,
-      "lat": -7.0375077,
-      "lon": 110.4745472,
+      "lat": -7.037526,
+      "lon": 110.474368,
       "tags": {
         "air_conditioning": "yes",
-        "brand": "Indomaret",
+        "brand": "Alfamidi",
         "brand:wikidata": "Q4262825",
         "brand:wikipedia": "id:Indomaret",
-        "name": "Indomaret",
+        "name": "Alfamidi Sendangmulyo",
         "name:en": "Indomaret",
         "name:id": "Indomaret",
         "name:ja": "インドマレット",
@@ -5255,8 +5261,9 @@
         "toilets": "yes",
         "toilets:access": "permissive",
         "website": "https://www.klikindomaret.com",
-        "verified": "osm_verified",
-        "addr:street": ""
+        "verified": "google_maps_verified",
+        "addr:street": "Sendangmulyo",
+        "addr:full": "XF6F+XPQ Alfamidisuper Sendangmulyo X Jadi, Sendangmulyo, Kec. Tembalang, Kota Semarang, Jawa Tengah 50272"
       }
     },
     {
@@ -7558,33 +7565,34 @@
     {
       "type": "node",
       "id": 11757245370,
-      "lat": -6.9793494,
-      "lon": 110.4010157,
+      "lat": -6.9792722,
+      "lon": 110.4009432,
       "tags": {
         "brand": "Alfamart",
         "brand:wikidata": "Q23745600",
-        "name": "Alfamart",
+        "name": "Alfamart Madukoro",
         "operator": "PT Sumber Alfaria Trijaya,Tbk",
         "shop": "convenience",
         "toilets": "yes",
         "toilets:access": "permissive",
         "toilets:unisex": "yes",
         "website": "https://alfamart.co.id",
-        "verified": "osm_verified",
-        "addr:street": ""
+        "verified": "google_maps_verified",
+        "addr:street": "Jl. Madukoro Raya No.Kel",
+        "addr:full": "Alfamart Madukoro, Jl. Madukoro Raya No.Kel, Krobokan, Kec. Semarang Barat, Kota Semarang, Jawa Tengah 50141"
       }
     },
     {
       "type": "node",
       "id": 11757245371,
-      "lat": -6.9734595,
-      "lon": 110.3985208,
+      "lat": -6.973571,
+      "lon": 110.3984622,
       "tags": {
         "air_conditioning": "yes",
         "brand": "Indomaret",
         "brand:wikidata": "Q4262825",
         "brand:wikipedia": "id:Indomaret",
-        "name": "Indomaret",
+        "name": "Indomaret Ariloka",
         "name:en": "Indomaret",
         "name:id": "Indomaret",
         "name:ja": "インドマレット",
@@ -7593,8 +7601,9 @@
         "toilets": "yes",
         "toilets:access": "permissive",
         "website": "https://www.klikindomaret.com",
-        "verified": "osm_verified",
-        "addr:street": ""
+        "verified": "google_maps_verified",
+        "addr:street": "Jl. Ariloka No.26 Kel",
+        "addr:full": "Indomaret Ariloka, Jl. Ariloka No.26 Kel, Krobokan, Semarang Barat, Semarang City, Central Java 50141"
       }
     },
     {
@@ -7758,14 +7767,14 @@
     {
       "type": "node",
       "id": 12076716269,
-      "lat": -6.9868619,
-      "lon": 110.4050868,
+      "lat": -6.9870377999999995,
+      "lon": 110.40500229999999,
       "tags": {
         "air_conditioning": "yes",
         "brand": "Indomaret",
         "brand:wikidata": "Q4262825",
         "brand:wikipedia": "id:Indomaret",
-        "name": "Indomaret",
+        "name": "Indomaret Bulustalan",
         "name:en": "Indomaret",
         "name:id": "Indomaret",
         "name:ja": "インドマレット",
@@ -7774,8 +7783,9 @@
         "toilets": "yes",
         "toilets:access": "permissive",
         "website": "https://www.klikindomaret.com",
-        "verified": "osm_verified",
-        "addr:street": ""
+        "verified": "google_maps_verified",
+        "addr:street": "Jl. Suyudono",
+        "addr:full": "Indomaret Bulustalan, Jl. Suyudono, Randusari, Kec. Semarang Sel., Kota Semarang, Jawa Tengah 50244"
       }
     },
     {
@@ -13527,31 +13537,33 @@
     {
       "type": "node",
       "id": 560251224,
-      "lat": -6.9959846,
-      "lon": 110.4466045,
+      "lat": -6.9962145,
+      "lon": 110.4465182,
       "tags": {
-        "name": "Alfamidi Kijang I",
-        "addr:street": "Jalan Kijang I",
+        "name": "Alfamidi Super Gajah Raya",
+        "addr:street": "Jl. Gajah Raya No.33",
         "addr:city": "Kota Semarang",
         "opening_hours": "24/7",
-        "verified": "osm_verified",
+        "verified": "google_maps_verified",
         "brand": "Alfamidi",
-        "shop": "convenience"
+        "shop": "convenience",
+        "addr:full": "Alfamidi Super Gajah Raya, Jl. Gajah Raya No.33, Gayamsari, Kec. Gayamsari, Kota Semarang, Jawa Tengah 50161"
       }
     },
     {
       "type": "node",
       "id": 1318808361,
-      "lat": -7.0222138,
-      "lon": 110.4983732,
+      "lat": -7.0222503,
+      "lon": 110.49828149999999,
       "tags": {
         "name": "Alfamidi Plamongan Indah",
-        "addr:street": "Jalan Kelapa Gading",
+        "addr:street": "Jl. Klp. Gading Raya",
         "addr:city": "Kota Semarang",
         "opening_hours": "24/7",
-        "verified": "osm_verified",
+        "verified": "google_maps_verified",
         "brand": "Alfamidi",
-        "shop": "convenience"
+        "shop": "convenience",
+        "addr:full": "XFHX+38V Alfamidi Plamongan Indah, Jl. Klp. Gading Raya, Plamongan Sari, Kec. Pedurungan, Kota Semarang, Jawa Tengah 50192"
       }
     },
     {
@@ -18699,6 +18711,1349 @@
         "tourism": "hotel",
         "addr:city": "Semarang",
         "verified": "google_travel_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400001,
+      "lat": -6.9645323,
+      "lon": 110.42909159999999,
+      "tags": {
+        "name": "Indomaret Tawang 61",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "Jl. Tawang",
+        "addr:full": "2CPH+5JP Indomaret Tawang 61, Jl. Tawang, Tj. Mas, Kec. Semarang Utara, Kota Semarang, Jawa Tengah 50174",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400002,
+      "lat": -6.963552,
+      "lon": 110.40543749999999,
+      "tags": {
+        "name": "Indomaret Pasir Mas",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "Jl. Kalimas Raya",
+        "addr:full": "Indomaret Pasir Mas, Jl. Kalimas Raya, Panggung Lor, Semarang Utara, Semarang City, Central Java 50177",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400003,
+      "lat": -6.959712499999999,
+      "lon": 110.40470479999999,
+      "tags": {
+        "name": "Alfamart Pasir Mas",
+        "brand": "Alfamart",
+        "shop": "convenience",
+        "addr:street": "Jl. Pasirmas Raya Blk. B No.21",
+        "addr:full": "Alfamart Pasirmas, Jl. Pasirmas Raya Blk. B No.21, Panggung Lor, Kec. Semarang Utara, Kota Semarang, Jawa Tengah 50177",
+        "addr:city": "Semarang",
+        "opening_hours": "07:00-22:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400004,
+      "lat": -6.964495299999999,
+      "lon": 110.4277686,
+      "tags": {
+        "name": "Indomaret Point Sta. Semarang Tawang",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "Sta. Semarang Tawang",
+        "addr:full": "Indomaret Point Sta. Semarang Tawang, Sta. Semarang Tawang, Tj. Mas, Kec. Semarang Utara, Kota Semarang, Jawa Tengah 50174",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400005,
+      "lat": -6.9663642999999995,
+      "lon": 110.41953799999999,
+      "tags": {
+        "name": "Indomaret Petek",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "Jl. Petek No.94",
+        "addr:full": "Indomaret Petek, Jl. Petek No.94, Dadapsari, Kec. Semarang Utara, Kota Semarang, Jawa Tengah 50173",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400006,
+      "lat": -6.963562199999999,
+      "lon": 110.39043649999999,
+      "tags": {
+        "name": "Indomaret Puri Anjasmoro EE",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "Jl. Puri Anjasmoro",
+        "addr:full": "29PR+H5F Indomaret Puri Anjasmoro EE, Jl. Puri Anjasmoro, Tawangsari, Kec. Semarang Barat, Kota Semarang, Jawa Tengah 50144",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400007,
+      "lat": -6.9690121,
+      "lon": 110.41637159999999,
+      "tags": {
+        "name": "Indomaret Tambra",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "Jl. Tambra",
+        "addr:full": "2CJ8+9GX Indomaret Tambra, Jl. Tambra, Purwosari, Kec. Semarang Utara, Kota Semarang, Jawa Tengah 50172",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400008,
+      "lat": -6.9603712,
+      "lon": 110.44144779999999,
+      "tags": {
+        "name": "Indomaret Raden Patah 267",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "Jl. Kaligawe Raya",
+        "addr:full": "Indomaret Raden Patah 267, Jl. Kaligawe Raya, Kemijen, Kec. Semarang Tim., Kota Semarang, Jawa Tengah 50126",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400009,
+      "lat": -6.9760317999999994,
+      "lon": 110.40896959999999,
+      "tags": {
+        "name": "Indomaret Fresh Indraprasta 1",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "Jl. Brotojoyo No.2a",
+        "addr:full": "Indomaret Indraprasta 1, Jl. Brotojoyo No.2a, Plombokan, Kec. Semarang Utara, Kota Semarang, Jawa Tengah 50171",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400010,
+      "lat": -6.9804466,
+      "lon": 110.40096989999999,
+      "tags": {
+        "name": "Indomaret Jenderal Sudirman",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "Jl. Jenderal Sudirman",
+        "addr:full": "2C92+R9H Indomaret, Jl. Jenderal Sudirman, Krobokan, Kec. Semarang Barat, Kota Semarang, Jawa Tengah 50141",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400011,
+      "lat": -6.978425199999999,
+      "lon": 110.40747929999999,
+      "tags": {
+        "name": "Indomaret Indraprasta",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "Jl. Indraprasta No.25",
+        "addr:full": "Indomaret Indraprasta 35, Jl. Indraprasta No.25, Pindrikan Lor, Kec. Semarang Tengah, Kota Semarang, Jawa Tengah 50131",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400012,
+      "lat": -6.9796594999999995,
+      "lon": 110.4212505,
+      "tags": {
+        "name": "Indomaret Gajah Mada",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "Jl. Gajahmada No.106 Rt01",
+        "addr:full": "Indomaret Gajah Mada, Jl. Gajahmada No.106 Rt01, RW.04, Bangunharjo, Semarang Tengah, Semarang City, Central Java 50138",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400013,
+      "lat": -6.9699561999999995,
+      "lon": 110.38869919999999,
+      "tags": {
+        "name": "Indomaret Puri Anjasmoro D-2",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "Jl. Puri Anjasmoro",
+        "addr:full": "29JQ+2F8 Indomaret Puri Anjasmoro Blok D-2, Jl. Puri Anjasmoro, Tawangsari, Semarang Barat, Semarang City, Central Java 50144",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400014,
+      "lat": -6.966152699999999,
+      "lon": 110.4330213,
+      "tags": {
+        "name": "Indomaret Raden Patah",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "Jl. Raden Patah",
+        "addr:full": "2CMM+G6J Indomaret Raden Patah, Jl. Raden Patah, Rejomulyo, Kec. Semarang Tim., Kota Semarang, Jawa Tengah 50227",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400015,
+      "lat": -6.978010299999999,
+      "lon": 110.4233921,
+      "tags": {
+        "name": "Indomaret Plampitan",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "Jl. Plampitan No.60",
+        "addr:full": "Indomaret, Jl. Plampitan No.60, Bangunharjo, Semarang Tengah, Semarang City, Central Java 50139",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400016,
+      "lat": -6.9792545,
+      "lon": 110.41710979999999,
+      "tags": {
+        "name": "Indomaret Mh. Thamrin",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "Jl. Thamrin No.14",
+        "addr:full": "Indomaret Mh. Thamrin, Jl. Thamrin No.14, Kambangsari, Semarang Tengah, Kembangsari, Semarang Tengah, Semarang City, Central Java 50133",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400017,
+      "lat": -6.9771795,
+      "lon": 110.41908799999999,
+      "tags": {
+        "name": "Indomaret Depok",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "Jl. Depok No.24",
+        "addr:full": "Indomaret, Jl. Depok No.24, Kembangsari, Kec. Semarang Tengah, Kota Semarang, Jawa Tengah 50133",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400018,
+      "lat": -6.9799038,
+      "lon": 110.4107774,
+      "tags": {
+        "name": "Indomaret Imam Bonjol 177",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "Jl. Imam Bonjol No.177B",
+        "addr:full": "Indomaret Imam Bonjol 177, Jl. Imam Bonjol No.177B, Pendrikan Kidul, Kec. Semarang Tengah, Kota Semarang, Jawa Tengah 50131",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400019,
+      "lat": -6.9671639999999995,
+      "lon": 110.4112921,
+      "tags": {
+        "name": "Alfamart Hasanudin 2",
+        "brand": "Alfamart",
+        "shop": "convenience",
+        "addr:street": "Jl. Hasanudin",
+        "addr:full": "2CM6+4GM Alfamart Hasanudin H037, Jl. Hasanudin, Plombokan, Kec. Semarang Utara, Kota Semarang, Jawa Tengah 50171",
+        "addr:city": "Semarang",
+        "opening_hours": "07:00-22:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400020,
+      "lat": -6.9836756,
+      "lon": 110.3959938,
+      "tags": {
+        "name": "Indomaret Puspowarno 21",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "Jl. Puspowarno No.24",
+        "addr:full": "Indomaret Puspowarno 21, Jl. Puspowarno No.24, Salamanmloyo, Kec. Semarang Barat, Kota Semarang, Jawa Tengah 50149",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400021,
+      "lat": -6.987632199999999,
+      "lon": 110.4229476,
+      "tags": {
+        "name": "Indomaret Point Gajah Mada",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "Jl. Gajahmada No.135",
+        "addr:full": "Indomaret Point Gajah Mada, Jl. Gajahmada No.135, Pekunden, Kec. Semarang Tengah, Kota Semarang, Jawa Tengah 50241",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400022,
+      "lat": -6.9694524,
+      "lon": 110.40861869999999,
+      "tags": {
+        "name": "Alfamart Satria Utara",
+        "brand": "Alfamart",
+        "shop": "convenience",
+        "addr:street": "Jl. Satria Utara",
+        "addr:full": "2CJ5+6C9 Alfamart Satria Utara, Jl. Satria Utara, Plombokan, Kec. Semarang Utara, Kota Semarang, Jawa Tengah 50171",
+        "addr:city": "Semarang",
+        "opening_hours": "07:00-22:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400023,
+      "lat": -6.962590199999999,
+      "lon": 110.4110805,
+      "tags": {
+        "name": "Alfamart Hasanudin 1",
+        "brand": "Alfamart",
+        "shop": "convenience",
+        "addr:street": "Jl. Hasanudin 17",
+        "addr:full": "Alfamart, Jl. Hasanudin 17, Blok H -1 Kel, Kuningan, Semarang Utara, Semarang City, Central Java 50142",
+        "addr:city": "Semarang",
+        "opening_hours": "07:00-22:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400024,
+      "lat": -6.965059999999999,
+      "lon": 110.41962,
+      "tags": {
+        "name": "Alfamart Kakap",
+        "brand": "Alfamart",
+        "shop": "convenience",
+        "addr:street": "Jl. Kakap No.62",
+        "addr:full": "Alfamart, Jl. Kakap No.62, Dadapsari, Semarang Utara, Semarang City, Central Java 50173",
+        "addr:city": "Semarang",
+        "opening_hours": "07:00-22:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400025,
+      "lat": -6.9678929,
+      "lon": 110.3960682,
+      "tags": {
+        "name": "Alfamart Semarang Indah",
+        "brand": "Alfamart",
+        "shop": "convenience",
+        "addr:street": "Semarang Indah Blok C4/15 G-F",
+        "addr:full": "Alfamart Semarang Indah, Semarang Indah Blok C4/15 G-F, Rt. 13, Rw. 08 Kel.Tawangsari &, Tawangmas, Kec. Semarang Barat, Kota Semarang, Jawa Tengah 50144",
+        "addr:city": "Semarang",
+        "opening_hours": "07:00-22:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400026,
+      "lat": -6.9683823,
+      "lon": 110.4161024,
+      "tags": {
+        "name": "Alfamart Tambra",
+        "brand": "Alfamart",
+        "shop": "convenience",
+        "addr:street": "Jl. Tambra Dalam Kel No.41",
+        "addr:full": "Alfamart Tambra, Jl. Tambra Dalam Kel No.41, RT.04/RW.05, Dadapsari, Kec. Semarang Utara, Kota Semarang, Jawa Tengah 50173",
+        "addr:city": "Semarang",
+        "opening_hours": "07:00-22:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400027,
+      "lat": -6.968456,
+      "lon": 110.4024767,
+      "tags": {
+        "name": "Alfamart Gondomono",
+        "brand": "Alfamart",
+        "shop": "convenience",
+        "addr:street": "Jl. Gondomono No.10",
+        "addr:full": "Alfamart Gondomono, Jl. Gondomono No.10, Panggung Kidul, Kec. Semarang Utara, Kota Semarang, Jawa Tengah 50179",
+        "addr:city": "Semarang",
+        "opening_hours": "07:00-22:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400028,
+      "lat": -6.9726244,
+      "lon": 110.4055142,
+      "tags": {
+        "name": "Alfamart Banowati",
+        "brand": "Alfamart",
+        "shop": "convenience",
+        "addr:street": "Jl. Banowati Raya No.57",
+        "addr:full": "Alfamart Banowati, Jl. Banowati Raya No.57, RT.05/RW.05, Bulu Lor, Kec. Semarang Utara, Kota Semarang, Jawa Tengah 50179",
+        "addr:city": "Semarang",
+        "opening_hours": "07:00-22:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400029,
+      "lat": -6.9685695999999995,
+      "lon": 110.3997268,
+      "tags": {
+        "name": "Alfamart Madukoro Raya",
+        "brand": "Alfamart",
+        "shop": "convenience",
+        "addr:street": "Ruko bizpark",
+        "addr:full": "ALFAMART MADUKORO RAYA, Ruko bizpark, Jl. Madukoro Raya blok A2 A3, Tawangmas, Kec. Semarang Barat, Kota Semarang, Jawa Tengah 50144",
+        "addr:city": "Semarang",
+        "opening_hours": "07:00-22:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400030,
+      "lat": -6.967896499999999,
+      "lon": 110.4293611,
+      "tags": {
+        "name": "Alfamart Wisata Kota Lama Semarang",
+        "brand": "Alfamart",
+        "shop": "convenience",
+        "addr:street": "Jl. Letjen Suprapto No.57-43",
+        "addr:full": "Alfamart Wisata Kota Lama Semarang, Jl. Letjen Suprapto No.57-43, Tj. Mas, Kec. Semarang Utara, Kota Semarang, Jawa Tengah 50174",
+        "addr:city": "Semarang",
+        "opening_hours": "07:00-22:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400031,
+      "lat": -6.9696111,
+      "lon": 110.3902969,
+      "tags": {
+        "name": "Alfamart Puri Puri Anjasmoro 2",
+        "brand": "Alfamart",
+        "shop": "convenience",
+        "addr:street": "Jl. Puri Anjasmoro Raya 2",
+        "addr:full": "29JR+543 Alfamart Anjasmoro2, Jl. Puri Anjasmoro Raya 2, Tawangsari, Kec. Semarang Barat, Kota Semarang, Jawa Tengah 50144",
+        "addr:city": "Semarang",
+        "opening_hours": "07:00-22:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400032,
+      "lat": -6.964247899999999,
+      "lon": 110.42815829999999,
+      "tags": {
+        "name": "AlfaExpress Stasiun Tawang",
+        "brand": "Alfamart",
+        "shop": "convenience",
+        "addr:street": "Komp. Stasiun Tawang",
+        "addr:full": "AlfaExpress Stasiun Tawang, Komp. Stasiun Tawang, Tj. Mas, Kec. Semarang Utara, Kota Semarang, Jawa Tengah 50174",
+        "addr:city": "Semarang",
+        "opening_hours": "07:00-22:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400033,
+      "lat": -6.968356699999999,
+      "lon": 110.4311752,
+      "tags": {
+        "name": "Alfamart Bubakan",
+        "brand": "Alfamart",
+        "shop": "convenience",
+        "addr:street": "Jl. MT. Haryono Kel No.28",
+        "addr:full": "Alfamart Bubakan, Jl. MT. Haryono Kel No.28, Kebonagung, Kec. Semarang Tim., Kota Semarang, Jawa Tengah 50123",
+        "addr:city": "Semarang",
+        "opening_hours": "07:00-22:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400034,
+      "lat": -6.978396,
+      "lon": 110.4152914,
+      "tags": {
+        "name": "Alfamart Pemuda Baru",
+        "brand": "Alfamart",
+        "shop": "convenience",
+        "addr:street": "Jl. Pemuda Kel No.109",
+        "addr:full": "Alfamart Pemuda Baru (H866Indah), Jl. Pemuda Kel No.109, RT.05/RW.03, Sekayu, Kec. Semarang Tengah, Kota Semarang, Jawa Tengah 50132",
+        "addr:city": "Semarang",
+        "opening_hours": "07:00-22:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400035,
+      "lat": -6.9757199,
+      "lon": 110.4234456,
+      "tags": {
+        "name": "Alfamart KH Wahid Hasyim",
+        "brand": "Alfamart",
+        "shop": "convenience",
+        "addr:street": "Jl. K.H. Wahid Hasyim Kel No.68/70",
+        "addr:full": "Alfamart KH Wahid Hasyim, Jl. K.H. Wahid Hasyim Kel No.68/70, Kranggan, Kec. Semarang Tengah, Kota Semarang, Jawa Tengah 50137",
+        "addr:city": "Semarang",
+        "opening_hours": "07:00-22:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400036,
+      "lat": -6.9796562,
+      "lon": 110.39093009999999,
+      "tags": {
+        "name": "Alfamart Puri Anjasmoro Raya",
+        "brand": "Alfamart",
+        "shop": "convenience",
+        "addr:street": "Jl. Puri Anjasmoro Raya Kel No.26",
+        "addr:full": "Alfamart, Jl. Puri Anjasmoro Raya Kel No.26, Karangayu, Kec. Semarang Barat, Kota Semarang, Jawa Tengah 50149",
+        "addr:city": "Semarang",
+        "opening_hours": "07:00-22:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400037,
+      "lat": -6.9715457,
+      "lon": 110.418807,
+      "tags": {
+        "name": "Alfamart Imam Bonjol",
+        "brand": "Alfamart",
+        "shop": "convenience",
+        "addr:street": "Jl. Imam Bonjol No.57",
+        "addr:full": "Alfamart Imam Bonjol, Jl. Imam Bonjol No.57, Purwosari, Kec. Semarang Utara, Kota Semarang, Jawa Tengah 50172",
+        "addr:city": "Semarang",
+        "opening_hours": "07:00-22:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400038,
+      "lat": -6.980333399999999,
+      "lon": 110.402874,
+      "tags": {
+        "name": "Alfamart Indraprasta",
+        "brand": "Alfamart",
+        "shop": "convenience",
+        "addr:street": "Jl. Indraprasta Kel No.117",
+        "addr:full": "Alfamart Indahprasta Pindrikan Lor, Jl. Indraprasta Kel No.117, Pindrikan Lor, Kec. Semarang Tengah, Kota Semarang, Jawa Tengah 50142",
+        "addr:city": "Semarang",
+        "opening_hours": "07:00-22:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400039,
+      "lat": -6.977824099999999,
+      "lon": 110.4103901,
+      "tags": {
+        "name": "Alfamart Abimanyu",
+        "brand": "Alfamart",
+        "shop": "convenience",
+        "addr:street": "Jl. Abimanyu Raya Kel No.11",
+        "addr:full": "2CC6+V4W Alfamart Abimanyu, Jl. Abimanyu Raya Kel No.11, Pindrikan Lor, Kec. Semarang Tengah, Kota Semarang, Jawa Tengah 50142",
+        "addr:city": "Semarang",
+        "opening_hours": "07:00-22:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400040,
+      "lat": -6.9709433,
+      "lon": 110.44006689999999,
+      "tags": {
+        "name": "Alfamart Citarum 1",
+        "brand": "Alfamart",
+        "shop": "convenience",
+        "addr:street": "Jl. Citarum Kel No.5",
+        "addr:full": "Alfamart Citarum, Jl. Citarum Kel No.5, Bugangan, Kec. Semarang Tim., Kota Semarang, Jawa Tengah 50126",
+        "addr:city": "Semarang",
+        "opening_hours": "07:00-22:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400041,
+      "lat": -6.9817545,
+      "lon": 110.42487179999999,
+      "tags": {
+        "name": "Alfamart Karang Anyar",
+        "brand": "Alfamart",
+        "shop": "convenience",
+        "addr:street": "Jl. Karang Anyar No.19",
+        "addr:full": "Alfamart, Jl. Karang Anyar No.19, Gabahan, Kec. Semarang Tengah, Kota Semarang, Jawa Tengah 50135",
+        "addr:city": "Semarang",
+        "opening_hours": "07:00-22:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400042,
+      "lat": -6.978590199999999,
+      "lon": 110.4299626,
+      "tags": {
+        "name": "Alfamart MT. Haryono",
+        "brand": "Alfamart",
+        "shop": "convenience",
+        "addr:street": "Jl. MT. Haryono No.Kel",
+        "addr:full": "Alfamart, Jl. MT. Haryono No.Kel, Jagalan, Semarang Tengah, Semarang City, Central Java 50136",
+        "addr:city": "Semarang",
+        "opening_hours": "07:00-22:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400043,
+      "lat": -6.9756791,
+      "lon": 110.39049019999999,
+      "tags": {
+        "name": "Alfamart Puri Anjasmoro",
+        "brand": "Alfamart",
+        "shop": "convenience",
+        "addr:street": "Jl. Anjasmoro Tengah VI Kel",
+        "addr:full": "Alfamart Puri Anjasmoro, Jl. Anjasmoro Tengah VI Kel, RT.06/RW.06, Karangayu, Kec. Semarang Barat, Kota Semarang, Jawa Tengah 50149",
+        "addr:city": "Semarang",
+        "opening_hours": "07:00-22:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400044,
+      "lat": -6.9766504,
+      "lon": 110.4227882,
+      "tags": {
+        "name": "Alfamart Plampitan",
+        "brand": "Alfamart",
+        "shop": "convenience",
+        "addr:street": "Jl. Plampitan Kel No.17",
+        "addr:full": "2CFF+G49 Alfamart, Jl. Plampitan Kel No.17, RT.003/RW.003, Bangunharjo, Semarang Tengah, Semarang City, Central Java 50138",
+        "addr:city": "Semarang",
+        "opening_hours": "07:00-22:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400045,
+      "lat": -6.9787124,
+      "lon": 110.4063297,
+      "tags": {
+        "name": "Alfamart Indraprasta",
+        "brand": "Alfamart",
+        "shop": "convenience",
+        "addr:street": "?",
+        "addr:full": "Alfamart Indraprasta, ?, Jl. Indraprasta No.53, Kel.Sukolilo, Kec. Semarang Tengah, Kota Semarang, Jawa Tengah 50137",
+        "addr:city": "Semarang",
+        "opening_hours": "07:00-22:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400046,
+      "lat": -6.982842,
+      "lon": 110.41747889999999,
+      "tags": {
+        "name": "Alfamart MH Thamrin",
+        "brand": "Alfamart",
+        "shop": "convenience",
+        "addr:street": "Jl. MH Thamrin No.35",
+        "addr:full": "Alfamart MH Thamrin, Jl. MH Thamrin No.35, Miroto, Kec. Semarang Tengah, Kota Semarang, Jawa Tengah 50134",
+        "addr:city": "Semarang",
+        "opening_hours": "07:00-22:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400047,
+      "lat": -6.9698053,
+      "lon": 110.43762199999999,
+      "tags": {
+        "name": "Alfamart Citarum 2",
+        "brand": "Alfamart",
+        "shop": "convenience",
+        "addr:street": "Jl. Citarum No.28",
+        "addr:full": "Alfamart Citarum Raya 2, Jl. Citarum No.28, Mlatibaru, Kec. Semarang Tim., Kota Semarang, Jawa Tengah 50122",
+        "addr:city": "Semarang",
+        "opening_hours": "07:00-22:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400048,
+      "lat": -6.9744259,
+      "lon": 110.3908034,
+      "tags": {
+        "name": "Alfamart Puri Anjasmoro 5",
+        "brand": "Alfamart",
+        "shop": "convenience",
+        "addr:street": "Jl. Puri Anjasmoro A-2 No.01 Rt.01 Rw.03 Kel.Tawangsari &",
+        "addr:full": "Alfamart Anjasmoro 5, Jl. Puri Anjasmoro A-2 No.01 Rt.01 Rw.03 Kel.Tawangsari &, Tawangmas, Semarang Barat, Semarang City, Central Java 50144",
+        "addr:city": "Semarang",
+        "opening_hours": "07:00-22:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400049,
+      "lat": -6.981700999999999,
+      "lon": 110.395545,
+      "tags": {
+        "name": "Alfamart Jenderal Sudirman",
+        "brand": "Alfamart",
+        "shop": "convenience",
+        "addr:street": "Jl. Jenderal Sudirman Kel No.222",
+        "addr:full": "Alfamart Jenderal Sudirman, Jl. Jenderal Sudirman Kel No.222, Cabean, Kec. Semarang Barat, Kota Semarang, Jawa Tengah 50141",
+        "addr:city": "Semarang",
+        "opening_hours": "07:00-22:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400050,
+      "lat": -6.981195199999999,
+      "lon": 110.4366977,
+      "tags": {
+        "name": "Alfamart Rejosari",
+        "brand": "Alfamart",
+        "shop": "convenience",
+        "addr:street": "Jl. Purwosari Raya No.37",
+        "addr:full": "ALFAMART Rejosari smg, Jl. Purwosari Raya No.37, Rejosari, Kec. Semarang Tim., Kota Semarang, Jawa Tengah 50125",
+        "addr:city": "Semarang",
+        "opening_hours": "07:00-22:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400051,
+      "lat": -6.994564899999999,
+      "lon": 110.41097669999999,
+      "tags": {
+        "name": "Alfamart Kariadi",
+        "brand": "Alfamart",
+        "shop": "convenience",
+        "addr:street": "Jl. Dr. Kariadi",
+        "addr:full": "2C46+59H Alfamart Kariadi, Jl. Dr. Kariadi, Randusari, Kec. Semarang Sel., Kota Semarang, Jawa Tengah 50244",
+        "addr:city": "Semarang",
+        "opening_hours": "07:00-22:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400052,
+      "lat": -6.987567299999999,
+      "lon": 110.39192249999999,
+      "tags": {
+        "name": "Alfamart Pamularsih",
+        "brand": "Alfamart",
+        "shop": "convenience",
+        "addr:street": "Jl. Pamularsih Raya No.71",
+        "addr:full": "Alfamart Pamularsih H394, Jl. Pamularsih Raya No.71, Salamanmloyo, Kec. Semarang Barat, Kota Semarang, Jawa Tengah 50149",
+        "addr:city": "Semarang",
+        "opening_hours": "07:00-22:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400053,
+      "lat": -6.9716279,
+      "lon": 110.43583729999999,
+      "tags": {
+        "name": "Alfamart Senjoyo",
+        "brand": "Alfamart",
+        "shop": "convenience",
+        "addr:street": "Jl. Senjoyo 2 Kel No.29",
+        "addr:full": "Alfamart Senjoyo, Jl. Senjoyo 2 Kel No.29, Bugangan, Kec. Semarang Tim., Kota Semarang, Jawa Tengah 50126",
+        "addr:city": "Semarang",
+        "opening_hours": "07:00-22:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400054,
+      "lat": -6.9876537,
+      "lon": 110.38762709999999,
+      "tags": {
+        "name": "Alfamart Pamularsih 104",
+        "brand": "Alfamart",
+        "shop": "convenience",
+        "addr:street": "Jl. Pamularsih Raya Kel No.104",
+        "addr:full": "Alfamart, Jl. Pamularsih Raya Kel No.104, Gisikdrono, Semarang Barat, Semarang City, Central Java 50149",
+        "addr:city": "Semarang",
+        "opening_hours": "07:00-22:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400055,
+      "lat": -6.9774533,
+      "lon": 110.39065599999999,
+      "tags": {
+        "name": "Alfamidi Puri Anjasmoro 2",
+        "brand": "Alfamidi",
+        "shop": "convenience",
+        "addr:street": "Jl. Puri Anjasmoro Raya No.131",
+        "addr:full": "Alfamidi Anjasmoro 2, Jl. Puri Anjasmoro Raya No.131, Tawangsari, Kec. Semarang Barat, Kota Semarang, Jawa Tengah 50144",
+        "addr:city": "Semarang",
+        "opening_hours": "07:00-22:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400056,
+      "lat": -6.964535199999999,
+      "lon": 110.4056715,
+      "tags": {
+        "name": "Alfamidi Pasir Mas",
+        "brand": "Alfamidi",
+        "shop": "convenience",
+        "addr:street": "Jl. Pasirmas Raya No.2",
+        "addr:full": "Alfamidi Pasir Mas, Jl. Pasirmas Raya No.2, Panggung Lor, Kec. Semarang Utara, Kota Semarang, Jawa Tengah 50177",
+        "addr:city": "Semarang",
+        "opening_hours": "07:00-22:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400057,
+      "lat": -6.9962656999999995,
+      "lon": 110.4092807,
+      "tags": {
+        "name": "Alfamidi S. Parman",
+        "brand": "Alfamidi",
+        "shop": "convenience",
+        "addr:street": "Jl. Letnan Jenderal S. Parman No.2B",
+        "addr:full": "Alfamidi, Jl. Letnan Jenderal S. Parman No.2B, Bendungan, Kec. Gajahmungkur, Kota Semarang, Jawa Tengah 50231",
+        "addr:city": "Semarang",
+        "opening_hours": "07:00-22:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400058,
+      "lat": -6.9761422,
+      "lon": 110.3692832,
+      "tags": {
+        "name": "Alfamidi Graha Padma",
+        "brand": "Alfamidi",
+        "shop": "convenience",
+        "addr:street": "Tambakharjo",
+        "addr:full": "29F9+GPV Alfamidi Graha Padma, Tambakharjo, Semarang Barat, Semarang City, Central Java 50149",
+        "addr:city": "Semarang",
+        "opening_hours": "07:00-22:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400059,
+      "lat": -6.989652899999999,
+      "lon": 110.4349943,
+      "tags": {
+        "name": "Alfamidi Sidodadi Timur",
+        "brand": "Alfamidi",
+        "shop": "convenience",
+        "addr:street": "Jl. Sidodadi Timur",
+        "addr:full": "2C6M+4XQ Alfamidi sidodadi, Jl. Sidodadi Timur, Karangtempel, Semarang Timur, Semarang City, Central Java 50232",
+        "addr:city": "Semarang",
+        "opening_hours": "07:00-22:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400060,
+      "lat": -6.962979,
+      "lon": 110.4660215,
+      "tags": {
+        "name": "Alfamidi Padi Raya",
+        "brand": "Alfamidi",
+        "shop": "convenience",
+        "addr:street": "Jl. Padi Raya",
+        "addr:full": "Alfamidi Padi Raya, Jl. Padi Raya, Gebangsari, Kec. Genuk, Kota Semarang, Jawa Tengah 50117",
+        "addr:city": "Semarang",
+        "opening_hours": "07:00-22:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400061,
+      "lat": -6.9866264,
+      "lon": 110.4481481,
+      "tags": {
+        "name": "Teras Alfamidi Gajah Raya 2",
+        "brand": "Alfamidi",
+        "shop": "convenience",
+        "addr:street": "Jl. Gajah Raya No.2",
+        "addr:full": "Teras Alfamidi Gajah Raya 2, Jl. Gajah Raya No.2, Sambirejo, Kec. Gayamsari, Kota Semarang, Jawa Tengah 50166",
+        "addr:city": "Semarang",
+        "opening_hours": "07:00-22:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400062,
+      "lat": -7.005983,
+      "lon": 110.4368021,
+      "tags": {
+        "name": "Alfamidi Lampersari",
+        "brand": "Alfamidi",
+        "shop": "convenience",
+        "addr:street": "Lamper Kidul",
+        "addr:full": "XCVP+JP3 Alfamidi Lampersari, Lamper Kidul, Kec. Semarang Sel., Kota Semarang, Jawa Tengah 50249",
+        "addr:city": "Semarang",
+        "opening_hours": "07:00-22:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400063,
+      "lat": -7.0041101,
+      "lon": 110.3988533,
+      "tags": {
+        "name": "Alfamidi Kelud Raya",
+        "brand": "Alfamidi",
+        "shop": "convenience",
+        "addr:street": "Jl. Kelud Raya No.46c",
+        "addr:full": "Alfamidi Kelud Raya, Jl. Kelud Raya No.46c, Petompon, Kec. Gajahmungkur, Kota Semarang, Jawa Tengah 50237",
+        "addr:city": "Semarang",
+        "opening_hours": "07:00-22:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400064,
+      "lat": -7.0106147,
+      "lon": 110.39612079999999,
+      "tags": {
+        "name": "Alfamidi Lamongan",
+        "brand": "Alfamidi",
+        "shop": "convenience",
+        "addr:street": "Jl. Lamongan Raya Jl. Lamongan Barat No.6",
+        "addr:full": "Alfamidi Lamongan, Jl. Lamongan Raya Jl. Lamongan Barat No.6, Bendan Ngisor, Kec. Gajahmungkur, Kota Semarang, Jawa Tengah 50233",
+        "addr:city": "Semarang",
+        "opening_hours": "07:00-22:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400065,
+      "lat": -7.002393499999999,
+      "lon": 110.4373416,
+      "tags": {
+        "name": "Alfamidi Sompok Semarang",
+        "brand": "Alfamidi",
+        "shop": "convenience",
+        "addr:street": "Jl. Taman Sompok",
+        "addr:full": "XCXP+2WW Alfamidi Sompok Semarang, Jl. Taman Sompok, Lamper Lor, Semarang Selatan, Semarang City, Central Java 50249",
+        "addr:city": "Semarang",
+        "opening_hours": "07:00-22:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400066,
+      "lat": -6.9961879,
+      "lon": 110.4730931,
+      "tags": {
+        "name": "Alfamidi Woltermonginsidi",
+        "brand": "Alfamidi",
+        "shop": "convenience",
+        "addr:street": "Jl. Wolter Monginsidi",
+        "addr:full": "2F3F+G6G Alfamidi Woltermonginsidi, Jl. Wolter Monginsidi, Tlogomulyo, Kec. Pedurungan, Kota Semarang, Jawa Tengah 50196",
+        "addr:city": "Semarang",
+        "opening_hours": "07:00-22:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400067,
+      "lat": -7.0196957,
+      "lon": 110.4708399,
+      "tags": {
+        "name": "Alfamidi Fatmawati",
+        "brand": "Alfamidi",
+        "shop": "convenience",
+        "addr:street": "Jl. Fatmawati No.100",
+        "addr:full": "Alfamidi Fatmawati X Jadi, Jl. Fatmawati No.100, Pedurungan Kidul, Kec. Pedurungan, Kota Semarang, Jawa Tengah 50246",
+        "addr:city": "Semarang",
+        "opening_hours": "07:00-22:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400068,
+      "lat": -7.0372657,
+      "lon": 110.457849,
+      "tags": {
+        "name": "Alfamidi Citragrand",
+        "brand": "Alfamidi",
+        "shop": "convenience",
+        "addr:street": "Jl. Alamanda Residence No.55a",
+        "addr:full": "Alfamidi Citragrand x JaDi Coffe, Jl. Alamanda Residence No.55a, Mangunharjo, Kec. Tembalang, Kota Semarang, Jawa Tengah 50276",
+        "addr:city": "Semarang",
+        "opening_hours": "07:00-22:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400069,
+      "lat": -7.0142599,
+      "lon": 110.45239679999999,
+      "tags": {
+        "name": "Alfamidi Kedung Mundu",
+        "brand": "Alfamidi",
+        "shop": "convenience",
+        "addr:street": "Jl. Kedungmundu No.202 No.202SambirotoKec",
+        "addr:full": "ALFAMIDI KEDUNG MUNDU, Jl. Kedungmundu No.202 No.202SambirotoKec, Sambiroto, Tembalang, Semarang City, Central Java 50274",
+        "addr:city": "Semarang",
+        "opening_hours": "07:00-22:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400070,
+      "lat": -7.0306324,
+      "lon": 110.416506,
+      "tags": {
+        "name": "Alfamidi Jatingaleh",
+        "brand": "Alfamidi",
+        "shop": "convenience",
+        "addr:street": "Jl. Karang Rejo Raya No.15-16",
+        "addr:full": "Alfamidi Jatingaleh, Jl. Karang Rejo Raya No.15-16, Karangrejo, Kec. Gajahmungkur, Kota Semarang, Jawa Tengah 50231",
+        "addr:city": "Semarang",
+        "opening_hours": "07:00-22:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400071,
+      "lat": -6.9981338,
+      "lon": 110.342597,
+      "tags": {
+        "name": "Alfamidi Beringin Raya",
+        "brand": "Alfamidi",
+        "shop": "convenience",
+        "addr:street": "Jl. Beringin Raya",
+        "addr:full": "282V+P2X Alfamidi Beringin Raya, Jl. Beringin Raya, Bringin, Kec. Ngaliyan, Kota Semarang, Jawa Tengah 50189",
+        "addr:city": "Semarang",
+        "opening_hours": "07:00-22:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400072,
+      "lat": -7.0330262,
+      "lon": 110.4676075,
+      "tags": {
+        "name": "Alfamidi Ketileng",
+        "brand": "Alfamidi",
+        "shop": "convenience",
+        "addr:street": "Jl. Ketileng Utara Iv",
+        "addr:full": "XF89+Q2Q Alfamidi Ketileng, Jl. Ketileng Utara Iv, Sendangmulyo, Kec. Tembalang, Kota Semarang, Jawa Tengah 50272",
+        "addr:city": "Semarang",
+        "opening_hours": "07:00-22:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400073,
+      "lat": -7.0752478,
+      "lon": 110.4189746,
+      "tags": {
+        "name": "Alfamidi Karangrejo Banyumanik",
+        "brand": "Alfamidi",
+        "shop": "convenience",
+        "addr:street": "Jl. Kr. Rejo Raya No.68",
+        "addr:full": "Alfamidi Karangrejo Banyumanik, Jl. Kr. Rejo Raya No.68, Srondol Wetan, Banyumanik, Semarang City, Central Java 50264",
+        "addr:city": "Semarang",
+        "opening_hours": "07:00-22:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400074,
+      "lat": -7.0682868999999995,
+      "lon": 110.4327036,
+      "tags": {
+        "name": "Alfamidi Mulawarman",
+        "brand": "Alfamidi",
+        "shop": "convenience",
+        "addr:street": "Jl. Mulawarman Raya No.3-5",
+        "addr:full": "Alfamidi Mulawarman, Jl. Mulawarman Raya No.3-5, Pedalangan, Kec. Banyumanik, Kota Semarang, Jawa Tengah 50268",
+        "addr:city": "Semarang",
+        "opening_hours": "07:00-22:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400075,
+      "lat": -7.084841099999999,
+      "lon": 110.36123239999999,
+      "tags": {
+        "name": "Alfamidi Gunungpati",
+        "brand": "Alfamidi",
+        "shop": "convenience",
+        "addr:street": "Gunungpati",
+        "addr:full": "W986+3F9 Alfamidi Gunungpati x JaDi Coffe, Gunungpati, Kec. Gn. Pati, Kota Semarang, Jawa Tengah 50229",
+        "addr:city": "Semarang",
+        "opening_hours": "07:00-22:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400076,
+      "lat": -6.9563692,
+      "lon": 110.4164275,
+      "tags": {
+        "name": "Indomaret SPBU Arteri Utara FBTP",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "SPBU Pertamina 44.501.02, Jl. Arteri Yos Sudarso / Hasanudin, Semarang",
+        "addr:district": "Semarang Utara",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400077,
+      "lat": -6.9668122,
+      "lon": 110.4046803,
+      "tags": {
+        "name": "Indomaret Brotojoyo",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "Jl. Brotojoyo Barat II No. 3, Panggung Kidul, Semarang Utara",
+        "addr:district": "Semarang Utara",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400078,
+      "lat": -6.96785,
+      "lon": 110.3965,
+      "tags": {
+        "name": "Indomaret Semarang Indah",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "Jl. Semarang Indah Blok D11, Tawangsari, Semarang Barat",
+        "addr:district": "Semarang Barat",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9400079,
+      "lat": -6.97342,
+      "lon": 110.40555,
+      "tags": {
+        "name": "Indomaret Banowati",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "Jl. Banowati Raya No. 42, Bulu Lor, Semarang Utara",
+        "addr:district": "Semarang Utara",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
       }
     }
   ]
