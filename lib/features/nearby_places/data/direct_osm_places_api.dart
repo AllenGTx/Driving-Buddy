@@ -501,21 +501,34 @@ class DirectOsmPlacesApi implements PlacesApi {
 
   String _resolveName(Map<String, dynamic> tags, PlaceCategory cat) {
     String baseName = '';
-    for (final key in ['name', 'name:id', 'brand', 'operator']) {
+    for (final key in ['name', 'name:id', 'name:en', 'brand', 'operator']) {
       final val = tags[key]?.toString().trim();
       if (val != null && val.isNotEmpty) {
         baseName = val;
         break;
       }
     }
-    if (baseName.isEmpty) return '';
+    if (baseName.isEmpty) {
+      final brand = tags['brand']?.toString().trim();
+      if (brand != null && brand.isNotEmpty) {
+        baseName = brand;
+      } else {
+        baseName = cat.label;
+      }
+    }
 
     final branch = tags['branch']?.toString().trim();
     if (branch != null &&
         branch.isNotEmpty &&
         !baseName.toLowerCase().contains(branch.toLowerCase())) {
-      return '$baseName $branch';
+      baseName = ' ';
     }
+
+    // Rapikan nama jika ada awalan redundant 'Jalan' (misal: 'SPBU Pertamina Jalan Imam Bonjol' -> 'SPBU Pertamina Imam Bonjol')
+    baseName = baseName.replaceFirst(
+      RegExp(r'^(SPBU Pertamina|SPBU|Indomaret|Alfamart|Alfamidi)\\s+(?:Jalan|Jl\\.?)\\s+', caseSensitive: false),
+      r' ',
+    ).trim();
 
     return baseName;
   }

@@ -238,10 +238,7 @@ class AuthService {
           final data = existingDoc.data();
           final existingPhoto = (data?['customPhotoUrl'] ?? data?['photoUrl']) as String?;
           if (existingPhoto != null && existingPhoto.trim().isNotEmpty) {
-            // Pastikan bukan foto Google yang disimpan sebagai kustom
-            if (existingPhoto.trim() != user.photoURL?.trim()) {
-              customPhoto = existingPhoto.trim();
-            }
+            customPhoto = existingPhoto.trim();
           }
         } catch (_) {}
       }
@@ -257,11 +254,11 @@ class AuthService {
         'lastLogin': FieldValue.serverTimestamp(),
       }, SetOptions(merge: true));
 
-      // JANGAN TIMPA FOTO PROFIL KANAN ATAS: Hanya set jika user memiliki foto kustom
-      if (customPhoto != null && customPhoto.isNotEmpty) {
-        await AccountConfig.setCustomPhoto(customPhoto, userEmail: user.email, uid: user.uid);
-      } else {
-        AccountConfig.photoNotifier.value = null;
+      final photoToUse = (customPhoto != null && customPhoto.isNotEmpty)
+          ? customPhoto
+          : user.photoURL;
+      if (photoToUse != null && photoToUse.isNotEmpty) {
+        await AccountConfig.setCustomPhoto(photoToUse, userEmail: user.email, uid: user.uid);
       }
     }
 

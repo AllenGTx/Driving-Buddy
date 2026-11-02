@@ -242,18 +242,18 @@ class _AccountSettingsScreenState extends State<AccountSettingsScreen> {
       final profile = await AuthService.getUserProfile();
       final cachedPhoto = await AccountConfig.getCustomPhoto(userEmail: email, uid: user?.uid);
       final firestorePhoto = (profile?['customPhotoUrl'] ?? profile?['photoUrl']) as String?;
-      // Foto kustom hanya yang diunggah user, bukan foto Google otomatis
-      String? photo;
-      if (cachedPhoto != null && cachedPhoto.trim().isNotEmpty && cachedPhoto != user?.photoURL) {
-        photo = cachedPhoto;
-      } else if (firestorePhoto != null && firestorePhoto.trim().isNotEmpty && firestorePhoto != user?.photoURL) {
-        photo = firestorePhoto;
-      }
+      final authPhoto = user?.photoURL;
+      
+      final photo = (cachedPhoto != null && cachedPhoto.trim().isNotEmpty)
+          ? cachedPhoto.trim()
+          : (firestorePhoto != null && firestorePhoto.trim().isNotEmpty
+              ? firestorePhoto.trim()
+              : (authPhoto != null && authPhoto.trim().isNotEmpty
+                  ? authPhoto.trim()
+                  : null));
 
       if (photo != null && photo.isNotEmpty) {
         await AccountConfig.setCustomPhoto(photo, userEmail: email, uid: user?.uid);
-      } else {
-        AccountConfig.photoNotifier.value = null;
       }
 
       if (mounted) {

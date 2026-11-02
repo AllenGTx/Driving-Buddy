@@ -44,18 +44,24 @@ class _DrivingBuddyAppBarState extends State<DrivingBuddyAppBar> {
     final curEmail = curUser?.email;
     final curUid = curUser?.uid;
     if (curUser != null) {
+      // 1. Cek cache lokal SharedPreferences terlebih dahulu (instan tanpa lag jaringan)
       final cached = await AccountConfig.getCustomPhoto(userEmail: curEmail, uid: curUid);
-      if (cached != null && cached.isNotEmpty && cached != curUser.photoURL) {
-        AccountConfig.photoNotifier.value = cached;
+      if (cached != null && cached.trim().isNotEmpty) {
+        AccountConfig.photoNotifier.value = cached.trim();
         return;
       }
+      // 2. Jika belum ada di cache, ambil dari Firestore profil atau Firebase Auth
       try {
         final profile = await AuthService.getUserProfile();
         final p = (profile?['customPhotoUrl'] ?? profile?['photoUrl']) as String?;
-        if (p != null && p.isNotEmpty && p != curUser.photoURL) {
-          await AccountConfig.setCustomPhoto(p, userEmail: curEmail, uid: curUid);
-        } else {
-          AccountConfig.photoNotifier.value = null;
+        final photoToUse = (p != null && p.trim().isNotEmpty)
+            ? p.trim()
+            : (curUser.photoURL != null && curUser.photoURL!.trim().isNotEmpty
+                ? curUser.photoURL!.trim()
+                : null);
+
+        if (photoToUse != null && photoToUse.isNotEmpty) {
+          await AccountConfig.setCustomPhoto(photoToUse, userEmail: curEmail, uid: curUid);
         }
       } catch (_) {}
     }
@@ -147,12 +153,14 @@ class _DrivingBuddyAppBarState extends State<DrivingBuddyAppBar> {
                   valueListenable: AccountConfig.photoNotifier,
                   builder: (context, photoUrl, _) {
                     final customPhoto = AccountConfig.photoNotifier.value;
-                    // JANGAN PERNAH FALLBACK KE FOTO GOOGLE: Foto kanan atas khusus PP kustom Driving Buddy
-                    final effectivePhoto = (customPhoto != null && customPhoto.isNotEmpty)
-                        ? customPhoto
-                        : (photoUrl != null && photoUrl.isNotEmpty && photoUrl != AuthService.currentUser?.photoURL
-                            ? photoUrl
-                            : null);
+                    final authPhoto = AuthService.currentUser?.photoURL;
+                    final effectivePhoto = (customPhoto != null && customPhoto.trim().isNotEmpty)
+                        ? customPhoto.trim()
+                        : (photoUrl != null && photoUrl.trim().isNotEmpty
+                            ? photoUrl.trim()
+                            : (authPhoto != null && authPhoto.trim().isNotEmpty
+                                ? authPhoto.trim()
+                                : null));
 
                     Widget imageWidget = const Icon(Icons.person_rounded, color: Colors.white, size: 20);
 

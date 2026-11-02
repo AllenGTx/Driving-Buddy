@@ -8,6 +8,21 @@
   "elements": [
     {
       "type": "node",
+      "id": 1430916336,
+      "lat": -6.9563692,
+      "lon": 110.4164275,
+      "tags": {
+        "name": "SPBU Pertamina 44.501.02 Arteri Utara",
+        "brand": "Pertamina",
+        "amenity": "fuel",
+        "addr:street": "Jl. Arteri Yos Sudarso / Hasanudin",
+        "addr:city": "Semarang",
+        "opening_hours": "24/7",
+        "verified": "osm_verified"
+      }
+    },
+    {
+      "type": "node",
       "id": 9900001,
       "lat": -6.95385,
       "lon": 110.40932,
@@ -29,7 +44,7 @@
       "lat": -6.9588426,
       "lon": 110.4092821,
       "tags": {
-        "name": "Indomaret Telaga Mas Raya",
+        "name": "Indomaret Telaga Mas",
         "brand": "Indomaret",
         "branch": "Telaga Mas Raya",
         "shop": "convenience",
@@ -46,7 +61,7 @@
       "lat": -6.95892,
       "lon": 110.4081,
       "tags": {
-        "name": "Alfamart Telaga Mas Raya",
+        "name": "Alfamart Telaga Mas",
         "brand": "Alfamart",
         "branch": "Telaga Mas Raya",
         "shop": "convenience",
@@ -2333,7 +2348,7 @@
         "brand": "Indomaret",
         "brand:wikidata": "Q4262825",
         "brand:wikipedia": "id:Indomaret",
-        "name": "Indomaret",
+        "name": "Indomaret Hasanudin",
         "name:en": "Indomaret",
         "name:id": "Indomaret",
         "name:ja": "インドマレット",
@@ -2343,7 +2358,8 @@
         "toilets:access": "permissive",
         "website": "https://www.klikindomaret.com",
         "verified": "osm_verified",
-        "addr:street": ""
+        "addr:street": "Jl. Hasanudin, Plombokan",
+        "addr:city": "Semarang"
       }
     },
     {
@@ -2354,7 +2370,7 @@
       "tags": {
         "brand": "Alfamart",
         "brand:wikidata": "Q23745600",
-        "name": "Alfamart",
+        "name": "Alfamart Hasanudin",
         "operator": "PT Sumber Alfaria Trijaya,Tbk",
         "shop": "convenience",
         "toilets": "yes",
@@ -2362,7 +2378,8 @@
         "toilets:unisex": "yes",
         "website": "https://alfamart.co.id",
         "verified": "osm_verified",
-        "addr:street": ""
+        "addr:street": "Jl. Hasanudin, Plombokan",
+        "addr:city": "Semarang"
       }
     },
     {
@@ -13626,7 +13643,7 @@
       "lat": -7.0368459,
       "lon": 110.4575089,
       "tags": {
-        "name": "Indomaret Jalan Citra Grand Semarang",
+        "name": "Indomaret Citra Grand Semarang",
         "addr:street": "Jalan Citra Grand Semarang",
         "addr:city": "Kota Semarang",
         "opening_hours": "24/7",
@@ -13656,7 +13673,7 @@
       "lat": -7.6950112,
       "lon": 110.4180779,
       "tags": {
-        "name": "Indomaret Jalan Kaliurang",
+        "name": "Indomaret Kaliurang",
         "addr:street": "Jalan Kaliurang",
         "addr:city": "Sleman",
         "opening_hours": "24/7",
@@ -13671,7 +13688,7 @@
       "lat": -7.691524,
       "lon": 110.8473225,
       "tags": {
-        "name": "Indomaret Jalan Brigadir Jenderal Slamet Riyadi",
+        "name": "Indomaret Brigadir Jenderal Slamet Riyadi",
         "addr:street": "Jalan Brigadir Jenderal Slamet Riyadi",
         "addr:city": "Sukoharjo",
         "opening_hours": "24/7",
@@ -13686,7 +13703,7 @@
       "lat": -7.5981246,
       "lon": 110.9573646,
       "tags": {
-        "name": "Indomaret Jalan Lawu",
+        "name": "Indomaret Lawu",
         "addr:street": "Jalan Lawu",
         "addr:city": "Karanganyar",
         "opening_hours": "24/7",
@@ -13701,7 +13718,7 @@
       "lat": -7.6004405,
       "lon": 110.9633428,
       "tags": {
-        "name": "Indomaret Jalan Walet VIII",
+        "name": "Indomaret Walet VIII",
         "addr:street": "Jalan Walet VIII",
         "addr:city": "Karanganyar",
         "opening_hours": "24/7",
@@ -13716,7 +13733,7 @@
       "lat": -7.6473434,
       "lon": 111.0475038,
       "tags": {
-        "name": "Indomaret Jalan Matesih-Karangpandan",
+        "name": "Indomaret Matesih-Karangpandan",
         "addr:street": "Jalan Matesih-Karangpandan",
         "addr:city": "Karanganyar",
         "opening_hours": "24/7",
@@ -13731,7 +13748,7 @@
       "lat": -7.7049286,
       "lon": 110.4314843,
       "tags": {
-        "name": "Alfamart Jalan Besi Jangkang",
+        "name": "Alfamart Besi Jangkang",
         "addr:street": "Jalan Besi Jangkang",
         "addr:city": "Sleman",
         "opening_hours": "24/7",
@@ -13746,7 +13763,7 @@
       "lat": -7.6493385,
       "lon": 111.0473334,
       "tags": {
-        "name": "Alfamart Jalan Matesih-Karangpandan",
+        "name": "Alfamart Matesih-Karangpandan",
         "addr:street": "Jalan Matesih-Karangpandan",
         "addr:city": "Karanganyar",
         "opening_hours": "24/7",
@@ -13776,7 +13793,7 @@
       "lat": -6.9959846,
       "lon": 110.4466045,
       "tags": {
-        "name": "Alfamidi Jalan Kijang I",
+        "name": "Alfamidi Kijang I",
         "addr:street": "Jalan Kijang I",
         "addr:city": "Kota Semarang",
         "opening_hours": "24/7",
@@ -13806,7 +13823,7 @@
       "lat": -7.723938,
       "lon": 110.5577782,
       "tags": {
-        "name": "Alfamidi Jalan Jogja - Solo",
+        "name": "Alfamidi Jogja - Solo",
         "addr:street": "Jalan Jogja - Solo",
         "addr:city": "Klaten",
         "opening_hours": "24/7",
@@ -14048,7 +14065,7 @@
       "lat": -7.3204565,
       "lon": 110.4942945,
       "tags": {
-        "name": "SPBU Pertamina Jalan Imam Bonjol",
+        "name": "SPBU Pertamina Imam Bonjol",
         "addr:street": "Jalan Imam Bonjol",
         "addr:city": "Salatiga",
         "opening_hours": "24/7",
@@ -14108,7 +14125,7 @@
       "lat": -7.3752524,
       "lon": 110.220098,
       "tags": {
-        "name": "SPBU Pertamina Jalan Raya Temanggung - Magelang",
+        "name": "SPBU Pertamina Raya Temanggung - Magelang",
         "addr:street": "Jalan Raya Temanggung - Magelang",
         "addr:city": "Badran",
         "opening_hours": "24/7",
@@ -14123,7 +14140,7 @@
       "lat": -7.4825279,
       "lon": 110.2333959,
       "tags": {
-        "name": "SPBU Pertamina Jalan Jenderal Urip Sumoharjo",
+        "name": "SPBU Pertamina Jenderal Urip Sumoharjo",
         "addr:street": "Jalan Jenderal Urip Sumoharjo",
         "addr:city": "Magelang",
         "opening_hours": "24/7",
@@ -14138,7 +14155,7 @@
       "lat": -7.4880803,
       "lon": 110.2345584,
       "tags": {
-        "name": "SPBU Pertamina Jalan Soekarno Hatta",
+        "name": "SPBU Pertamina Soekarno Hatta",
         "addr:street": "Jalan Soekarno Hatta",
         "addr:city": "Magelang",
         "opening_hours": "24/7",
@@ -14153,7 +14170,7 @@
       "lat": -7.60242,
       "lon": 110.2996551,
       "tags": {
-        "name": "SPBU Pertamina Jalan Magelang",
+        "name": "SPBU Pertamina Magelang",
         "addr:street": "Jalan Magelang",
         "addr:city": "Gulon",
         "opening_hours": "24/7",
@@ -14168,7 +14185,7 @@
       "lat": -7.5737963,
       "lon": 110.2735523,
       "tags": {
-        "name": "SPBU Pertamina Jalan Tentara Pelajar",
+        "name": "SPBU Pertamina Tentara Pelajar",
         "addr:street": "Jalan Tentara Pelajar",
         "addr:city": "Tamanagung",
         "opening_hours": "24/7",
@@ -14183,7 +14200,7 @@
       "lat": -7.4009355,
       "lon": 109.8892315,
       "tags": {
-        "name": "SPBU Pertamina Jalan Raya Wonosobo - Banjarnegara",
+        "name": "SPBU Pertamina Raya Wonosobo - Banjarnegara",
         "addr:street": "Jalan Raya Wonosobo - Banjarnegara",
         "addr:city": "Selomerto",
         "opening_hours": "24/7",
@@ -14198,7 +14215,7 @@
       "lat": -6.9786018,
       "lon": 110.4165869,
       "tags": {
-        "name": "SPBU Pertamina Jalan Pemuda",
+        "name": "SPBU Pertamina Pemuda",
         "addr:street": "Jalan Pemuda",
         "addr:city": "Semarang",
         "opening_hours": "24/7",
@@ -14213,7 +14230,7 @@
       "lat": -7.0251656,
       "lon": 110.4676447,
       "tags": {
-        "name": "SPBU Pertamina Jalan Kedungmundu",
+        "name": "SPBU Pertamina Kedungmundu",
         "addr:street": "Jalan Kedungmundu",
         "addr:city": "Semarang",
         "opening_hours": "24/7",
@@ -14228,7 +14245,7 @@
       "lat": -7.0231024,
       "lon": 110.4876217,
       "tags": {
-        "name": "SPBU Pertamina Jalan Letnan Jenderal Sarwo Edi",
+        "name": "SPBU Pertamina Letnan Jenderal Sarwo Edi",
         "addr:street": "Jalan Letnan Jenderal Sarwo Edi",
         "addr:city": "Semarang",
         "opening_hours": "24/7",
@@ -14243,7 +14260,7 @@
       "lat": -6.9480256,
       "lon": 110.4910469,
       "tags": {
-        "name": "SPBU Pertamina Jalan Raya Semarang-Demak",
+        "name": "SPBU Pertamina Raya Semarang-Demak",
         "addr:street": "Jalan Raya Semarang-Demak",
         "addr:city": "Semarang",
         "opening_hours": "24/7",
@@ -14258,7 +14275,7 @@
       "lat": -6.9330711,
       "lon": 110.5363825,
       "tags": {
-        "name": "SPBU Pertamina Jalan Raya Semarang - Demak",
+        "name": "SPBU Pertamina Raya Semarang - Demak",
         "addr:street": "Jalan Raya Semarang - Demak",
         "addr:city": "Sayung",
         "opening_hours": "24/7",
@@ -14273,7 +14290,7 @@
       "lat": -7.1308684,
       "lon": 110.4090115,
       "tags": {
-        "name": "SPBU Pertamina Jalan Ahmad Yani",
+        "name": "SPBU Pertamina Ahmad Yani",
         "addr:street": "Jalan Ahmad Yani",
         "addr:city": "Ungaran",
         "opening_hours": "24/7",
@@ -14303,7 +14320,7 @@
       "lat": -7.130325,
       "lon": 110.4242083,
       "tags": {
-        "name": "SPBU Pertamina Jalan Tol Semarang–Solo",
+        "name": "SPBU Pertamina Tol Semarang–Solo",
         "addr:street": "Jalan Tol Semarang–Solo",
         "addr:city": "Kalirejo",
         "opening_hours": "24/7",
@@ -14318,7 +14335,7 @@
       "lat": -6.9225693,
       "lon": 110.5824968,
       "tags": {
-        "name": "SPBU Pertamina Jalan Raya Semarang - Demak",
+        "name": "SPBU Pertamina Raya Semarang - Demak",
         "addr:street": "Jalan Raya Semarang - Demak",
         "addr:city": "Karangtowo",
         "opening_hours": "24/7",
@@ -14333,7 +14350,7 @@
       "lat": -7.2121755,
       "lon": 110.449824,
       "tags": {
-        "name": "SPBU Pertamina Jalan Tol Semarang–Solo",
+        "name": "SPBU Pertamina Tol Semarang–Solo",
         "addr:street": "Jalan Tol Semarang–Solo",
         "addr:city": "Derekan",
         "opening_hours": "24/7",
@@ -14348,7 +14365,7 @@
       "lat": -7.2490172,
       "lon": 110.4256416,
       "tags": {
-        "name": "SPBU Pertamina Jalan Palagan",
+        "name": "SPBU Pertamina Palagan",
         "addr:street": "Jalan Palagan",
         "addr:city": "Bawen",
         "opening_hours": "24/7",
@@ -14363,7 +14380,7 @@
       "lat": -7.2575843,
       "lon": 110.4615413,
       "tags": {
-        "name": "SPBU Pertamina Jalan Tol Semarang–Solo",
+        "name": "SPBU Pertamina Tol Semarang–Solo",
         "addr:street": "Jalan Tol Semarang–Solo",
         "addr:city": "Delik",
         "opening_hours": "24/7",
@@ -14378,7 +14395,7 @@
       "lat": -7.2715285,
       "lon": 110.3959382,
       "tags": {
-        "name": "SPBU Pertamina Jalan Lingkar Ambarawa (KH. Ahmad Dahlan)",
+        "name": "SPBU Pertamina Lingkar Ambarawa (KH. Ahmad Dahlan)",
         "addr:street": "Jalan Lingkar Ambarawa (KH. Ahmad Dahlan)",
         "addr:city": "Ambarawa",
         "opening_hours": "24/7",
@@ -14393,7 +14410,7 @@
       "lat": -6.9843987,
       "lon": 110.1031148,
       "tags": {
-        "name": "SPBU Pertamina Jalan Tol Semarang–Batang",
+        "name": "SPBU Pertamina Tol Semarang–Batang",
         "addr:street": "Jalan Tol Semarang–Batang",
         "addr:city": "Gento",
         "opening_hours": "24/7",
@@ -14408,7 +14425,7 @@
       "lat": -7.3083705,
       "lon": 110.4654517,
       "tags": {
-        "name": "SPBU Pertamina Jalan Abu Bakar Shidiq",
+        "name": "SPBU Pertamina Abu Bakar Shidiq",
         "addr:street": "Jalan Abu Bakar Shidiq",
         "addr:city": "Jombor",
         "opening_hours": "24/7",
@@ -14423,7 +14440,7 @@
       "lat": -7.3320612,
       "lon": 110.4992956,
       "tags": {
-        "name": "SPBU Pertamina Jalan Merbabu",
+        "name": "SPBU Pertamina Merbabu",
         "addr:street": "Jalan Merbabu",
         "addr:city": "Salatiga",
         "opening_hours": "24/7",
@@ -14468,7 +14485,7 @@
       "lat": -7.5108763,
       "lon": 110.7457166,
       "tags": {
-        "name": "Alfamidi Jalan Cenderawasih",
+        "name": "Alfamidi Cenderawasih",
         "addr:street": "Jalan Cenderawasih",
         "addr:city": "Desa Ngesrep",
         "opening_hours": "24/7",
@@ -14483,7 +14500,7 @@
       "lat": -7.7282199,
       "lon": 110.3986855,
       "tags": {
-        "name": "Alfamidi Jalan Kaliurang",
+        "name": "Alfamidi Kaliurang",
         "addr:street": "Jalan Kaliurang",
         "addr:city": "Ngaglik",
         "opening_hours": "24/7",
@@ -14498,7 +14515,7 @@
       "lat": -7.4291172,
       "lon": 111.0114267,
       "tags": {
-        "name": "Alfamidi Jalan Sukowati",
+        "name": "Alfamidi Sukowati",
         "addr:street": "Jalan Sukowati",
         "addr:city": "Sragen",
         "opening_hours": "24/7",
@@ -14513,7 +14530,7 @@
       "lat": -7.7835917,
       "lon": 110.3792445,
       "tags": {
-        "name": "Alfamidi Jalan Dokter Wahidin",
+        "name": "Alfamidi Dokter Wahidin",
         "addr:street": "Jalan Dokter Wahidin",
         "addr:city": "Yogyakarta",
         "opening_hours": "24/7",
@@ -14528,7 +14545,7 @@
       "lat": -7.8134861,
       "lon": 110.396037,
       "tags": {
-        "name": "Alfamidi Jalan Ki Penjawi",
+        "name": "Alfamidi Ki Penjawi",
         "addr:street": "Jalan Ki Penjawi",
         "addr:city": "Yogyakarta",
         "opening_hours": "24/7",
@@ -14543,7 +14560,7 @@
       "lat": -7.5979745,
       "lon": 110.9546606,
       "tags": {
-        "name": "Alfamidi Jalan Lawu",
+        "name": "Alfamidi Lawu",
         "addr:street": "Jalan Lawu",
         "addr:city": "Karanganyar",
         "opening_hours": "24/7",
@@ -14558,7 +14575,7 @@
       "lat": -7.8203465,
       "lon": 110.3558227,
       "tags": {
-        "name": "Alfamidi Jalan Bantul",
+        "name": "Alfamidi Bantul",
         "addr:street": "Jalan Bantul",
         "addr:city": "Yogyakarta",
         "opening_hours": "24/7",
@@ -14573,7 +14590,7 @@
       "lat": -7.4058868,
       "lon": 111.4401785,
       "tags": {
-        "name": "Alfamidi Jalan Trunojoyo",
+        "name": "Alfamidi Trunojoyo",
         "addr:street": "Jalan Trunojoyo",
         "addr:city": "Ngawi",
         "opening_hours": "24/7",
@@ -14729,7 +14746,7 @@
       "lat": -6.9592262,
       "lon": 110.0156055,
       "tags": {
-        "name": "SPBU Pertamina Jalan Tol Semarang–Batang",
+        "name": "SPBU Pertamina Tol Semarang–Batang",
         "addr:street": "Jalan Tol Semarang–Batang",
         "addr:city": "Sawangan",
         "opening_hours": "24/7",
@@ -14772,7 +14789,7 @@
       "lat": -7.3369754,
       "lon": 110.4773431,
       "tags": {
-        "name": "SPBU Pertamina Jalan Lingkar Salatiga",
+        "name": "SPBU Pertamina Lingkar Salatiga",
         "addr:street": "Jalan Lingkar Salatiga",
         "addr:city": "Salatiga",
         "opening_hours": "24/7",
@@ -14787,7 +14804,7 @@
       "lat": -6.9295871,
       "lon": 109.6558469,
       "tags": {
-        "name": "SPBU Pertamina Jalan Gatot Subroto",
+        "name": "SPBU Pertamina Gatot Subroto",
         "addr:street": "Jalan Gatot Subroto",
         "addr:city": "Kertijayan",
         "opening_hours": "24/7",
@@ -14802,7 +14819,7 @@
       "lat": -7.3586282,
       "lon": 110.2226436,
       "tags": {
-        "name": "SPBU Pertamina Jalan Raya Kranggan - Pringsurat",
+        "name": "SPBU Pertamina Raya Kranggan - Pringsurat",
         "addr:street": "Jalan Raya Kranggan - Pringsurat",
         "addr:city": "Kranggan",
         "opening_hours": "24/7",
@@ -14831,7 +14848,7 @@
       "lat": -7.3606435,
       "lon": 110.5137286,
       "tags": {
-        "name": "SPBU Pertamina Jalan Soekarno-Hatta",
+        "name": "SPBU Pertamina Soekarno-Hatta",
         "addr:street": "Jalan Soekarno-Hatta",
         "addr:city": "Salatiga",
         "opening_hours": "24/7",
@@ -14846,7 +14863,7 @@
       "lat": -7.3621831,
       "lon": 110.5289591,
       "tags": {
-        "name": "SPBU Pertamina Jalan Raya Tingkir-Suruh",
+        "name": "SPBU Pertamina Raya Tingkir-Suruh",
         "addr:street": "Jalan Raya Tingkir-Suruh",
         "addr:city": "Barukan",
         "opening_hours": "24/7",
@@ -14861,7 +14878,7 @@
       "lat": -7.8167755,
       "lon": 110.0170975,
       "tags": {
-        "name": "SPBU Pertamina Jalan Wates - Purworejo",
+        "name": "SPBU Pertamina Wates - Purworejo",
         "addr:street": "Jalan Wates - Purworejo",
         "addr:city": "Bagelen",
         "opening_hours": "24/7",
@@ -14876,7 +14893,7 @@
       "lat": -7.3931658,
       "lon": 110.4235894,
       "tags": {
-        "name": "SPBU Pertamina Jalan Raya Kopeng",
+        "name": "SPBU Pertamina Raya Kopeng",
         "addr:street": "Jalan Raya Kopeng",
         "addr:city": "Kopeng",
         "opening_hours": "24/7",
@@ -14891,7 +14908,7 @@
       "lat": -7.3982651,
       "lon": 110.5138697,
       "tags": {
-        "name": "SPBU Pertamina Jalan Raya Salatiga - Boyolali",
+        "name": "SPBU Pertamina Raya Salatiga - Boyolali",
         "addr:street": "Jalan Raya Salatiga - Boyolali",
         "addr:city": "Klerokrajan",
         "opening_hours": "24/7",
@@ -14906,7 +14923,7 @@
       "lat": -7.3945965,
       "lon": 110.5135593,
       "tags": {
-        "name": "SPBU Pertamina Jalan Raya Salatiga - Boyolali",
+        "name": "SPBU Pertamina Raya Salatiga - Boyolali",
         "addr:street": "Jalan Raya Salatiga - Boyolali",
         "addr:city": "Klerokrajan",
         "opening_hours": "24/7",
@@ -14921,7 +14938,7 @@
       "lat": -7.3678876,
       "lon": 110.5633745,
       "tags": {
-        "name": "SPBU Pertamina Jalan Raya Tingkir-Suruh",
+        "name": "SPBU Pertamina Raya Tingkir-Suruh",
         "addr:street": "Jalan Raya Tingkir-Suruh",
         "addr:city": "Plumbon",
         "opening_hours": "24/7",
@@ -14936,7 +14953,7 @@
       "lat": -7.4212403,
       "lon": 110.5258145,
       "tags": {
-        "name": "SPBU Pertamina Jalan Raya Salatiga - Boyolali",
+        "name": "SPBU Pertamina Raya Salatiga - Boyolali",
         "addr:street": "Jalan Raya Salatiga - Boyolali",
         "addr:city": "Tengaran",
         "opening_hours": "24/7",
@@ -14951,7 +14968,7 @@
       "lat": -7.4334101,
       "lon": 110.5313585,
       "tags": {
-        "name": "SPBU Pertamina Jalan Raya Salatiga - Boyolali",
+        "name": "SPBU Pertamina Raya Salatiga - Boyolali",
         "addr:street": "Jalan Raya Salatiga - Boyolali",
         "addr:city": "Urutsewu",
         "opening_hours": "24/7",
@@ -14994,7 +15011,7 @@
       "lat": -7.46466,
       "lon": 110.5549539,
       "tags": {
-        "name": "SPBU Pertamina Jalan Raya Salatiga - Boyolali",
+        "name": "SPBU Pertamina Raya Salatiga - Boyolali",
         "addr:street": "Jalan Raya Salatiga - Boyolali",
         "addr:city": "Gladagsari",
         "opening_hours": "24/7",
@@ -15009,7 +15026,7 @@
       "lat": -7.4909836,
       "lon": 110.5716841,
       "tags": {
-        "name": "SPBU Pertamina Jalan Raya Salatiga - Boyolali",
+        "name": "SPBU Pertamina Raya Salatiga - Boyolali",
         "addr:street": "Jalan Raya Salatiga - Boyolali",
         "addr:city": "Penggung",
         "opening_hours": "24/7",
@@ -15024,7 +15041,7 @@
       "lat": -7.5140205,
       "lon": 110.5870253,
       "tags": {
-        "name": "SPBU Pertamina Jalan Raya Salatiga - Boyolali",
+        "name": "SPBU Pertamina Raya Salatiga - Boyolali",
         "addr:street": "Jalan Raya Salatiga - Boyolali",
         "addr:city": "Beji",
         "opening_hours": "24/7",
@@ -15039,7 +15056,7 @@
       "lat": -7.538768,
       "lon": 110.6176441,
       "tags": {
-        "name": "SPBU Pertamina Jalan Raya Boyolali - Kartosuro",
+        "name": "SPBU Pertamina Raya Boyolali - Kartosuro",
         "addr:street": "Jalan Raya Boyolali - Kartosuro",
         "addr:city": "Mojosongo",
         "opening_hours": "24/7",
@@ -15054,7 +15071,7 @@
       "lat": -7.5324837,
       "lon": 110.6022177,
       "tags": {
-        "name": "SPBU Pertamina Jalan Pemuda",
+        "name": "SPBU Pertamina Pemuda",
         "addr:street": "Jalan Pemuda",
         "addr:city": "Boyolali",
         "opening_hours": "24/7",
@@ -15069,7 +15086,7 @@
       "lat": -7.535232,
       "lon": 110.6681385,
       "tags": {
-        "name": "SPBU Pertamina Jalan Raya Boyolali - Kartosuro",
+        "name": "SPBU Pertamina Raya Boyolali - Kartosuro",
         "addr:street": "Jalan Raya Boyolali - Kartosuro",
         "addr:city": "Teras",
         "opening_hours": "24/7",
@@ -15098,7 +15115,7 @@
       "lat": -7.5461896,
       "lon": 110.7250327,
       "tags": {
-        "name": "SPBU Pertamina Jalan Raya Boyolali - Kartosuro",
+        "name": "SPBU Pertamina Raya Boyolali - Kartosuro",
         "addr:street": "Jalan Raya Boyolali - Kartosuro",
         "addr:city": "Kertonatan",
         "opening_hours": "24/7",
@@ -15113,7 +15130,7 @@
       "lat": -7.5801686,
       "lon": 110.769139,
       "tags": {
-        "name": "SPBU Pertamina Jalan Mangesti Raya",
+        "name": "SPBU Pertamina Mangesti Raya",
         "addr:street": "Jalan Mangesti Raya",
         "addr:city": "Mayang",
         "opening_hours": "24/7",
@@ -15128,7 +15145,7 @@
       "lat": -7.6731354,
       "lon": 110.7104546,
       "tags": {
-        "name": "SPBU Pertamina Jalan Juwiring - Pedan",
+        "name": "SPBU Pertamina Juwiring - Pedan",
         "addr:street": "Jalan Juwiring - Pedan",
         "addr:city": "Kaligawe",
         "opening_hours": "24/7",
@@ -15143,7 +15160,7 @@
       "lat": -7.5456254,
       "lon": 110.8072247,
       "tags": {
-        "name": "SPBU Pertamina Jalan Ki Mangun Sarkoro",
+        "name": "SPBU Pertamina Ki Mangun Sarkoro",
         "addr:street": "Jalan Ki Mangun Sarkoro",
         "addr:city": "Surakarta",
         "opening_hours": "24/7",
@@ -15158,7 +15175,7 @@
       "lat": -7.6782031,
       "lon": 110.8002889,
       "tags": {
-        "name": "SPBU Pertamina Jalan Sukoharjo",
+        "name": "SPBU Pertamina Sukoharjo",
         "addr:street": "Jalan Sukoharjo",
         "addr:city": "Bulukan",
         "opening_hours": "24/7",
@@ -15173,7 +15190,7 @@
       "lat": -7.5563772,
       "lon": 110.8508353,
       "tags": {
-        "name": "SPBU Pertamina Jalan Ki Hadjar Dewantara",
+        "name": "SPBU Pertamina Ki Hadjar Dewantara",
         "addr:street": "Jalan Ki Hadjar Dewantara",
         "addr:city": "Surakarta",
         "opening_hours": "24/7",
@@ -15188,7 +15205,7 @@
       "lat": -7.7612577,
       "lon": 110.4769162,
       "tags": {
-        "name": "SPBU Pertamina Jalan Jogja - Solo",
+        "name": "SPBU Pertamina Jogja - Solo",
         "addr:street": "Jalan Jogja - Solo",
         "addr:city": "Kalasan",
         "opening_hours": "24/7",
@@ -15203,7 +15220,7 @@
       "lat": -7.6850731,
       "lon": 110.6430239,
       "tags": {
-        "name": "Alfamart Jalan Jogja - Solo",
+        "name": "Alfamart Jogja - Solo",
         "addr:street": "Jalan Jogja - Solo",
         "addr:city": "Mlese",
         "opening_hours": "24/7",
@@ -15302,7 +15319,7 @@
       "lat": -7.5475742,
       "lon": 110.8898561,
       "tags": {
-        "name": "SPBU Pertamina Jalan Raya Solo - Ngawi",
+        "name": "SPBU Pertamina Raya Solo - Ngawi",
         "addr:street": "Jalan Raya Solo - Ngawi",
         "addr:city": "Sroyo",
         "opening_hours": "24/7",
@@ -15317,7 +15334,7 @@
       "lat": -7.5322832,
       "lon": 110.8989586,
       "tags": {
-        "name": "SPBU Pertamina Jalan Raya Solo - Ngawi",
+        "name": "SPBU Pertamina Raya Solo - Ngawi",
         "addr:street": "Jalan Raya Solo - Ngawi",
         "addr:city": "Kebakkramat",
         "opening_hours": "24/7",
@@ -15332,7 +15349,7 @@
       "lat": -7.5009403,
       "lon": 110.9164379,
       "tags": {
-        "name": "SPBU Pertamina Jalan Raya Solo - Ngawi",
+        "name": "SPBU Pertamina Raya Solo - Ngawi",
         "addr:street": "Jalan Raya Solo - Ngawi",
         "addr:city": "Kebakkramat",
         "opening_hours": "24/7",
@@ -15347,7 +15364,7 @@
       "lat": -7.4797748,
       "lon": 110.919562,
       "tags": {
-        "name": "SPBU Pertamina Jalan Tol Solo–Ngawi",
+        "name": "SPBU Pertamina Tol Solo–Ngawi",
         "addr:street": "Jalan Tol Solo–Ngawi",
         "addr:city": "Masaran",
         "opening_hours": "24/7",
@@ -15362,7 +15379,7 @@
       "lat": -7.4811406,
       "lon": 110.920007,
       "tags": {
-        "name": "SPBU Pertamina Jalan Tol Solo–Ngawi",
+        "name": "SPBU Pertamina Tol Solo–Ngawi",
         "addr:street": "Jalan Tol Solo–Ngawi",
         "addr:city": "Masaran",
         "opening_hours": "24/7",
@@ -15377,7 +15394,7 @@
       "lat": -7.47751,
       "lon": 110.9263775,
       "tags": {
-        "name": "SPBU Pertamina Jalan Raya Solo - Ngawi",
+        "name": "SPBU Pertamina Raya Solo - Ngawi",
         "addr:street": "Jalan Raya Solo - Ngawi",
         "addr:city": "Jati",
         "opening_hours": "24/7",
@@ -15392,7 +15409,7 @@
       "lat": -7.4611354,
       "lon": 110.9504037,
       "tags": {
-        "name": "SPBU Pertamina Jalan Raya Solo - Ngawi",
+        "name": "SPBU Pertamina Raya Solo - Ngawi",
         "addr:street": "Jalan Raya Solo - Ngawi",
         "addr:city": "Masaran",
         "opening_hours": "24/7",
@@ -15407,7 +15424,7 @@
       "lat": -7.4429147,
       "lon": 110.9793226,
       "tags": {
-        "name": "SPBU Pertamina Jalan Raya Solo - Ngawi",
+        "name": "SPBU Pertamina Raya Solo - Ngawi",
         "addr:street": "Jalan Raya Solo - Ngawi",
         "addr:city": "Jetak",
         "opening_hours": "24/7",
@@ -15422,7 +15439,7 @@
       "lat": -7.4075555,
       "lon": 111.0532453,
       "tags": {
-        "name": "SPBU Pertamina Jalan Raya Solo - Ngawi",
+        "name": "SPBU Pertamina Raya Solo - Ngawi",
         "addr:street": "Jalan Raya Solo - Ngawi",
         "addr:city": "Ngrampal",
         "opening_hours": "24/7",
@@ -15437,7 +15454,7 @@
       "lat": -7.3850953,
       "lon": 111.0728495,
       "tags": {
-        "name": "SPBU Pertamina Jalan Raya Solo - Ngawi",
+        "name": "SPBU Pertamina Raya Solo - Ngawi",
         "addr:street": "Jalan Raya Solo - Ngawi",
         "addr:city": "Ngrampal",
         "opening_hours": "24/7",
@@ -15508,7 +15525,7 @@
       "lat": -7.3669986,
       "lon": 111.1140494,
       "tags": {
-        "name": "SPBU Pertamina Jalan Raya Solo - Ngawi",
+        "name": "SPBU Pertamina Raya Solo - Ngawi",
         "addr:street": "Jalan Raya Solo - Ngawi",
         "addr:city": "Sambungmacan",
         "opening_hours": "24/7",
@@ -15597,7 +15614,7 @@
       "lat": -6.9206934,
       "lon": 109.8619359,
       "tags": {
-        "name": "SPBU Pertamina Jalan Tol Semarang–Batang",
+        "name": "SPBU Pertamina Tol Semarang–Batang",
         "addr:street": "Jalan Tol Semarang–Batang",
         "addr:city": "Kuripan",
         "opening_hours": "24/7",
@@ -15626,7 +15643,7 @@
       "lat": -6.6951445,
       "lon": 111.339191,
       "tags": {
-        "name": "SPBU Pertamina Jalan Dorang",
+        "name": "SPBU Pertamina Dorang",
         "addr:street": "Jalan Dorang",
         "addr:city": "Tasikagung",
         "opening_hours": "24/7",
@@ -15656,7 +15673,7 @@
       "lat": -6.8041619,
       "lon": 110.8610309,
       "tags": {
-        "name": "SPBU Pertamina Jalan Panglima Besar Sudirman",
+        "name": "SPBU Pertamina Panglima Besar Sudirman",
         "addr:street": "Jalan Panglima Besar Sudirman",
         "addr:city": "Rendeng",
         "opening_hours": "24/7",
@@ -15671,7 +15688,7 @@
       "lat": -6.781011,
       "lon": 110.9899383,
       "tags": {
-        "name": "SPBU Pertamina Jalan Raya Kudus - Pati",
+        "name": "SPBU Pertamina Raya Kudus - Pati",
         "addr:street": "Jalan Raya Kudus - Pati",
         "addr:city": "Pati",
         "opening_hours": "24/7",
@@ -15686,7 +15703,7 @@
       "lat": -6.7895065,
       "lon": 110.9775097,
       "tags": {
-        "name": "SPBU Pertamina Jalan Raya Kudus - Pati",
+        "name": "SPBU Pertamina Raya Kudus - Pati",
         "addr:street": "Jalan Raya Kudus - Pati",
         "addr:city": "Pati",
         "opening_hours": "24/7",
@@ -15800,7 +15817,7 @@
       "lat": -7.7348931,
       "lon": 110.3428181,
       "tags": {
-        "name": "Indomaret Jalan Kebon Agung",
+        "name": "Indomaret Kebon Agung",
         "addr:street": "Jalan Kebon Agung",
         "addr:city": "Mlati",
         "opening_hours": "24/7",
@@ -15815,7 +15832,7 @@
       "lat": -7.7169909,
       "lon": 110.346387,
       "tags": {
-        "name": "Indomaret Jalan KRT Pringgodiningrat",
+        "name": "Indomaret KRT Pringgodiningrat",
         "addr:street": "Jalan KRT Pringgodiningrat",
         "addr:city": "Mlati",
         "opening_hours": "24/7",
@@ -15861,7 +15878,7 @@
       "lat": -7.7838225,
       "lon": 110.4106768,
       "tags": {
-        "name": "Indomaret Jalan Majapahit",
+        "name": "Indomaret Majapahit",
         "addr:street": "Jalan Majapahit",
         "addr:city": "Depok",
         "opening_hours": "24/7",
@@ -15876,7 +15893,7 @@
       "lat": -7.3604835,
       "lon": 108.5643809,
       "tags": {
-        "name": "Indomaret Jalan Siliwangi",
+        "name": "Indomaret Siliwangi",
         "addr:street": "Jalan Siliwangi",
         "addr:city": "Banjar",
         "opening_hours": "24/7",
@@ -15891,7 +15908,7 @@
       "lat": -7.4153056,
       "lon": 111.4210056,
       "tags": {
-        "name": "Indomaret Jalan Siliwangi",
+        "name": "Indomaret Siliwangi",
         "addr:street": "Jalan Siliwangi",
         "addr:city": "Ngawi",
         "opening_hours": "24/7",
@@ -15921,7 +15938,7 @@
       "lat": -6.7198048,
       "lon": 111.346236,
       "tags": {
-        "name": "Indomaret Jalan Pemuda",
+        "name": "Indomaret Pemuda",
         "addr:street": "Jalan Pemuda",
         "addr:city": "Rembang",
         "opening_hours": "24/7",
@@ -15936,7 +15953,7 @@
       "lat": -6.7310665,
       "lon": 111.3529686,
       "tags": {
-        "name": "Indomaret Jl. Pemuda",
+        "name": "Indomaret Pemuda",
         "addr:street": "Jl. Pemuda",
         "addr:city": "Rembang",
         "opening_hours": "24/7",
@@ -15951,7 +15968,7 @@
       "lat": -6.7293358,
       "lon": 108.5455366,
       "tags": {
-        "name": "Indomaret Jalan Pemuda",
+        "name": "Indomaret Pemuda",
         "addr:street": "Jalan Pemuda",
         "addr:city": "Cirebon",
         "opening_hours": "24/7",
@@ -15966,7 +15983,7 @@
       "lat": -6.5959825,
       "lon": 110.6691043,
       "tags": {
-        "name": "Indomaret Jalan Pemuda",
+        "name": "Indomaret Pemuda",
         "addr:street": "Jalan Pemuda",
         "addr:city": "Potroyudan",
         "opening_hours": "24/7",
@@ -15981,7 +15998,7 @@
       "lat": -6.7111197,
       "lon": 111.3420768,
       "tags": {
-        "name": "Indomaret Jl. Sudirman",
+        "name": "Indomaret Sudirman",
         "addr:street": "Jl. Sudirman",
         "addr:city": "Rembang",
         "opening_hours": "24/7",
@@ -15996,7 +16013,7 @@
       "lat": -6.7022112,
       "lon": 111.3278464,
       "tags": {
-        "name": "Indomaret Jl. Gajah Mada",
+        "name": "Indomaret Gajah Mada",
         "addr:street": "Jl. Gajah Mada",
         "addr:city": "Rembang",
         "opening_hours": "24/7",
@@ -16011,7 +16028,7 @@
       "lat": -6.6995362,
       "lon": 111.3167224,
       "tags": {
-        "name": "Indomaret Jalan Gajah Mada",
+        "name": "Indomaret Gajah Mada",
         "addr:street": "Jalan Gajah Mada",
         "addr:city": "Rembang",
         "opening_hours": "24/7",
@@ -16026,7 +16043,7 @@
       "lat": -7.8008855,
       "lon": 110.3730838,
       "tags": {
-        "name": "Indomaret Jalan Gadjah Mada",
+        "name": "Indomaret Gadjah Mada",
         "addr:street": "Jalan Gadjah Mada",
         "addr:city": "Yogyakarta",
         "opening_hours": "24/7",
@@ -16041,7 +16058,7 @@
       "lat": -6.7201314,
       "lon": 108.5507814,
       "tags": {
-        "name": "Indomaret Jalan Dokter Cipto Mangunkusumo",
+        "name": "Indomaret Dokter Cipto Mangunkusumo",
         "addr:street": "Jalan Dokter Cipto Mangunkusumo",
         "addr:city": "Cirebon",
         "opening_hours": "24/7",
@@ -16071,7 +16088,7 @@
       "lat": -6.7084778,
       "lon": 108.5589503,
       "tags": {
-        "name": "Alfamart Jalan Siliwangi",
+        "name": "Alfamart Siliwangi",
         "addr:street": "Jalan Siliwangi",
         "addr:city": "Kota Cirebon",
         "opening_hours": "24/7",
@@ -16086,7 +16103,7 @@
       "lat": -7.6489543,
       "lon": 111.3154298,
       "tags": {
-        "name": "Alfamart Jalan Hasanuddin",
+        "name": "Alfamart Hasanuddin",
         "addr:street": "Jalan Hasanuddin",
         "addr:city": "Tawanganom",
         "opening_hours": "24/7",
@@ -16101,7 +16118,7 @@
       "lat": -6.7288917,
       "lon": 108.5483055,
       "tags": {
-        "name": "Alfamart Jalan Pemuda",
+        "name": "Alfamart Pemuda",
         "addr:street": "Jalan Pemuda",
         "addr:city": "Cirebon",
         "opening_hours": "24/7",
@@ -16116,7 +16133,7 @@
       "lat": -6.7296928,
       "lon": 108.544109,
       "tags": {
-        "name": "Alfamart Jalan Pemuda",
+        "name": "Alfamart Pemuda",
         "addr:street": "Jalan Pemuda",
         "addr:city": "Cirebon",
         "opening_hours": "24/7",
@@ -16131,7 +16148,7 @@
       "lat": -7.720144,
       "lon": 109.9315739,
       "tags": {
-        "name": "Alfamart Jalan Gajah Mada",
+        "name": "Alfamart Gajah Mada",
         "addr:street": "Jalan Gajah Mada",
         "addr:city": "Besole",
         "opening_hours": "24/7",
@@ -16161,7 +16178,7 @@
       "lat": -7.7029762,
       "lon": 110.4132505,
       "tags": {
-        "name": "Alfamart Jalan Pandanaran",
+        "name": "Alfamart Pandanaran",
         "addr:street": "Jalan Pandanaran",
         "addr:city": "Ngaglik",
         "opening_hours": "24/7",
@@ -16176,7 +16193,7 @@
       "lat": -6.8301525,
       "lon": 108.6267993,
       "tags": {
-        "name": "Alfamart Jalan MT. Haryono",
+        "name": "Alfamart MT. Haryono",
         "addr:street": "Jalan MT. Haryono",
         "addr:city": "Cipeujeuh Wetan",
         "opening_hours": "24/7",
@@ -16191,7 +16208,7 @@
       "lat": -7.864157,
       "lon": 111.4607062,
       "tags": {
-        "name": "Alfamart Jalan Letnan Jenderal M.T. Haryono",
+        "name": "Alfamart Letnan Jenderal M.T. Haryono",
         "addr:street": "Jalan Letnan Jenderal M.T. Haryono",
         "addr:city": "Jingglong",
         "opening_hours": "24/7",
@@ -16221,7 +16238,7 @@
       "lat": -7.77408,
       "lon": 110.4638511,
       "tags": {
-        "name": "Indomaret Jalan Solo",
+        "name": "Indomaret Solo",
         "addr:street": "Jalan Solo",
         "addr:city": "Kalasan",
         "opening_hours": "24/7",
@@ -16236,7 +16253,7 @@
       "lat": -7.7527154,
       "lon": 110.5176719,
       "tags": {
-        "name": "Indomaret Jalan Jogja - Solo",
+        "name": "Indomaret Jogja - Solo",
         "addr:street": "Jalan Jogja - Solo",
         "addr:city": "Sanggrahan",
         "opening_hours": "24/7",
@@ -16251,7 +16268,7 @@
       "lat": -7.4039827,
       "lon": 111.4155701,
       "tags": {
-        "name": "Indomaret Jalan Raya Solo - Ngawi",
+        "name": "Indomaret Raya Solo - Ngawi",
         "addr:street": "Jalan Raya Solo - Ngawi",
         "addr:city": "Ngawi",
         "opening_hours": "24/7",
@@ -16266,7 +16283,7 @@
       "lat": -7.388696,
       "lon": 111.0714769,
       "tags": {
-        "name": "Indomaret Jalan Raya Solo - Ngawi",
+        "name": "Indomaret Raya Solo - Ngawi",
         "addr:street": "Jalan Raya Solo - Ngawi",
         "addr:city": "Ngrampal",
         "opening_hours": "24/7",
@@ -16281,7 +16298,7 @@
       "lat": -7.3743362,
       "lon": 111.1055532,
       "tags": {
-        "name": "Indomaret Jalan Raya Solo - Ngawi",
+        "name": "Indomaret Raya Solo - Ngawi",
         "addr:street": "Jalan Raya Solo - Ngawi",
         "addr:city": "Sambungmacan",
         "opening_hours": "24/7",
@@ -16296,7 +16313,7 @@
       "lat": -7.7837004,
       "lon": 110.4467256,
       "tags": {
-        "name": "Indomaret Jalan Jogja - Solo",
+        "name": "Indomaret Jogja - Solo",
         "addr:street": "Jalan Jogja - Solo",
         "addr:city": "Kalasan",
         "opening_hours": "24/7",
@@ -16311,7 +16328,7 @@
       "lat": -7.7800001,
       "lon": 110.4541619,
       "tags": {
-        "name": "Indomaret Jalan Jogja - Solo",
+        "name": "Indomaret Jogja - Solo",
         "addr:street": "Jalan Jogja - Solo",
         "addr:city": "Berbah",
         "opening_hours": "24/7",
@@ -16326,7 +16343,7 @@
       "lat": -7.4445923,
       "lon": 110.9769954,
       "tags": {
-        "name": "Indomaret Jalan Raya Solo - Ngawi",
+        "name": "Indomaret Raya Solo - Ngawi",
         "addr:street": "Jalan Raya Solo - Ngawi",
         "addr:city": "Jetak",
         "opening_hours": "24/7",
@@ -16341,7 +16358,7 @@
       "lat": -7.3928722,
       "lon": 111.0523843,
       "tags": {
-        "name": "Indomaret Jalan Tol Solo–Ngawi",
+        "name": "Indomaret Tol Solo–Ngawi",
         "addr:street": "Jalan Tol Solo–Ngawi",
         "addr:city": "Kebonromo",
         "opening_hours": "24/7",
@@ -16356,7 +16373,7 @@
       "lat": -7.760624,
       "lon": 110.4769115,
       "tags": {
-        "name": "Indomaret Jalan Jogja - Solo",
+        "name": "Indomaret Jogja - Solo",
         "addr:street": "Jalan Jogja - Solo",
         "addr:city": "Kalasan",
         "opening_hours": "24/7",
@@ -16371,7 +16388,7 @@
       "lat": -7.7748235,
       "lon": 110.4635031,
       "tags": {
-        "name": "Indomaret Jalan Jogja - Solo",
+        "name": "Indomaret Jogja - Solo",
         "addr:street": "Jalan Jogja - Solo",
         "addr:city": "Kalasan",
         "opening_hours": "24/7",
@@ -16386,7 +16403,7 @@
       "lat": -7.4068062,
       "lon": 111.0533558,
       "tags": {
-        "name": "Indomaret Jalan Raya Solo - Ngawi",
+        "name": "Indomaret Raya Solo - Ngawi",
         "addr:street": "Jalan Raya Solo - Ngawi",
         "addr:city": "Ngrampal",
         "opening_hours": "24/7",
@@ -16401,7 +16418,7 @@
       "lat": -7.3932525,
       "lon": 111.0528644,
       "tags": {
-        "name": "Indomaret Jalan Tol Solo–Ngawi",
+        "name": "Indomaret Tol Solo–Ngawi",
         "addr:street": "Jalan Tol Solo–Ngawi",
         "addr:city": "Kebonromo",
         "opening_hours": "24/7",
@@ -16416,7 +16433,7 @@
       "lat": -7.6857086,
       "lon": 110.6402016,
       "tags": {
-        "name": "Indomaret Jalan Jogja - Solo",
+        "name": "Indomaret Jogja - Solo",
         "addr:street": "Jalan Jogja - Solo",
         "addr:city": "Mlese",
         "opening_hours": "24/7",
@@ -16431,7 +16448,7 @@
       "lat": -7.7832431,
       "lon": 110.4459151,
       "tags": {
-        "name": "Indomaret Jalan Jogja - Solo",
+        "name": "Indomaret Jogja - Solo",
         "addr:street": "Jalan Jogja - Solo",
         "addr:city": "Kalasan",
         "opening_hours": "24/7",
@@ -16446,7 +16463,7 @@
       "lat": -6.7249487,
       "lon": 108.5081832,
       "tags": {
-        "name": "Indomaret Jl. Fatahillah - Megu Cilik Sate Sakud",
+        "name": "Indomaret Fatahillah - Megu Cilik Sate Sakud",
         "addr:street": "Jl. Fatahillah - Megu Cilik Sate Sakud",
         "addr:city": "Palir",
         "opening_hours": "24/7",
@@ -16461,7 +16478,7 @@
       "lat": -6.7234173,
       "lon": 108.5089892,
       "tags": {
-        "name": "Indomaret Jl. Fathillah - Megu Gede",
+        "name": "Indomaret Fathillah - Megu Gede",
         "addr:street": "Jl. Fathillah - Megu Gede",
         "addr:city": "Palir",
         "opening_hours": "24/7",
@@ -16476,7 +16493,7 @@
       "lat": -6.7671518,
       "lon": 111.5776601,
       "tags": {
-        "name": "Indomaret Jalan Mojosari - Jatirogo (Bts. Kab. Tuban)",
+        "name": "Indomaret Mojosari - Jatirogo (Bts. Kab. Tuban)",
         "addr:street": "Jalan Mojosari - Jatirogo (Bts. Kab. Tuban)",
         "addr:city": "Karas",
         "opening_hours": "24/7",
@@ -16491,7 +16508,7 @@
       "lat": -6.7058312,
       "lon": 111.6308563,
       "tags": {
-        "name": "Indomaret Jalan Raya Kragan",
+        "name": "Indomaret Raya Kragan",
         "addr:street": "Jalan Raya Kragan",
         "addr:city": "Rembang",
         "opening_hours": "24/7",
@@ -16506,7 +16523,7 @@
       "lat": -7.7472499,
       "lon": 110.3990002,
       "tags": {
-        "name": "Indomaret Jalan Sukoharjo",
+        "name": "Indomaret Sukoharjo",
         "addr:street": "Jalan Sukoharjo",
         "addr:city": "Depok",
         "opening_hours": "24/7",
@@ -16521,7 +16538,7 @@
       "lat": -7.751835,
       "lon": 110.3983452,
       "tags": {
-        "name": "Indomaret Jalan Sukoharjo",
+        "name": "Indomaret Sukoharjo",
         "addr:street": "Jalan Sukoharjo",
         "addr:city": "Depok",
         "opening_hours": "24/7",
@@ -16536,7 +16553,7 @@
       "lat": -6.705054,
       "lon": 111.3520392,
       "tags": {
-        "name": "Indomaret Jl. P. Sudirman",
+        "name": "Indomaret P. Sudirman",
         "addr:street": "Jl. P. Sudirman",
         "addr:city": "Rembang",
         "opening_hours": "24/7",
@@ -16581,7 +16598,7 @@
       "lat": -6.7226011,
       "lon": 111.3434702,
       "tags": {
-        "name": "Indomaret Jl. Slamet Riyadi",
+        "name": "Indomaret Slamet Riyadi",
         "addr:street": "Jl. Slamet Riyadi",
         "addr:city": "Rembang",
         "opening_hours": "24/7",
@@ -16611,7 +16628,7 @@
       "lat": -7.7552011,
       "lon": 110.4995648,
       "tags": {
-        "name": "Alfamart Jalan Jogja - Solo",
+        "name": "Alfamart Jogja - Solo",
         "addr:street": "Jalan Jogja - Solo",
         "addr:city": "Kebondalem Kidul",
         "opening_hours": "24/7",
@@ -16626,7 +16643,7 @@
       "lat": -7.7549804,
       "lon": 110.4968485,
       "tags": {
-        "name": "Alfamart Jalan Jogja - Solo",
+        "name": "Alfamart Jogja - Solo",
         "addr:street": "Jalan Jogja - Solo",
         "addr:city": "Kebondalem Kidul",
         "opening_hours": "24/7",
@@ -16641,7 +16658,7 @@
       "lat": -7.4038491,
       "lon": 111.0574235,
       "tags": {
-        "name": "Alfamart Jalan Raya Solo - Ngawi",
+        "name": "Alfamart Raya Solo - Ngawi",
         "addr:street": "Jalan Raya Solo - Ngawi",
         "addr:city": "Ngrampal",
         "opening_hours": "24/7",
@@ -16656,7 +16673,7 @@
       "lat": -7.370298,
       "lon": 111.1771755,
       "tags": {
-        "name": "Alfamart Jalan Raya Solo - Ngawi",
+        "name": "Alfamart Raya Solo - Ngawi",
         "addr:street": "Jalan Raya Solo - Ngawi",
         "addr:city": "Sambirejo",
         "opening_hours": "24/7",
@@ -16671,7 +16688,7 @@
       "lat": -7.3972103,
       "lon": 111.065418,
       "tags": {
-        "name": "Alfamart Jalan Raya Solo - Ngawi",
+        "name": "Alfamart Raya Solo - Ngawi",
         "addr:street": "Jalan Raya Solo - Ngawi",
         "addr:city": "Ngrampal",
         "opening_hours": "24/7",
@@ -16686,7 +16703,7 @@
       "lat": -7.4030836,
       "lon": 111.4120212,
       "tags": {
-        "name": "Alfamart Jalan Raya Solo - Ngawi",
+        "name": "Alfamart Raya Solo - Ngawi",
         "addr:street": "Jalan Raya Solo - Ngawi",
         "addr:city": "Ngawi",
         "opening_hours": "24/7",
@@ -16701,7 +16718,7 @@
       "lat": -7.7195723,
       "lon": 110.5680743,
       "tags": {
-        "name": "Alfamart Jalan Jogja - Solo",
+        "name": "Alfamart Jogja - Solo",
         "addr:street": "Jalan Jogja - Solo",
         "addr:city": "Trunuh",
         "opening_hours": "24/7",
@@ -16716,7 +16733,7 @@
       "lat": -7.7652704,
       "lon": 110.4727526,
       "tags": {
-        "name": "Alfamart Jalan Jogja - Solo",
+        "name": "Alfamart Jogja - Solo",
         "addr:street": "Jalan Jogja - Solo",
         "addr:city": "Kalasan",
         "opening_hours": "24/7",
@@ -16731,7 +16748,7 @@
       "lat": -7.7592072,
       "lon": 110.4786752,
       "tags": {
-        "name": "Alfamart Jalan Jogja - Solo",
+        "name": "Alfamart Jogja - Solo",
         "addr:street": "Jalan Jogja - Solo",
         "addr:city": "Kalasan",
         "opening_hours": "24/7",
@@ -16746,7 +16763,7 @@
       "lat": -7.7188236,
       "lon": 110.5763629,
       "tags": {
-        "name": "Alfamart Jalan Jogja - Solo",
+        "name": "Alfamart Jogja - Solo",
         "addr:street": "Jalan Jogja - Solo",
         "addr:city": "Trunuh",
         "opening_hours": "24/7",
@@ -16761,7 +16778,7 @@
       "lat": -7.7710402,
       "lon": 110.4683245,
       "tags": {
-        "name": "Alfamart Jalan Jogja - Solo",
+        "name": "Alfamart Jogja - Solo",
         "addr:street": "Jalan Jogja - Solo",
         "addr:city": "Kalasan",
         "opening_hours": "24/7",
@@ -16776,7 +16793,7 @@
       "lat": -7.7588589,
       "lon": 110.479102,
       "tags": {
-        "name": "Alfamart Jalan Jogja - Solo",
+        "name": "Alfamart Jogja - Solo",
         "addr:street": "Jalan Jogja - Solo",
         "addr:city": "Kalasan",
         "opening_hours": "24/7",
@@ -16791,7 +16808,7 @@
       "lat": -7.6674574,
       "lon": 110.7532033,
       "tags": {
-        "name": "Alfamart Jalan Bedrek",
+        "name": "Alfamart Bedrek",
         "addr:street": "Jalan Bedrek",
         "addr:city": "Juwiring",
         "opening_hours": "24/7",

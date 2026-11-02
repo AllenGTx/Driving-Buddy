@@ -802,15 +802,17 @@ class _LoginScreenState extends State<LoginScreen>
       }
       final profile = await AuthService.getUserProfile();
       final customPhoto = (profile?['customPhotoUrl'] ?? profile?['photoUrl']) as String?;
-      if (customPhoto != null && customPhoto.isNotEmpty && customPhoto != gUser?.photoURL) {
-        await AccountConfig.setCustomPhoto(customPhoto, userEmail: gEmail, uid: gUser?.uid);
-      } else {
-        final localCustom = await AccountConfig.getCustomPhoto(userEmail: gEmail, uid: gUser?.uid);
-        if (localCustom != null && localCustom.isNotEmpty && localCustom != gUser?.photoURL) {
-          AccountConfig.photoNotifier.value = localCustom;
-        } else {
-          AccountConfig.photoNotifier.value = null;
-        }
+      final localCustom = await AccountConfig.getCustomPhoto(userEmail: gEmail, uid: gUser?.uid);
+      final photoToSet = (customPhoto != null && customPhoto.trim().isNotEmpty)
+          ? customPhoto.trim()
+          : (localCustom != null && localCustom.trim().isNotEmpty
+              ? localCustom.trim()
+              : (gUser?.photoURL != null && gUser!.photoURL!.trim().isNotEmpty
+                  ? gUser.photoURL!.trim()
+                  : null));
+
+      if (photoToSet != null && photoToSet.isNotEmpty) {
+        await AccountConfig.setCustomPhoto(photoToSet, userEmail: gEmail, uid: gUser?.uid);
       }
       if (mounted) {
         Navigator.of(context).pushReplacement(

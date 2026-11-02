@@ -197,7 +197,7 @@ class _NearbyPlacesSheetState extends State<NearbyPlacesSheet>
                       crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         Text(
-                          place.name,
+                          place.name.trim().isNotEmpty ? place.name.trim() : place.categoryText,
                           style: TextStyle(
                             fontSize: 16,
                             fontWeight: FontWeight.w800,
@@ -1166,11 +1166,14 @@ class _PlaceTile extends StatelessWidget {
     final ahead = place.ahead;
     final rating = place.rating;
     final address = place.address;
+    final displayName = place.name.trim().isNotEmpty
+        ? place.name.trim()
+        : (place.categoryText.isNotEmpty ? place.categoryText : 'Tempat Istirahat');
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[
         Text(
-          place.name,
+          displayName,
           maxLines: 2,
           overflow: TextOverflow.ellipsis,
           style: PlacesStyle.bodyMd.copyWith(
