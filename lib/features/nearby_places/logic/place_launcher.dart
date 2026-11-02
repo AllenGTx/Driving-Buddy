@@ -115,13 +115,18 @@ class PlaceLauncher {
 
   /// Buka pencarian Google Maps live via Browser Web (Chrome)
   static Future<bool> openLiveSearchInBrowser(String query, double? lat, double? lng, {UrlOpener? opener}) async {
-    final queryParam = (lat != null && lng != null)
-        ? '$query (${lat.toStringAsFixed(6)},${lng.toStringAsFixed(6)})'
-        : query;
-    final uri = Uri.https('www.google.com', '/maps/search/', <String, String>{
-      'api': '1',
-      'query': queryParam,
-    });
+    Uri uri;
+    if (lat != null && lng != null) {
+      final encodedQuery = Uri.encodeComponent(query);
+      final latStr = lat.toStringAsFixed(6);
+      final lngStr = lng.toStringAsFixed(6);
+      uri = Uri.parse('https://www.google.com/maps/search/$encodedQuery/@$latStr,$lngStr,15z');
+    } else {
+      uri = Uri.https('www.google.com', '/maps/search/', <String, String>{
+        'api': '1',
+        'query': query,
+      });
+    }
     return _open(uri, opener);
   }
 

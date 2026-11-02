@@ -401,9 +401,19 @@ class SessionService {
     double? endLat,
     double? endLng,
     List<Map<String, double>>? routePoints,
+    DateTime? startedAt,
   }) async {
+    final now = DateTime.now();
+    final effectiveStartedAt = (startedAt ?? now.subtract(Duration(seconds: durationSeconds))).toLocal();
+    final startedAtIso = effectiveStartedAt.toIso8601String();
+    final endedAtIso = now.toIso8601String();
+
     final sessionPayload = {
       'id': sessionId,
+      'startedAtIso': startedAtIso,
+      'started_at': startedAtIso,
+      'endedAtIso': endedAtIso,
+      'ended_at': endedAtIso,
       'durationSeconds': durationSeconds,
       'duration_seconds': durationSeconds,
       'avgSpeedKmh': avgSpeedKmh,
@@ -444,7 +454,6 @@ class SessionService {
       if (routePoints != null && routePoints.isNotEmpty)
         'routePoints': routePoints,
       'status': 'completed',
-      'endedAtIso': DateTime.now().toIso8601String(),
     };
 
     final user = AuthService.currentUser;
@@ -463,8 +472,12 @@ class SessionService {
         .doc(sessionId);
 
       await docRef.set({
-      'endedAt': FieldValue.serverTimestamp(),
-      'endedAtIso': DateTime.now().toIso8601String(),
+      'startedAt': Timestamp.fromDate(effectiveStartedAt),
+      'startedAtIso': startedAtIso,
+      'started_at': startedAtIso,
+      'endedAt': Timestamp.fromDate(now),
+      'endedAtIso': endedAtIso,
+      'ended_at': endedAtIso,
       'durationSeconds': durationSeconds,
       'duration_seconds': durationSeconds, // kompatibilitas
       'avgSpeedKmh': avgSpeedKmh,
@@ -690,8 +703,28 @@ class SessionService {
             .doc(sessionId);
 
         final firestorePayload = Map<String, dynamic>.from(s);
-        firestorePayload['startedAt'] = FieldValue.serverTimestamp();
-        firestorePayload['endedAt'] = FieldValue.serverTimestamp();
+        if (s['startedAtIso'] != null) {
+          final dt = DateTime.tryParse(s['startedAtIso'].toString());
+          if (dt != null) {
+            firestorePayload['startedAt'] = Timestamp.fromDate(dt);
+          }
+        } else if (s['started_at'] != null) {
+          final dt = DateTime.tryParse(s['started_at'].toString());
+          if (dt != null) {
+            firestorePayload['startedAt'] = Timestamp.fromDate(dt);
+          }
+        }
+        if (s['endedAtIso'] != null) {
+          final dt = DateTime.tryParse(s['endedAtIso'].toString());
+          if (dt != null) {
+            firestorePayload['endedAt'] = Timestamp.fromDate(dt);
+          }
+        } else if (s['ended_at'] != null) {
+          final dt = DateTime.tryParse(s['ended_at'].toString());
+          if (dt != null) {
+            firestorePayload['endedAt'] = Timestamp.fromDate(dt);
+          }
+        }
         firestorePayload['syncedFromOffline'] = true;
 
         await docRef.set(firestorePayload, SetOptions(merge: true));

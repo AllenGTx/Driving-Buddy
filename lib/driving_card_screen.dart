@@ -46,7 +46,7 @@ List<Achievement> computeAchievements({
   DateTime? startedAt,
 }) {
   final results = <Achievement>[];
-  final h = startedAt?.hour ?? DateTime.now().hour;
+  final h = (startedAt ?? DateTime.now()).toLocal().hour;
 
   if (drivingScore >= 85 && totalMicrosleeps == 0) {
     results.add(
@@ -1227,13 +1227,12 @@ class _DrivingCardScreenState extends State<DrivingCardScreen>
 
   @override
   Widget build(BuildContext context) {
-    final dt = widget.startedAt ?? DateTime.now();
+    final dt = (widget.startedAt ?? DateTime.now()).toLocal();
     final hour = dt.hour;
     final minute = dt.minute;
-    final ampm = hour >= 12 ? 'PM' : 'AM';
-    final h12 = hour % 12 == 0 ? 12 : hour % 12;
+    // Format 24 Jam (00:00 - 23:59)
     final timeStr =
-        '${h12.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')} $ampm';
+        '${hour.toString().padLeft(2, '0')}:${minute.toString().padLeft(2, '0')}';
     final monthNamesId = [
       'Jan',
       'Feb',

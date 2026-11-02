@@ -8,6 +8,142 @@
   "elements": [
     {
       "type": "node",
+      "id": 9000108,
+      "lat": -6.9691,
+      "lon": 110.3905,
+      "tags": {
+        "name": "Alfamart Puri Anjasmoro",
+        "brand": "Alfamart",
+        "shop": "convenience",
+        "addr:street": "Jl. Puri Anjasmoro Raya",
+        "addr:city": "Semarang",
+        "addr:district": "Semarang Barat",
+        "opening_hours": "07:00-22:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9000107,
+      "lat": -6.9685,
+      "lon": 110.392,
+      "tags": {
+        "name": "Indomaret Puri Anjasmoro",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "Jl. Puri Anjasmoro Blok B1 No. 15",
+        "addr:city": "Semarang",
+        "addr:district": "Semarang Barat",
+        "opening_hours": "24/7",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9000106,
+      "lat": -6.9641,
+      "lon": 110.4069,
+      "tags": {
+        "name": "Alfamart Brotojoyo",
+        "brand": "Alfamart",
+        "shop": "convenience",
+        "addr:street": "Jl. Brotojoyo Raya No. 24",
+        "addr:city": "Semarang",
+        "addr:district": "Semarang Utara",
+        "opening_hours": "07:00-22:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9000105,
+      "lat": -6.9632,
+      "lon": 110.4078,
+      "tags": {
+        "name": "Indomaret Brotojoyo",
+        "brand": "Indomaret",
+        "shop": "convenience",
+        "addr:street": "Jl. Brotojoyo Timur No. 12",
+        "addr:city": "Semarang",
+        "addr:district": "Semarang Utara",
+        "opening_hours": "24/7",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9000104,
+      "lat": -6.9664,
+      "lon": 110.4105,
+      "tags": {
+        "name": "Alfamidi Hasanudin",
+        "brand": "Alfamidi",
+        "shop": "convenience",
+        "addr:street": "Jl. Hasanudin No. 45",
+        "addr:city": "Semarang",
+        "addr:district": "Semarang Utara",
+        "opening_hours": "07:00-23:00",
+        "toilets": "yes",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9000103,
+      "lat": -6.9635,
+      "lon": 110.4082,
+      "tags": {
+        "name": "Mono Coliving Brotojoyo",
+        "brand": "Mono Coliving",
+        "tourism": "guest_house",
+        "guest_house": "yes",
+        "addr:street": "Jl. Brotojoyo Timur II",
+        "addr:city": "Semarang",
+        "addr:district": "Semarang Utara",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9000102,
+      "lat": -6.9645,
+      "lon": 110.4075,
+      "tags": {
+        "name": "Townhouse OAK Semarang",
+        "brand": "Townhouse OAK",
+        "tourism": "hotel",
+        "hotel": "yes",
+        "addr:street": "Jl. Brotojoyo Barat I No. 1",
+        "addr:city": "Semarang",
+        "addr:district": "Semarang Utara",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
+      "id": 9000101,
+      "lat": -6.9652,
+      "lon": 110.412,
+      "tags": {
+        "name": "Check Inn @ Permata Hijau",
+        "brand": "Check Inn",
+        "tourism": "hotel",
+        "hotel": "yes",
+        "addr:street": "Jl. Permata Hijau No. BB-6",
+        "addr:city": "Semarang",
+        "addr:district": "Semarang Utara",
+        "opening_hours": "24/7",
+        "verified": "google_maps_verified"
+      }
+    },
+    {
+      "type": "node",
       "id": 9500002,
       "lat": -6.969816,
       "lon": 110.391012,
@@ -2918,22 +3054,6 @@
         "source": "HOT_InAWARESurvey_2018",
         "verified": "osm_verified",
         "addr:street": "Jalan Kelud Raya"
-      }
-    },
-    {
-      "type": "node",
-      "id": 5475150784,
-      "lat": -6.9628716,
-      "lon": 110.4330897,
-      "tags": {
-        "addr:city": "Semarang",
-        "addr:full": "Jalan Pengapon",
-        "amenity": "fuel",
-        "name": "SPBU 44.501.16",
-        "operator": "PT Pertamina",
-        "source": "HOT_InAWARESurvey_2018",
-        "verified": "osm_verified",
-        "addr:street": "Jalan Pengapon"
       }
     },
     {

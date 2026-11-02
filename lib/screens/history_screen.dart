@@ -175,10 +175,32 @@ class _HistoryScreenState extends State<HistoryScreen> {
     final dt = DateTime.tryParse(isoDate)?.toLocal();
     if (dt == null) return '-';
     final now = DateTime.now();
-    final diff = now.difference(dt).inDays;
-    if (diff == 0) return LanguageService.instance.s.today;
-    if (diff == 1) return LanguageService.instance.isEnglish ? 'Yesterday' : 'Kemarin';
-    return '${dt.day}/${dt.month}/${dt.year}';
+
+    final timeStr =
+        '${dt.hour.toString().padLeft(2, '0')}:${dt.minute.toString().padLeft(2, '0')}';
+
+    final nowDateOnly = DateTime(now.year, now.month, now.day);
+    final dtDateOnly = DateTime(dt.year, dt.month, dt.day);
+    final dayDiff = nowDateOnly.difference(dtDateOnly).inDays;
+
+    final isEn = LanguageService.instance.isEnglish;
+    if (dayDiff == 0) {
+      return isEn ? 'Today, $timeStr' : 'Hari Ini, $timeStr';
+    } else if (dayDiff == 1) {
+      return isEn ? 'Yesterday, $timeStr' : 'Kemarin, $timeStr';
+    }
+
+    final monthNamesId = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'Mei', 'Jun',
+      'Jul', 'Agu', 'Sep', 'Okt', 'Nov', 'Des'
+    ];
+    final monthNamesEn = [
+      'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
+      'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
+    ];
+    final monthNames = isEn ? monthNamesEn : monthNamesId;
+
+    return '${dt.day} ${monthNames[dt.month - 1]} ${dt.year}, $timeStr';
   }
 
   Color _scoreColor(int score) {

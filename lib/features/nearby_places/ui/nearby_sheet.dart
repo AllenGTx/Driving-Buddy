@@ -482,11 +482,11 @@ class _NearbyPlacesSheetState extends State<NearbyPlacesSheet>
     final isDark = ThemeService.instance.isDarkMode;
     final fix = _controller.fix;
     final catQuery = switch (_selected) {
-      PlaceCategory.spbu => 'SPBU Pertamina terdekat',
-      PlaceCategory.minimarket => 'Minimarket Indomaret Alfamart terdekat',
-      PlaceCategory.lodging => 'Hotel penginapan terdekat',
-      PlaceCategory.restArea => 'Rest area terdekat',
-      _ => 'Tempat istirahat terdekat',
+      PlaceCategory.spbu => 'SPBU Pertamina',
+      PlaceCategory.minimarket => 'Indomaret Alfamart',
+      PlaceCategory.lodging => 'Hotel',
+      PlaceCategory.restArea => 'Rest Area',
+      _ => 'Tempat Istirahat',
     };
     final lat = fix?.lat;
     final lng = fix?.lng;

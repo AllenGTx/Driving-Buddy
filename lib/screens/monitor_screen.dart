@@ -918,6 +918,7 @@ class MonitorScreenState extends State<MonitorScreen> with WidgetsBindingObserve
           endLat: effectiveEndLat,
           endLng: effectiveEndLng,
           routePoints: processedRoute,
+          startedAt: sessionStart,
         );
       } catch (e) {
         debugPrint('Gagal simpan sesi online (aman di lokal): $e');

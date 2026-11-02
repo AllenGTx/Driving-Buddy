@@ -671,34 +671,65 @@ class NearbyPlacesController extends ChangeNotifier {
 
   // ------------------------------------------------------------- internal
 
-  /// Tempat terbaik: yang di depan (atau arahnya belum diketahui) dulu, lalu yang di belakang.
+  /// Tempat terbaik: Rekomendasi pitstop paling optimal (mempertimbangkan jarak dekat,
+  /// kategori tempat yang nyaman untuk istirahat, dan arah kendaraan).
   static NearbyPlace? _pick(List<NearbyPlace> primary, List<NearbyPlace> fallback) {
-    for (final p in primary) {
-      if (p.distanceM <= 1000) return p;
+    final pool = <NearbyPlace>[...primary, ...fallback];
+    if (pool.isEmpty) return null;
+
+    NearbyPlace? bestPlace;
+    double bestScore = double.infinity;
+
+    for (final p in pool) {
+      final dist = p.distanceM.toDouble();
+
+      // Bobot kategori: Rest Area & SPBU paling ideal untuk berhenti cepat; hotel sangat baik saat malam
+      double catFactor = 1.0;
+      final cat = p.category;
+      if (cat == PlaceCategory.restArea) {
+        catFactor = 0.85;
+      } else if (cat == PlaceCategory.spbu) {
+        catFactor = 0.90;
+      } else if (cat == PlaceCategory.minimarket) {
+        catFactor = 1.0;
+      } else if (cat == PlaceCategory.lodging) {
+        final hour = DateTime.now().hour;
+        catFactor = (hour >= 20 || hour < 6) ? 0.90 : 1.05;
+      }
+
+      // Penalti arah kendaraan: hanya berlaku jika jarak > 400 meter.
+      // Jika tempat sangat dekat (< 400m), sangat mudah diakses/belok tanpa perlu penalti arah.
+      double headingFactor = 1.0;
+      if (p.ahead == false && dist > 400) {
+        headingFactor = 1.4;
+      }
+
+      final score = dist * catFactor * headingFactor;
+      if (score < bestScore) {
+        bestScore = score;
+        bestPlace = p;
+      }
     }
-    for (final p in fallback) {
-      if (p.distanceM <= 1000) return p;
-    }
-    for (final p in primary) {
-      if (p.ahead != false) return p;
-    }
-    for (final p in fallback) {
-      if (p.ahead != false) return p;
-    }
-    if (primary.isNotEmpty) return primary.first;
-    if (fallback.isNotEmpty) return fallback.first;
-    return null;
+
+    return bestPlace ?? primary.firstOrNull ?? fallback.firstOrNull;
   }
 
-  /// Urutan tampil: di depan/belum diketahui dulu, lalu yang di belakang; tiap kelompok dari yang terdekat.
+  /// Urutan tampil: tempat sangat dekat (< 500m) diurutkan murni berdasarkan jarak fisik terdekat
+  /// agar tempat persis di sekitar pengguna (seperti hotel / minimarket 100m) langsung terlihat di atas.
+  /// Untuk jarak lebih jauh (> 500m), tempat di depan (ahead) diprioritaskan.
   static List<NearbyPlace> _rank(List<NearbyPlace> places) {
     final sorted = List<NearbyPlace>.of(places);
     sorted.sort((a, b) {
-      final distA = (a.ahead == false && a.distanceM > 1000)
-          ? a.distanceM + 2500
+      final isVeryCloseA = a.distanceM <= 500;
+      final isVeryCloseB = b.distanceM <= 500;
+      if (isVeryCloseA && !isVeryCloseB) return -1;
+      if (!isVeryCloseA && isVeryCloseB) return 1;
+
+      final distA = (a.ahead == false && a.distanceM > 500)
+          ? a.distanceM + 1500
           : a.distanceM;
-      final distB = (b.ahead == false && b.distanceM > 1000)
-          ? b.distanceM + 2500
+      final distB = (b.ahead == false && b.distanceM > 500)
+          ? b.distanceM + 1500
           : b.distanceM;
       final byDistance = distA.compareTo(distB);
       if (byDistance != 0) return byDistance;

@@ -513,6 +513,13 @@ class DirectOsmPlacesApi implements PlacesApi {
       return true;
     }
 
+    // Filter SPBU dengan nama janggal (misal 'SPBU Gang ...' atau depo/gudang)
+    if (cat == PlaceCategory.spbu) {
+      if (lowerName.contains('gang') || lowerName.contains('gudang') || lowerName.contains('depo')) {
+        return true;
+      }
+    }
+
     // 3. FILTER MINIMARKET (Hanya minimarket ritel resmi, bukan toko kelontong/vape/kerupuk)
     if (cat == PlaceCategory.minimarket) {
       final isBadShop = RegExp(
@@ -552,13 +559,13 @@ class DirectOsmPlacesApi implements PlacesApi {
     if (branch != null &&
         branch.isNotEmpty &&
         !baseName.toLowerCase().contains(branch.toLowerCase())) {
-      baseName = ' ';
+      baseName = '$baseName $branch';
     }
 
     // Rapikan nama jika ada awalan redundant 'Jalan' (misal: 'SPBU Pertamina Jalan Imam Bonjol' -> 'SPBU Pertamina Imam Bonjol')
     baseName = baseName.replaceFirst(
-      RegExp(r'^(SPBU Pertamina|SPBU|Indomaret|Alfamart|Alfamidi)\\s+(?:Jalan|Jl\\.?)\\s+', caseSensitive: false),
-      r' ',
+      RegExp(r'^(SPBU Pertamina|SPBU|Indomaret|Alfamart|Alfamidi)\s+(?:Jalan|Jl\.?)\s+', caseSensitive: false),
+      r'$1 ',
     ).trim();
 
     return baseName;
