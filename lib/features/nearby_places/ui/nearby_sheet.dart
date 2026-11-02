@@ -1166,9 +1166,20 @@ class _PlaceTile extends StatelessWidget {
     final ahead = place.ahead;
     final rating = place.rating;
     final address = place.address;
-    final displayName = place.name.trim().isNotEmpty
+    String displayName = place.name.trim().isNotEmpty
         ? place.name.trim()
         : (place.categoryText.isNotEmpty ? place.categoryText : 'Tempat Istirahat');
+
+    final lowerDisplay = displayName.toLowerCase();
+    if ((lowerDisplay == 'indomaret' ||
+            lowerDisplay == 'alfamart' ||
+            lowerDisplay == 'alfamidi' ||
+            lowerDisplay == 'spbu' ||
+            lowerDisplay == 'spbu pertamina') &&
+        address.isNotEmpty) {
+      final shortAddress = address.split(',').first.trim();
+      displayName = '$displayName • $shortAddress';
+    }
     return Column(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: <Widget>[

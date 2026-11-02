@@ -322,6 +322,14 @@ class DirectOsmPlacesApi implements PlacesApi {
         headingDeg: headingDeg,
       );
 
+      // Cegah duplikasi titik yang jaraknya sangat berdekatan (< 60m) dalam kategori yang sama
+      final curLat = pLat;
+      final curLng = pLng;
+      final isDuplicate = list.any((existing) =>
+          existing.categoryKey == detectedCat.apiValue &&
+          haversineM(existing.lat, existing.lng, curLat, curLng) < 60);
+      if (isDuplicate) continue;
+
       final address = _resolveAddress(tags);
 
       final placeId = 'osm:$type/$idNum';
@@ -560,6 +568,30 @@ class DirectOsmPlacesApi implements PlacesApi {
         branch.isNotEmpty &&
         !baseName.toLowerCase().contains(branch.toLowerCase())) {
       baseName = '$baseName $branch';
+    }
+
+    // Jika nama masih brand generik polos ('Indomaret' / 'Alfamart' / 'Alfamidi' / 'SPBU'),
+    // otomatis lengkapi dengan nama jalan/wilayah agar judul kartu informatif
+    final lowerBase = baseName.toLowerCase();
+    if (lowerBase == 'indomaret' ||
+        lowerBase == 'alfamart' ||
+        lowerBase == 'alfamidi' ||
+        lowerBase == 'spbu' ||
+        lowerBase == 'spbu pertamina') {
+      final street = tags['addr:street']?.toString().trim() ?? '';
+      final city = tags['addr:city']?.toString().trim() ?? '';
+      if (street.isNotEmpty) {
+        final cleanStreet = street
+            .replaceFirst(RegExp(r'^(?:Jalan|Jl\.?)\s+', caseSensitive: false), '')
+            .split(',')
+            .first
+            .trim();
+        if (cleanStreet.isNotEmpty) {
+          baseName = '$baseName $cleanStreet';
+        }
+      } else if (city.isNotEmpty) {
+        baseName = '$baseName $city';
+      }
     }
 
     // Rapikan nama jika ada awalan redundant 'Jalan' (misal: 'SPBU Pertamina Jalan Imam Bonjol' -> 'SPBU Pertamina Imam Bonjol')
