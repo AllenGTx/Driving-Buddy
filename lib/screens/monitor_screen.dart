@@ -32,6 +32,9 @@ import '../driving_card_screen.dart';
 import '../widgets/driving_buddy_app_bar.dart';
 import '../widgets/pre_trip_safety_dialog.dart';
 import '../features/nearby_places/nearby_places.dart';
+import '../features/voice_buddy/ui/buddy_floating_sheet.dart';
+import '../features/voice_buddy/ui/buddy_ptt_button.dart';
+import '../features/voice_buddy/voice_buddy_controller.dart';
 
 // ============================================================================
 // MONITOR SCREEN (Active HUD Berkendara Telemetri — Luxury GT)
@@ -42,8 +45,14 @@ typedef MonitoringScreen = MonitorScreen;
 class MonitorScreen extends StatefulWidget {
   final bool isActive;
   final NearbyPlacesController? nearbyController;
+  final VoiceBuddyController? voiceBuddyController;
 
-  const MonitorScreen({super.key, this.isActive = true, this.nearbyController});
+  const MonitorScreen({
+    super.key,
+    this.isActive = true,
+    this.nearbyController,
+    this.voiceBuddyController,
+  });
 
   @override
   MonitorScreenState createState() => MonitorScreenState();
@@ -71,6 +80,8 @@ class MonitorScreenState extends State<MonitorScreen> with WidgetsBindingObserve
   // Tempat terdekat (Maps API): kartu rekomendasi pitstop & tombol rest area
   late final NearbyPlacesController _nearby;
   late final bool _ownsNearby;
+  late final VoiceBuddyController _voiceBuddy;
+  late final bool _ownsVoiceBuddy;
 
   // Posture Detection Toggle Preferences
   bool _enableHeadTilt = true;
@@ -143,6 +154,25 @@ class MonitorScreenState extends State<MonitorScreen> with WidgetsBindingObserve
       _nearby.start(askPermission: false);
     }
     _nearby.addListener(_onNearbyUpdate);
+    _ownsVoiceBuddy = widget.voiceBuddyController == null;
+    if (widget.voiceBuddyController != null) {
+      _voiceBuddy = widget.voiceBuddyController!;
+      _voiceBuddy.bindDrivingTelemetry(
+        sessionIdProvider: () =>
+            _currentSessionId ?? AuthService.currentUser?.uid ?? 'local-driver',
+        driverResultProvider: () => _result,
+        tripMinutesProvider: () => _elapsedSeconds ~/ 60,
+      );
+    } else {
+      _voiceBuddy = VoiceBuddyController(
+        nearby: _nearby,
+        sessionIdProvider: () =>
+            _currentSessionId ?? AuthService.currentUser?.uid ?? 'local-driver',
+        driverResultProvider: () => _result,
+        tripMinutesProvider: () => _elapsedSeconds ~/ 60,
+      );
+      unawaited(_voiceBuddy.init(insideMainApp: true));
+    }
     _loadPostureSettings();
   }
 
@@ -393,6 +423,9 @@ class MonitorScreenState extends State<MonitorScreen> with WidgetsBindingObserve
     _cameraController?.dispose();
     _mesh.dispose();
     _alert.dispose();
+    if (_ownsVoiceBuddy) {
+      _voiceBuddy.dispose();
+    }
     if (_ownsNearby) {
       _nearby.dispose();
     }
@@ -672,6 +705,11 @@ class MonitorScreenState extends State<MonitorScreen> with WidgetsBindingObserve
         if (!_isCurrentlyDrowsy) {
           _isCurrentlyDrowsy = true;
           _drowsyCount++;
+          if (!isSnoozed && !isExcessiveYawn && !_isAlertShowing) {
+            unawaited(
+              _voiceBuddy.maybeSpeakDrowsyReminder(yawnCount: result.yawnCount),
+            );
+          }
           if (AuthService.isLoggedIn && _currentSessionId != null) {
             SessionService.logEvent(
               sessionId: _currentSessionId!,
@@ -1109,6 +1147,7 @@ class MonitorScreenState extends State<MonitorScreen> with WidgetsBindingObserve
   }) {
     if (!_isMonitoring || _isAlertShowing) return;
     _isAlertShowing = true;
+    _voiceBuddy.setEmergencyAlertActive(true);
     if (_showCameraModal) {
       setState(() => _showCameraModal = false);
     }
@@ -1164,6 +1203,7 @@ class MonitorScreenState extends State<MonitorScreen> with WidgetsBindingObserve
     ).then((_) {
       _sosTimer?.cancel();
       _isAlertShowing = false;
+      _voiceBuddy.setEmergencyAlertActive(false);
       _nearby.clearUrgent();
     });
   }
@@ -1207,6 +1247,8 @@ class MonitorScreenState extends State<MonitorScreen> with WidgetsBindingObserve
 
                 // 2. AI Face Monitoring Glass Cockpit Card
                 _buildGlassCockpitCameraCard(),
+                const SizedBox(height: 10),
+                BuddyPushToTalkBar(controller: _voiceBuddy),
                 const SizedBox(height: 14),
 
                 // 3. Rekomendasi Pitstop Assistant Card
@@ -1223,6 +1265,7 @@ class MonitorScreenState extends State<MonitorScreen> with WidgetsBindingObserve
               _cameraController != null &&
               _cameraController!.value.isInitialized)
             _buildCameraFocusModal(),
+          if (_ownsVoiceBuddy) BuddyFloatingSheet(controller: _voiceBuddy),
         ],
       ),
     );

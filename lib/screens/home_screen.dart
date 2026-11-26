@@ -16,6 +16,9 @@ import '../services/firebase_service.dart';
 import '../models/account_config.dart';
 import '../widgets/driving_buddy_app_bar.dart';
 import '../features/nearby_places/nearby_places.dart';
+import '../features/voice_buddy/ui/buddy_control_bar.dart';
+import '../features/voice_buddy/ui/buddy_floating_sheet.dart';
+import '../features/voice_buddy/voice_buddy_controller.dart';
 import '../services/theme_service.dart';
 import '../services/language_service.dart';
 
@@ -29,12 +32,14 @@ class CockpitScreen extends StatefulWidget {
   final bool isActive;
   final VoidCallback? onStartMonitoring;
   final NearbyPlacesController? nearbyController;
+  final VoiceBuddyController? voiceBuddyController;
 
   const CockpitScreen({
     super.key,
     this.isActive = true,
     this.onStartMonitoring,
     this.nearbyController,
+    this.voiceBuddyController,
   });
 
   @override
@@ -46,6 +51,8 @@ class _CockpitScreenState extends State<CockpitScreen>
   String _driverName = 'Pengemudi';
   late final NearbyPlacesController _nearby;
   late final bool _ownsNearby;
+  late final VoiceBuddyController _voiceBuddy;
+  late final bool _ownsVoiceBuddy;
 
   // Realtime Sessions from Firestore
   List<Map<String, dynamic>> _userSessions = [];
@@ -73,6 +80,12 @@ class _CockpitScreenState extends State<CockpitScreen>
     _nearby = widget.nearbyController ?? NearbyPlacesController();
     if (_ownsNearby) {
       _nearby.start(askPermission: false);
+    }
+    _ownsVoiceBuddy = widget.voiceBuddyController == null;
+    _voiceBuddy =
+        widget.voiceBuddyController ?? VoiceBuddyController(nearby: _nearby);
+    if (_ownsVoiceBuddy) {
+      unawaited(_voiceBuddy.init(insideMainApp: true));
     }
 
     _animController = AnimationController(
@@ -131,6 +144,9 @@ class _CockpitScreenState extends State<CockpitScreen>
     _animController.dispose();
     _sessionsSub?.cancel();
     _previewCamera?.dispose();
+    if (_ownsVoiceBuddy) {
+      _voiceBuddy.dispose();
+    }
     if (_ownsNearby) {
       _nearby.dispose();
     }
@@ -395,24 +411,29 @@ class _CockpitScreenState extends State<CockpitScreen>
               ? AppColors.darkBackground
               : AppColors.background,
           appBar: DrivingBuddyAppBar(title: LanguageService.instance.s.navHome),
-          body: SingleChildScrollView(
-            physics: const BouncingScrollPhysics(),
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                _buildDriverGreetingBar(),
-                const SizedBox(height: 16),
-                _buildGuardianMeshLaunchCard(context),
-                const SizedBox(height: 20),
-                _buildWeeklyTelemetryDialCard(),
-                const SizedBox(height: 20),
-                _buildRecentActivitiesSection(context),
-                const SizedBox(height: 20),
-                _buildRestAreaQuickCard(context),
-                const SizedBox(height: 16),
-              ],
-            ),
+          body: Stack(
+            children: [
+              SingleChildScrollView(
+                physics: const BouncingScrollPhysics(),
+                padding: const EdgeInsets.fromLTRB(16, 16, 16, 24),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    _buildDriverGreetingBar(),
+                    const SizedBox(height: 16),
+                    _buildGuardianMeshLaunchCard(context),
+                    const SizedBox(height: 20),
+                    _buildWeeklyTelemetryDialCard(),
+                    const SizedBox(height: 20),
+                    _buildRecentActivitiesSection(context),
+                    const SizedBox(height: 20),
+                    _buildRestAreaQuickCard(context),
+                    const SizedBox(height: 16),
+                  ],
+                ),
+              ),
+              if (_ownsVoiceBuddy) BuddyFloatingSheet(controller: _voiceBuddy),
+            ],
           ),
         );
       },
@@ -926,6 +947,10 @@ class _CockpitScreenState extends State<CockpitScreen>
                     ),
                   ),
                 ),
+                const SizedBox(height: 12),
+
+                // Pengaturan Nyala/Mati Asisten Suara (di bawah tab Preview)
+                BuddyControlBar(controller: _voiceBuddy),
                 const SizedBox(height: 14),
 
                 DbPressable(

@@ -18,6 +18,7 @@ import numpy as np
 import time
 from collections import deque
 from fastapi import FastAPI, WebSocket, WebSocketDisconnect
+from fastapi.middleware.cors import CORSMiddleware
 
 # =====================================================================
 # 1. KONFIGURASI PARAMETER & THRESHOLD
@@ -49,6 +50,18 @@ MOUTH_OUTER = [61, 291, 39, 181, 0, 17, 269, 405]
 
 mp_face_mesh = mp.solutions.face_mesh
 app = FastAPI()
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+try:
+    from llm_chat import build_router
+    app.include_router(build_router())
+except Exception as _llm_exc:
+    print(f"[WARN] Modul LLM tidak dimuat: {_llm_exc}")
 
 # =====================================================================
 # 2. FUNGSI KALKULASI GEOMETRI WAJAH

@@ -12,11 +12,12 @@ class DrowsinessDetector {
   static const rightEye = [33, 160, 158, 133, 153, 144];
   static const leftEye = [362, 385, 387, 263, 373, 380];
 
-  double? _eyeClosedStart, _yawnStart, _headDropStart, _headTiltStart;
+  double? _eyeClosedStart, _yawnStart, _headDropStart, _headTiltStart, _lastFrameTime;
   double _lastBlink = 0, _yawnDisplayUntil = 0;
   bool _eyeClosed = false, _yawnCounted = false;
   final _yawns = Queue<double>();
   final _blinks = Queue<double>();
+  final _droopySpans = Queue<(double, double)>();
 
   // Head Bobbing & Head Tilt Tracker
   final _headBobs = Queue<double>();
@@ -60,8 +61,11 @@ class DrowsinessDetector {
     List<Offset>? p, {
     bool enableHeadTilt = true,
     bool enableHeadBob = true,
+    double? nowSec,
   }) {
-    final now = DateTime.now().millisecondsSinceEpoch / 1000.0;
+    final now = nowSec ?? (DateTime.now().millisecondsSinceEpoch / 1000.0);
+    final dt = _lastFrameTime != null ? (now - _lastFrameTime!).clamp(0.0, 0.5) : 0.0;
+    _lastFrameTime = now;
 
     while (_yawns.isNotEmpty && now - _yawns.first > Thresholds.yawnWindow) {
       _yawns.removeFirst();
@@ -71,6 +75,9 @@ class DrowsinessDetector {
     }
     while (_headBobs.isNotEmpty && now - _headBobs.first > Thresholds.headBobWindow) {
       _headBobs.removeFirst();
+    }
+    while (_droopySpans.isNotEmpty && now - _droopySpans.first.$1 > Thresholds.drowsyWindowSec) {
+      _droopySpans.removeFirst();
     }
 
     if (p == null) {
@@ -107,7 +114,11 @@ class DrowsinessDetector {
     } else {
       _eyeClosed = false;
       _eyeClosedStart = null;
+      if (ear < Thresholds.earDrowsyUpper && mar < Thresholds.marYawn && dt > 0) {
+        _droopySpans.add((now, dt));
+      }
     }
+    final droopyAccum = _droopySpans.fold<double>(0.0, (sum, s) => sum + s.$2);
 
     // --- Menguap (1x per siklus buka-tutup mulut) ---
     if (mar > Thresholds.marYawn) {
@@ -196,7 +207,10 @@ class DrowsinessDetector {
         now - _headDropStart! >= Thresholds.headDropLimit) {
       status = DriverStatus.drowsy;
       sub = 'PERINGATAN: KEPALA MENUNDUK / TERLELAP';
-    } else if (_yawns.length >= Thresholds.yawnAlertFreq) {
+    } else if (droopyAccum >= Thresholds.drowsyAccumulatedLimit) {
+      status = DriverStatus.drowsy;
+      sub = 'LELAH: Mata Mulai Sayu (${droopyAccum.toStringAsFixed(1)}s / 10s)';
+    } else if (_yawns.length >= Thresholds.yawnDrowsyFreq) {
       status = DriverStatus.drowsy;
       sub = 'LELAH: ${_yawns.length}x Menguap dalam 5 Mnt';
     } else if (_blinks.length >= Thresholds.highBlinkRate) {
@@ -236,6 +250,7 @@ class DrowsinessDetector {
   void resetAllAlerts() {
     resetYawns();
     resetHeadBobs();
+    _droopySpans.clear();
     _headTiltStart = null;
     _eyeClosedStart = null;
   }

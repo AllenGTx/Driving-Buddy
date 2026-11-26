@@ -1,6 +1,8 @@
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <!-- Izin kamera untuk deteksi wajah real-time -->
     <uses-permission android:name="android.permission.CAMERA"/>
+    <!-- Izin mikrofon untuk fitur Asisten Suara Buddy -->
+    <uses-permission android:name="android.permission.RECORD_AUDIO"/>
     <!-- Izin internet untuk koneksi WebSocket ke server Python -->
     <uses-permission android:name="android.permission.INTERNET"/>
     <!-- Izin akses jaringan lokal (WiFi) -->
@@ -66,6 +68,13 @@
             <action android:name="android.intent.action.VIEW" />
             <data android:scheme="whatsapp" />
         </intent>
+        <intent>
+            <action android:name="android.intent.action.TTS_SERVICE" />
+        </intent>
+        <intent>
+            <action android:name="android.speech.RecognitionService" />
+        </intent>
+        <package android:name="com.google.android.googlequicksearchbox" />
         <package android:name="com.whatsapp" />
         <package android:name="com.whatsapp.w4b" />
         <package android:name="com.google.android.gms" />

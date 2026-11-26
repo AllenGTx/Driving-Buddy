@@ -2,15 +2,20 @@
 class Thresholds {
   // Ambang geometris
   static const double earClosed = 0.15; // mata tertutup
+  static const double earDrowsyUpper = 0.21; // batas atas mata sayu (0.15 - 0.21)
   static const double marYawn = 0.35; // mulut menguap
   static const double headDrop = 0.68; // kepala menunduk (pitch ratio)
 
   // Durasi (detik)
   static const double eyeClosedLimit = 1.7; // -> Sleep
+  static const double drowsyWindowSec = 10.0; // jendela geser PERCLOS mata sayu
+  static const double drowsyAccumulatedLimit = 4.0; // akumulasi >= 4s mata sayu dalam 10s -> Drowsy
   static const double yawnLimit = 1.2; // -> Yawn
   static const double headDropLimit = 2.0; // -> Drowsy
   static const double yawnWindow = 300; // jendela 5 menit
-  static const int yawnAlertFreq = 4; // >=4x menguap / 5 menit -> Drowsy
+  static const int yawnDrowsyFreq = 2; // >=2x menguap / 5 menit -> Drowsy (tanpa sirine)
+  static const int yawnAlertFreq = 4; // >=4x menguap / 5 menit -> Sirine kelelahan berat
+  static const Duration buddyDrowsyTtsCooldown = Duration(seconds: 90);
   static const int highBlinkRate = 35; // kedip / menit -> Drowsy
   static const double minBlinkInterval = 0.2; // debounce kedip
 
