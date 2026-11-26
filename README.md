@@ -132,3 +132,4 @@ Aplikasi memerlukan beberapa izin sistem Android agar fitur bekerja optimal:
 
 Dikembangkan dengan dedikasi untuk keselamatan berkendara di Indonesia.  
 - **Pengembang:** [AllenGTx](https://github.com/AllenGTx) & [Vodyanitsa1](https://github.com/Vodyanitsa1)
+ 
