@@ -42,32 +42,6 @@
 6. **Rekomendasi Pitstop & Tempat Istirahat Terdekat**
    - Menemukan SPBU, Rest Area, minimarket, dan kafe terdekat menggunakan integrasi OpenStreetMap / Google Maps.
 
-7. **Asisten Percakapan AI "Buddy" (Integrasi LLM Groq)**
-   - Endpoint `POST /chat` di `server.py` untuk ngobrol dengan pengemudi, memakai LLM Groq (`openai/gpt-oss-120b`). API key hanya disimpan di `.env` server, tidak pernah di aplikasi.
-   - Balasan menyesuaikan kondisi pengemudi (status kantuk, jumlah menguap, lama perjalanan) dan tetap memberi pesan keselamatan walau LLM sedang gagal.
-   - Klien Flutter siap pakai di `lib/features/llm_chat/`. Detail lengkap ada di [README_LLM.md](README_LLM.md).
-
----
-
-## 📸 Tampilan Aplikasi
-
-<table>
-  <tr>
-    <td align="center"><img src="docs/screenshots/01-welcome.png" width="200" alt="Halaman Selamat Datang"><br><b>Selamat Datang</b></td>
-    <td align="center"><img src="docs/screenshots/02-login.png" width="200" alt="Halaman Masuk"><br><b>Masuk / Daftar</b></td>
-    <td align="center"><img src="docs/screenshots/03-beranda.png" width="200" alt="Beranda"><br><b>Beranda</b></td>
-    <td align="center"><img src="docs/screenshots/04-berkendara.png" width="200" alt="Mode Berkendara"><br><b>Mode Berkendara</b></td>
-  </tr>
-  <tr>
-    <td align="center"><img src="docs/screenshots/05-riwayat.png" width="200" alt="Riwayat Perjalanan"><br><b>Riwayat Perjalanan</b></td>
-    <td align="center"><img src="docs/screenshots/06-kartu-berkendara.png" width="200" alt="Kartu Berkendara"><br><b>Kartu Berkendara</b></td>
-    <td align="center"><img src="docs/screenshots/07-pengaturan.png" width="200" alt="Pengaturan Akun"><br><b>Pengaturan & Kontak SOS</b></td>
-    <td></td>
-  </tr>
-</table>
-
-> Tangkapan layar diambil dari build aplikasi saat belum ada riwayat perjalanan. Angka di Kartu Berkendara adalah contoh data.
-
 ---
 
 ## 🛠️ Prasyarat Lingkungan (Prerequisites)
@@ -157,4 +131,5 @@ Aplikasi memerlukan beberapa izin sistem Android agar fitur bekerja optimal:
 ## 📄 Lisensi & Kontributor
 
 Dikembangkan dengan dedikasi untuk keselamatan berkendara di Indonesia.  
-- **Pengembang:** [AllenGTx](https://github.com/AllenGTx), [Vodyanitsa1](https://github.com/Vodyanitsa1), [bramest1654](https://github.com/bramest1654) & [A-san-spec](https://github.com/A-san-spec)
+- **Pengembang:** [AllenGTx](https://github.com/AllenGTx) & [Vodyanitsa1](https://github.com/Vodyanitsa1)
+ 
