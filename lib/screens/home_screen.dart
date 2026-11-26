@@ -58,11 +58,12 @@ class _CockpitScreenState extends State<CockpitScreen>
 
   // Camera Preview in Cockpit
   CameraController? _previewCamera;
+  bool _isCameraEnabled = false;
   bool _isPreviewReady = false;
   bool _faceDetected = false;
   String _previewStatus = LanguageService.instance.isEnglish
-      ? 'Connecting optical sensor...'
-      : 'Menghubungkan sensor optik...';
+      ? 'Camera preview off • Tap toggle to enable'
+      : 'Pratinjau kamera mati • Ketuk tombol untuk aktifkan';
   bool _isCameraExpanded = false;
 
   @override
@@ -85,7 +86,7 @@ class _CockpitScreenState extends State<CockpitScreen>
 
     _loadDriverName();
     _listenSessions();
-    if (widget.isActive) {
+    if (widget.isActive && _isCameraEnabled) {
       _initPreviewCamera();
     }
     AccountConfig.nameNotifier.addListener(_onProfileNameChanged);
@@ -102,7 +103,8 @@ class _CockpitScreenState extends State<CockpitScreen>
     super.didUpdateWidget(oldWidget);
     if (widget.isActive && !oldWidget.isActive) {
       _loadDriverName();
-      if (_previewCamera == null || !_previewCamera!.value.isInitialized) {
+      if (_isCameraEnabled &&
+          (_previewCamera == null || !_previewCamera!.value.isInitialized)) {
         _initPreviewCamera();
       }
     } else if (!widget.isActive && oldWidget.isActive) {
@@ -111,9 +113,13 @@ class _CockpitScreenState extends State<CockpitScreen>
       if (mounted) {
         setState(() {
           _isPreviewReady = false;
-          _previewStatus = LanguageService.instance.isEnglish
-              ? 'Camera standby'
-              : 'Kamera siaga';
+          _previewStatus = _isCameraEnabled
+              ? (LanguageService.instance.isEnglish
+                    ? 'Camera standby'
+                    : 'Kamera siaga')
+              : (LanguageService.instance.isEnglish
+                    ? 'Camera preview off • Tap toggle to enable'
+                    : 'Pratinjau kamera mati • Ketuk tombol untuk aktifkan');
         });
       }
     }
@@ -129,6 +135,31 @@ class _CockpitScreenState extends State<CockpitScreen>
       _nearby.dispose();
     }
     super.dispose();
+  }
+
+  Future<void> _togglePreviewCamera(bool enabled) async {
+    if (enabled) {
+      setState(() {
+        _isCameraEnabled = true;
+        _previewStatus = LanguageService.instance.isEnglish
+            ? 'Connecting optical sensor...'
+            : 'Menghubungkan sensor optik...';
+      });
+      await _initPreviewCamera();
+    } else {
+      await _previewCamera?.dispose();
+      _previewCamera = null;
+      if (mounted) {
+        setState(() {
+          _isCameraEnabled = false;
+          _isPreviewReady = false;
+          _faceDetected = false;
+          _previewStatus = LanguageService.instance.isEnglish
+              ? 'Camera preview off • Tap toggle to enable'
+              : 'Pratinjau kamera mati • Ketuk tombol untuk aktifkan';
+        });
+      }
+    }
   }
 
   Future<void> _initPreviewCamera() async {
@@ -694,14 +725,30 @@ class _CockpitScreenState extends State<CockpitScreen>
                         border: Border.all(color: statusBorder),
                       ),
                       child: Text(
-                        _faceDetected
-                            ? LanguageService.instance.s.sensorActive
-                            : LanguageService.instance.s.sensorReady,
+                        !_isCameraEnabled
+                            ? (LanguageService.instance.isEnglish
+                                  ? 'CAMERA OFF'
+                                  : 'KAMERA MATI')
+                            : (_faceDetected
+                                  ? LanguageService.instance.s.sensorActive
+                                  : LanguageService.instance.s.sensorReady),
                         style: TextStyle(
                           fontSize: 9.5,
                           fontWeight: FontWeight.w800,
                           color: statusColor,
                           letterSpacing: 0.5,
+                        ),
+                      ),
+                    ),
+                    const SizedBox(width: 6),
+                    SizedBox(
+                      height: 28,
+                      child: Transform.scale(
+                        scale: 0.8,
+                        child: Switch.adaptive(
+                          value: _isCameraEnabled,
+                          onChanged: _togglePreviewCamera,
+                          activeColor: const Color(0xFFF26B1D),
                         ),
                       ),
                     ),
