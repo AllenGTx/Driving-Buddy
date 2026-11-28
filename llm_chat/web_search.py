@@ -2,7 +2,8 @@
 
 Mendukung:
 1. Pertanyaan umum & cek fakta berita terkini (mis. politik, viral, peristiwa hari ini/kemarin)
-2. Skor sepak bola / olahraga terkini (mis. Man United vs Sporting Lisbon)
+2. Skor olahraga real-time: sepak bola, basket NBA, Formula 1, bulu tangkis, e-sport MPL/MLBB/VALORANT/Dota,
+   Olimpiade, SEA Games, tinju/MMA, tenis, dan turnamen apa pun yang bisa dicari di ESPN/Google/Bing.
 3. Pencarian daftar lagu resmi (antrean playlist 5 lagu + sampul HD) dan resolusi audio stream penuh
    tanpa pernah memaksa pengguna keluar dari aplikasi Driving Buddy ke halaman pencarian Spotify.
 """
@@ -27,8 +28,26 @@ _SEARCH_TRIGGER_PATTERNS = re.compile(
     r"cari\s+di\s+google|cari\s+tau|cari\s+tahu|coba\s+cari|tolong\s+cari|googling|search|"
     r"apakah\s+benar|bener\s+ga|bener\s+gak|benar\s+tidak|hoaks|hoax|cek\s+fakta|fakta\s+atau|"
     r"berita|kabar\s+terbaru|viral|isu\s+|gosip|melengserkan|lengser|pemilu|presiden|wapres|menteri|prabowo|gibran|"
-    r"skor|berapa\s+skor|hasil\s+pertandingan|menang\s+berapa|kalah\s+berapa|pertandingan|lawan|vs|versus|klasemen|liga\s+champions|premier\s+league|liga\s+inggris|timnas|"
-    r"man\s+united|man\s+utd|man\s+u|mu\b|manchester|sporting|real\s+madrid|barcelona|barca|arsenal|liverpool|chelsea|juventus|milan|inter|bayern|psg|tottenham|persib|persija|"
+    # Sepak bola
+    r"skor|berapa\s+skor|hasil\s+pertandingan|menang\s+berapa|kalah\s+berapa|pertandingan|lawan|vs|versus|klasemen|"
+    r"liga\s+champions|premier\s+league|liga\s+inggris|timnas|ucl|europa\s+league|la\s+liga|serie\s+a|bundesliga|"
+    r"man\s+united|man\s+utd|man\s+u|mu\b|manchester|sporting|real\s+madrid|barcelona|barca|arsenal|liverpool|chelsea|"
+    r"juventus|milan|inter|bayern|psg|tottenham|persib|persija|arema|bali\s+united|psm|timnas|"
+    # Basket NBA
+    r"nba|lakers|celtics|warriors|bulls|heat|suns|nuggets|bucks|nets|knicks|"
+    r"lebron|curry|durant|giannis|jokic|doncic|ibl\s+basket|"
+    # E-sport & Gaming
+    r"mpl|mobile\s+legends|mlbb|rrq|evos|onic|alter\s+ego|aura|bigetron|"
+    r"valorant|vct|dota\s+2|the\s+international|csgo|cs2|pubg|free\s+fire|ffws|"
+    r"league\s+of\s+legends|lol|worlds|lck|lpl|t1\b|esport|e-sport|turnamen|"
+    # Formula 1 & balap
+    r"formula\s+1|f1|grand\s+prix|gp\s+\w+|verstappen|hamilton|leclerc|norris|sainz|alonso|"
+    r"red\s+bull|ferrari|mercedes|mclaren|"
+    # Olimpiade & olahraga lain
+    r"olimpiade|asian\s+games|sea\s+games|paralimpik|medali|"
+    r"bulu\s+tangkis|bulutangkis|kevin\s+sanjaya|ginting|jonatan|"
+    r"tenis|wimbledon|us\s+open|french\s+open|australian\s+open|grand\s+slam|"
+    r"tinju|mma|ufc|one\s+championship|boxing|"
     r"kemarin|tadi\s+malam|semalam|hari\s+ini|minggu\s+ini|bulan\s+ini|tahun\s+202[4-9]|terbaru|sekarang\s+siapa|"
     r"harga\s+|kurs\s+|rupiah|dollar|bitcoin|emas\s+hari\s+ini|cuaca\s+di|jadwal\s+"
     r")\b",
@@ -153,31 +172,79 @@ _MONTH_MAP = {
 }
 
 _TEAM_ALIASES = (
+    # Sepak bola — Premier League
     (re.compile(r"\b(?:manchester\s+united|man\s+united|man\s+utd|man\s+u|mufc|mu)\b", re.I), "Manchester United", ("manchester united", "man utd", "man united")),
     (re.compile(r"\b(?:manchester\s+city|man\s+city|mcfc)\b", re.I), "Manchester City", ("manchester city", "man city")),
     (re.compile(r"\bliverpool\b", re.I), "Liverpool", ("liverpool",)),
     (re.compile(r"\barsenal\b", re.I), "Arsenal", ("arsenal",)),
     (re.compile(r"\bchelsea\b", re.I), "Chelsea", ("chelsea",)),
     (re.compile(r"\b(?:tottenham|spurs)\b", re.I), "Tottenham", ("tottenham", "spurs")),
+    (re.compile(r"\bnewcastle\b", re.I), "Newcastle", ("newcastle",)),
+    (re.compile(r"\b(?:aston\s+villa|villa)\b", re.I), "Aston Villa", ("aston villa",)),
+    # Sepak bola — La Liga
     (re.compile(r"\b(?:real\s+madrid|madrid)\b", re.I), "Real Madrid", ("real madrid",)),
-    (re.compile(r"\b(?:barcelona|barca)\b", re.I), "Barcelona", ("barcelona",)),
+    (re.compile(r"\b(?:barcelona|barca|fcb)\b", re.I), "Barcelona", ("barcelona",)),
+    (re.compile(r"\b(?:atletico\s+madrid|atletico)\b", re.I), "Atletico Madrid", ("atletico madrid",)),
+    # Sepak bola — Eropa lain
     (re.compile(r"\bsporting\b", re.I), "Sporting", ("sporting",)),
     (re.compile(r"\bbayern\b", re.I), "Bayern Munich", ("bayern",)),
+    (re.compile(r"\b(?:borussia\s+dortmund|dortmund|bvb)\b", re.I), "Borussia Dortmund", ("dortmund",)),
     (re.compile(r"\b(?:inter\s+milan|inter)\b", re.I), "Inter", ("inter",)),
     (re.compile(r"\b(?:ac\s+milan|milan)\b", re.I), "AC Milan", ("milan",)),
     (re.compile(r"\bjuventus\b", re.I), "Juventus", ("juventus",)),
-    (re.compile(r"\bpsg\b", re.I), "PSG", ("psg", "paris saint-germain")),
+    (re.compile(r"\bnapoli\b", re.I), "Napoli", ("napoli",)),
+    (re.compile(r"\b(?:psg|paris\s+saint.germain)\b", re.I), "PSG", ("psg", "paris saint-germain")),
+    (re.compile(r"\b(?:ajax)\b", re.I), "Ajax", ("ajax",)),
+    (re.compile(r"\b(?:porto)\b", re.I), "Porto", ("porto",)),
+    # Sepak bola — Indonesia
     (re.compile(r"\bpersib\b", re.I), "Persib", ("persib",)),
     (re.compile(r"\bpersija\b", re.I), "Persija", ("persija",)),
+    (re.compile(r"\barema\b", re.I), "Arema", ("arema",)),
+    (re.compile(r"\bbali\s+united\b", re.I), "Bali United", ("bali united",)),
+    (re.compile(r"\bpsm\b", re.I), "PSM Makassar", ("psm",)),
     (re.compile(r"\btimnas(?:\s+indonesia)?\b", re.I), "Indonesia", ("indonesia",)),
+    # NBA Basketball
+    (re.compile(r"\b(?:lakers|los\s+angeles\s+lakers)\b", re.I), "Lakers", ("lakers",)),
+    (re.compile(r"\b(?:celtics|boston\s+celtics)\b", re.I), "Celtics", ("celtics",)),
+    (re.compile(r"\b(?:warriors|golden\s+state)\b", re.I), "Warriors", ("warriors",)),
+    (re.compile(r"\b(?:bulls|chicago\s+bulls)\b", re.I), "Bulls", ("bulls",)),
+    (re.compile(r"\b(?:heat|miami\s+heat)\b", re.I), "Heat", ("heat",)),
+    (re.compile(r"\b(?:suns|phoenix\s+suns)\b", re.I), "Suns", ("suns",)),
+    (re.compile(r"\b(?:nuggets|denver\s+nuggets)\b", re.I), "Nuggets", ("nuggets",)),
+    (re.compile(r"\b(?:bucks|milwaukee\s+bucks)\b", re.I), "Bucks", ("bucks",)),
+    (re.compile(r"\b(?:knicks|new\s+york\s+knicks)\b", re.I), "Knicks", ("knicks",)),
+    # Formula 1 (driver bukan tim, tapi berguna untuk matching)
+    (re.compile(r"\bverstappen\b", re.I), "Max Verstappen", ("verstappen",)),
+    (re.compile(r"\blewis\s+hamilton\b", re.I), "Lewis Hamilton", ("hamilton",)),
+    (re.compile(r"\bleclerc\b", re.I), "Charles Leclerc", ("leclerc",)),
+    # E-sport MPL / Mobile Legends
+    (re.compile(r"\b(?:rrq|rrq\s+hoshi)\b", re.I), "RRQ Hoshi", ("rrq",)),
+    (re.compile(r"\b(?:evos|evos\s+legends)\b", re.I), "EVOS Legends", ("evos",)),
+    (re.compile(r"\b(?:onic|onic\s+esports)\b", re.I), "ONIC Esports", ("onic",)),
+    (re.compile(r"\b(?:alter\s+ego)\b", re.I), "Alter Ego", ("alter ego",)),
+    (re.compile(r"\b(?:aura|aura\s+fire)\b", re.I), "Aura Fire", ("aura",)),
+    # Bulu Tangkis
+    (re.compile(r"\bkevin\s+sanjaya\b", re.I), "Kevin Sanjaya", ("kevin sanjaya",)),
+    (re.compile(r"\bginting\b", re.I), "Anthony Ginting", ("ginting",)),
+    (re.compile(r"\bjonatan\s+christie\b", re.I), "Jonatan Christie", ("jonatan",)),
 )
 
 
 def _normalize_sports_query(query: str) -> str:
+    """Normalisasi alias tim/atlet umum agar pencarian Google News lebih akurat."""
     out = re.sub(r"\b(?:man\s+u|mu)\b", "Manchester United", query, flags=re.I)
     out = re.sub(r"\bman\s+united\b", "Manchester United", out, flags=re.I)
     out = re.sub(r"\bman\s+city\b", "Manchester City", out, flags=re.I)
     out = re.sub(r"\bbarca\b", "Barcelona", out, flags=re.I)
+    out = re.sub(r"\b(?:spurs)\b", "Tottenham", out, flags=re.I)
+    out = re.sub(r"\b(?:bvb|dortmund)\b", "Borussia Dortmund", out, flags=re.I)
+    out = re.sub(r"\b(?:psg)\b", "Paris Saint-Germain", out, flags=re.I)
+    out = re.sub(r"\b(?:lakers)\b", "Los Angeles Lakers", out, flags=re.I)
+    out = re.sub(r"\b(?:warriors)\b", "Golden State Warriors", out, flags=re.I)
+    out = re.sub(r"\bformula\s+(?:satu|one)\b", "Formula 1", out, flags=re.I)
+    out = re.sub(r"\b(?:mlbb|mobile\s+legends)\b", "Mobile Legends MLBB", out, flags=re.I)
+    out = re.sub(r"\bmpl\s+id\b", "MPL Indonesia", out, flags=re.I)
+    out = re.sub(r"\b(?:bulutangkis|bulu\s+tangkis)\b", "badminton", out, flags=re.I)
     return re.sub(r"\s+", " ", out).strip()
 
 
@@ -230,7 +297,11 @@ def _extract_sports_dates_ymd(query: str, today: Optional[dt.date] = None) -> Li
 
 
 async def _fetch_espn_scoreboard(client: httpx.AsyncClient, query: str) -> List[str]:
-    """Ambil skor resmi & pencetak gol langsung dari ESPN Public Scoreboard API (gratis, tanpa API key)."""
+    """Ambil skor resmi dari ESPN Public Scoreboard API untuk berbagai olahraga (gratis, tanpa API key).
+
+    Mendukung: sepak bola (soccer/all), basket NBA, Formula 1, bulu tangkis, MMA, tenis Grand Slam.
+    ESPN scoreboard API path: /apis/site/v2/sports/{sport}/{league}/scoreboard?dates=YYYYMMDD
+    """
     matched_teams: List[Tuple[str, Tuple[str, ...]]] = []
     for pat, label, kws in _TEAM_ALIASES:
         if pat.search(query):
@@ -238,11 +309,49 @@ async def _fetch_espn_scoreboard(client: httpx.AsyncClient, query: str) -> List[
     if not matched_teams:
         return []
 
+    low = query.lower()
     dates_ymd = _extract_sports_dates_ymd(query)[:7]
+
+    # Deteksi sport berdasarkan kata kunci dalam query
+    # ESPN scoreboard path: sport/league
+    _SPORT_ROUTES: List[Tuple[re.Pattern, str]] = [
+        # Basket NBA
+        (re.compile(r"\b(?:nba|lakers|celtics|warriors|bulls|heat|suns|nuggets|bucks|knicks|nets)\b", re.I), "basketball/nba"),
+        # Formula 1
+        (re.compile(r"\b(?:formula\s*1|f1|grand\s+prix|gp\s+\w+|verstappen|leclerc|hamilton|norris|sainz|alonso)\b", re.I), "racing/f1"),
+        # MMA / UFC
+        (re.compile(r"\b(?:ufc|mma|one\s+championship|boxing|tinju|khabib|mcgregor)\b", re.I), "mma/ufc"),
+        # Tenis Grand Slam / ATP / WTA
+        (re.compile(r"\b(?:tenis|tennis|wimbledon|us\s+open|french\s+open|australian\s+open|grand\s+slam|atp|wta)\b", re.I), "tennis/atp"),
+        # Baseball (MLB)
+        (re.compile(r"\b(?:mlb|baseball|yankees|dodgers|red\s+sox)\b", re.I), "baseball/mlb"),
+        # American Football NFL
+        (re.compile(r"\b(?:nfl|american\s+football|touchdown|super\s+bowl|chiefs|eagles|cowboys)\b", re.I), "football/nfl"),
+        # Hockey NHL
+        (re.compile(r"\b(?:nhl|hockey|rangers|maple\s+leafs|canadiens)\b", re.I), "hockey/nhl"),
+        # Sepak bola — default fallback (harus paling akhir)
+        (re.compile(r"\b(?:skor|man\s+united|man\s+u|liverpool|arsenal|chelsea|barcelona|liga|ucl|premier|la\s+liga|persib|persija|timnas|sepak\s+bola)\b", re.I), "soccer/all"),
+    ]
+
+    # Tentukan route sport yang paling relevan
+    sport_route = "soccer/all"  # default
+    for pat_s, route in _SPORT_ROUTES:
+        if pat_s.search(low):
+            sport_route = route
+            break
+
     urls = [
-        f"https://site.api.espn.com/apis/site/v2/sports/soccer/all/scoreboard?dates={ymd}"
+        f"https://site.api.espn.com/apis/site/v2/sports/{sport_route}/scoreboard?dates={ymd}"
         for ymd in dates_ymd
     ]
+
+    # Untuk F1, gunakan juga endpoint hasil race
+    if sport_route == "racing/f1":
+        # F1 race result tersedia di ESPN dengan path berbeda
+        urls = [
+            f"https://site.api.espn.com/apis/site/v2/sports/racing/f1/scoreboard?dates={ymd}"
+            for ymd in dates_ymd
+        ]
 
     async def _get_day(url: str):
         try:
@@ -264,32 +373,50 @@ async def _fetch_espn_scoreboard(client: httpx.AsyncClient, query: str) -> List[
                 if len(comps) < 2:
                     continue
                 haystack = " ".join(
-                    f"{c.get('team', {}).get('displayName', '')} {c.get('team', {}).get('shortDisplayName', '')}"
+                    f"{c.get('team', {}).get('displayName', '')} {c.get('team', {}).get('shortDisplayName', '')} {c.get('athlete', {}).get('displayName', '')} {c.get('athlete', {}).get('lastName', '')}"
                     for c in comps
                 ).lower()
+                # Untuk olahraga individu (F1, tenis, MMA) cukup 1 nama yang match
+                min_hits = 1 if sport_route in ("racing/f1", "tennis/atp", "mma/ufc") else min(2, len(matched_teams))
                 team_hits = sum(1 for _, kws in matched_teams if any(kw in haystack for kw in kws))
-                if team_hits < min(2, len(matched_teams)):
+                if team_hits < min_hits:
                     continue
 
                 home = next((c for c in comps if c.get("homeAway") == "home"), comps[0])
                 away = next((c for c in comps if c.get("homeAway") == "away"), comps[1])
-                h_name = home.get("team", {}).get("shortDisplayName") or home.get("team", {}).get("displayName") or "Home"
-                a_name = away.get("team", {}).get("shortDisplayName") or away.get("team", {}).get("displayName") or "Away"
+
+                # Nama tim atau atlet (F1/tenis memakai athlete, basket/sepakbola memakai team)
+                def _name(c: dict) -> str:
+                    return (
+                        c.get("team", {}).get("shortDisplayName")
+                        or c.get("team", {}).get("displayName")
+                        or c.get("athlete", {}).get("displayName")
+                        or "?"
+                    )
+
+                h_name = _name(home)
+                a_name = _name(away)
                 h_score = home.get("score", "?")
                 a_score = away.get("score", "?")
                 status_txt = (comp.get("status") or {}).get("type", {}).get("shortDetail") or "Result"
                 ev_date = (ev.get("date") or "")[:10]
-                league = ((ev.get("season") or {}).get("slug") or "").replace("-", " ").title()
+                league = (
+                    (ev.get("season") or {}).get("slug")
+                    or (ev.get("competitions") or [{}])[0].get("type", {}).get("abbreviation")
+                    or sport_route.split("/")[-1].upper()
+                ).replace("-", " ").title()
 
+                # Pencetak poin/gol — berlaku untuk sepakbola dan basket
                 scorers: List[str] = []
-                for det in (comp.get("details") or [])[:6]:
+                for det in (comp.get("details") or [])[:8]:
                     clk = (det.get("clock") or {}).get("displayValue") or ""
                     aths = det.get("athletesInvolved") or []
                     pname = aths[0].get("shortName") if aths else ""
                     if pname and det.get("scoringPlay"):
                         scorers.append(f"{pname} {clk}".strip())
-                extra = f" | Gol: {', '.join(scorers)}" if scorers else ""
-                out.append(f"[Skor Resmi {ev_date} {league}] {h_name} {h_score} - {a_score} {a_name} ({status_txt}){extra}"[:240])
+                sport_label = sport_route.split("/")[-1].upper()
+                extra = f" | Gol: {', '.join(scorers)}" if scorers and sport_route.startswith("soccer") else ""
+                out.append(f"[Skor Resmi {ev_date} {sport_label}] {h_name} {h_score} - {a_score} {a_name} ({status_txt}){extra}"[:260])
     return out
 
 
@@ -305,7 +432,22 @@ async def search_live_web(raw_message: str, timeout_s: float = 2.8) -> Optional[
     }
     is_sports = bool(
         re.search(
-            r"\b(?:skor|hasil|vs|versus|lawan|pertandingan|united|utd|man\s*u|liverpool|sporting|madrid|barca|arsenal|chelsea|liga|timnas|persib|persija)\b",
+            r"\b(?:"
+            # Sepak bola
+            r"skor|hasil|vs|versus|lawan|pertandingan|united|utd|man\s*u|liverpool|sporting|madrid|barca|arsenal|chelsea|"
+            r"liga|timnas|persib|persija|arema|psm|premier|la\s+liga|serie\s+a|bundesliga|ucl|champions|"
+            # Basket
+            r"nba|lakers|celtics|warriors|bulls|heat|suns|nuggets|bucks|knicks|"
+            # E-sport & gaming
+            r"mpl|mlbb|mobile\s+legends|rrq|evos|onic|alter\s+ego|valorant|vct|dota|pubg|free\s+fire|"
+            r"esport|e-sport|turnamen|"
+            # F1 & balap
+            r"formula\s*1|f1|grand\s+prix|verstappen|leclerc|hamilton|norris|sainz|"
+            # Olahraga lain
+            r"olimpiade|asian\s+games|sea\s+games|bulutangkis|bulu\s+tangkis|badminton|"
+            r"tenis|wimbledon|us\s+open|french\s+open|atp|wta|"
+            r"tinju|mma|ufc|one\s+championship"
+            r")\b",
             query,
             re.I,
         )
@@ -327,6 +469,8 @@ async def search_live_web(raw_message: str, timeout_s: float = 2.8) -> Optional[
                     _fetch_espn_scoreboard(client, query),
                     _fetch_google_news_rss(client, f"hasil {rss_sports}", hl="id", gl="ID"),
                     _fetch_google_news_rss(client, f"{rss_sports} score result", hl="en", gl="US"),
+                    # Wikipedia untuk profil atlet / fakta turnamen
+                    _fetch_wikipedia_summary(client, rss_sports),
                 ]
             else:
                 tasks = [
