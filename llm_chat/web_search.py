@@ -15,6 +15,7 @@ import html
 import logging
 import re
 import time
+import unicodedata
 import urllib.parse
 import xml.etree.ElementTree as ET
 from typing import Any, AsyncIterator, Dict, List, Optional, Tuple
@@ -509,9 +510,24 @@ async def search_live_web(raw_message: str, timeout_s: float = 2.8) -> Optional[
     )
 
 
+def _strip_accents(text: str) -> str:
+    """Hapus tanda diakritik/aksen unicode (mis. eńau -> enau, Beyoncé -> Beyonce)."""
+    return "".join(
+        ch for ch in unicodedata.normalize("NFKD", text or "")
+        if not unicodedata.combining(ch)
+    )
+
+
 def _clean_music_query(query: str) -> str:
-    clean_q = re.sub(r"\b(?:by|oleh|dari|lagu|song|musik|music|spotify)\b", " ", (query or ""), flags=re.IGNORECASE)
+    normalized = _strip_accents(query or "")
+    clean_q = re.sub(r"\b(?:by|oleh|dari|lagu|song|musik|music|spotify)\b", " ", normalized, flags=re.IGNORECASE)
     return re.sub(r"\s+", " ", clean_q).strip()
+
+
+def _strip_feat_for_search(query: str) -> str:
+    """Hapus bagian feat./ft. agar pencarian katalog lebih toleran bila artis tamu terlalu panjang."""
+    stripped = re.sub(r"\b(?:feat\.?|ft\.?|featuring)\b.*$", "", query or "", flags=re.IGNORECASE)
+    return re.sub(r"\s+", " ", stripped).strip()
 
 
 def _base_song_title(title: str) -> str:
@@ -763,6 +779,9 @@ def _is_unwanted_variant(text: str, query: str) -> bool:
         "parody",
         "reaction",
         "tutorial",
+        "remake",
+        "amapiano",
+        "blend",
     )
     for term in bad_terms:
         if term in t_low and term.strip() not in q_low:
@@ -782,7 +801,7 @@ def _query_overlap_ratio(query: str, candidate_text: str) -> float:
 
 
 def _resolve_ytdlp_sync(query: str, target_dur_s: int = 210) -> Optional[Dict[str, Any]]:
-    """Coba ekstrak URL audio m4a/mp3 studio penuh via yt-dlp jika diizinkan jaringan server."""
+    """Coba ekstrak URL audio m4a/mp3 studio penuh via YouTube Music Official Topic / yt-dlp."""
     try:
         import yt_dlp  # type: ignore
     except Exception:
@@ -793,38 +812,54 @@ def _resolve_ytdlp_sync(query: str, target_dur_s: int = 210) -> Optional[Dict[st
         "quiet": True,
         "no_warnings": True,
         "noplaylist": True,
-        "socket_timeout": 3.5,
+        "socket_timeout": 4.0,
         "extract_flat": False,
-        "extractor_args": {"youtube": {"player_client": ["android", "ios", "web"]}},
+        "extractor_args": {"youtube": {"player_client": ["android_music", "android", "ios", "web"]}},
     }
-    try:
-        with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(f"ytsearch3:{query} official audio", download=False)
-            entries = (info or {}).get("entries") or []
-            for ent in entries:
-                if not ent:
-                    continue
-                u = ent.get("url") or ""
-                dur = int(ent.get("duration") or 0)
-                ext = (ent.get("ext") or "m4a").lower()
-                ent_title = ent.get("title") or ""
-                uploader = ent.get("uploader") or ent.get("channel") or ""
-                if _is_unwanted_variant(ent_title, query):
-                    continue
-                if _query_overlap_ratio(query, f"{ent_title} {uploader}") < 0.5:
-                    continue
-                if u.startswith("http") and 60 <= dur <= 720 and "manifest.googlevideo.com" not in u:
+    search_queries = [f"ytsearch4:{query} topic", f"ytsearch3:{query} official audio"]
+    best_candidate: Optional[Tuple[float, Dict[str, Any]]] = None
+
+    for sq in search_queries:
+        try:
+            with yt_dlp.YoutubeDL(ydl_opts) as ydl:
+                info = ydl.extract_info(sq, download=False)
+                entries = (info or {}).get("entries") or []
+                for ent in entries:
+                    if not ent:
+                        continue
+                    u = ent.get("url") or ""
+                    dur = int(ent.get("duration") or 0)
+                    ext = (ent.get("ext") or "m4a").lower()
+                    ent_title = ent.get("title") or ""
+                    uploader = ent.get("uploader") or ent.get("channel") or ""
+                    if _is_unwanted_variant(ent_title, query):
+                        continue
+                    overlap = _query_overlap_ratio(query, f"{ent_title} {uploader}")
+                    if overlap < 0.5:
+                        continue
+                    if not (u.startswith("http") and 60 <= dur <= 720 and "manifest.googlevideo.com" not in u):
+                        continue
+                    score = overlap * 50.0
+                    # Prioritas tinggi untuk kanal resmi YouTube Music "- Topic"
+                    if uploader.lower().endswith("- topic") or "official" in uploader.lower():
+                        score += 40.0
+                    if target_dur_s > 45:
+                        score -= min(25.0, abs(dur - target_dur_s) * 0.5)
                     mime = "audio/mpeg" if ext == "mp3" else "audio/mp4"
-                    return {
+                    cand = {
                         "mode": "direct_url",
                         "url": u,
                         "mime": mime,
                         "headers": ent.get("http_headers") or {},
                         "duration_s": dur,
                     }
-    except Exception as exc:
-        log.debug("[MusicStream] yt-dlp dilewati: %s", exc)
-    return None
+                    if best_candidate is None or score > best_candidate[0]:
+                        best_candidate = (score, cand)
+            if best_candidate and best_candidate[0] >= 75.0:
+                return best_candidate[1]
+        except Exception as exc:
+            log.debug("[MusicStream] yt-dlp dilewati (%s): %s", sq, exc)
+    return best_candidate[1] if best_candidate else None
 
 
 async def _resolve_soundcloud_full_stream(
@@ -837,58 +872,66 @@ async def _resolve_soundcloud_full_stream(
     if not cid:
         return None
 
-    search_url = (
-        f"https://api-v2.soundcloud.com/search/tracks?q={urllib.parse.quote(query)}"
-        f"&client_id={cid}&limit=12"
-    )
-    resp = await client.get(search_url)
-    if resp.status_code != 200:
-        return None
+    queries_to_try = [query]
+    no_feat = _strip_feat_for_search(query)
+    if no_feat and no_feat.lower() != query.lower():
+        queries_to_try.append(no_feat)
 
     candidates: List[Tuple[float, Dict[str, Any]]] = []
-    for tr in resp.json().get("collection") or []:
-        if tr.get("policy") == "SNIP":
-            continue
-        dur_ms = int(tr.get("duration") or 0)
-        dur_s = dur_ms // 1000
-        # Pastikan lagu utuh penuh (>= 85 detik, <= 11 menit), bukan cuplikan 30 detik
-        if dur_s < 85 or dur_s > 660:
-            continue
-        tcs = tr.get("media", {}).get("transcodings") or []
-        if not tcs:
-            continue
-
-        title_raw = (tr.get("title") or "").strip()
-        user_obj = tr.get("user") or {}
-        uploader = (user_obj.get("username") or "").strip()
-        is_verified = bool(user_obj.get("verified"))
-
-        # TOLAK KERAS cover, acoustic, slowed, pitched, remix, dll jika user tidak memintanya!
-        if _is_unwanted_variant(title_raw, query):
-            continue
-
-        # Wajib ada kecocokan kata kunci query pada judul + nama uploader
-        overlap = _query_overlap_ratio(query, f"{title_raw} {uploader}")
-        if overlap < 0.55:
-            continue
-
-        score = 100.0 + overlap * 25.0
-        if is_verified:
-            score += 25.0
-        # Jika durasi berbeda jauh (> 25 detik) dari durasi studio asli, kemungkinan besar versi berbeda/pitched
-        if target_dur_s > 45:
-            diff_s = abs(dur_s - target_dur_s)
-            if diff_s > 35:
-                continue
-            score -= min(35.0, diff_s * 0.65)
-
-        has_prog = any(
-            tc.get("format", {}).get("protocol") == "progressive" and not tc.get("snipped")
-            for tc in tcs
+    for active_q in queries_to_try:
+        search_url = (
+            f"https://api-v2.soundcloud.com/search/tracks?q={urllib.parse.quote(active_q)}"
+            f"&client_id={cid}&limit=12"
         )
-        if has_prog:
-            score += 8.0
-        candidates.append((score, tr))
+        resp = await client.get(search_url)
+        if resp.status_code != 200:
+            continue
+
+        for tr in resp.json().get("collection") or []:
+            if tr.get("policy") == "SNIP":
+                continue
+            dur_ms = int(tr.get("duration") or 0)
+            dur_s = dur_ms // 1000
+            # Pastikan lagu utuh penuh (>= 85 detik, <= 11 menit), bukan cuplikan 30 detik
+            if dur_s < 85 or dur_s > 660:
+                continue
+            tcs = tr.get("media", {}).get("transcodings") or []
+            if not tcs:
+                continue
+
+            title_raw = (tr.get("title") or "").strip()
+            user_obj = tr.get("user") or {}
+            uploader = (user_obj.get("username") or "").strip()
+            is_verified = bool(user_obj.get("verified"))
+
+            # TOLAK KERAS cover, acoustic, slowed, pitched, remix, dll jika user tidak memintanya!
+            if _is_unwanted_variant(title_raw, active_q):
+                continue
+
+            # Wajib ada kecocokan kata kunci query pada judul + nama uploader
+            overlap = _query_overlap_ratio(active_q, f"{title_raw} {uploader}")
+            if overlap < 0.55:
+                continue
+
+            score = 100.0 + overlap * 25.0
+            if is_verified:
+                score += 25.0
+            # Jika durasi berbeda jauh (> 35 detik) dari durasi studio asli, kemungkinan besar versi berbeda/pitched
+            if target_dur_s > 45:
+                diff_s = abs(dur_s - target_dur_s)
+                if diff_s > 35:
+                    continue
+                score -= min(35.0, diff_s * 0.65)
+
+            has_prog = any(
+                tc.get("format", {}).get("protocol") == "progressive" and not tc.get("snipped")
+                for tc in tcs
+            )
+            if has_prog:
+                score += 8.0
+            candidates.append((score, tr))
+        if candidates:
+            break
 
     candidates.sort(key=lambda pair: pair[0], reverse=True)
 
