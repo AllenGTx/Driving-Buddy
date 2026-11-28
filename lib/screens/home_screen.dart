@@ -16,6 +16,7 @@ import '../services/firebase_service.dart';
 import '../models/account_config.dart';
 import '../widgets/driving_buddy_app_bar.dart';
 import '../features/nearby_places/nearby_places.dart';
+import '../features/spotify_island/ui/spotify_connect_card.dart';
 import '../features/voice_buddy/ui/buddy_control_bar.dart';
 import '../features/voice_buddy/ui/buddy_floating_sheet.dart';
 import '../features/voice_buddy/voice_buddy_controller.dart';
@@ -422,6 +423,8 @@ class _CockpitScreenState extends State<CockpitScreen>
                     _buildDriverGreetingBar(),
                     const SizedBox(height: 16),
                     _buildGuardianMeshLaunchCard(context),
+                    const SizedBox(height: 16),
+                    const SpotifyConnectCard(),
                     const SizedBox(height: 20),
                     _buildWeeklyTelemetryDialCard(),
                     const SizedBox(height: 20),

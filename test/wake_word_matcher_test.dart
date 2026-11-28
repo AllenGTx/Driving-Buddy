@@ -150,4 +150,37 @@ void main() {
       isFalse,
     );
   });
+
+  test('Yo Jane, Yo John, and Yo Furina wake variants match reliably', () {
+    for (final c in ['Yo Jane', 'yo jein', 'Yo Jen', 'yojane']) {
+      expect(
+        WakeWordMatcher.match(
+          c,
+          profile: BuddyVoiceProfile.jane,
+          activeNickname: 'Jane',
+        ).kind,
+        WakeMatchKind.wakeOnly,
+      );
+    }
+    for (final c in ['Yo John', 'yo jon', 'yojohn']) {
+      expect(
+        WakeWordMatcher.match(
+          c,
+          profile: BuddyVoiceProfile.john,
+          activeNickname: 'John',
+        ).kind,
+        WakeMatchKind.wakeOnly,
+      );
+    }
+    for (final c in ['Yo Furina', 'Yo Rina']) {
+      expect(
+        WakeWordMatcher.match(
+          c,
+          profile: BuddyVoiceProfile.furina,
+          activeNickname: 'Rina',
+        ).kind,
+        WakeMatchKind.wakeOnly,
+      );
+    }
+  });
 }

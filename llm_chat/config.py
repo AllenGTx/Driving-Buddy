@@ -21,7 +21,7 @@ from urllib.parse import urlparse
 
 log = logging.getLogger("driving_buddy.llm")
 
-PROVIDERS = ("freellmapi", "groq", "gemini", "cerebras", "pollinations", "openai", "custom", "mock")
+PROVIDERS = ("freellmapi", "groq", "gemini", "cloudflare", "cerebras", "pollinations", "openai", "custom", "mock")
 
 # Semua provider di bawah memakai format OpenAI: POST {base_url}/chat/completions
 # max_tokens: batas panjang jawaban. Model "thinking" (Gemini 3.x, gpt-oss, o-series) ikut menghitung
@@ -34,21 +34,27 @@ _PRESETS: Dict[str, Dict[str, Any]] = {
         "max_tokens": 512,
         "reasoning_effort": "",
     },
-    # Llama 3.3 70B sudah dipensiunkan Groq (16 Agu 2026); pengganti yang disarankan Groq: gpt-oss-120b.
-    # gpt-oss = model reasoning, jadi jatah token dibuat lebih besar dan reasoning "low" supaya cepat.
+    # Prioritaskan model cepat untuk obrolan berkendara real-time (<0.6 detik)
     "groq": {
         "base_url": "https://api.groq.com/openai/v1",
-        "model": "openai/gpt-oss-120b",
+        "model": "llama-3.1-8b-instant",
         "max_tokens_param": "max_completion_tokens",
-        "max_tokens": 512,
-        "reasoning_effort": "low",
+        "max_tokens": 180,
+        "reasoning_effort": "",
     },
     "gemini": {
         "base_url": "https://generativelanguage.googleapis.com/v1beta/openai",
         "model": "gemini-3.1-flash-lite",
         "max_tokens_param": "max_tokens",
-        "max_tokens": 1024,
+        "max_tokens": 512,
         "reasoning_effort": "low",  # Gemini 3.x tidak bisa mematikan thinking; "low" = lebih cepat & hemat
+    },
+    "cloudflare": {
+        "base_url": "https://api.cloudflare.com/client/v4/accounts/{account_id}/ai/v1",
+        "model": "@cf/meta/llama-3.1-8b-instruct-fast",
+        "max_tokens_param": "max_tokens",
+        "max_tokens": 180,
+        "reasoning_effort": "",
     },
     "cerebras": {
         "base_url": "https://api.cerebras.ai/v1",
@@ -88,6 +94,7 @@ _ALT_KEY_VARS: Dict[str, Tuple[str, ...]] = {
     "freellmapi": ("FREELLM_API_KEY",),
     "groq": ("GROQ_API_KEY",),
     "gemini": ("GEMINI_API_KEY", "GOOGLE_API_KEY"),
+    "cloudflare": ("CLOUDFLARE_API_TOKEN", "CF_API_TOKEN"),
     "cerebras": ("CEREBRAS_API_KEY",),
     "openai": ("OPENAI_API_KEY",),
 }
@@ -225,12 +232,18 @@ def load_settings(environ: Optional[Mapping[str, str]] = None, env_file: Optiona
             if env.get(var):
                 api_key = env[var]
                 break
-    if provider in ("groq", "gemini", "cerebras", "openai") and not api_key:
+    if provider in ("groq", "gemini", "cloudflare", "cerebras", "openai") and not api_key:
         problems.append(f"API key untuk '{provider}' belum diisi (set LLM_API_KEY di file .env)")
     elif api_key.startswith("YOUR_"):
         problems.append("LLM_API_KEY masih berisi contoh dari .env.example, ganti dengan API key asli")
 
     base_url = env.get("LLM_BASE_URL", "") or preset["base_url"]
+    if provider == "cloudflare":
+        cf_acc = (env.get("CLOUDFLARE_ACCOUNT_ID") or env.get("CF_ACCOUNT_ID") or "").strip()
+        if not cf_acc:
+            problems.append("CLOUDFLARE_ACCOUNT_ID wajib diisi untuk provider cloudflare")
+        else:
+            base_url = base_url.replace("{account_id}", cf_acc)
     if provider != "mock":
         parsed = urlparse(base_url)
         if not base_url:
@@ -314,9 +327,9 @@ def load_fallback_chain(
     )
     if groq_key:
         for g_model, g_effort in (
-            ("openai/gpt-oss-120b", "low"),
-            ("qwen/qwen3.8-27b", ""),
+            ("llama-3.1-8b-instant", ""),
             ("openai/gpt-oss-20b", "low"),
+            ("openai/gpt-oss-120b", "low"),
         ):
             sub_env = dict(env)
             sub_env["LLM_PROVIDER"] = "groq"
@@ -324,7 +337,7 @@ def load_fallback_chain(
             sub_env.pop("LLM_BASE_URL", None)
             sub_env["LLM_MODEL"] = g_model
             sub_env["LLM_MAX_TOKENS_PARAM"] = "max_completion_tokens"
-            sub_env["LLM_MAX_TOKENS"] = "512"
+            sub_env["LLM_MAX_TOKENS"] = "180" if not g_effort else "320"
             if g_effort:
                 sub_env["LLM_REASONING_EFFORT"] = g_effort
             else:
@@ -350,6 +363,20 @@ def load_fallback_chain(
         sub_env = dict(env)
         sub_env["LLM_PROVIDER"] = "cerebras"
         sub_env.pop("LLM_API_KEY", None)
+        sub_env.pop("LLM_BASE_URL", None)
+        sub_env.pop("LLM_MODEL", None)
+        sub_env.pop("LLM_MAX_TOKENS", None)
+        sub_env.pop("LLM_MAX_TOKENS_PARAM", None)
+        sub_env.pop("LLM_REASONING_EFFORT", None)
+        _add_candidate(load_settings(sub_env))
+
+    cf_tok = env.get("CLOUDFLARE_API_TOKEN") or env.get("CF_API_TOKEN") or ""
+    cf_acc = env.get("CLOUDFLARE_ACCOUNT_ID") or env.get("CF_ACCOUNT_ID") or ""
+    if cf_tok and cf_acc:
+        sub_env = dict(env)
+        sub_env["LLM_PROVIDER"] = "cloudflare"
+        sub_env["LLM_API_KEY"] = cf_tok
+        sub_env["CLOUDFLARE_ACCOUNT_ID"] = cf_acc
         sub_env.pop("LLM_BASE_URL", None)
         sub_env.pop("LLM_MODEL", None)
         sub_env.pop("LLM_MAX_TOKENS", None)

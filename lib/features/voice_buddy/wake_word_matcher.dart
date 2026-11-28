@@ -84,7 +84,7 @@ class WakeWordMatcher {
   };
 
   static final RegExp _gluedPrefixPattern = RegExp(
-    r'^(oi|oy|woi|woy|ei|ey|eh|hei|hey|hai|hi|halo|hallo|alo)(rina|rinaa|furina|jane|jein|jeni|john|jon|jhon|buddy|badi)$',
+    r'^(oi|oy|woi|woy|ei|ey|eh|hei|hey|hai|hi|halo|hallo|alo|yo|yoo)(rina|rinaa|furina|jane|jein|jeni|jan|jen|john|jon|jhon|buddy|badi)$',
   );
 
   static bool _matchesAlias(String word, Set<String> aliases, String nickLow) {
@@ -188,13 +188,14 @@ class WakeWordMatcher {
       case BuddyVoiceProfile.john:
         base.addAll({
           'john', 'jon', 'jhon', 'joni', 'johan', 'zon', 'don', 'jo',
-          'heijohn', 'oijohn', 'eijohn', 'halojohn',
+          'heijohn', 'oijohn', 'eijohn', 'halojohn', 'yojohn', 'yojon',
         });
         break;
       case BuddyVoiceProfile.jane:
         base.addAll({
           'jane', 'jen', 'jeni', 'jein', 'jenny', 'zen', 'jain', 'jeyn', 'jeane',
-          'heijane', 'oijane', 'eijane', 'halojane',
+          'jan', 'yohane', 'yozen',
+          'heijane', 'oijane', 'eijane', 'halojane', 'yojane', 'yojein', 'yojen',
         });
         break;
     }

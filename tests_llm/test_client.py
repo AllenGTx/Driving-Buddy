@@ -77,11 +77,11 @@ def test_success_builds_a_correct_request():
     assert str(req.url) == "https://api.groq.com/openai/v1/chat/completions"
     assert req.headers["authorization"] == "Bearer gsk_test_key"
     body = calls.body()
-    assert body["model"] == "openai/gpt-oss-120b"
+    assert body["model"] == "llama-3.1-8b-instant"
     assert body["messages"] == MESSAGES
-    assert body["max_completion_tokens"] == 512 and "max_tokens" not in body
+    assert body["max_completion_tokens"] == 180 and "max_tokens" not in body
     assert body["temperature"] == 0.7
-    assert body["reasoning_effort"] == "low"
+    assert "reasoning_effort" not in body
 
 
 def test_reasoning_effort_is_sent_only_when_configured():

@@ -11,11 +11,11 @@ def test_groq_defaults():
     s = load_settings({"LLM_PROVIDER": "groq", "LLM_API_KEY": "gsk_abc"})
     assert s.configured
     assert s.base_url == "https://api.groq.com/openai/v1"
-    assert s.model == "openai/gpt-oss-120b"
+    assert s.model == "llama-3.1-8b-instant"
     assert s.max_tokens_param == "max_completion_tokens"
     assert s.base_url_host == "api.groq.com"
     # gpt-oss = model reasoning: jatah token lebih besar + reasoning rendah
-    assert s.max_tokens == 512 and s.reasoning_effort == "low"
+    assert s.max_tokens == 180 and s.reasoning_effort is None
 
 
 def test_gemini_defaults():
@@ -24,7 +24,7 @@ def test_gemini_defaults():
     assert s.base_url == "https://generativelanguage.googleapis.com/v1beta/openai"
     assert s.model == "gemini-3.1-flash-lite"
     # model thinking: jatah token lebih besar + reasoning rendah supaya cepat dan jawaban tidak kosong
-    assert s.max_tokens == 1024 and s.reasoning_effort == "low"
+    assert s.max_tokens == 512 and s.reasoning_effort == "low"
     override = load_settings({"LLM_PROVIDER": "gemini", "LLM_API_KEY": "AIzaXYZ",
                               "LLM_REASONING_EFFORT": "medium", "LLM_MAX_TOKENS": "2048"})
     assert override.reasoning_effort == "medium" and override.max_tokens == 2048

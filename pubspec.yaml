@@ -70,5 +70,11 @@ flutter:
     - assets/sounds/beep.wav
     - assets/sounds/buzzer.wav
     - assets/audio/furina/
+    - assets/audio/jane/
+    - assets/audio/john/
     - places_snapshot.json
+
+  shaders:
+    - shaders/marble_orb.frag
+
 

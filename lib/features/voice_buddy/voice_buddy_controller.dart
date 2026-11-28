@@ -8,12 +8,17 @@ import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../core/thresholds.dart';
 import '../../models/detection_result.dart';
+import '../../services/device_control_service.dart';
+import '../../services/driving_notification_service.dart';
 import '../../services/language_service.dart';
 import '../llm_chat/llm_chat.dart';
 import '../nearby_places/data/direct_osm_places_api.dart';
+import '../nearby_places/data/location_provider.dart';
 import '../nearby_places/logic/nearby_controller.dart';
+import '../nearby_places/logic/place_launcher.dart';
 import '../nearby_places/models/nearby_place.dart';
 import '../nearby_places/models/place_category.dart';
+import '../spotify_island/spotify_island_controller.dart';
 import 'buddy_stt_service.dart';
 import 'buddy_tts_service.dart';
 import 'buddy_voice_config.dart';
@@ -57,7 +62,6 @@ class VoiceBuddyController extends ChangeNotifier {
       try {
         _authSub = FirebaseAuth.instance.authStateChanges().listen((user) {
           if (user == null || !user.emailVerified) {
-            // Begitu user keluar / berada di Login atau Register, matikan paksa pendengar suara!
             _insideAuthenticatedApp = false;
             unawaited(_forceSilenceOnAuthExit());
           }
@@ -67,7 +71,7 @@ class VoiceBuddyController extends ChangeNotifier {
   }
 
   static const String _prefEnabledKey = 'buddy_voice_enabled';
-  static const Duration _dismissAnimDuration = Duration(milliseconds: 300);
+  static const Duration _dismissAnimDuration = Duration(milliseconds: 280);
 
   final NearbyPlacesController nearby;
   String Function() _sessionIdProvider;
@@ -79,14 +83,18 @@ class VoiceBuddyController extends ChangeNotifier {
   final BuddySttService _stt;
   final BuddyTtsService _tts;
   final DirectOsmPlacesApi _directPlaces = DirectOsmPlacesApi();
+  final GeolocatorLocationProvider _fallbackGps = GeolocatorLocationProvider();
   StreamSubscription<User?>? _authSub;
 
   bool _enabled = false;
   bool _insideAuthenticatedApp = false;
+  bool _appInForeground = true;
   bool _emergencyMuted = false;
   bool _busyTurn = false;
   bool _holdingPtt = false;
   bool _followUpListening = false;
+  bool _drowsyReminderActive = false;
+  bool _isDrivingActive = false;
   int _turnId = 0;
   DateTime _pttDownAt = DateTime.fromMillisecondsSinceEpoch(0);
 
@@ -97,10 +105,10 @@ class VoiceBuddyController extends ChangeNotifier {
   double _orbFrequency = 0.45;
   DateTime _lastDrowsySpeech = DateTime.fromMillisecondsSinceEpoch(0);
   Timer? _dismissTimer;
+  Timer? _resumeAfterCallTimer;
   Timer? _watchdog;
   DateTime _lastTurnEnd = DateTime.fromMillisecondsSinceEpoch(0);
 
-  /// Jeda singkat agar gema speaker sendiri tidak langsung memicu panggilan ulang.
   static const Duration _echoGuard = Duration(milliseconds: 650);
   static const Duration _turnWatchdog = Duration(seconds: 90);
   static const Duration _initialWakeSilenceTimeout = Duration(milliseconds: 3200);
@@ -110,6 +118,7 @@ class VoiceBuddyController extends ChangeNotifier {
   bool get isEnabled => _enabled;
   bool get isHoldingPtt => _holdingPtt;
   bool get isFollowUpListening => _followUpListening;
+  bool get isDrowsyReminderActive => _drowsyReminderActive;
   SiriOrbPhase get phase => _phase;
   bool get isSheetVisible => _phase != SiriOrbPhase.hidden;
   String get transcriptText => _transcriptText;
@@ -120,7 +129,7 @@ class VoiceBuddyController extends ChangeNotifier {
   BuddyVoiceProfile get voiceProfile => BuddyVoiceConfig.instance.profile;
 
   bool get _isAllowedInCurrentScreen {
-    if (!_insideAuthenticatedApp) return false;
+    if (!_insideAuthenticatedApp || !_appInForeground) return false;
     if (!requireFirebaseAuth) return true;
     try {
       final u = FirebaseAuth.instance.currentUser;
@@ -130,14 +139,16 @@ class VoiceBuddyController extends ChangeNotifier {
     }
   }
 
-  /// Dipanggil oleh `MainShell` saat pengguna sudah masuk ke dalam aplikasi utama
-  /// (Beranda, Berkendara, Riwayat) dan otomatis dimatikan saat keluar ke Login/Register.
+  void setEcoMode(bool enabled) {
+    _stt.setEcoMode(enabled);
+  }
+
   Future<void> setInsideAuthenticatedApp(bool inside) async {
     if (_insideAuthenticatedApp == inside) return;
     _insideAuthenticatedApp = inside;
     if (!inside) {
       await _forceSilenceOnAuthExit();
-    } else if (_enabled && !_emergencyMuted && !_busyTurn) {
+    } else if (_enabled && _appInForeground && !_emergencyMuted && !_busyTurn) {
       await _resumePassiveWakeWatch();
     }
   }
@@ -145,8 +156,10 @@ class VoiceBuddyController extends ChangeNotifier {
   Future<void> _forceSilenceOnAuthExit() async {
     _turnId++;
     _dismissTimer?.cancel();
+    _resumeAfterCallTimer?.cancel();
     _holdingPtt = false;
     _followUpListening = false;
+    _drowsyReminderActive = false;
     _busyTurn = false;
     _stt.finishActiveCaptureNow();
     await _stt.pauseWakeWordWatch();
@@ -167,15 +180,70 @@ class VoiceBuddyController extends ChangeNotifier {
     _tripMinutesProvider = tripMinutesProvider;
   }
 
+  /// Menangani keluar aplikasi (Home, Screenshot, pindah ke Maps/Spotify, layar kunci, atau panggilan masuk):
+  /// - Langsung sembunyikan Orb ke mode idle tanpa pernah salah memutar suara "Furina capek"!
+  /// - Bersihkan cache gambar di memori agar RAM saat berjalan di latar belakang sangat hemat.
+  /// - Otomatis kembali siaga ~1.8 detik sesudah kembali ke dalam aplikasi (dan telepon sudah selesai).
   void handleAppLifecycle(AppLifecycleState state, {bool isDriving = false}) {
-    final backgrounded =
-        state == AppLifecycleState.paused || state == AppLifecycleState.detached;
-    _stt.setAppBackgrounded(backgrounded, keepActiveInDrive: isDriving);
+    _isDrivingActive = isDriving;
+    if (state == AppLifecycleState.paused ||
+        state == AppLifecycleState.hidden ||
+        state == AppLifecycleState.detached) {
+      _appInForeground = false;
+      _resumeAfterCallTimer?.cancel();
+      _turnId++;
+      _dismissTimer?.cancel();
+      _holdingPtt = false;
+      _followUpListening = false;
+      _drowsyReminderActive = false;
+      _busyTurn = false;
+      _stt.finishActiveCaptureNow();
+      _stt.setAppBackgrounded(true, keepActiveInDrive: false);
+      unawaited(_stt.pauseWakeWordWatch());
+      unawaited(_tts.stop());
+      if (_phase != SiriOrbPhase.hidden) {
+        _phase = SiriOrbPhase.hidden;
+        notifyListeners();
+      }
+      try {
+        PaintingBinding.instance.imageCache.clear();
+        PaintingBinding.instance.imageCache.clearLiveImages();
+      } catch (_) {}
+    } else if (state == AppLifecycleState.inactive) {
+      // Saat user menekan tombol Screenshot / notifikasi bar / telepon masuk mendadak:
+      // bila Orb sedang terbuka, batalkan giliran dengan tenang agar socket putus tidak dianggap "capek"
+      if (_phase != SiriOrbPhase.hidden) {
+        _turnId++;
+        _dismissTimer?.cancel();
+        _holdingPtt = false;
+        _followUpListening = false;
+        _drowsyReminderActive = false;
+        _busyTurn = false;
+        _stt.finishActiveCaptureNow();
+        unawaited(_tts.stop());
+        _phase = SiriOrbPhase.hidden;
+        notifyListeners();
+      }
+    } else if (state == AppLifecycleState.resumed) {
+      _appInForeground = true;
+      _stt.setAppBackgrounded(false, keepActiveInDrive: isDriving);
+      _resumeAfterCallTimer?.cancel();
+      _resumeAfterCallTimer = Timer(const Duration(milliseconds: 1800), () async {
+        if (!_enabled || !_isAllowedInCurrentScreen || _emergencyMuted || _busyTurn) {
+          return;
+        }
+        if (await DeviceControlService.instance.isInPhoneOrVoipCall()) {
+          return;
+        }
+        await _resumePassiveWakeWatch();
+      });
+    }
   }
 
   Future<void> init({bool insideMainApp = false}) async {
     _insideAuthenticatedApp = insideMainApp;
     await BuddyVoiceConfig.instance.load();
+    await SpotifyIslandController.instance.init();
     try {
       final prefs = await SharedPreferences.getInstance();
       final savedEnabled = prefs.getBool(_prefEnabledKey) ?? false;
@@ -194,47 +262,51 @@ class VoiceBuddyController extends ChangeNotifier {
 
   void _onConfigChanged() {
     notifyListeners();
-  }
-
-  void _onPartialChanged() {
-    if (_phase == SiriOrbPhase.listening) {
-      final p = _stt.livePartialText.value;
-      if (p.isNotEmpty) {
-        _transcriptText = p;
-        notifyListeners();
-      }
+    if (_enabled && _isAllowedInCurrentScreen && !_busyTurn && !_emergencyMuted) {
+      unawaited(_resumePassiveWakeWatch());
     }
   }
 
   void _syncEnergy() {
-    final nextE = _phase == SiriOrbPhase.speaking
-        ? _tts.speechEnergy.value
-        : (_phase == SiriOrbPhase.listening ? _stt.inputEnergy.value : 0.0);
-    final nextF = _phase == SiriOrbPhase.speaking
-        ? _tts.speechFrequency.value
-        : (_phase == SiriOrbPhase.listening ? _stt.inputFrequency.value : 0.42);
-    if ((nextE - _orbEnergy).abs() > 0.012 ||
-        (nextF - _orbFrequency).abs() > 0.025) {
-      _orbEnergy = nextE;
-      _orbFrequency = nextF;
+    double e = 0.0;
+    double f = _orbFrequency;
+    if (_phase == SiriOrbPhase.speaking) {
+      e = _tts.speechEnergy.value;
+      f = _tts.speechFrequency.value;
+    } else if (_phase == SiriOrbPhase.listening) {
+      e = _stt.inputEnergy.value;
+      f = _stt.inputFrequency.value;
+    }
+    if ((e - _orbEnergy).abs() > 0.015 || (f - _orbFrequency).abs() > 0.02) {
+      _orbEnergy = e;
+      _orbFrequency = f;
       notifyListeners();
     }
   }
 
-  Future<bool> setEnabled(bool next) async {
-    if (_enabled == next) return _enabled;
-    if (next) {
+  void _onPartialChanged() {
+    if (_phase == SiriOrbPhase.listening) {
+      final partial = _stt.livePartialText.value.trim();
+      if (partial.isNotEmpty && partial != _transcriptText) {
+        _transcriptText = partial;
+        notifyListeners();
+      }
+    }
+  }
+
+  Future<bool> setEnabled(bool wantEnabled) async {
+    if (wantEnabled) {
       final granted = await _stt.ensureMicPermission();
       if (!granted) {
         _enabled = false;
+        _saveEnabledPref(false);
         notifyListeners();
         return false;
       }
-      await BuddyVoiceConfig.instance.load();
       _enabled = true;
       _saveEnabledPref(true);
       notifyListeners();
-      if (_isAllowedInCurrentScreen) {
+      if (_isAllowedInCurrentScreen && !_emergencyMuted) {
         await _resumePassiveWakeWatch();
       }
       return true;
@@ -243,6 +315,7 @@ class VoiceBuddyController extends ChangeNotifier {
       _enabled = false;
       _holdingPtt = false;
       _followUpListening = false;
+      _drowsyReminderActive = false;
       _saveEnabledPref(false);
       _dismissTimer?.cancel();
       await _stt.pauseWakeWordWatch();
@@ -262,6 +335,9 @@ class VoiceBuddyController extends ChangeNotifier {
     }).catchError((_) {});
   }
 
+  /// Saat Sirine Darurat Microsleep berbunyi:
+  /// 1. Musik Spotify langsung di-pause paksa demi keselamatan pengemudi!
+  /// 2. Asisten suara langsung membisu agar sirine darurat terdengar 100%.
   void setEmergencyAlertActive(bool active) {
     if (_emergencyMuted == active) return;
     _emergencyMuted = active;
@@ -270,21 +346,30 @@ class VoiceBuddyController extends ChangeNotifier {
       _dismissTimer?.cancel();
       _holdingPtt = false;
       _followUpListening = false;
+      _drowsyReminderActive = false;
       _stt.finishActiveCaptureNow();
       unawaited(_tts.stop());
       unawaited(_stt.pauseWakeWordWatch());
+      unawaited(SpotifyIslandController.instance.pauseForEmergencyAlarm());
       if (_phase != SiriOrbPhase.hidden) {
         _phase = SiriOrbPhase.hidden;
         _busyTurn = false;
         notifyListeners();
       }
-    } else if (_enabled && _isAllowedInCurrentScreen) {
-      unawaited(_resumePassiveWakeWatch());
+    } else {
+      unawaited(DeviceControlService.instance.setAudioDucking(enable: false));
+      if (_enabled && _isAllowedInCurrentScreen) {
+        unawaited(_resumePassiveWakeWatch());
+      }
     }
   }
 
+  /// Peringatan Kantuk Halus (0ms rekaman suara lokal untuk Furina, Jane & John, tanpa teks "Silakan bicara sekarang...")
   Future<void> maybeSpeakDrowsyReminder({required int yawnCount}) async {
     if (!_enabled || !_isAllowedInCurrentScreen || _emergencyMuted || _busyTurn) {
+      return;
+    }
+    if (await DeviceControlService.instance.isInPhoneOrVoipCall()) {
       return;
     }
     final now = DateTime.now();
@@ -292,59 +377,66 @@ class VoiceBuddyController extends ChangeNotifier {
       return;
     }
     _lastDrowsySpeech = now;
+    final myTurn = ++_turnId;
     _busyTurn = true;
+    _drowsyReminderActive = true;
     _dismissTimer?.cancel();
     await _stt.pauseWakeWordWatch();
 
-    final chosenDrowsy = _tts.pickDrowsyReminderText(yawnCount: yawnCount);
+    final curProf = voiceProfile;
+    final chosenDrowsy = _tts.pickDrowsyReminderText(
+      yawnCount: yawnCount,
+      profile: curProf,
+    );
     _transcriptText = '';
-    _replyText = '';
+    _replyText = chosenDrowsy;
     _setPhase(SiriOrbPhase.summon);
-    await Future<void>.delayed(const Duration(milliseconds: 200));
-    if (!_enabled || !_isAllowedInCurrentScreen || _emergencyMuted) {
+
+    if (myTurn != _turnId || !_enabled || !_isAllowedInCurrentScreen || _emergencyMuted) {
+      _drowsyReminderActive = false;
       _busyTurn = false;
       return;
     }
+
     await _tts.speakDrowsyReminder(
-      profile: voiceProfile,
+      profile: curProf,
       yawnCount: yawnCount,
       chosenText: chosenDrowsy,
       onPlaybackStart: () {
+        if (myTurn != _turnId) return;
         _replyText = chosenDrowsy;
         _setPhase(SiriOrbPhase.speaking);
       },
     );
+    if (myTurn != _turnId) return;
+    _drowsyReminderActive = false;
     _scheduleDismissAndResume();
   }
 
+  /// Ketuk bola kaca:
+  /// - TIDAK PERNAH menghilangkan Orb secara tak sengaja!
+  /// - Jika asisten sedang berbicara (`speaking`), ketukan menyela pembicaraan agar pengguna bisa langsung bicara.
+  /// - Jika asisten sedang mendengarkan / berpikir, hanya memicu efek kilatan cahaya kaca (*glass flare*).
   Future<void> onOrbTapped() async {
     if (!_isAllowedInCurrentScreen || _emergencyMuted) return;
-    if (!_enabled) {
-      final ok = await setEnabled(true);
-      if (!ok) return;
-    }
-    _dismissTimer?.cancel();
-    if (_phase == SiriOrbPhase.speaking) {
+    if (_phase == SiriOrbPhase.speaking && !_drowsyReminderActive) {
+      _dismissTimer?.cancel();
       final myTurn = ++_turnId;
       _busyTurn = true;
       await _tts.stop();
       if (myTurn != _turnId) return;
-      await _listenAndAnswerAfterWake(turnId: myTurn);
-      return;
-    }
-    if (!_busyTurn || _phase == SiriOrbPhase.dismissing) {
-      final myTurn = ++_turnId;
-      _busyTurn = true;
       await _listenAndAnswerAfterWake(turnId: myTurn);
     }
   }
 
   Future<void> onPushToTalkDown() async {
     if (!_isAllowedInCurrentScreen || _emergencyMuted) return;
+    if (await DeviceControlService.instance.isInPhoneOrVoipCall()) return;
     final granted = await _stt.ensureMicPermission();
     if (!granted) return;
 
     _dismissTimer?.cancel();
+    _drowsyReminderActive = false;
     _pttDownAt = DateTime.now();
     _holdingPtt = true;
     notifyListeners();
@@ -382,6 +474,7 @@ class VoiceBuddyController extends ChangeNotifier {
     _dismissTimer?.cancel();
     _holdingPtt = false;
     _followUpListening = false;
+    _drowsyReminderActive = false;
     _busyTurn = false;
     _stt.finishActiveCaptureNow();
     await _tts.stop();
@@ -421,6 +514,9 @@ class VoiceBuddyController extends ChangeNotifier {
     if (!_enabled || !_isAllowedInCurrentScreen || _emergencyMuted || _busyTurn) {
       return;
     }
+    if (await DeviceControlService.instance.isInPhoneOrVoipCall()) {
+      return;
+    }
     final now = DateTime.now();
     if (now.difference(_lastTurnEnd) < _echoGuard) {
       await _resumePassiveWakeWatch();
@@ -447,15 +543,15 @@ class VoiceBuddyController extends ChangeNotifier {
 
     final myTurn = ++_turnId;
     _busyTurn = true;
+    _drowsyReminderActive = false;
     _dismissTimer?.cancel();
     await _stt.pauseWakeWordWatch();
 
     if (match.kind == WakeMatchKind.wakeOnly) {
       final chosenAck = _tts.pickWakeAckText(voiceProfile);
       _transcriptText = transcript;
-      _replyText = '';
+      _replyText = chosenAck;
       _setPhase(SiriOrbPhase.summon);
-      await Future<void>.delayed(const Duration(milliseconds: 160));
       if (myTurn != _turnId) return;
       if (!_enabled || !_isAllowedInCurrentScreen || _emergencyMuted) {
         _busyTurn = false;
@@ -484,7 +580,7 @@ class VoiceBuddyController extends ChangeNotifier {
     _transcriptText = match.remainingCommand;
     _replyText = '';
     _setPhase(SiriOrbPhase.summon);
-    await Future<void>.delayed(const Duration(milliseconds: 160));
+    await Future<void>.delayed(const Duration(milliseconds: 120));
     if (myTurn != _turnId) return;
     await _processCommandWithLlm(match.remainingCommand, turnId: myTurn);
   }
@@ -502,9 +598,14 @@ class VoiceBuddyController extends ChangeNotifier {
       _busyTurn = false;
       return;
     }
+    if (await DeviceControlService.instance.isInPhoneOrVoipCall()) {
+      await dismissSheet();
+      return;
+    }
 
     final isEn = LanguageService.instance.isEnglish;
     _followUpListening = isFollowUp;
+    _drowsyReminderActive = false;
     if (!isFollowUp) {
       _transcriptText = isEn ? 'Listening...' : 'Mendengarkan...';
       _replyText = '';
@@ -526,7 +627,6 @@ class VoiceBuddyController extends ChangeNotifier {
       return;
     }
     if (query.trim().isEmpty) {
-      // Pengguna sudah diam selesai mengobrol -> tutup Orb halus ala Siri (0 token)
       await dismissSheet();
       return;
     }
@@ -590,8 +690,29 @@ class VoiceBuddyController extends ChangeNotifier {
       return;
     }
     _followUpListening = false;
+    _drowsyReminderActive = false;
     _replyText = '';
     _setPhase(SiriOrbPhase.thinking);
+
+    final currentProf = voiceProfile;
+
+    // 1. Cek Perintah Suara Musik Spotify ("setelkan lagu ...", "putar lagu ...", "pause lagu", "next lagu")
+    final handledSpotify = await _tryHandleSpotifyVoiceCommand(
+      userMessage,
+      profile: currentProf,
+      turnId: myTurn,
+    );
+    if (handledSpotify || myTurn != _turnId) return;
+
+    // 2. Cek Perintah Navigasi Langsung ke Google Maps ("arahkan saya ke Indomaret terdekat", "buka maps ke ...")
+    if (_isNavigationRequest(userMessage)) {
+      await _handleDirectMapsNavigation(
+        userMessage,
+        profile: currentProf,
+        turnId: myTurn,
+      );
+      return;
+    }
 
     final places = await _gatherRelevantPlaces(userMessage);
     if (myTurn != _turnId) return;
@@ -602,7 +723,6 @@ class VoiceBuddyController extends ChangeNotifier {
       tripMinutes: _tripMinutesProvider(),
     );
     final sid = LlmChatApi.sanitizeSessionId(_sessionIdProvider());
-    final currentProf = voiceProfile;
 
     final res = await _chatApi.sendSafe(
       sessionId: sid,
@@ -613,12 +733,32 @@ class VoiceBuddyController extends ChangeNotifier {
       nearbyPlaces: places,
     );
     if (myTurn != _turnId) return;
-
     if (!_isAllowedInCurrentScreen || _emergencyMuted || _phase == SiriOrbPhase.hidden) {
-      if (res.fallback && currentProf == BuddyVoiceProfile.furina) {
-        await BuddyTtsService.activateJaneHandoff();
-      }
       _busyTurn = false;
+      return;
+    }
+
+    // Pisahkan error putus sinyal seluler ("SOS saja" / terowongan) vs kuota server habis!
+    final isNetworkSignalLost = res.fallback &&
+        (res.error == 'unreachable' || res.error == 'timeout');
+    if (isNetworkSignalLost) {
+      final isEn = LanguageService.instance.isEnglish;
+      final offlineMsg = BuddyTtsService.offlineSignalTextFor(
+        currentProf,
+        isEnglish: isEn,
+      );
+      _replyText = offlineMsg;
+      notifyListeners();
+      await _tts.speakOfflineSignalNotice(
+        currentProf,
+        onPlaybackStart: () {
+          if (myTurn != _turnId) return;
+          _replyText = offlineMsg;
+          _setPhase(SiriOrbPhase.speaking);
+        },
+      );
+      if (myTurn != _turnId) return;
+      _scheduleDismissAndResume();
       return;
     }
 
@@ -627,10 +767,14 @@ class VoiceBuddyController extends ChangeNotifier {
         ? BuddyTtsService.furinaTiredText
         : res.reply;
 
+    // Tampilkan teks jawaban seketika (~0.4 detik) begitu LLM selesai berpikir tanpa menunggu unduhan audio!
+    _replyText = displayReply;
+    notifyListeners();
+
     final shouldSwitchToJane = await _tts.speakReply(
       profile: currentProf,
       text: res.reply,
-      isTiredFallback: res.fallback,
+      isTiredFallback: isFurinaTired,
       isDrowsyDriver:
           det.status == DriverStatus.drowsy || det.status == DriverStatus.sleep,
       onPlaybackStart: () {
@@ -649,8 +793,10 @@ class VoiceBuddyController extends ChangeNotifier {
           _phase != SiriOrbPhase.hidden) {
         final isEn = LanguageService.instance.isEnglish;
         final janeFollowUp = isEn
-            ? 'Hi! Jane is here with you now. Drive safely and call me anytime.'
-            : 'Halo! Sekarang Jane yang temenin kamu di jalan ya. Panggil Jane kapan saja.';
+            ? 'Hi! Jane is here with you now. Drive safely and call me anytime!'
+            : 'Halo! Sekarang Jane yang temenin kamu di jalan ya. Panggil Jane kapan saja!';
+        _replyText = janeFollowUp;
+        notifyListeners();
         await _tts.speakReply(
           profile: BuddyVoiceProfile.jane,
           text: janeFollowUp,
@@ -672,15 +818,10 @@ class VoiceBuddyController extends ChangeNotifier {
         );
 
     if (isFarewell || followUpDepth >= _maxFollowUpTurns) {
-      // Pengguna sudah pamit/selesai -> tutup Full-Screen Siri Orb + Scrim otomatis
       _scheduleDismissAndResume();
       return;
     }
 
-    // Mode Percakapan Berkelanjutan (Multi-Turn):
-    // Jeda akustik singkat 280ms agar ekor suara speaker tidak tertangkap mic,
-    // lalu buka jendela dengar lanjutan tanpa perlu memanggil wake-word lagi!
-    // Jika pengguna diam selama ~4.2 detik, Orb otomatis menutup halus ala Siri.
     await Future<void>.delayed(const Duration(milliseconds: 280));
     if (myTurn != _turnId) return;
     if (!_isAllowedInCurrentScreen || _emergencyMuted || _phase == SiriOrbPhase.hidden) {
@@ -694,40 +835,268 @@ class VoiceBuddyController extends ChangeNotifier {
     );
   }
 
-  Future<List<LlmNearbyPlaceBrief>> _gatherRelevantPlaces(String query) async {
+  Future<bool> _tryHandleSpotifyVoiceCommand(
+    String userMessage, {
+    required BuddyVoiceProfile profile,
+    required int turnId,
+  }) async {
+    final trimmedMsg = userMessage.trim();
+    final low = trimmedMsg.toLowerCase();
+    final spotifyCtrl = SpotifyIslandController.instance;
+    final isEn = LanguageService.instance.isEnglish;
+
+    // 1. Perintah menghentikan / menutup lagu sepenuhnya (tanpa keluar aplikasi)
+    final isStopOrClose = RegExp(
+      r'\b(?:hentikan|stop|matikan|matiin|tutup|udahin|sudahi)\s+(?:lagu(?:nya)?|musik(?:nya)?|spotify)\b|\b(?:lagu(?:nya)?|musik(?:nya)?)\s+(?:dihentikan|distop|dimatikan|stop\s+dulu|matiin\s+aja)\b',
+      caseSensitive: false,
+    ).hasMatch(low);
+    if (isStopOrClose && spotifyCtrl.isVisible) {
+      await spotifyCtrl.closeIsland();
+      final stopMsg = isEn
+          ? 'Okay, I have stopped the music for you.'
+          : 'Oke, musiknya udah aku hentikan ya.';
+      _replyText = stopMsg;
+      notifyListeners();
+      await _tts.speakReply(
+        profile: profile,
+        text: stopMsg,
+        onPlaybackStart: () {
+          if (turnId != _turnId) return;
+          _replyText = stopMsg;
+          _setPhase(SiriOrbPhase.speaking);
+        },
+      );
+      if (turnId != _turnId) return true;
+      _scheduleDismissAndResume();
+      return true;
+    }
+
+    // 2. Perintah jeda sementara (pause)
+    final isPauseCmd = RegExp(
+      r'\b(?:pause|jeda)\s+(?:lagu(?:nya)?|musik(?:nya)?|dulu)?\b',
+      caseSensitive: false,
+    ).hasMatch(low);
+    if (isPauseCmd && spotifyCtrl.isVisible) {
+      await spotifyCtrl.pausePlayback();
+      final pauseMsg = isEn
+          ? 'Paused the song for now.'
+          : 'Oke, lagunya aku jeda dulu ya.';
+      _replyText = pauseMsg;
+      notifyListeners();
+      await _tts.speakReply(
+        profile: profile,
+        text: pauseMsg,
+        onPlaybackStart: () {
+          if (turnId != _turnId) return;
+          _replyText = pauseMsg;
+          _setPhase(SiriOrbPhase.speaking);
+        },
+      );
+      if (turnId != _turnId) return true;
+      _scheduleDismissAndResume();
+      return true;
+    }
+
+    // 3. Perintah lanjutkan lagu (resume)
+    final isResumeCmd = RegExp(
+      r'\b(?:lanjutkan|lanjutin|lanjut\s+putar|play\s+lagi|nyalakan\s+lagi)\s*(?:lagu(?:nya)?|musik(?:nya)?)?\b',
+      caseSensitive: false,
+    ).hasMatch(low);
+    if (isResumeCmd && spotifyCtrl.isVisible && !spotifyCtrl.isPlaying) {
+      await dismissSheet();
+      await spotifyCtrl.resumePlayback();
+      return true;
+    }
+
+    // 4. Perintah lagu sebelumnya / ulangi lagu
+    final isPrevCmd = RegExp(
+      r'\b(?:lagu\s+sebelumnya|musik\s+sebelumnya|balik\s+ke\s+lagu\s+tadi|previous\s+song|ulang\s+lagu(?:nya)?)\b',
+      caseSensitive: false,
+    ).hasMatch(low);
+    if (isPrevCmd && spotifyCtrl.isVisible) {
+      final prevTrack = await spotifyCtrl.skipPrevious();
+      if (turnId != _turnId) return true;
+      final prevMsg = isEn
+          ? 'Going back to ${prevTrack.title} by ${prevTrack.artist}.'
+          : 'Oke, balik ke lagu ${prevTrack.title} dari ${prevTrack.artist} ya.';
+      _replyText = prevMsg;
+      notifyListeners();
+      await _tts.speakReply(
+        profile: profile,
+        text: prevMsg,
+        onPlaybackStart: () {
+          if (turnId != _turnId) return;
+          _replyText = prevMsg;
+          _setPhase(SiriOrbPhase.speaking);
+        },
+      );
+      if (turnId != _turnId) return true;
+      await dismissSheet();
+      return true;
+    }
+
+    // 5. Perintah ganti ke lagu spesifik ATAU setel lagu baru:
+    //    mis. "ganti lagu ke Last Night on Earth", "ubah lagu Cancer", "setelkan lagu ..."
+    final switchSpecificMatch = RegExp(
+      r'^(?:tolong\s+|coba\s+|eh\s+)?(?:ganti|gantiin|ubah|pindah(?:kan)?)\s+(?:lagu(?:nya)?|musik(?:nya)?)\s+(?:ke|jadi|dengan)?\s*(.+?)(?:\s+di\s+spotify|\s+lewat\s+spotify|\s+dong|\s+ya)?$',
+      caseSensitive: false,
+    ).firstMatch(trimmedMsg);
+
+    // 6. Perintah ganti lagu berikutnya secara umum (tanpa menyebut judul spesifik)
+    final isGenericNext = switchSpecificMatch == null &&
+        RegExp(
+          r'\b(?:next\s+lagu|next\s+musik|next\s+song|skip\s+lagu|lagu\s+selanjutnya|lagu\s+berikutnya|lagu\s+lain|ganti\s+lagu(?:nya)?|ganti\s+musik(?:nya)?)\b',
+          caseSensitive: false,
+        ).hasMatch(low);
+    if (isGenericNext && spotifyCtrl.isVisible) {
+      await spotifyCtrl.pausePlayback();
+      final nextTrack = await spotifyCtrl.skipNext();
+      if (turnId != _turnId) return true;
+      await spotifyCtrl.pausePlayback();
+      final nextMsg = isEn
+          ? 'Switching to ${nextTrack.title} by ${nextTrack.artist} now.'
+          : 'Oke, kita ganti ke lagu ${nextTrack.title} dari ${nextTrack.artist} ya.';
+      _replyText = nextMsg;
+      notifyListeners();
+      await _tts.speakReply(
+        profile: profile,
+        text: nextMsg,
+        onPlaybackStart: () {
+          if (turnId != _turnId) return;
+          _replyText = nextMsg;
+          _setPhase(SiriOrbPhase.speaking);
+        },
+      );
+      if (turnId != _turnId) return true;
+      await dismissSheet();
+      await spotifyCtrl.resumePlayback();
+      return true;
+    }
+
+    final playMatch = switchSpecificMatch ??
+        RegExp(
+          r'(?:tolong\s+|coba\s+)?(?:setelkan|setelin|setel|putarkan|putarin|putar|play|nyalakan|nyalain|mainkan)\s+(?:lagu\s+|musik\s+)?(.+?)(?:\s+di\s+spotify|\s+lewat\s+spotify|\s+dong|\s+ya)?$',
+          caseSensitive: false,
+        ).firstMatch(trimmedMsg);
+
+    final bool mentionsSpotifyConnect =
+        low.contains('hubungkan spotify') || low.contains('konek spotify') || low.contains('connect spotify');
+
+    if (playMatch == null && !mentionsSpotifyConnect) {
+      return false;
+    }
+
+    await spotifyCtrl.init();
+    if (turnId != _turnId) return true;
+
+    // Jika pengguna belum klik Hubungkan, otomatis aktifkan Dynamic Island in-app agar lagu tetap langsung jalan mulus!
+    if (!spotifyCtrl.isConnected) {
+      await spotifyCtrl.connectSpotify(openAppToAuthorize: false);
+    }
+
+    if (mentionsSpotifyConnect && playMatch == null) {
+      final alreadyMsg = isEn
+          ? 'Spotify Dynamic Island is active! Just tell me what song you want to hear.'
+          : 'Pemutar Spotify Dynamic Island kamu sudah aktif kok, tinggal bilang mau diputerin lagu apa ya.';
+      _replyText = alreadyMsg;
+      notifyListeners();
+      await _tts.speakReply(
+        profile: profile,
+        text: alreadyMsg,
+        onPlaybackStart: () {
+          if (turnId != _turnId) return;
+          _replyText = alreadyMsg;
+          _setPhase(SiriOrbPhase.speaking);
+        },
+      );
+      if (turnId != _turnId) return true;
+      await _listenAndAnswerAfterWake(isFollowUp: true, turnId: turnId);
+      return true;
+    }
+
+    final rawSongQuery = (playMatch?.group(1) ?? '')
+        .replaceAll(RegExp(r'\bspotify\b', caseSensitive: false), '')
+        .trim();
+    if (rawSongQuery.isEmpty) return false;
+
+    final track = await spotifyCtrl.fetchTrackMetadata(rawSongQuery);
+    if (turnId != _turnId) return true;
+
+    // Hentikan lagu lama bila sedang berputar supaya suara asisten jernih sebelum lagu baru mulai
+    if (spotifyCtrl.isPlaying) {
+      await spotifyCtrl.pausePlayback();
+    }
+
+    final confirmMsg = isEn
+        ? 'Okay, playing ${track.title} by ${track.artist} right here for you.'
+        : 'Oke, aku puterin lagu ${track.title} dari ${track.artist} sekarang ya.';
+    _replyText = confirmMsg;
+    notifyListeners();
+    await _tts.speakReply(
+      profile: profile,
+      text: confirmMsg,
+      onPlaybackStart: () {
+        if (turnId != _turnId) return;
+        _replyText = confirmMsg;
+        _setPhase(SiriOrbPhase.speaking);
+      },
+    );
+    if (turnId != _turnId) return true;
+
+    // Sembunyikan Orb ke mode idle, lalu langsung jalankan stream di Dynamic Island (TANPA keluar ke halaman Spotify!)
+    await dismissSheet();
+    await spotifyCtrl.playSongOnIsland(track, isDrivingSession: _isDrivingActive);
+    return true;
+  }
+
+  PlaceCategory? _detectPlaceCategory(String query) {
     final low = query.toLowerCase();
-    PlaceCategory? wantedCat;
     if (low.contains('indomaret') ||
         low.contains('alfamart') ||
         low.contains('alfamidi') ||
         low.contains('minimarket') ||
         low.contains('warung') ||
         low.contains('beli minum')) {
-      wantedCat = PlaceCategory.minimarket;
-    } else if (low.contains('spbu') ||
+      return PlaceCategory.minimarket;
+    }
+    if (low.contains('spbu') ||
         low.contains('bensin') ||
         low.contains('pertamina') ||
         low.contains('pom')) {
-      wantedCat = PlaceCategory.spbu;
-    } else if (low.contains('hotel') ||
+      return PlaceCategory.spbu;
+    }
+    if (low.contains('hotel') ||
         low.contains('menginap') ||
         low.contains('penginapan') ||
         low.contains('motel')) {
-      wantedCat = PlaceCategory.lodging;
-    } else if (low.contains('rest area') || low.contains('istirahat')) {
-      wantedCat = PlaceCategory.restArea;
+      return PlaceCategory.lodging;
     }
+    if (low.contains('rest area') || low.contains('istirahat')) {
+      return PlaceCategory.restArea;
+    }
+    return null;
+  }
+
+  Future<List<NearbyPlace>> _resolveRawPlaces(String query) async {
+    final low = query.toLowerCase();
+    final wantedCat = _detectPlaceCategory(query);
 
     List<NearbyPlace> raw = nearby.placesFor(wantedCat);
-    final fix = nearby.fix;
-    if (raw.isEmpty && fix != null) {
+    DriverFix? fix = nearby.fix;
+    if (fix == null || !fix.isValid) {
+      try {
+        fix = await _fallbackGps.currentFix(timeout: const Duration(seconds: 4));
+      } catch (_) {}
+    }
+
+    if (raw.isEmpty && fix != null && fix.isValid) {
       try {
         final direct = await _directPlaces.nearby(
           lat: fix.lat,
           lng: fix.lng,
           category: wantedCat,
           headingDeg: fix.headingDeg,
-          limit: 6,
+          limit: 8,
         );
         raw = direct.places;
       } catch (_) {}
@@ -749,7 +1118,11 @@ class VoiceBuddyController extends ChangeNotifier {
           .toList();
       if (filtered.isNotEmpty) raw = filtered;
     }
+    return raw;
+  }
 
+  Future<List<LlmNearbyPlaceBrief>> _gatherRelevantPlaces(String query) async {
+    final raw = await _resolveRawPlaces(query);
     return raw
         .take(5)
         .map(
@@ -764,10 +1137,98 @@ class VoiceBuddyController extends ChangeNotifier {
         .toList();
   }
 
-  /// Begitu asisten selesai berbicara (~550ms jeda napas alami), langsung tutup
-  /// Full-Screen Siri Orb + Scrim dengan animasi ala Siri Apple dan kembali ke siaga!
+  bool _isNavigationRequest(String query) {
+    final low = query.toLowerCase();
+    return low.contains('arahkan') ||
+        low.contains('arahin') ||
+        low.contains('antar saya') ||
+        low.contains('antarkan') ||
+        low.contains('anterin') ||
+        low.contains('tunjukkan jalan') ||
+        low.contains('navigasi') ||
+        low.contains('rute ke') ||
+        low.contains('buka maps') ||
+        low.contains('buka google map') ||
+        low.contains('navigate to') ||
+        low.contains('directions to');
+  }
+
+  String _extractCleanDestinationLabel(String query) {
+    final cleaned = query
+        .replaceAll(
+          RegExp(
+            r'^(?:tolong\s+|coba\s+)?(?:arahkan|arahin|antarkan|anterin|navigasi|tunjukkan\s+jalan|buka\s+google\s+maps?|buka\s+maps?|rute)(?:\s+saya|\s+aku)?(?:\s+ke|\s+menuju)?\s*',
+            caseSensitive: false,
+          ),
+          '',
+        )
+        .trim();
+    return cleaned.isNotEmpty ? cleaned : query.trim();
+  }
+
+  Future<void> _handleDirectMapsNavigation(
+    String userMessage, {
+    required BuddyVoiceProfile profile,
+    required int turnId,
+  }) async {
+    final rawPlaces = await _resolveRawPlaces(userMessage);
+    if (turnId != _turnId) return;
+
+    final isEn = LanguageService.instance.isEnglish;
+    final NearbyPlace? target = rawPlaces.isNotEmpty ? rawPlaces.first : null;
+    final destLabel = target != null
+        ? target.name
+        : _extractCleanDestinationLabel(userMessage);
+
+    final navReply = target != null
+        ? (isEn
+              ? 'Okay, opening Google Maps route to ${target.name}, about ${target.distanceM.round()} meters away.'
+              : 'Oke, aku bukain rute Google Maps ke ${target.name} sekarang ya, jaraknya sekitar ${target.distanceM.round()} meter.')
+        : (isEn
+              ? 'Okay, opening Google Maps route to $destLabel now.'
+              : 'Oke, aku bukain Google Maps menuju $destLabel sekarang ya.');
+
+    _replyText = navReply;
+    notifyListeners();
+
+    await _tts.speakReply(
+      profile: profile,
+      text: navReply,
+      onPlaybackStart: () {
+        if (turnId != _turnId) return;
+        _replyText = navReply;
+        _setPhase(SiriOrbPhase.speaking);
+      },
+    );
+    if (turnId != _turnId) return;
+
+    // Munculkan notifikasi persisten/balik cepat persis seperti klik manual tempat terdekat!
+    if (_isDrivingActive) {
+      await DrivingNotificationService.instance.showMonitoringNotification();
+    } else {
+      await DrivingNotificationService.instance.showQuickReturnNotification(
+        title: '📍 Navigasi ke $destLabel Aktif',
+        body: 'Ketuk notifikasi ini kapan saja untuk kembali ke Driving Buddy.',
+      );
+    }
+
+    // Sembunyikan asisten ke mode idle sebelum berpindah ke Google Maps
+    await dismissSheet();
+
+    if (target != null) {
+      await PlaceLauncher.navigate(target);
+    } else {
+      final fix = nearby.fix;
+      await PlaceLauncher.openLiveSearchInBrowser(
+        destLabel,
+        fix?.lat,
+        fix?.lng,
+      );
+    }
+  }
+
   void _scheduleDismissAndResume({
-    Duration delay = const Duration(milliseconds: 550),
+    Duration delay = const Duration(milliseconds: 520),
   }) {
     _dismissTimer?.cancel();
     _dismissTimer = Timer(delay, () async {
@@ -778,6 +1239,7 @@ class VoiceBuddyController extends ChangeNotifier {
           _setPhase(SiriOrbPhase.hidden);
         }
       }
+      _drowsyReminderActive = false;
       _busyTurn = false;
       if (_enabled && _isAllowedInCurrentScreen && !_emergencyMuted) {
         await _resumePassiveWakeWatch();
@@ -803,6 +1265,7 @@ class VoiceBuddyController extends ChangeNotifier {
   void dispose() {
     _insideAuthenticatedApp = false;
     _dismissTimer?.cancel();
+    _resumeAfterCallTimer?.cancel();
     _watchdog?.cancel();
     _authSub?.cancel();
     BuddyVoiceConfig.instance.removeListener(_onConfigChanged);

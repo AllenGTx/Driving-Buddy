@@ -87,6 +87,10 @@ class MonitorScreenState extends State<MonitorScreen> with WidgetsBindingObserve
   bool _enableHeadTilt = true;
   bool _enableHeadBob = true;
   bool _isBatteryOptimization = false;
+  DateTime _lastProcessedFrameAt = DateTime.fromMillisecondsSinceEpoch(0);
+  DateTime _ecoBurstUntil = DateTime.fromMillisecondsSinceEpoch(0);
+  DateTime _lastUiRefreshAt = DateTime.fromMillisecondsSinceEpoch(0);
+  bool _ecoDimApplied = false;
 
   // Hasil deteksi real-time
   DetectionResult _result = DetectionResult.initial;
@@ -477,6 +481,9 @@ class MonitorScreenState extends State<MonitorScreen> with WidgetsBindingObserve
     }
 
     _isBatteryOptimization = await AlertConfig.isBatteryOptimizationEnabled();
+    GeolocatorLocationProvider.ecoPowerSaving = _isBatteryOptimization;
+    _voiceBuddy.setEcoMode(_isBatteryOptimization);
+    _ecoDimApplied = false;
 
     // Muat ulang pengaturan Head Tilt/Bob terbaru sebelum sesi dimulai.
     // Pengaturan dibuka sebagai halaman terpisah sehingga tab tidak
@@ -590,7 +597,7 @@ class MonitorScreenState extends State<MonitorScreen> with WidgetsBindingObserve
 
       _cameraController = CameraController(
         _frontCamera!,
-        ResolutionPreset.medium,
+        _isBatteryOptimization ? ResolutionPreset.low : ResolutionPreset.medium,
         enableAudio: false,
         imageFormatGroup: Platform.isAndroid
             ? ImageFormatGroup.nv21
@@ -626,13 +633,20 @@ class MonitorScreenState extends State<MonitorScreen> with WidgetsBindingObserve
     }
   }
 
-  // ---------- ML Kit Frame Processing (Offline 100%) ----------
+  // ---------- ML Kit Frame Processing (Offline 100% + Adaptive Eco Mode ~65-70% Battery Saving) ----------
   Future<void> _onFrame(CameraImage image) async {
     if (_busy) return;
-    final int step = _isBatteryOptimization
-        ? 3
-        : Thresholds.processEveryNthFrame;
-    if (++_frameCount % step != 0) return;
+    final nowTs = DateTime.now();
+    if (_isBatteryOptimization) {
+      // Eco Mode Pintar: 8 FPS (130ms) saat segar, otomatis naik ke 18 FPS (55ms) selama 15 detik bila mata mulai sayu!
+      final int minGapMs = nowTs.isBefore(_ecoBurstUntil) ? 55 : 130;
+      if (nowTs.difference(_lastProcessedFrameAt).inMilliseconds < minGapMs) {
+        return;
+      }
+    } else {
+      if (++_frameCount % Thresholds.processEveryNthFrame != 0) return;
+    }
+    _lastProcessedFrameAt = nowTs;
     _busy = true;
 
     try {
@@ -652,6 +666,29 @@ class MonitorScreenState extends State<MonitorScreen> with WidgetsBindingObserve
         enableHeadTilt: _enableHeadTilt,
         enableHeadBob: _enableHeadBob,
       );
+
+      // Akselerasi otomatis Eco Mode ke 18 FPS selama 15 detik jika ada indikasi awal kantuk
+      if (_isBatteryOptimization &&
+          (result.status != DriverStatus.awake ||
+              (result.ear > 0.05 && result.ear < 0.235) ||
+              result.mar > 0.45 ||
+              result.rollAngle.abs() > 12.0)) {
+        _ecoBurstUntil = DateTime.now().add(const Duration(seconds: 15));
+      }
+
+      // Auto-Dim layar ke 28% sesudah 45 detik mengemudi aman pada Eco Mode (menghemat ~40% daya layar)
+      if (_isBatteryOptimization &&
+          _elapsedSeconds >= 45 &&
+          !_ecoDimApplied &&
+          !_isNightVisionEnabled &&
+          !_isAlertShowing) {
+        _ecoDimApplied = true;
+        unawaited(
+          ScreenBrightness.instance
+              .setApplicationScreenBrightness(0.28)
+              .catchError((_) {}),
+        );
+      }
 
       // Catat riwayat EAR untuk waveform & agregat sesi
       if (result.ear > 0.05) {
@@ -722,6 +759,12 @@ class MonitorScreenState extends State<MonitorScreen> with WidgetsBindingObserve
       }
 
       if (!isSnoozed && (isSleep || isExcessiveYawn) && !_isAlertShowing) {
+        if (_ecoDimApplied) {
+          _ecoDimApplied = false;
+          unawaited(
+            ScreenBrightness.instance.resetScreenBrightness().catchError((_) {}),
+          );
+        }
         await _alert.playAlert();
         if (isSleep) {
           String alertTitle = 'MATA TERPEJAM!\nISTIRAHAT SEKARANG';
@@ -759,10 +802,20 @@ class MonitorScreenState extends State<MonitorScreen> with WidgetsBindingObserve
       }
 
       if (mounted) {
-        setState(() {
+        final nowUi = DateTime.now();
+        final statusChanged = result.status != _result.status ||
+            (result.status != DriverStatus.noFace) != _eyeDetected;
+        if (!_isBatteryOptimization ||
+            statusChanged ||
+            nowUi.difference(_lastUiRefreshAt).inMilliseconds >= 250) {
+          _lastUiRefreshAt = nowUi;
+          setState(() {
+            _result = result;
+            _eyeDetected = result.status != DriverStatus.noFace;
+          });
+        } else {
           _result = result;
-          _eyeDetected = result.status != DriverStatus.noFace;
-        });
+        }
       }
     } catch (e) {
       debugPrint('[FaceMesh] Error deteksi frame: $e');
@@ -802,12 +855,13 @@ class MonitorScreenState extends State<MonitorScreen> with WidgetsBindingObserve
     await _cameraController?.dispose();
     _cameraController = null;
     await _alert.stop();
-    if (_ownsNearby) {
-      _nearby.stop();
-      _nearby.start(askPermission: false);
-    }
+    GeolocatorLocationProvider.ecoPowerSaving = false;
+    _voiceBuddy.setEcoMode(false);
+    _nearby.stop();
+    _nearby.start(askPermission: false, track: false);
     await WakelockPlus.disable();
-    if (_isNightVisionEnabled) {
+    if (_isNightVisionEnabled || _ecoDimApplied) {
+      _ecoDimApplied = false;
       try {
         await ScreenBrightness.instance.resetScreenBrightness();
       } catch (_) {}

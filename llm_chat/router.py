@@ -15,7 +15,8 @@ import math
 import time
 from typing import Any, Callable, Dict, Optional, Tuple
 
-from fastapi import APIRouter, HTTPException, Path
+from fastapi import APIRouter, HTTPException, Path, Query
+from fastapi.responses import StreamingResponse
 
 from .audio_routes import build_audio_router
 from .client import BaseLLM, FallbackChainLLM, LLMError, make_llm
@@ -23,6 +24,13 @@ from .config import Settings, load_fallback_chain, load_settings
 from .prompts import build_messages, clean_reply, pick_fallback
 from .schemas import SESSION_ID_PATTERN, ChatRequest, ChatResponse
 from .store import RateLimiter, SessionStore
+from .web_search import (
+    iter_resolved_music_bytes,
+    needs_live_web_search,
+    resolve_in_app_music_stream,
+    search_live_web,
+    search_music_track,
+)
 
 log = logging.getLogger("driving_buddy.llm")
 
@@ -98,6 +106,9 @@ def build_router(
         async with session.lock:
             if req.reset:
                 session.history.clear()
+            web_ctx: Optional[str] = None
+            if auto_chain and needs_live_web_search(req.message):
+                web_ctx = await search_live_web(req.message, timeout_s=2.0)
             messages = build_messages(
                 list(session.history),
                 req.message,
@@ -105,6 +116,7 @@ def build_router(
                 buddy_name=req.buddy_name,
                 voice_profile=req.voice_profile,
                 nearby_places=req.nearby_places,
+                web_search_context=web_ctx,
             )
             try:
                 result = await llm.complete(messages)
@@ -156,6 +168,28 @@ def build_router(
                 deep_cache["deep"] = (now, await _deep_check(llm, settings))
             info.update(deep_cache["deep"][1])
         return info
+
+    @router.get("/music/search", summary="Cari lagu resmi & antrean playlist untuk Dynamic Island in-app")
+    async def music_search(q: str = Query(..., min_length=1, max_length=160)) -> Dict[str, Any]:
+        return await search_music_track(q)
+
+    @router.get("/music/stream", summary="Alirkan audio lagu penuh langsung ke dalam Dynamic Island tanpa keluar aplikasi")
+    async def music_stream(
+        q: str = Query(..., min_length=1, max_length=180),
+        dur: int = Query(210, ge=15, le=900),
+    ) -> StreamingResponse:
+        info = await resolve_in_app_music_stream(q, target_dur_s=dur)
+        if not info:
+            raise HTTPException(status_code=404, detail={"error": "music_stream_not_found"})
+        return StreamingResponse(
+            iter_resolved_music_bytes(info),
+            media_type=info.get("mime", "audio/mp4"),
+            headers={
+                "Cache-Control": "public, max-age=300",
+                "X-Music-Duration": str(info.get("duration_s", dur)),
+                "X-Music-Mode": str(info.get("mode", "stream")),
+            },
+        )
 
     router.include_router(build_audio_router())
     return router

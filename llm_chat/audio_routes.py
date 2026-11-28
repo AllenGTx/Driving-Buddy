@@ -18,8 +18,11 @@ log = logging.getLogger("driving_buddy.llm")
 # PENTING: Whisper `prompt` adalah contoh kalimat transkrip sebelumnya, BUKAN instruksi sistem!
 # Jangan gunakan kata seperti "Ejaan nama tepat:" karena memicu halusinasi "X dieja X-Y-Z".
 STT_VOCAB_PROMPT = (
-    "Halo Rina, Furina, Jane, John. Tolong bantu saya cari tempat istirahat, "
-    "rest area, SPBU Pertamina, Indomaret, Alfamart, atau hotel terdekat."
+    "Yo Rina, Yo Furina, Yo Jane, Yo John, halo Rina. "
+    "Cerpennya kok pendek banget belum selesai, lanjutin ceritanya dong, gitu aja jir, wkwk, santai aja bro. "
+    "Coba cari di Google apakah benar berita terbaru kemarin atau skor pertandingan sepak bola. "
+    "Tolong arahkan saya ke Indomaret, Alfamart, SPBU Pertamina, rest area, atau hotel terdekat. "
+    "Tolong setelkan lagu di Spotify."
 )
 
 _HALLUCINATION_PATTERNS = (
@@ -76,6 +79,8 @@ def build_audio_router(
     gemini_key = env.get("GEMINI_API_KEY") or env.get("GOOGLE_API_KEY") or (
         env.get("LLM_API_KEY", "") if env.get("LLM_API_KEY", "").startswith(("AIza", "AQ.")) else ""
     )
+    cf_tok = env.get("CLOUDFLARE_API_TOKEN") or env.get("CF_API_TOKEN") or ""
+    cf_acc = env.get("CLOUDFLARE_ACCOUNT_ID") or env.get("CF_ACCOUNT_ID") or ""
     voicebox_url = (env.get("VOICEBOX_URL") or os.environ.get("VOICEBOX_URL") or "http://127.0.0.1:17493").rstrip("/")
     skip_local_voicebox = (env.get("SKIP_LOCAL_VOICEBOX") or os.environ.get("SKIP_LOCAL_VOICEBOX") or "") == "1"
     furina_cloud_url = (env.get("FURINA_TTS_URL") or os.environ.get("FURINA_TTS_URL") or "").rstrip("/")
@@ -102,9 +107,9 @@ def build_audio_router(
         vocab = f"Halo {clean_hint}. {STT_VOCAB_PROMPT}" if clean_hint and clean_hint.lower() not in STT_VOCAB_PROMPT.lower() else STT_VOCAB_PROMPT
         errors = []
 
-        # Tier 1: Groq Whisper (2 kolam kuota terpisah: large-v3-turbo -> large-v3)
+        # Tier 1: Groq Whisper (prioritaskan whisper-large-v3 penuh untuk akurasi kosakata Indonesia tertinggi, lalu turbo)
         if groq_key:
-            for w_model in ("whisper-large-v3-turbo", "whisper-large-v3"):
+            for w_model in ("whisper-large-v3", "whisper-large-v3-turbo"):
                 try:
                     client = _client(4.5)
                     try:
@@ -132,6 +137,29 @@ def build_audio_router(
                             await client.aclose()
                 except Exception as exc:
                     errors.append(f"groq({w_model}):{type(exc).__name__}")
+
+        # Tier 2: Cloudflare Workers AI Whisper-Large-V3-Turbo (Gratis Cadangan)
+        if cf_tok and cf_acc:
+            try:
+                client = _client(5.0)
+                try:
+                    b64_cf = base64.b64encode(raw).decode("ascii")
+                    cf_resp = await client.post(
+                        f"https://api.cloudflare.com/client/v4/accounts/{cf_acc}/ai/run/@cf/openai/whisper-large-v3-turbo",
+                        headers={"Authorization": f"Bearer {cf_tok}", "Content-Type": "application/json"},
+                        json={"audio": b64_cf, "language": "id", "initial_prompt": vocab},
+                    )
+                    if cf_resp.status_code == 200:
+                        res_obj = cf_resp.json().get("result") or {}
+                        text = clean_stt_transcript(res_obj.get("text") or "")
+                        if text:
+                            return {"text": text, "provider": "cloudflare_whisper"}
+                    errors.append(f"cloudflare_stt:{cf_resp.status_code}")
+                finally:
+                    if http is None:
+                        await client.aclose()
+            except Exception as exc:
+                errors.append(f"cloudflare_stt:{type(exc).__name__}")
 
         # Tier 2: Voicebox Local Whisper (:17493/transcribe) bila tidak di-skip
         if not skip_local_voicebox:

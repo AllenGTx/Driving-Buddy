@@ -6,89 +6,178 @@ import 'package:flutter/scheduler.dart';
 
 import '../voice_buddy_controller.dart';
 
-/// Bola asisten bergaya iOS Siri (`SUICOrbView` × `SiriWave`) dengan:
-/// - Pegas fisik orde-2 (Apple Fluid Interfaces: `response` & `dampingRatio`) yang interruptible.
-/// - Garis gelombang sinus multi-harmonik teredam (`SiriWave`) yang naik-turun mengikuti volume (`energy`)
-///   dan merapat/merenggang mengikuti frekuensi vokal (`frequency`), menembus keluar batas bola.
-/// - Membran cairan polar dengan profil optik *Beer-Lambert* (gelap pekat di dalam, berpendar cair
-///   di punggung gelombang) sehingga tidak keruh dan menyatu seperti cairan cahaya.
-/// - Dispersi *Chromatic Aberration* presisi (`1.5–3.2px` pergeseran spektral Merah-Magenta,
-///   Copper-Gold, dan Cyan-Prism pada `BlendMode.plus`) yang memijar putih di titik temu gelombang.
+/// Marble Volumetric Studio Glass Orb (GLSL FragmentShader `shaders/marble_orb.frag`)
+/// + Irregular Voice-Reactive Aura Ribbons Strictly BEHIND the Orb Rotating Clockwise:
+///
+/// 1. **Lapisan Belakang (`_ClockwiseIrregularBackAuraPainter`)**:
+///    - Garis aura organik tak beraturan yang mekar mengikuti amplitudo suara saat diajak mengobrol.
+///    - Diposisikan **100% di belakang bola kaca** (area dalam bola `r < rBall` dipotong bersih sehingga
+///      tidak pernah ada garis atau pita aneh yang memotong tengah bola!).
+///    - Berputar pelan secara kontinu **searah jarum jam dinding (`+clockwiseAngle`)**.
+/// 2. **Lapisan Utama (`shaders/marble_orb.frag` per-pixel raymarched 3D glass orb)**:
+///    - Pembiasan kaca studio 3D (`refract` rasio `1/1.4`), 10 sampel chord volumetrik, puntiran vertikal
+///      `phase * 0.7 + y * (0.6 + energy)`, *domain-warped* 3-octave value noise yang melipat hidup
+///      di seluruh isi bola (tidak hitam kosong dan tanpa garis kotak horizontal!).
+///    - Filamen cahaya tipis `(1 - |2n - 1|)^10`, pembiasan tepi R/G/B `(1 - z)^{2.1, 2.6, 3.3}`,
+///      pantulan jendela studio miring 20° di kiri-atas, pantulan kanan-bawah, serta elips cahaya meja `1.26r`.
+///    - Bertransisi warna halus (~600ms, `3.2/s`) antar status sehingga cuaca di dalam bola tampak hidup
+///      bergerak dan berganti nuansa warna dengan identitas utama Hangat Amber-Oranye.
 class SiriOrangeOrb extends StatefulWidget {
   const SiriOrangeOrb({
     super.key,
     required this.phase,
     required this.energy,
     this.frequency = 0.45,
-    this.size = 80.0,
+    this.size = 285.0,
+    this.pressKick = 0.0,
+    this.pointerOffset = Offset.zero,
   });
 
   final SiriOrbPhase phase;
   final double energy;
   final double frequency;
   final double size;
+  final double pressKick;
+  final Offset pointerOffset;
 
   @override
   State<SiriOrangeOrb> createState() => _SiriOrangeOrbState();
 }
 
-class _FluidSpring1D {
-  _FluidSpring1D({
-    required this.response,
-    required this.dampingRatio,
-    double initialValue = 0.0,
-  }) : value = initialValue;
+class _Vec3 {
+  const _Vec3(this.r, this.g, this.b);
+  final double r;
+  final double g;
+  final double b;
 
-  final double response;
-  final double dampingRatio;
-  double value;
-  double velocity = 0.0;
+  static _Vec3 lerp(_Vec3 a, _Vec3 b, double t) {
+    return _Vec3(
+      a.r + (b.r - a.r) * t,
+      a.g + (b.g - a.g) * t,
+      a.b + (b.b - a.b) * t,
+    );
+  }
 
-  void step(double target, double dt) {
-    if (dt <= 0.0) return;
-    final int steps = (dt / 0.016).ceil().clamp(1, 4);
-    final double h = dt / steps;
-    final double omega = (2.0 * math.pi) / math.max(0.04, response);
-    final double stiffness = omega * omega;
-    final double damping = 2.0 * dampingRatio * omega;
+  Color toDisplayColor({double alpha = 1.0}) {
+    return Color.fromRGBO(
+      (r.clamp(0.0, 1.0) * 255).round(),
+      (g.clamp(0.0, 1.0) * 255).round(),
+      (b.clamp(0.0, 1.0) * 255).round(),
+      alpha.clamp(0.0, 1.0),
+    );
+  }
+}
 
-    for (int i = 0; i < steps; i++) {
-      final double force = -stiffness * (value - target) - damping * velocity;
-      velocity += force * h;
-      value += velocity * h;
-    }
+class _MarbleStateTone {
+  const _MarbleStateTone({
+    required this.deep,
+    required this.bright,
+    required this.rim,
+  });
+
+  final _Vec3 deep;
+  final _Vec3 bright;
+  final _Vec3 rim;
+
+  static _MarbleStateTone lerp(
+    _MarbleStateTone a,
+    _MarbleStateTone b,
+    double t,
+  ) {
+    return _MarbleStateTone(
+      deep: _Vec3.lerp(a.deep, b.deep, t),
+      bright: _Vec3.lerp(a.bright, b.bright, t),
+      rim: _Vec3.lerp(a.rim, b.rim, t),
+    );
   }
 }
 
 class _SiriOrangeOrbState extends State<SiriOrangeOrb>
     with SingleTickerProviderStateMixin {
+  static ui.FragmentProgram? _cachedProgram;
+  static bool _loadingProgram = false;
+
+  // Palet cuaca kaca volumetrik Marble:
+  // - Asking / Listening / Summon: Golden-Amber ikonik persis referensi Marble ("May I go ahead?")
+  // - Thinking: Berputar cepat dengan gradasi Violet-Amber menyala
+  // - Speaking: Berpendar hangat Molten Amber <-> Emerald-Gold yang bernapas mengikuti suara
+  // - Idle / Ready: Warm Studio Copper-Amber dengan kilau biru lembut di bibir kaca
+  static const _MarbleStateTone _toneSummonAmber = _MarbleStateTone(
+    deep: _Vec3(1.00, 0.40, 0.06),
+    bright: _Vec3(1.00, 0.88, 0.45),
+    rim: _Vec3(1.00, 0.70, 0.30),
+  );
+
+  static const _MarbleStateTone _toneListeningAmber = _MarbleStateTone(
+    deep: _Vec3(1.00, 0.38, 0.05),
+    bright: _Vec3(1.00, 0.90, 0.48),
+    rim: _Vec3(1.00, 0.72, 0.32),
+  );
+
+  static const _MarbleStateTone _toneThinkingViolet = _MarbleStateTone(
+    deep: _Vec3(0.58, 0.20, 0.98),
+    bright: _Vec3(0.96, 0.78, 1.00),
+    rim: _Vec3(0.84, 0.56, 1.00),
+  );
+
+  static const _MarbleStateTone _toneSpeakingWarmEmerald = _MarbleStateTone(
+    deep: _Vec3(0.94, 0.44, 0.08),
+    bright: _Vec3(0.92, 1.00, 0.68),
+    rim: _Vec3(0.52, 0.96, 0.72),
+  );
+
+  static const _MarbleStateTone _toneReadyWarmBlue = _MarbleStateTone(
+    deep: _Vec3(0.88, 0.36, 0.08),
+    bright: _Vec3(0.96, 0.86, 0.64),
+    rim: _Vec3(0.62, 0.78, 1.00),
+  );
+
+  ui.FragmentShader? _shader;
   late final Ticker _ticker;
   Duration _lastTick = Duration.zero;
-  double _phaseTime = 0.0;
-  double _summonFlash = 0.0;
 
-  final _FluidSpring1D _energySpring = _FluidSpring1D(
-    response: 0.14,
-    dampingRatio: 0.76,
-  );
-  final _FluidSpring1D _freqSpring = _FluidSpring1D(
-    response: 0.22,
-    dampingRatio: 0.90,
-    initialValue: 0.45,
-  );
-  final _FluidSpring1D _eruptionSpring = _FluidSpring1D(
-    response: 0.18,
-    dampingRatio: 0.68,
-  );
+  double _clockSec = 0.0;
+  double _fogPhase = 0.0;
+  double _clockwiseAuraAngle = 0.0;
+  double _auraMorphPhase = 0.0;
+  double _easedEnergy = 0.24;
+  double _flareKick = 0.0;
+  double _lastExternalKick = 0.0;
+  Offset _easedPointer = Offset.zero;
+
+  _MarbleStateTone _currentTone = _toneSummonAmber;
 
   @override
   void initState() {
     super.initState();
+    _ensureShaderLoaded();
     if (widget.phase == SiriOrbPhase.summon) {
-      _summonFlash = 1.0;
-      _eruptionSpring.velocity = 2.4;
+      _flareKick = 0.85;
     }
     _ticker = createTicker(_onTick)..start();
+  }
+
+  Future<void> _ensureShaderLoaded() async {
+    if (_cachedProgram != null) {
+      _shader = _cachedProgram!.fragmentShader();
+      if (mounted) setState(() {});
+      return;
+    }
+    if (_loadingProgram) return;
+    _loadingProgram = true;
+    try {
+      final prog = await ui.FragmentProgram.fromAsset('shaders/marble_orb.frag');
+      _cachedProgram = prog;
+      if (mounted) {
+        setState(() {
+          _shader = prog.fragmentShader();
+        });
+      }
+    } catch (_) {
+      // Pada unit test headless tanpa GPU shader bundle, fallback radial painter dipakai otomatis.
+    } finally {
+      _loadingProgram = false;
+    }
   }
 
   @override
@@ -96,9 +185,34 @@ class _SiriOrangeOrbState extends State<SiriOrangeOrb>
     super.didUpdateWidget(oldWidget);
     if (widget.phase == SiriOrbPhase.summon &&
         oldWidget.phase != SiriOrbPhase.summon) {
-      _summonFlash = 1.0;
-      _eruptionSpring.velocity += 2.0;
+      _flareKick = 0.90;
     }
+    if (widget.pressKick > _lastExternalKick) {
+      _flareKick = 1.0;
+    }
+    _lastExternalKick = widget.pressKick;
+  }
+
+  _MarbleStateTone _targetToneFor(SiriOrbPhase p) {
+    return switch (p) {
+      SiriOrbPhase.thinking => _toneThinkingViolet,
+      SiriOrbPhase.listening => _MarbleStateTone.lerp(
+        _toneListeningAmber,
+        const _MarbleStateTone(
+          deep: _Vec3(1.00, 0.30, 0.12),
+          bright: _Vec3(1.00, 0.92, 0.56),
+          rim: _Vec3(1.00, 0.64, 0.36),
+        ),
+        0.5 + 0.5 * math.sin(_clockSec * 1.6),
+      ),
+      SiriOrbPhase.speaking => _MarbleStateTone.lerp(
+        _toneSummonAmber,
+        _toneSpeakingWarmEmerald,
+        0.45 + 0.45 * math.sin(_clockSec * 1.35),
+      ),
+      SiriOrbPhase.summon => _toneSummonAmber,
+      _ => _toneReadyWarmBlue,
+    };
   }
 
   void _onTick(Duration elapsed) {
@@ -106,50 +220,64 @@ class _SiriOrangeOrbState extends State<SiriOrangeOrb>
         ? 0.016
         : ((elapsed - _lastTick).inMicroseconds / 1e6).clamp(0.0, 0.05);
     _lastTick = elapsed;
+    _clockSec += dt;
 
     final reducedMotion =
         mounted && (MediaQuery.maybeDisableAnimationsOf(context) ?? false);
 
-    final rawE = widget.energy.clamp(0.0, 1.0);
-    final rawF = widget.frequency.clamp(0.15, 1.0);
+    // Flare press decay: exp(-2.2 * dt)
+    if (_flareKick > 0.002) {
+      _flareKick *= math.exp(-2.2 * dt);
+    } else {
+      _flareKick = 0.0;
+    }
 
-    final ambientE = switch (widget.phase) {
-      SiriOrbPhase.thinking => 0.32 + 0.12 * math.sin(_phaseTime * 2.2),
+    // Smooth color state blend at 3.2 per second (~600ms transition, never instant)
+    final targetTone = _targetToneFor(widget.phase);
+    final toneAlpha = (1.0 - math.exp(-3.2 * dt)).clamp(0.0, 1.0);
+    _currentTone = _MarbleStateTone.lerp(_currentTone, targetTone, toneAlpha);
+
+    // Pointer eased at 4 per second
+    final ptrAlpha = (1.0 - math.exp(-4.0 * dt)).clamp(0.0, 1.0);
+    _easedPointer = Offset.lerp(_easedPointer, widget.pointerOffset, ptrAlpha)!;
+
+    // Energy eased at 5 per second (Marble spec + live voice amplitude + press flare +0.7)
+    final liveVoice = widget.energy.clamp(0.0, 1.0);
+    final sinAsk = math.sin(2.4 * _clockSec);
+    final double stateTargetEnergy = switch (widget.phase) {
+      SiriOrbPhase.thinking => 0.62 + 0.16 * math.sin(3.1 * _clockSec),
+      SiriOrbPhase.listening => math.max(
+        liveVoice * 1.15,
+        0.38 + 0.36 * (sinAsk * sinAsk),
+      ),
+      SiriOrbPhase.speaking => math.max(liveVoice * 1.22, 0.34),
       SiriOrbPhase.summon => 0.58,
-      SiriOrbPhase.listening => math.max(rawE, 0.12),
-      SiriOrbPhase.speaking => math.max(rawE, 0.15),
-      _ => 0.06,
+      _ => 0.18,
     };
+    final targetEnergy = reducedMotion
+        ? 0.30
+        : (stateTargetEnergy + _flareKick * 0.70).clamp(0.0, 1.75);
+    final energyAlpha = (1.0 - math.exp(-5.0 * dt)).clamp(0.0, 1.0);
+    _easedEnergy += (targetEnergy - _easedEnergy) * energyAlpha;
 
-    _energySpring.step(ambientE, dt);
-    _freqSpring.step(
-      widget.phase == SiriOrbPhase.thinking ? 0.70 : rawF,
-      dt,
-    );
-
-    final activeBurst =
-        (widget.phase == SiriOrbPhase.listening ||
-            widget.phase == SiriOrbPhase.speaking ||
-            widget.phase == SiriOrbPhase.summon)
-        ? (ambientE * 1.04 + _summonFlash * 0.35).clamp(0.0, 1.05)
-        : (widget.phase == SiriOrbPhase.thinking ? 0.24 : 0.04);
-    _eruptionSpring.step(reducedMotion ? activeBurst * 0.25 : activeBurst, dt);
-
-    final eNow = _energySpring.value.clamp(0.0, 1.1);
-    final fNow = _freqSpring.value.clamp(0.15, 1.0);
-
-    final baseSpeed = switch (widget.phase) {
-      SiriOrbPhase.summon => 2.5,
-      SiriOrbPhase.thinking => 2.9,
-      SiriOrbPhase.listening => 1.30 + eNow * 1.10 + fNow * 0.50,
-      SiriOrbPhase.speaking => 1.40 + eNow * 1.20 + fNow * 0.60,
-      SiriOrbPhase.dismissing => 1.5,
-      _ => 0.80,
+    // Fog speed integrated in Dart (phase += dt * speed) so changing speed never jumps
+    final double baseSpeed = switch (widget.phase) {
+      SiriOrbPhase.thinking => 0.75,
+      SiriOrbPhase.listening => 0.22 + liveVoice * 0.32,
+      SiriOrbPhase.speaking => 0.24 + liveVoice * 0.38,
+      SiriOrbPhase.summon => 0.42,
+      _ => 0.12,
     };
-    _phaseTime += dt * (reducedMotion ? 0.22 : baseSpeed);
+    final fogSpeed = baseSpeed + _flareKick * 1.60;
 
-    if (_summonFlash > 0.0) {
-      _summonFlash = (_summonFlash - dt / 0.28).clamp(0.0, 1.0);
+    if (!reducedMotion) {
+      _fogPhase += dt * fogSpeed;
+      // Putaran pelan searah jarum jam dinding (+dt * rad/s, positif = searah jarum jam di layar Flutter!)
+      final clockwiseSpeed =
+          0.34 + 0.22 * (liveVoice.clamp(0.0, 1.0)) + _flareKick * 0.45;
+      _clockwiseAuraAngle =
+          (_clockwiseAuraAngle + dt * clockwiseSpeed) % (2.0 * math.pi);
+      _auraMorphPhase += dt * (1.15 + 1.45 * liveVoice);
     }
 
     if (mounted) setState(() {});
@@ -158,36 +286,70 @@ class _SiriOrangeOrbState extends State<SiriOrangeOrb>
   @override
   void dispose() {
     _ticker.dispose();
+    _shader?.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
     final reducedMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
-    final eVal = _energySpring.value.clamp(0.0, 1.08);
-    final fVal = _freqSpring.value.clamp(0.15, 1.0);
-    final eruptVal = _eruptionSpring.value.clamp(0.0, 1.08);
-    final velVal = (_energySpring.velocity.abs() / 5.5).clamp(0.0, 1.0);
+    final liveVoice = widget.energy.clamp(0.0, 1.0);
+    final isVoiceInteractive =
+        widget.phase == SiriOrbPhase.listening ||
+        widget.phase == SiriOrbPhase.speaking ||
+        widget.phase == SiriOrbPhase.summon ||
+        widget.phase == SiriOrbPhase.thinking;
 
     final breathScale = reducedMotion
         ? 1.0
-        : (1.0 + 0.035 * eVal + 0.045 * _summonFlash).clamp(0.95, 1.12);
+        : (1.0 + 0.018 * _easedEnergy.clamp(0.0, 1.0) + 0.026 * _flareKick)
+              .clamp(0.96, 1.08);
+
+    // Pergeseran halus 1.2% mengikuti sentuhan / pointer sesuai spesifikasi Marble
+    final shiftPx = Offset(
+      _easedPointer.dx * widget.size * 0.014,
+      _easedPointer.dy * widget.size * 0.014,
+    );
 
     return Semantics(
-      label: 'Indikator gelombang suara asisten',
+      label: 'Bola kaca cuaca asisten suara',
       child: RepaintBoundary(
-        child: Transform.scale(
-          scale: breathScale,
-          child: CustomPaint(
-            size: Size.square(widget.size),
-            painter: _SiriFluidWaveOrbPainter(
-              t: _phaseTime,
-              energy: eVal,
-              frequency: fVal,
-              eruption: eruptVal,
-              velocityBoost: velVal,
-              summonFlash: _summonFlash,
-              phase: widget.phase,
+        child: Transform.translate(
+          offset: shiftPx,
+          child: Transform.scale(
+            scale: breathScale,
+            child: SizedBox.square(
+              dimension: widget.size,
+              child: Stack(
+                fit: StackFit.expand,
+                children: [
+                  // LAPISAN 1 (MURNI DI BELAKANG BOLA):
+                  // Garis gelombang tak beraturan yang berputar searah jarum jam dinding saat diajak bicara
+                  CustomPaint(
+                    painter: _ClockwiseIrregularBackAuraPainter(
+                      clockwiseAngle: _clockwiseAuraAngle,
+                      morphPhase: _auraMorphPhase,
+                      voiceEnergy: liveVoice,
+                      stateEnergy: _easedEnergy,
+                      frequency: widget.frequency.clamp(0.15, 1.0),
+                      isActive: isVoiceInteractive,
+                      tone: _currentTone,
+                    ),
+                  ),
+
+                  // LAPISAN 2 (DI DEPAN):
+                  // Bola Kaca Volumetrik Marble Per-Pixel (menutup area r <= rBall dengan mulus 2px AA)
+                  CustomPaint(
+                    painter: _MarbleShaderOrbPainter(
+                      shader: _shader ?? _cachedProgram?.fragmentShader(),
+                      fogPhase: _fogPhase,
+                      energy: _easedEnergy,
+                      pointer: _easedPointer,
+                      tone: _currentTone,
+                    ),
+                  ),
+                ],
+              ),
             ),
           ),
         ),
@@ -196,571 +358,141 @@ class _SiriOrangeOrbState extends State<SiriOrangeOrb>
   }
 }
 
-class _SiriFluidWaveOrbPainter extends CustomPainter {
-  const _SiriFluidWaveOrbPainter({
-    required this.t,
-    required this.energy,
+class _ClockwiseIrregularBackAuraPainter extends CustomPainter {
+  const _ClockwiseIrregularBackAuraPainter({
+    required this.clockwiseAngle,
+    required this.morphPhase,
+    required this.voiceEnergy,
+    required this.stateEnergy,
     required this.frequency,
-    required this.eruption,
-    required this.velocityBoost,
-    required this.summonFlash,
-    required this.phase,
+    required this.isActive,
+    required this.tone,
   });
 
-  final double t;
-  final double energy;
+  final double clockwiseAngle;
+  final double morphPhase;
+  final double voiceEnergy;
+  final double stateEnergy;
   final double frequency;
-  final double eruption;
-  final double velocityBoost;
-  final double summonFlash;
-  final SiriOrbPhase phase;
+  final bool isActive;
+  final _MarbleStateTone tone;
 
   @override
   void paint(Canvas canvas, Size size) {
-    final center = Offset(size.width * 0.5, size.height * 0.5);
-    // Radius bola kaca 0.285 dari kanvas -> menyisakan margin aman di segala sisi
-    // agar puncak gelombang yang keluar dari bola tidak pernah terpotong batas kotak!
-    final rBall = math.min(size.width, size.height) * 0.285;
+    final center = Offset(size.width * 0.5, size.height * 0.46);
+    final rBall = math.min(size.width, size.height) * 0.34;
 
-    // Dispersi Chromatic Aberration optik yang rapat & tajam (tidak terpecah jadi garis terpisah)
-    final aberrationPx =
-        (rBall * (0.028 + 0.042 * energy + 0.032 * velocityBoost))
-            .clamp(0.7, rBall * 0.095);
+    final activeBoost = isActive ? 1.0 : 0.35;
+    final e = (voiceEnergy * 0.85 + stateEnergy * 0.32).clamp(0.0, 1.35) *
+        activeBoost;
+    if (e < 0.03) return;
 
-    // 1. Pendaran Atmosfer Luar (Prismatic Halation)
-    _drawAtmosphericAura(canvas, center, rBall, aberrationPx);
-
-    // 2. Bola Kaca Gelap Pekat (Deep Obsidian Glass) agar kontras bagian dalam tetap mewah
-    final membranePath = _buildBreathingMembranePath(center, rBall);
-    _drawObsidianGlassSphere(canvas, center, rBall, membranePath);
-
-    // Titik pusaran kaustik Lissajous
-    final orbit = phase == SiriOrbPhase.thinking ? 0.09 : (0.04 + 0.07 * energy);
-    final nexus = Offset(
-      center.dx + rBall * orbit * math.sin(1.13 * t),
-      center.dy + rBall * (orbit * 0.85) * math.cos(0.87 * t),
+    // Potong area dalam lingkaran bola kaca (PathOperation.difference) sehingga 100% garis tak beraturan
+    // HANYA terlihat muncul dari BELAKANG bola kaca, tidak pernah melintasi bagian depan bola!
+    final outerBounds = Path()..addRect(Offset.zero & size);
+    final innerBallCutout = Path()
+      ..addOval(Rect.fromCircle(center: center, radius: rBall * 0.985));
+    final strictlyBehindOrbClip = Path.combine(
+      PathOperation.difference,
+      outerBounds,
+      innerBallCutout,
     );
 
-    // 3. Dua Selubung Cairan Polar Halus (Dominan Copper Orange #F26B1D & Amber #FF7A2E)
-    _drawFluidPolarAurora(
-      canvas: canvas,
-      center: center,
-      rBall: rBall,
-      lobes: 2,
-      phaseShift: t * 1.15,
-      eruptionReach: 0.08 + 0.28 * eruption,
-      aberrationPx: aberrationPx,
-      coreColor: const Color(0xFFF26B1D),
-      redFringe: const Color(0xFFFF5722),
-      cyanFringe: const Color(0xFFFFB300),
-      intensity: 0.55 + 0.28 * energy,
-    );
-
-    _drawFluidPolarAurora(
-      canvas: canvas,
-      center: center,
-      rBall: rBall,
-      lobes: 3,
-      phaseShift: -t * 1.42 + 1.2,
-      eruptionReach: 0.06 + 0.32 * eruption,
-      aberrationPx: aberrationPx * 1.1,
-      coreColor: const Color(0xFFFF9800),
-      redFringe: const Color(0xFFE65100),
-      cyanFringe: const Color(0xFFFFD54F),
-      intensity: 0.45 + 0.26 * energy,
-    );
-
-    // 4. Tiga Pita Gelombang Sinus Koheren (SiriWave × SUICOrbView)
-    // Dominan Orange hangat berpadu Amber & Sunlit Gold
-    final chordSpan = 1.04 + (0.28 * eruption).clamp(0.0, 0.30);
-    final baseTilt = 0.14 * math.sin(0.45 * t);
-    final spatialFreq = 2.8 + 3.4 * frequency;
-
-    // Pita Sinus Utama: Deep Copper-Orange -> Putih Panas
-    _drawSiriWaveRibbon(
-      canvas: canvas,
-      center: nexus,
-      rBall: rBall,
-      axisAngle: baseTilt - 0.16,
-      chordSpan: chordSpan,
-      amplitude: rBall * (0.24 + 0.62 * energy + 0.15 * summonFlash),
-      spatialFreq: spatialFreq,
-      temporalPhase: t * 3.2,
-      foldPhase: 1.05,
-      aberrationPx: aberrationPx,
-      primaryColor: const Color(0xFFF26B1D),
-      warmShiftColor: const Color(0xFFFF3D00),
-      coolShiftColor: const Color(0xFFFFB74D),
-      opacity: 0.80 + 0.20 * energy,
-    );
-
-    // Pita Sinus Kedua: Vibrant Tangerine-Orange
-    _drawSiriWaveRibbon(
-      canvas: canvas,
-      center: nexus,
-      rBall: rBall,
-      axisAngle: baseTilt + 0.22,
-      chordSpan: chordSpan * 0.98,
-      amplitude: rBall * (0.20 + 0.54 * energy + 0.12 * summonFlash),
-      spatialFreq: spatialFreq * 1.22,
-      temporalPhase: -t * 3.5 + 1.4,
-      foldPhase: -1.15,
-      aberrationPx: aberrationPx * 1.08,
-      primaryColor: const Color(0xFFFF7A2E),
-      warmShiftColor: const Color(0xFFDD2C00),
-      coolShiftColor: const Color(0xFFFFE082),
-      opacity: 0.70 + 0.20 * energy,
-    );
-
-    // Pita Sinus Ketiga: Sunlit Golden Amber
-    _drawSiriWaveRibbon(
-      canvas: canvas,
-      center: nexus,
-      rBall: rBall,
-      axisAngle: baseTilt - 0.42,
-      chordSpan: chordSpan * 0.94,
-      amplitude: rBall * (0.15 + 0.48 * energy * (0.60 + 0.60 * frequency)),
-      spatialFreq: spatialFreq * 1.48,
-      temporalPhase: t * 4.2 + 2.5,
-      foldPhase: 0.85,
-      aberrationPx: aberrationPx * 1.12,
-      primaryColor: const Color(0xFFFFAB40),
-      warmShiftColor: const Color(0xFFFF6D00),
-      coolShiftColor: const Color(0xFFFFF3E0),
-      opacity: 0.60 + 0.24 * energy,
-    );
-
-    // 5. Inti Singularitas Putih-Emas Pijar di Pusat Pertemuan Gelombang
-    final coreR = rBall * (0.34 + 0.18 * energy + 0.18 * summonFlash);
-    final corePaint = Paint()
-      ..blendMode = BlendMode.plus
-      ..shader = ui.Gradient.radial(
-        nexus,
-        coreR,
-        [
-          Colors.white.withValues(alpha: (0.94 + 0.06 * summonFlash).clamp(0.0, 1.0)),
-          const Color(0xFFFFFBEB).withValues(alpha: 0.68),
-          const Color(0xFFFF7A2E).withValues(alpha: 0.24),
-          const Color(0x00F26B1D),
-        ],
-        const [0.0, 0.22, 0.56, 1.0],
-      );
-    canvas.drawCircle(nexus, coreR, corePaint);
-
-    // 6. Cincin Refraksi Kaca Halus yang Melunak Saat Gelombang Menyembur Keluar
-    _drawYieldingGlassRim(canvas, center, rBall, membranePath);
-  }
-
-  void _drawAtmosphericAura(
-    Canvas canvas,
-    Offset center,
-    double rBall,
-    double aberrationPx,
-  ) {
-    final baseAlpha = (0.20 + 0.22 * energy + 0.24 * summonFlash).clamp(0.0, 0.68);
-    final blurSigma = (rBall * (0.32 + 0.24 * energy)).clamp(4.0, 18.0);
-
-    canvas.drawCircle(
-      center + Offset(-aberrationPx * 1.4, -aberrationPx * 0.8),
-      rBall * (1.02 + 0.18 * eruption),
-      Paint()
-        ..color = const Color(0xFFFF2A6D).withValues(alpha: baseAlpha * 0.36)
-        ..maskFilter = MaskFilter.blur(BlurStyle.normal, blurSigma),
-    );
-    canvas.drawCircle(
-      center + Offset(aberrationPx * 1.4, aberrationPx * 0.8),
-      rBall * (1.00 + 0.16 * eruption),
-      Paint()
-        ..color = const Color(0xFF22D3EE).withValues(alpha: baseAlpha * 0.28)
-        ..maskFilter = MaskFilter.blur(BlurStyle.normal, blurSigma),
-    );
-    canvas.drawCircle(
-      center,
-      rBall * (1.06 + 0.20 * eruption),
-      Paint()
-        ..color = const Color(0xFFF26B1D).withValues(alpha: baseAlpha)
-        ..maskFilter = MaskFilter.blur(BlurStyle.normal, blurSigma * 1.1),
-    );
-  }
-
-  Path _buildBreathingMembranePath(Offset center, double rBall) {
-    const int n = 64;
-    final pts = List<Offset>.generate(n, (i) {
-      final theta = (i / n) * 2.0 * math.pi;
-      final deform =
-          (0.012 + 0.042 * eruption) * math.sin(2.0 * theta + 1.5 * t) +
-          (0.010 + 0.032 * eruption) * math.cos(3.0 * theta - 2.1 * t);
-      final r = rBall * (1.0 + deform);
-      return Offset(center.dx + r * math.cos(theta), center.dy + r * math.sin(theta));
-    });
-    return _closedSmoothSpline(pts);
-  }
-
-  void _drawObsidianGlassSphere(
-    Canvas canvas,
-    Offset center,
-    double rBall,
-    Path membranePath,
-  ) {
     canvas.save();
-    canvas.clipPath(membranePath);
+    canvas.clipPath(strictlyBehindOrbClip);
 
-    final basePaint = Paint()
-      ..shader = ui.Gradient.radial(
-        center,
-        rBall * 1.05,
-        const [
-          Color(0xFF070304),
-          Color(0xFF130706),
-          Color(0xFF2B0E07),
-        ],
-        const [0.0, 0.70, 1.0],
+    // Putar kanvas searah jarum jam dinding (+clockwiseAngle di koordinat layar Flutter = searah jarum jam!)
+    canvas.translate(center.dx, center.dy);
+    canvas.rotate(clockwiseAngle);
+
+    final warmMain = const Color(0xFFFF7A26);
+    final goldCrest = const Color(0xFFFFCA62);
+    final stateAccent = tone.rim.toDisplayColor();
+    final rubyFringe = const Color(0xFFFF3D57);
+
+    final ribbonColors = <Color>[
+      warmMain,
+      goldCrest,
+      stateAccent,
+      rubyFringe,
+    ];
+
+    // 4 pita kontur tak beraturan organik yang mekar halus di belakang tepi bola saat berbicara
+    for (int layer = 0; layer < 4; layer++) {
+      final double l = layer.toDouble();
+      final double phaseOffset = l * 1.42;
+      final Path irregularLoop = _buildIrregularContourPath(
+        baseRadius: rBall * (0.995 + 0.032 * l + 0.048 * e),
+        wobbleAmp: rBall * (0.042 + 0.135 * e) * (1.0 - 0.10 * l),
+        morph: morphPhase + phaseOffset,
+        freqBoost: frequency,
+        seed: layer,
       );
-    canvas.drawCircle(center, rBall * 1.12, basePaint);
 
-    // Fresnel multi-spektrum tipis di tepi dalam kaca
-    canvas.saveLayer(
-      Rect.fromCircle(center: center, radius: rBall * 1.12),
-      Paint()..blendMode = BlendMode.screen,
-    );
-    canvas.drawCircle(
-      center,
-      rBall * 1.10,
-      Paint()
-        ..shader = ui.Gradient.sweep(
-          center,
-          [
-            const Color(0xFFF26B1D).withValues(alpha: 0.45),
-            const Color(0xFF22D3EE).withValues(alpha: 0.34 + 0.14 * energy),
-            const Color(0xFFFF9F43).withValues(alpha: 0.42),
-            const Color(0xFFFF2A6D).withValues(alpha: 0.42 + 0.16 * energy),
-            const Color(0xFFF26B1D).withValues(alpha: 0.45),
-          ],
-          const [0.0, 0.26, 0.52, 0.78, 1.0],
-        ),
-    );
-    canvas.drawCircle(
-      center,
-      rBall * 1.10,
-      Paint()
-        ..blendMode = BlendMode.dstIn
-        ..shader = ui.Gradient.radial(
-          center,
-          rBall * 1.02,
-          const [
-            Color(0x00000000),
-            Color(0x00000000),
-            Color(0x99FFFFFF),
-            Color(0xFFFFFFFF),
-          ],
-          const [0.0, 0.72, 0.90, 1.0],
-        ),
-    );
-    canvas.restore();
-    canvas.restore();
-  }
+      final Color col = ribbonColors[layer];
+      final double baseAlpha = ((0.30 + 0.44 * e) * (1.0 - 0.14 * l))
+          .clamp(0.0, 0.82);
 
-  /// Selubung cairan polar mulus yang menyembur keluar dari bola dengan gradien tepi-terang
-  /// (Beer-Lambert optical shell: transparan di tengah sehingga bagian dalam bola tetap hitam pekat).
-  void _drawFluidPolarAurora({
-    required Canvas canvas,
-    required Offset center,
-    required double rBall,
-    required int lobes,
-    required double phaseShift,
-    required double eruptionReach,
-    required double aberrationPx,
-    required Color coreColor,
-    required Color redFringe,
-    required Color cyanFringe,
-    required double intensity,
-  }) {
-    const int n = 64;
-
-    List<Offset> sampleAurora(double radialShiftPx, double phaseDelta) {
-      return List<Offset>.generate(n, (i) {
-        final theta = (i / n) * 2.0 * math.pi;
-        final w1 = math.sin(lobes * theta + phaseShift + phaseDelta);
-        final w2 = 0.42 * math.cos((lobes + 1) * theta - 1.3 * phaseShift + phaseDelta);
-        final raw = (w1 + w2) / 1.42;
-
-        final double radialFactor = raw >= 0.0
-            ? 0.90 + (0.10 + eruptionReach) * math.pow(raw, 1.18).toDouble()
-            : 0.90 + 0.16 * raw;
-        final r = rBall * radialFactor + radialShiftPx;
-        return Offset(center.dx + r * math.cos(theta), center.dy + r * math.sin(theta));
-      });
-    }
-
-    final pathCore = _closedSmoothSpline(sampleAurora(0.0, 0.0));
-    final pathRed = _closedSmoothSpline(sampleAurora(aberrationPx, -0.05));
-    final pathCyan = _closedSmoothSpline(sampleAurora(-aberrationPx * 0.9, 0.05));
-
-    final maxR = rBall * (1.02 + eruptionReach);
-    final op = intensity.clamp(0.0, 0.85);
-
-    // Profil optik Beer-Lambert: bening di pusat (0..0.64), bercahaya lembut menjelang tepi gelombang!
-    final shellFill = Paint()
-      ..isAntiAlias = true
-      ..blendMode = BlendMode.plus
-      ..shader = ui.Gradient.radial(
-        center,
-        maxR,
-        [
-          coreColor.withValues(alpha: 0.0),
-          coreColor.withValues(alpha: op * 0.08),
-          coreColor.withValues(alpha: op * 0.34),
-          Color.lerp(coreColor, Colors.white, 0.35)!.withValues(alpha: op * 0.42),
-        ],
-        const [0.0, 0.58, 0.86, 1.0],
+      // Pendaran aura lembut di belakang pita
+      canvas.drawPath(
+        irregularLoop,
+        Paint()
+          ..isAntiAlias = true
+          ..style = PaintingStyle.stroke
+          ..strokeWidth = 5.5 - l * 0.7
+          ..blendMode = BlendMode.plus
+          ..color = col.withValues(alpha: baseAlpha * 0.34)
+          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4.5),
       );
-    canvas.drawPath(pathCore, shellFill);
 
-    // Dispersi kromatik halus melekat rapat pada punggung gelombang cairan
-    canvas.drawPath(
-      pathRed,
-      Paint()
-        ..isAntiAlias = true
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2.2
-        ..blendMode = BlendMode.plus
-        ..color = redFringe.withValues(alpha: op * 0.58)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2.0),
-    );
-    canvas.drawPath(
-      pathCyan,
-      Paint()
-        ..isAntiAlias = true
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 2.0
-        ..blendMode = BlendMode.plus
-        ..color = cyanFringe.withValues(alpha: op * 0.52)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.8),
-    );
-    canvas.drawPath(
-      pathCore,
-      Paint()
-        ..isAntiAlias = true
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.2
-        ..blendMode = BlendMode.plus
-        ..color = Color.lerp(coreColor, Colors.white, 0.55)!.withValues(alpha: op * 0.78),
-    );
+      // Garis kontur tak beraturan tajam berkilau
+      canvas.drawPath(
+        irregularLoop,
+        Paint()
+          ..isAntiAlias = true
+          ..style = PaintingStyle.stroke
+          ..strokeJoin = StrokeJoin.round
+          ..strokeWidth = (2.1 - l * 0.25).clamp(1.1, 2.4)
+          ..blendMode = BlendMode.plus
+          ..color = Color.lerp(col, Colors.white, 0.34)!
+              .withValues(alpha: baseAlpha),
+      );
+    }
+
+    canvas.restore();
   }
 
-  /// Pita gelombang sinus SiriWave yang melengkung mulus naik-turun mengikuti frekuensi & volume,
-  /// menembus keluar batas bola dengan tepi kaustik tajam dan dispersi kromatik rapat.
-  void _drawSiriWaveRibbon({
-    required Canvas canvas,
-    required Offset center,
-    required double rBall,
-    required double axisAngle,
-    required double chordSpan,
-    required double amplitude,
-    required double spatialFreq,
-    required double temporalPhase,
-    required double foldPhase,
-    required double aberrationPx,
-    required Color primaryColor,
-    required Color warmShiftColor,
-    required Color coolShiftColor,
-    required double opacity,
+  Path _buildIrregularContourPath({
+    required double baseRadius,
+    required double wobbleAmp,
+    required double morph,
+    required double freqBoost,
+    required int seed,
   }) {
-    const int steps = 48;
-    final tangent = Offset(math.cos(axisAngle), math.sin(axisAngle));
-    final normal = Offset(-tangent.dy, tangent.dx);
-    final halfLen = rBall * chordSpan;
+    const int steps = 84;
+    final List<Offset> pts = List<Offset>.generate(steps, (i) {
+      final double theta = (i / steps) * 2.0 * math.pi;
+      // Harmonik asimetris tak beraturan (3, 5, 7 gelombang) agar kontur organik, tidak bundar kaku
+      final double n1 = math.sin(3.0 * theta + morph * 0.85 + seed * 1.9);
+      final double n2 =
+          0.62 * math.cos(5.0 * theta - morph * 1.15 + seed * 2.7);
+      final double n3 =
+          (0.32 + 0.22 * freqBoost) *
+          math.sin(7.0 * theta + morph * 1.45 - seed * 1.1);
+      final double r =
+          baseRadius + wobbleAmp * ((n1 + n2 + n3) / 1.94);
+      return Offset(r * math.cos(theta), r * math.sin(theta));
+    });
 
-    List<Offset> sampleCurve({
-      required double ampScale,
-      required double freqMul,
-      required double phaseAdd,
-      required double shiftPx,
-    }) {
-      return List<Offset>.generate(steps + 1, (i) {
-        final u = (i / steps) * 2.0 - 1.0;
-        // Persamaan atenuasi klasik SiriWave iOS: (1 + (u/K)^2)^(-2.1) -> meruncing mulus di ujung!
-        final att = math.pow(1.0 + (u / 0.68) * (u / 0.68), -2.05).toDouble();
-        final edgeZero = math.cos(u * math.pi * 0.5).clamp(0.0, 1.0);
-        final env = att * math.pow(edgeZero, 0.5).toDouble();
-
-        final wave =
-            math.sin(u * spatialFreq * freqMul - temporalPhase + phaseAdd) +
-            0.28 * math.sin(u * spatialFreq * 2.0 * freqMul + 1.25 * temporalPhase);
-        final disp = amplitude * ampScale * env * (wave / 1.28) + shiftPx * env;
-        return center + tangent * (u * halfLen) + normal * disp;
-      });
-    }
-
-    final upperPts = sampleCurve(ampScale: 1.0, freqMul: 1.0, phaseAdd: 0.0, shiftPx: 0.0);
-    final lowerPts = sampleCurve(ampScale: 0.42, freqMul: 0.88, phaseAdd: foldPhase, shiftPx: 0.0);
-    final warmPts = sampleCurve(ampScale: 1.02, freqMul: 1.0, phaseAdd: -0.06, shiftPx: aberrationPx);
-    final coolPts = sampleCurve(ampScale: 0.98, freqMul: 1.0, phaseAdd: 0.06, shiftPx: -aberrationPx);
-
-    final ribbonPath = _openSmoothSpline(upperPts);
-    final rev = lowerPts.reversed.toList();
-    for (int i = 0; i < rev.length; i++) {
-      final p = rev[i];
-      if (i == 0) {
-        ribbonPath.lineTo(p.dx, p.dy);
-      } else {
-        final prev = rev[i - 1];
-        ribbonPath.quadraticBezierTo(
-          prev.dx,
-          prev.dy,
-          (prev.dx + p.dx) * 0.5,
-          (prev.dy + p.dy) * 0.5,
-        );
-      }
-    }
-    ribbonPath.close();
-
-    final alpha = opacity.clamp(0.0, 0.92);
-
-    // Selaput cairan sutera translusen di antara dua kurva sinus (membentuk efek lipatan Siri)
-    canvas.drawPath(
-      ribbonPath,
-      Paint()
-        ..isAntiAlias = true
-        ..blendMode = BlendMode.plus
-        ..shader = ui.Gradient.radial(
-          center,
-          halfLen,
-          [
-            Colors.white.withValues(alpha: alpha * 0.30),
-            primaryColor.withValues(alpha: alpha * 0.34),
-            warmShiftColor.withValues(alpha: alpha * 0.14),
-            primaryColor.withValues(alpha: 0.0),
-          ],
-          const [0.0, 0.40, 0.82, 1.0],
-        ),
-    );
-
-    final mainPath = _openSmoothSpline(upperPts);
-    final warmPath = _openSmoothSpline(warmPts);
-    final coolPath = _openSmoothSpline(coolPts);
-
-    // Pendaran cairan penyatu (fluid bloom)
-    canvas.drawPath(
-      mainPath,
-      Paint()
-        ..isAntiAlias = true
-        ..style = PaintingStyle.stroke
-        ..strokeCap = StrokeCap.round
-        ..strokeWidth = 3.6
-        ..blendMode = BlendMode.plus
-        ..color = primaryColor.withValues(alpha: alpha * 0.38)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 2.8),
-    );
-
-    // Dispersi Chromatic Aberration Merah-Magenta & Cyan-Prismatik tepat di bibir gelombang
-    canvas.drawPath(
-      warmPath,
-      Paint()
-        ..isAntiAlias = true
-        ..style = PaintingStyle.stroke
-        ..strokeCap = StrokeCap.round
-        ..strokeWidth = 1.7
-        ..blendMode = BlendMode.plus
-        ..color = warmShiftColor.withValues(alpha: alpha * 0.68)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.3),
-    );
-    canvas.drawPath(
-      coolPath,
-      Paint()
-        ..isAntiAlias = true
-        ..style = PaintingStyle.stroke
-        ..strokeCap = StrokeCap.round
-        ..strokeWidth = 1.6
-        ..blendMode = BlendMode.plus
-        ..color = coolShiftColor.withValues(alpha: alpha * 0.62)
-        ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 1.2),
-    );
-
-    // Garis Punggung Gelombang Sinus Tajam Berkilau (Caustic Crest)
-    canvas.drawPath(
-      mainPath,
-      Paint()
-        ..isAntiAlias = true
-        ..style = PaintingStyle.stroke
-        ..strokeCap = StrokeCap.round
-        ..strokeWidth = 1.3
-        ..blendMode = BlendMode.plus
-        ..shader = ui.Gradient.linear(
-          center - tangent * halfLen,
-          center + tangent * halfLen,
-          [
-            primaryColor.withValues(alpha: 0.0),
-            Color.lerp(primaryColor, Colors.white, 0.65)!.withValues(alpha: alpha * 0.90),
-            Colors.white.withValues(alpha: (alpha * 1.05).clamp(0.0, 0.98)),
-            Color.lerp(primaryColor, Colors.white, 0.65)!.withValues(alpha: alpha * 0.90),
-            primaryColor.withValues(alpha: 0.0),
-          ],
-          const [0.0, 0.22, 0.50, 0.78, 1.0],
-        ),
-    );
-  }
-
-  void _drawYieldingGlassRim(
-    Canvas canvas,
-    Offset center,
-    double rBall,
-    Path membranePath,
-  ) {
-    final rimOpacity = (0.58 - 0.30 * eruption).clamp(0.18, 0.62);
-    canvas.drawPath(
-      membranePath,
-      Paint()
-        ..isAntiAlias = true
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.05
-        ..shader = ui.Gradient.sweep(
-          center,
-          [
-            const Color(0xFFFFF7ED).withValues(alpha: rimOpacity),
-            const Color(0xFFFF9F43).withValues(alpha: rimOpacity * 0.72),
-            const Color(0xFF38BDF8).withValues(alpha: rimOpacity * 0.48),
-            const Color(0xFFFF2A6D).withValues(alpha: rimOpacity * 0.55),
-            const Color(0xFFFFF7ED).withValues(alpha: rimOpacity),
-          ],
-          const [0.0, 0.26, 0.52, 0.78, 1.0],
-        ),
-    );
-
-    final specRect = Rect.fromCircle(center: center, radius: rBall * 0.91);
-    canvas.drawArc(
-      specRect,
-      -2.55,
-      1.0,
-      false,
-      Paint()
-        ..isAntiAlias = true
-        ..style = PaintingStyle.stroke
-        ..strokeWidth = 1.15
-        ..strokeCap = StrokeCap.round
-        ..shader = ui.Gradient.linear(
-          center + Offset(-rBall * 0.8, -rBall * 0.8),
-          center,
-          [
-            Colors.white.withValues(alpha: (0.44 - 0.18 * eruption).clamp(0.12, 0.46)),
-            Colors.white.withValues(alpha: 0.0),
-          ],
-        ),
-    );
-  }
-
-  static Path _closedSmoothSpline(List<Offset> pts) {
-    final path = Path();
-    if (pts.isEmpty) return path;
-    final n = pts.length;
-    final firstMid = Offset(
-      (pts[n - 1].dx + pts[0].dx) * 0.5,
-      (pts[n - 1].dy + pts[0].dy) * 0.5,
+    final Path path = Path();
+    final Offset firstMid = Offset(
+      (pts.last.dx + pts.first.dx) * 0.5,
+      (pts.last.dy + pts.first.dy) * 0.5,
     );
     path.moveTo(firstMid.dx, firstMid.dy);
-    for (int i = 0; i < n; i++) {
-      final curr = pts[i];
-      final next = pts[(i + 1) % n];
+    for (int i = 0; i < steps; i++) {
+      final Offset curr = pts[i];
+      final Offset next = pts[(i + 1) % steps];
       path.quadraticBezierTo(
         curr.dx,
         curr.dy,
@@ -772,33 +504,90 @@ class _SiriFluidWaveOrbPainter extends CustomPainter {
     return path;
   }
 
-  static Path _openSmoothSpline(List<Offset> pts) {
-    final path = Path();
-    if (pts.isEmpty) return path;
-    path.moveTo(pts.first.dx, pts.first.dy);
-    for (int i = 1; i < pts.length - 1; i++) {
-      final curr = pts[i];
-      final next = pts[i + 1];
-      path.quadraticBezierTo(
-        curr.dx,
-        curr.dy,
-        (curr.dx + next.dx) * 0.5,
-        (curr.dy + next.dy) * 0.5,
+  @override
+  bool shouldRepaint(covariant _ClockwiseIrregularBackAuraPainter old) {
+    return old.clockwiseAngle != clockwiseAngle ||
+        old.morphPhase != morphPhase ||
+        old.voiceEnergy != voiceEnergy ||
+        old.stateEnergy != stateEnergy ||
+        old.isActive != isActive;
+  }
+}
+
+class _MarbleShaderOrbPainter extends CustomPainter {
+  const _MarbleShaderOrbPainter({
+    required this.shader,
+    required this.fogPhase,
+    required this.energy,
+    required this.pointer,
+    required this.tone,
+  });
+
+  final ui.FragmentShader? shader;
+  final double fogPhase;
+  final double energy;
+  final Offset pointer;
+  final _MarbleStateTone tone;
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width * 0.5, size.height * 0.46);
+    final rBall = math.min(size.width, size.height) * 0.34;
+
+    final frag = shader;
+    if (frag != null) {
+      // Set uniforms in exact GLSL order (0..17)
+      frag.setFloat(0, size.width);
+      frag.setFloat(1, size.height);
+      frag.setFloat(2, center.dx);
+      frag.setFloat(3, center.dy);
+      frag.setFloat(4, rBall);
+      frag.setFloat(5, fogPhase);
+      frag.setFloat(6, energy);
+      frag.setFloat(7, pointer.dx);
+      frag.setFloat(8, pointer.dy);
+      frag.setFloat(9, tone.deep.r);
+      frag.setFloat(10, tone.deep.g);
+      frag.setFloat(11, tone.deep.b);
+      frag.setFloat(12, tone.bright.r);
+      frag.setFloat(13, tone.bright.g);
+      frag.setFloat(14, tone.bright.b);
+      frag.setFloat(15, tone.rim.r);
+      frag.setFloat(16, tone.rim.g);
+      frag.setFloat(17, tone.rim.b);
+
+      canvas.drawRect(
+        Offset.zero & size,
+        Paint()..shader = frag,
       );
+      return;
     }
-    if (pts.length > 1) {
-      path.lineTo(pts.last.dx, pts.last.dy);
-    }
-    return path;
+
+    // Fallback tanpa WebGL/Impeller (mis. saat unit test headless): gradien radial warna status sesuai spesifikasi Marble
+    canvas.drawCircle(
+      center,
+      rBall,
+      Paint()
+        ..shader = ui.Gradient.radial(
+          center + Offset(-rBall * 0.22, -rBall * 0.24),
+          rBall * 1.15,
+          [
+            tone.bright.toDisplayColor(),
+            tone.deep.toDisplayColor(),
+            const Color(0xFF1A0904),
+          ],
+          const [0.0, 0.68, 1.0],
+        ),
+    );
   }
 
   @override
-  bool shouldRepaint(covariant _SiriFluidWaveOrbPainter oldDelegate) {
-    return oldDelegate.t != t ||
-        oldDelegate.energy != energy ||
-        oldDelegate.frequency != frequency ||
-        oldDelegate.eruption != eruption ||
-        oldDelegate.summonFlash != summonFlash ||
-        oldDelegate.phase != phase;
+  bool shouldRepaint(covariant _MarbleShaderOrbPainter old) {
+    return old.fogPhase != fogPhase ||
+        old.energy != energy ||
+        old.pointer != pointer ||
+        old.tone.deep.r != tone.deep.r ||
+        old.tone.bright.g != tone.bright.g ||
+        old.shader != shader;
   }
 }

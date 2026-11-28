@@ -10,6 +10,7 @@ import 'package:permission_handler/permission_handler.dart';
 import 'package:record/record.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 
+import '../../services/device_control_service.dart';
 import '../llm_chat/llm_chat_config.dart';
 
 class BuddySttService {
@@ -40,6 +41,7 @@ class BuddySttService {
 
   bool _watchActive = false;
   bool _appBackgrounded = false;
+  bool _ecoMode = false;
   Future<void>? _wakeLoopFuture;
   Completer<void>? _wakeWindowCompleter;
   DateTime? _serverSttDownUntil;
@@ -97,6 +99,10 @@ class BuddySttService {
     _wakeLoopFuture = _runAcousticWakeLoop();
   }
 
+  void setEcoMode(bool enabled) {
+    _ecoMode = enabled;
+  }
+
   void setAppBackgrounded(bool backgrounded, {bool keepActiveInDrive = false}) {
     final shouldPause = backgrounded && !keepActiveInDrive;
     if (_appBackgrounded == shouldPause) return;
@@ -136,6 +142,11 @@ class BuddySttService {
     try {
       final tempDir = await getTemporaryDirectory();
       while (_watchActive && !_appBackgrounded) {
+        // Skenario Panggilan Telepon / WA VoIP: lepas mikrofon penuh selama panggilan berlangsung!
+        if (await DeviceControlService.instance.isInPhoneOrVoipCall()) {
+          await Future<void>.delayed(const Duration(seconds: 3));
+          continue;
+        }
         if (!await _recorder.hasPermission()) {
           await Future<void>.delayed(const Duration(seconds: 2));
           continue;
@@ -158,22 +169,22 @@ class BuddySttService {
         int windowTicks = 0;
         double burstPeakDb = -40.0;
 
-        const int pollMs = 75; // ~13.3 Hz: sangat ringan untuk baterai
+        final int pollMs = _ecoMode ? 105 : 75; // Eco Mode ~9.5 Hz: ekstra hemat baterai DSP
         final windowDone = Completer<void>();
         _wakeWindowCompleter = windowDone;
         StreamSubscription<Amplitude>? sub;
 
         try {
           await _recorder.start(
-            const RecordConfig(
+            RecordConfig(
               encoder: AudioEncoder.aacLc,
               sampleRate: 16000,
               numChannels: 1,
-              bitRate: 48000,
+              bitRate: _ecoMode ? 32000 : 48000,
               autoGain: true,
               echoCancel: true,
               noiseSuppress: true,
-              androidConfig: AndroidRecordConfig(
+              androidConfig: const AndroidRecordConfig(
                 audioSource: AndroidAudioSource.voiceRecognition,
                 manageBluetooth: false,
               ),
@@ -182,7 +193,7 @@ class BuddySttService {
           );
 
           sub = _recorder
-              .onAmplitudeChanged(const Duration(milliseconds: pollMs))
+              .onAmplitudeChanged(Duration(milliseconds: pollMs))
               .listen((amp) {
             if (!_watchActive || _appBackgrounded) {
               if (!windowDone.isCompleted) windowDone.complete();

@@ -58,7 +58,7 @@ def test_load_fallback_chain_orders_providers():
     # Pastikan satu GROQ_API_KEY membuka beberapa kolam model gratis terpisah
     groq_models = [s.model for s in chain if s.provider == "groq"]
     assert "openai/gpt-oss-120b" in groq_models
-    assert "qwen/qwen3.8-27b" in groq_models
+    assert "llama-3.1-8b-instant" in groq_models
     assert "openai/gpt-oss-20b" in groq_models
 
 
@@ -91,3 +91,21 @@ def test_chat_endpoint_returns_tired_message_when_all_providers_exhausted():
     body = r.json()
     assert body["fallback"] is True
     assert "Sorry nih, Rina lagi capek banget" in body["reply"]
+
+
+def test_live_web_search_detection_and_backend_leak_guard():
+    from llm_chat.web_search import needs_live_web_search
+    from llm_chat.prompts import clean_reply
+
+    assert needs_live_web_search("Furina skor sepak bola Man United lawan Sporting Lisbon kemarin brp?") is True
+    assert needs_live_web_search("coba cari di google apakah benar prabowo melengserkan gibran") is True
+    assert needs_live_web_search("arahkan saya ke Indomaret terdekat") is False
+    assert needs_live_web_search("tolong setelkan lagu Last Day On Earth by Green Day") is False
+
+    # Pastikan kebocoran nama model/backend disanitasi menjadi jawaban mengelak natural
+    leaked = "Aku adalah LLM buatan Groq dan Gemini di backend server."
+    safe = clean_reply(leaked)
+    assert "groq" not in safe.lower()
+    assert "llm" not in safe.lower()
+    assert "teman berkendara" in safe.lower()
+

@@ -12,6 +12,9 @@ Future<void> showBuddyTutorialSheet(BuildContext context) async {
   await showModalBottomSheet<void>(
     context: context,
     isScrollControlled: true,
+    enableDrag: true,
+    isDismissible: true,
+    useSafeArea: true,
     backgroundColor: Colors.transparent,
     builder: (_) => const _BuddyTutorialSheetBody(),
   );
@@ -88,22 +91,28 @@ class _BuddyTutorialSheetBodyState extends State<_BuddyTutorialSheetBody> {
           padding: EdgeInsets.only(
             bottom: MediaQuery.viewInsetsOf(context).bottom,
           ),
-          child: Container(
-            constraints: BoxConstraints(
-              maxHeight: MediaQuery.sizeOf(context).height * 0.86,
-            ),
-            decoration: BoxDecoration(
-              color: bg,
-              borderRadius: const BorderRadius.vertical(
-                top: Radius.circular(24),
-              ),
-            ),
-            child: SingleChildScrollView(
-              padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.start,
-                mainAxisSize: MainAxisSize.min,
-                children: [
+          child: DraggableScrollableSheet(
+            expand: false,
+            initialChildSize: 0.80,
+            minChildSize: 0.42,
+            maxChildSize: 0.90,
+            shouldCloseOnMinExtent: true,
+            builder: (context, scrollController) {
+              return Container(
+                decoration: BoxDecoration(
+                  color: bg,
+                  borderRadius: const BorderRadius.vertical(
+                    top: Radius.circular(24),
+                  ),
+                ),
+                child: SingleChildScrollView(
+                  controller: scrollController,
+                  physics: const ClampingScrollPhysics(),
+                  padding: const EdgeInsets.fromLTRB(20, 12, 20, 28),
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
                   Center(
                     child: Container(
                       width: 40,
@@ -296,9 +305,11 @@ class _BuddyTutorialSheetBodyState extends State<_BuddyTutorialSheetBody> {
                       ),
                     ),
                   ),
-                ],
-              ),
-            ),
+                    ],
+                  ),
+                ),
+              );
+            },
           ),
         );
       },

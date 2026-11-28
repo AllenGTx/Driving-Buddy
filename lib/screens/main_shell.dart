@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../core/app_colors.dart';
 import '../core/design_tokens.dart';
 import '../features/nearby_places/nearby_places.dart';
+import '../features/spotify_island/ui/dynamic_island_overlay.dart';
 import '../features/voice_buddy/ui/buddy_floating_sheet.dart';
 import '../features/voice_buddy/voice_buddy_controller.dart';
 import '../models/account_config.dart';
@@ -59,7 +60,8 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
     }
 
     _currentIndex = widget.initialIndex;
-    _nearbyController.start(askPermission: false);
+    // Saat di Beranda sebelum sesi berkendara dimulai, ambil posisi sekali saja (track: false) agar GPS tidak menguras baterai!
+    _nearbyController.start(askPermission: false, track: false);
     _voiceBuddyController = VoiceBuddyController(
       nearby: _nearbyController,
       sessionIdProvider: () =>
@@ -266,6 +268,9 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
                 ),
               ),
             ),
+
+            // Dynamic Island Pemutar Musik Spotify (hanya muncul bila diminta via suara)
+            const DynamicIslandOverlay(),
 
             // Overlay Layar Penuh Siri Orb (aktif lintas halaman Beranda & Berkendara)
             BuddyFloatingSheet(controller: _voiceBuddyController),

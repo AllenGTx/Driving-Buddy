@@ -1,4 +1,5 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:io';
 import 'dart:math' as math;
 
@@ -9,9 +10,17 @@ import 'package:flutter_tts/flutter_tts.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 
+import '../../services/device_control_service.dart';
 import '../../services/language_service.dart';
 import '../llm_chat/llm_chat_config.dart';
+import '../spotify_island/spotify_island_controller.dart';
 import 'buddy_voice_config.dart';
+
+enum _CloudTtsStatus {
+  played,
+  exhausted503,
+  networkError,
+}
 
 class BuddyTtsService {
   BuddyTtsService({http.Client? httpClient})
@@ -33,6 +42,7 @@ class BuddyTtsService {
   Completer<void>? _nativeSpeakDone;
   bool _initialized = false;
   bool _nativeBusy = false;
+  bool _cancelled = false;
   String _resolvedIdLocale = 'id-ID';
 
   static const String furinaTiredText =
@@ -45,35 +55,81 @@ class BuddyTtsService {
     ('audio/furina/wake_3.wav', 'Ya? Gimana sayang...?'),
   ];
 
-  static const List<String> _janeWakeRepliesId = [
-    'Ya? Ada yang bisa Jane bantu?',
-    'Halo, mau tanya apa nih?',
-    'Iya, Jane dengerin kok.',
+  static const List<(String, String)> _janeWakeReplies = [
+    ('audio/jane/wake_1.wav', 'Ya? Ada yang bisa Jane bantu?'),
+    ('audio/jane/wake_2.wav', 'Halo! Mau tanya apa nih?'),
+    ('audio/jane/wake_3.wav', 'Iya, Jane dengerin kok!'),
   ];
 
-  static const List<String> _johnWakeRepliesId = [
-    'Ya? Ada yang bisa dibantu?',
-    'Siap, mau tanya apa?',
-    'Iya bro, John dengerin.',
+  static const List<(String, String)> _johnWakeReplies = [
+    ('audio/john/wake_1.wav', 'Ya bro? Ada yang bisa John bantu?'),
+    ('audio/john/wake_2.wav', 'Siap! Mau tanya apa nih?'),
+    ('audio/john/wake_3.wav', 'Iya bro, John dengerin!'),
   ];
 
-  static const List<(String, String)> _drowsyYawnLines = [
-    (
-      'audio/furina/drowsy_yawn.wav',
-      'Eh, kamu sudah menguap dua kali nih dalam lima menit. Kalau mulai ngantuk, menepi sebentar ya.',
-    ),
-  ];
+  static String offlineSignalTextFor(BuddyVoiceProfile profile, {bool isEnglish = false}) {
+    if (isEnglish) {
+      return 'Internet signal is currently lost, but I am still right here watching your alertness on the road!';
+    }
+    return switch (profile) {
+      BuddyVoiceProfile.furina =>
+        'Eh, sinyalnya lagi putus nih... Tapi tenang ya, Rina tetap di sini jagain kamu menyetir kok!',
+      BuddyVoiceProfile.john =>
+        'Waduh, sinyal internet lagi hilang nih bro... Tenang aja, sensor keselamatan tetap aktif jagain kamu!',
+      BuddyVoiceProfile.jane =>
+        'Wah, sinyal internet lagi putus nih... Tapi tenang, Jane tetap siaga jagain mata kamu di jalan ya!',
+    };
+  }
 
-  static const List<(String, String)> _drowsyEyeLines = [
-    (
-      'audio/furina/drowsy_eyes.wav',
-      'Aduh, mengantuk ya? Coba cari tempat istirahat ya.',
-    ),
-    (
-      'audio/furina/drowsy_general.wav',
-      'Kamu kelihatan mulai lelah di jalan. Yuk istirahat sebentar biar segar lagi.',
-    ),
-  ];
+  static String offlineSignalAssetFor(BuddyVoiceProfile profile) {
+    return 'audio/${profile.name}/offline_signal.wav';
+  }
+
+  List<(String, String)> _wakePoolFor(BuddyVoiceProfile p) {
+    return switch (p) {
+      BuddyVoiceProfile.furina => _furinaWakeReplies,
+      BuddyVoiceProfile.john => _johnWakeReplies,
+      BuddyVoiceProfile.jane => _janeWakeReplies,
+    };
+  }
+
+  List<(String, String)> _drowsyPoolFor(BuddyVoiceProfile p, {required int yawnCount}) {
+    final folder = p.name;
+    if (yawnCount >= 2) {
+      return [
+        (
+          'audio/$folder/drowsy_yawn.wav',
+          switch (p) {
+            BuddyVoiceProfile.john =>
+              'Eh bro, kamu udah menguap dua kali nih dalam lima menit! Kalau ngantuk, menepi dulu sebentar ya.',
+            _ =>
+              'Eh, kamu sudah menguap dua kali nih dalam lima menit! Kalau mulai ngantuk, menepi sebentar ya.',
+          },
+        ),
+      ];
+    }
+    return [
+      (
+        'audio/$folder/drowsy_eyes.wav',
+        switch (p) {
+          BuddyVoiceProfile.furina => 'Aduh, mengantuk ya? Coba cari tempat istirahat ya.',
+          BuddyVoiceProfile.john =>
+            'Waduh, mata kamu mulai sayu tuh... Coba cari rest area terdekat dulu yuk!',
+          BuddyVoiceProfile.jane =>
+            'Aduh, matamu mulai kelihatan sayu nih... Yuk cari tempat istirahat sebentar ya!',
+        },
+      ),
+      (
+        'audio/$folder/drowsy_general.wav',
+        switch (p) {
+          BuddyVoiceProfile.john =>
+            'Kelihatannya kamu mulai capek nyetir nih. Istirahat sebentar yuk biar fokus lagi!',
+          _ =>
+            'Kamu kelihatan mulai lelah di jalan. Yuk istirahat sebentar biar segar lagi!',
+        },
+      ),
+    ];
+  }
 
   Future<void> _ensureInit() async {
     if (_initialized) return;
@@ -97,11 +153,9 @@ class BuddyTtsService {
         _finishNative();
       });
 
-      // Beri waktu singkat agar service TextToSpeech Android selesai binding di panggilan pertama
-      await Future<void>.delayed(const Duration(milliseconds: 120));
+      await Future<void>.delayed(const Duration(milliseconds: 100));
       await _tts.setVolume(1.0);
 
-      // Android lama/ROM tertentu memakai 'in-ID' alih-alih 'id-ID'
       bool idOk = false;
       try {
         final avail = await _tts.isLanguageAvailable('id-ID');
@@ -124,16 +178,13 @@ class BuddyTtsService {
   String pickWakeAckText([BuddyVoiceProfile? profile]) {
     final p = profile ?? BuddyVoiceConfig.instance.profile;
     final isEn = LanguageService.instance.isEnglish;
-    if (p == BuddyVoiceProfile.furina) {
-      return _furinaWakeReplies[_rng.nextInt(_furinaWakeReplies.length)].$2;
-    }
-    if (isEn) {
+    if (isEn && p != BuddyVoiceProfile.furina) {
       return p == BuddyVoiceProfile.john
-          ? 'Yes? How can I help?'
+          ? 'Yes? How can John help?'
           : 'Hi! What can Jane help you with?';
     }
-    final pool = p == BuddyVoiceProfile.john ? _johnWakeRepliesId : _janeWakeRepliesId;
-    return pool[_rng.nextInt(pool.length)];
+    final pool = _wakePoolFor(p);
+    return pool[_rng.nextInt(pool.length)].$2;
   }
 
   Future<void> speakWakeAck(
@@ -141,17 +192,16 @@ class BuddyTtsService {
     String? chosenText,
     VoidCallback? onPlaybackStart,
   }) async {
-    if (profile == BuddyVoiceProfile.furina) {
+    final isEn = LanguageService.instance.isEnglish;
+    if (!isEn || profile == BuddyVoiceProfile.furina) {
+      final pool = _wakePoolFor(profile);
       final pick = chosenText != null
-          ? _furinaWakeReplies.firstWhere(
-              (e) => e.$2 == chosenText,
-              orElse: () => _furinaWakeReplies[0],
-            )
-          : _furinaWakeReplies[_rng.nextInt(_furinaWakeReplies.length)];
-      await _speakWithAssetOrDynamic(
-        profile: profile,
+          ? pool.firstWhere((e) => e.$2 == chosenText, orElse: () => pool[0])
+          : pool[_rng.nextInt(pool.length)];
+      await _speakLocalAssetImmediate(
+        assetRelPath: pick.$1,
         text: pick.$2,
-        furinaAssetPath: pick.$1,
+        profile: profile,
         onPlaybackStart: onPlaybackStart,
       );
       return;
@@ -164,8 +214,12 @@ class BuddyTtsService {
     );
   }
 
-  String pickDrowsyReminderText({required int yawnCount}) {
-    final pool = yawnCount >= 2 ? _drowsyYawnLines : _drowsyEyeLines;
+  String pickDrowsyReminderText({
+    required int yawnCount,
+    BuddyVoiceProfile? profile,
+  }) {
+    final p = profile ?? BuddyVoiceConfig.instance.profile;
+    final pool = _drowsyPoolFor(p, yawnCount: yawnCount);
     return pool[_rng.nextInt(pool.length)].$2;
   }
 
@@ -175,19 +229,78 @@ class BuddyTtsService {
     String? chosenText,
     VoidCallback? onPlaybackStart,
   }) async {
-    final pool = yawnCount >= 2 ? _drowsyYawnLines : _drowsyEyeLines;
+    final pool = _drowsyPoolFor(profile, yawnCount: yawnCount);
     final pick = chosenText != null
         ? pool.firstWhere((e) => e.$2 == chosenText, orElse: () => pool[0])
         : pool[_rng.nextInt(pool.length)];
-    await _speakWithAssetOrDynamic(
-      profile: profile,
+    await _speakLocalAssetImmediate(
+      assetRelPath: pick.$1,
       text: pick.$2,
-      furinaAssetPath: profile == BuddyVoiceProfile.furina ? pick.$1 : null,
+      profile: profile,
       onPlaybackStart: onPlaybackStart,
     );
   }
 
-  /// Segera pindahkan profil aktif dari Furina ke Jane saat Furina lelah / habis kuota.
+  Future<void> speakOfflineSignalNotice(
+    BuddyVoiceProfile profile, {
+    VoidCallback? onPlaybackStart,
+  }) async {
+    final isEn = LanguageService.instance.isEnglish;
+    final txt = offlineSignalTextFor(profile, isEnglish: isEn);
+    if (!isEn) {
+      await _speakLocalAssetImmediate(
+        assetRelPath: offlineSignalAssetFor(profile),
+        text: txt,
+        profile: profile,
+        onPlaybackStart: onPlaybackStart,
+      );
+      return;
+    }
+    await _speakWithAssetOrDynamic(
+      profile: profile,
+      text: txt,
+      onPlaybackStart: onPlaybackStart,
+    );
+  }
+
+  Future<void> _speakLocalAssetImmediate({
+    required String assetRelPath,
+    required String text,
+    required BuddyVoiceProfile profile,
+    VoidCallback? onPlaybackStart,
+  }) async {
+    await stop();
+    _cancelled = false;
+    await _ensureInit();
+    await DeviceControlService.instance.setAudioDucking(enable: true);
+    await SpotifyIslandController.instance.setBuddySpeechDucking(true);
+    try {
+      final wavBytes = await _loadAssetBytes('assets/$assetRelPath');
+      if (wavBytes != null && wavBytes.lengthInBytes > 256) {
+        isSpeaking.value = true;
+        onPlaybackStart?.call();
+        _startWavOrSyllableEnvelope(text, wavBytes: wavBytes);
+        final done = Completer<void>();
+        _activeSpeak = done;
+        await _player.setReleaseMode(ReleaseMode.stop);
+        await _player.setVolume(1.0);
+        await _player.play(AssetSource(assetRelPath));
+        await done.future.timeout(const Duration(seconds: 15), onTimeout: () {});
+        return;
+      }
+      await _speakWithAssetOrDynamic(
+        profile: profile,
+        text: text,
+        onPlaybackStart: onPlaybackStart,
+      );
+    } finally {
+      _stopEnvelope();
+      isSpeaking.value = false;
+      await SpotifyIslandController.instance.setBuddySpeechDucking(false);
+      await DeviceControlService.instance.setAudioDucking(enable: false);
+    }
+  }
+
   static Future<void> activateJaneHandoff() async {
     if (BuddyVoiceConfig.instance.profile == BuddyVoiceProfile.furina) {
       final rawNick = BuddyVoiceConfig.instance.rawCustomNickname.trim().toLowerCase();
@@ -198,7 +311,8 @@ class BuddyTtsService {
     }
   }
 
-  /// Mengembalikan `true` jika Furina lelah (`tired.wav`) dan otomatis berpindah ke Jane.
+  /// Mengembalikan `true` HANYA jika Furina benar-benar habis kuota di seluruh provider (`503`)
+  /// dan otomatis berpindah ke Jane (bukan karena putus sinyal / tekan tombol Home!).
   Future<bool> speakReply({
     required BuddyVoiceProfile profile,
     required String text,
@@ -207,14 +321,12 @@ class BuddyTtsService {
     VoidCallback? onPlaybackStart,
   }) async {
     if (isTiredFallback && profile == BuddyVoiceProfile.furina) {
-      // 1) Putar suara pamit Furina ("Maaf ya... Furina lagi capek nih... Mungkin kamu mau bicara sama Jane?")
-      await _speakWithAssetOrDynamic(
-        profile: BuddyVoiceProfile.furina,
+      await _speakLocalAssetImmediate(
+        assetRelPath: furinaTiredAsset,
         text: furinaTiredText,
-        furinaAssetPath: furinaTiredAsset,
+        profile: BuddyVoiceProfile.furina,
         onPlaybackStart: onPlaybackStart,
       );
-      // 2) Langsung pindahkan profil aktif ke Jane secara otomatis!
       await activateJaneHandoff();
       return true;
     }
@@ -230,6 +342,28 @@ class BuddyTtsService {
     return usedTiredHandoff;
   }
 
+  List<String> _splitForStreamingTts(String text) {
+    final trimmed = text.trim();
+    if (trimmed.length <= 145) return [trimmed];
+    final parts = trimmed
+        .split(RegExp(r'(?<=[.!?])\s+'))
+        .map((s) => s.trim())
+        .where((s) => s.isNotEmpty)
+        .toList();
+    if (parts.length <= 1) return [trimmed];
+
+    // Jangan pernah memisahkan kata seru pendek (seperti "Siap!", "Oke!", "Wah!") sendirian
+    String first = parts.first;
+    int idx = 1;
+    while (first.length < 38 && idx < parts.length) {
+      first = '$first ${parts[idx]}';
+      idx++;
+    }
+    if (idx >= parts.length) return [trimmed];
+    final rest = parts.sublist(idx).join(' ');
+    return rest.isEmpty ? [first] : [first, rest];
+  }
+
   Future<bool> _speakWithAssetOrDynamic({
     required BuddyVoiceProfile profile,
     required String text,
@@ -237,46 +371,79 @@ class BuddyTtsService {
     VoidCallback? onPlaybackStart,
   }) async {
     await stop();
+    _cancelled = false;
     await _ensureInit();
     final trimmed = text.trim();
     if (trimmed.isEmpty) return false;
 
     bool notifiedStart = false;
     void fireStartOnce() {
-      if (!notifiedStart) {
+      if (!notifiedStart && !_cancelled) {
         notifiedStart = true;
         isSpeaking.value = true;
         onPlaybackStart?.call();
       }
     }
 
+    await DeviceControlService.instance.setAudioDucking(enable: true);
+    await SpotifyIslandController.instance.setBuddySpeechDucking(true);
     try {
-      if (profile == BuddyVoiceProfile.furina) {
-        // 1. Jika ada file WAV offline lokal (wake_1..3, drowsy, tired), putar seketika (0 kuota)
-        if (furinaAssetPath != null) {
-          final wavBytes = await _loadAssetBytes('assets/$furinaAssetPath');
-          if (wavBytes != null && wavBytes.lengthInBytes > 256) {
-            fireStartOnce();
-            _startWavOrSyllableEnvelope(trimmed, wavBytes: wavBytes);
-            final done = Completer<void>();
-            _activeSpeak = done;
-            await _player.setReleaseMode(ReleaseMode.stop);
-            await _player.setVolume(1.0);
-            await _player.play(AssetSource(furinaAssetPath));
-            await done.future.timeout(const Duration(seconds: 14), onTimeout: () {});
-            return furinaAssetPath == furinaTiredAsset;
+      if (profile == BuddyVoiceProfile.furina && furinaAssetPath != null) {
+        final wavBytes = await _loadAssetBytes('assets/$furinaAssetPath');
+        if (wavBytes != null && wavBytes.lengthInBytes > 256) {
+          fireStartOnce();
+          _startWavOrSyllableEnvelope(trimmed, wavBytes: wavBytes);
+          final done = Completer<void>();
+          _activeSpeak = done;
+          await _player.setReleaseMode(ReleaseMode.stop);
+          await _player.setVolume(1.0);
+          await _player.play(AssetSource(furinaAssetPath));
+          await done.future.timeout(const Duration(seconds: 14), onTimeout: () {});
+          return furinaAssetPath == furinaTiredAsset;
+        }
+      }
+
+      // Sentence-Split Parallel Prefetch: Kalimat pertama langsung bunyi dalam ~1 detik
+      // sementara kalimat kedua diunduh paralel di latar belakang tanpa jeda!
+      final chunks = _splitForStreamingTts(trimmed);
+      Future<http.Response?>? nextPrefetch;
+      if (chunks.length > 1) {
+        nextPrefetch = _fetchCloudTtsBytes(chunks[1], profile: profile);
+      }
+
+      final firstStatus = await _playCloudChunk(
+        chunks[0],
+        profile: profile,
+        onAudioReady: fireStartOnce,
+      );
+      if (_cancelled) return false;
+
+      if (firstStatus == _CloudTtsStatus.played) {
+        if (chunks.length > 1 && !_cancelled) {
+          final prefetchedResp = await nextPrefetch;
+          if (!_cancelled && prefetchedResp != null && prefetchedResp.statusCode == 200 && prefetchedResp.bodyBytes.length >= 256) {
+            await _playRawResponseBytes(
+              chunks[1],
+              profile: profile,
+              resp: prefetchedResp,
+              onAudioReady: fireStartOnce,
+            );
+          } else if (!_cancelled) {
+            await _playCloudChunk(
+              chunks[1],
+              profile: profile,
+              onAudioReady: fireStartOnce,
+            );
           }
         }
+        return false;
+      }
 
-        // 2. Cloud Furina TTS (RVC v2 -> Free Neural Fallback di server)
-        final playedRemote = await _tryRemoteCloudTts(
-          trimmed,
-          profile: BuddyVoiceProfile.furina,
-          onAudioReady: fireStartOnce,
-        );
-        if (playedRemote) return false;
-
-        // 3. Jika internet mati / server benar-benar tidak terjangkau: putar pesan pamit Furina -> otomatis pindah ke Jane -> Jane bacakan jawabannya!
+      // Hanya jika server eksplisit mengembalikan HTTP 503 (seluruh provider Furina benar-benar habis),
+      // barulah putar tired.wav & pindah otomatis ke Jane!
+      if (profile == BuddyVoiceProfile.furina &&
+          firstStatus == _CloudTtsStatus.exhausted503 &&
+          !_cancelled) {
         final tiredBytes = await _loadAssetBytes('assets/$furinaTiredAsset');
         if (tiredBytes != null && tiredBytes.lengthInBytes > 256) {
           fireStartOnce();
@@ -289,30 +456,42 @@ class BuddyTtsService {
           await done.future.timeout(const Duration(seconds: 14), onTimeout: () {});
         }
         await activateJaneHandoff();
-        fireStartOnce();
-        _startWavOrSyllableEnvelope(trimmed);
-        await _speakNative(BuddyVoiceProfile.jane, trimmed);
+        if (!_cancelled) {
+          await _playCloudChunk(
+            trimmed,
+            profile: BuddyVoiceProfile.jane,
+            onAudioReady: fireStartOnce,
+          );
+        }
         return true;
       }
 
-      // Jane (Female Buddy) & John (Male Buddy):
-      // Prioritas 1: Suara Neural Manusia Alami Gratis dari Cloud (GadisNeural / ArdiNeural -> natural, bukan robot!)
-      final playedNeural = await _tryRemoteCloudTts(
-        trimmed,
-        profile: profile,
-        onAudioReady: fireStartOnce,
-        timeout: const Duration(seconds: 8),
-      );
-      if (playedNeural) return false;
-
-      // Prioritas 2 (Offline / Tanpa Internet): Suara bawaan HP Android yang sudah dikalibrasi
-      fireStartOnce();
-      _startWavOrSyllableEnvelope(trimmed);
-      await _speakNative(profile, trimmed);
+      // Jika terjadi gangguan jaringan seluler ("SOS saja" / terowongan), putar rekaman lokal offline
+      // supaya tetap bersuara natural di HP Huawei/non-GMS tanpa salah memicu "Furina capek"!
+      if (!_cancelled) {
+        final offPath = offlineSignalAssetFor(profile);
+        final offBytes = await _loadAssetBytes('assets/$offPath');
+        if (offBytes != null && offBytes.lengthInBytes > 256) {
+          fireStartOnce();
+          _startWavOrSyllableEnvelope(offlineSignalTextFor(profile), wavBytes: offBytes);
+          final done = Completer<void>();
+          _activeSpeak = done;
+          await _player.setReleaseMode(ReleaseMode.stop);
+          await _player.setVolume(1.0);
+          await _player.play(AssetSource(offPath));
+          await done.future.timeout(const Duration(seconds: 14), onTimeout: () {});
+          return false;
+        }
+        fireStartOnce();
+        _startWavOrSyllableEnvelope(trimmed);
+        await _speakNative(profile, trimmed);
+      }
       return false;
     } finally {
       _stopEnvelope();
       isSpeaking.value = false;
+      await SpotifyIslandController.instance.setBuddySpeechDucking(false);
+      await DeviceControlService.instance.setAudioDucking(enable: false);
     }
   }
 
@@ -326,34 +505,73 @@ class BuddyTtsService {
     }
   }
 
-  Future<bool> _tryRemoteCloudTts(
+  Future<http.Response?> _fetchCloudTtsBytes(
     String text, {
     required BuddyVoiceProfile profile,
-    VoidCallback? onAudioReady,
-    Duration timeout = const Duration(seconds: 30),
+    Duration timeout = const Duration(seconds: 26),
   }) async {
     try {
       await LlmChatConfig.shared.load();
       final isEn = LanguageService.instance.isEnglish;
       final lang = isEn ? 'en' : 'id';
       final uri = Uri.parse('${LlmChatConfig.shared.baseUrl}/tts');
-      final resp = await _http
+      return await _http
           .post(
             uri,
             headers: const {'Content-Type': 'application/json; charset=utf-8'},
-            body:
-                '{"text":${_jsonEscape(text)},"voice_profile":"${profile.name}","language":"$lang"}',
+            body: jsonEncode({
+              'text': text,
+              'voice_profile': profile.name,
+              'language': lang,
+            }),
           )
           .timeout(timeout);
-      if (resp.statusCode != 200 || resp.bodyBytes.length < 256) return false;
+    } catch (_) {
+      return null;
+    }
+  }
 
+  Future<_CloudTtsStatus> _playCloudChunk(
+    String text, {
+    required BuddyVoiceProfile profile,
+    VoidCallback? onAudioReady,
+  }) async {
+    final resp = await _fetchCloudTtsBytes(text, profile: profile);
+    if (_cancelled) return _CloudTtsStatus.networkError;
+    if (resp == null) return _CloudTtsStatus.networkError;
+    if (resp.statusCode == 503) return _CloudTtsStatus.exhausted503;
+    if (resp.statusCode != 200 || resp.bodyBytes.length < 256) {
+      return _CloudTtsStatus.networkError;
+    }
+    final ok = await _playRawResponseBytes(
+      text,
+      profile: profile,
+      resp: resp,
+      onAudioReady: onAudioReady,
+    );
+    return ok ? _CloudTtsStatus.played : _CloudTtsStatus.networkError;
+  }
+
+  Future<bool> _playRawResponseBytes(
+    String text, {
+    required BuddyVoiceProfile profile,
+    required http.Response resp,
+    VoidCallback? onAudioReady,
+  }) async {
+    try {
+      if (_cancelled) return false;
       final dir = await getTemporaryDirectory();
       final isMp3 = (resp.headers['content-type'] ?? '').contains('mpeg');
       final ext = isMp3 ? 'mp3' : 'wav';
       final file = File(
-        '${dir.path}/buddy_${profile.name}_${DateTime.now().millisecondsSinceEpoch}.$ext',
+        '${dir.path}/buddy_${profile.name}_${DateTime.now().microsecondsSinceEpoch}.$ext',
       );
       await file.writeAsBytes(resp.bodyBytes, flush: true);
+
+      if (_cancelled) {
+        unawaited(file.delete().catchError((_) => file));
+        return false;
+      }
 
       onAudioReady?.call();
       _startWavOrSyllableEnvelope(
@@ -381,11 +599,9 @@ class BuddyTtsService {
       _nativeBusy = true;
       final res = await _tts.speak(text);
       if (res == 0) {
-        // Jika engine menolak percobaan pertama, reset bahasa standar lalu ulang sekali
         await _tts.setLanguage(_resolvedIdLocale);
         await _tts.speak(text);
       }
-      // Estimasi durasi aman berdasarkan panjang teks agar tidak pernah menggantung selamanya
       final estMs = (text.length * 85 + 1800).clamp(2500, 18000);
       await done.future.timeout(
         Duration(milliseconds: estMs),
@@ -405,52 +621,8 @@ class BuddyTtsService {
 
     await _tts.setVolume(1.0);
     await _tts.setLanguage(targetLang);
-    // Kecepatan & tinggi nada dibuat luwes agar suara bawaan HP tidak kaku
     await _tts.setSpeechRate(0.52);
     await _tts.setPitch(wantMale ? 0.86 : 1.05);
-
-    try {
-      final rawVoices = await _tts.getVoices;
-      if (rawVoices is List) {
-        Map<String, String>? chosen;
-        final langPrefix = isEn ? 'en' : 'id';
-        for (final item in rawVoices) {
-          if (item is Map) {
-            final locale = (item['locale'] ?? '').toString();
-            final locLow = locale.toLowerCase();
-            final name = (item['name'] ?? '').toString().toLowerCase();
-            final matchesLang = isEn
-                ? locLow.startsWith('en')
-                : (locLow.startsWith(langPrefix) || locLow.startsWith('in'));
-            if (!matchesLang) continue;
-
-            final looksMale =
-                name.contains('male') && !name.contains('female') ||
-                name.contains('idd-') ||
-                name.contains('idc-') ||
-                name.contains('iom-') ||
-                name.contains('#male');
-            final looksFemale =
-                name.contains('female') ||
-                name.contains('ida-') ||
-                name.contains('idb-') ||
-                name.contains('network') && !looksMale ||
-                name.contains('#female');
-
-            if ((wantMale && looksMale) || (!wantMale && looksFemale)) {
-              chosen = {
-                'name': item['name'].toString(),
-                'locale': locale,
-              };
-              break;
-            }
-          }
-        }
-        if (chosen != null) {
-          await _tts.setVoice(chosen);
-        }
-      }
-    } catch (_) {}
   }
 
   void _startWavOrSyllableEnvelope(String text, {Uint8List? wavBytes}) {
@@ -478,144 +650,135 @@ class BuddyTtsService {
     final clean = text.toLowerCase();
     final chars = clean.isNotEmpty ? clean : 'a';
     final words = clean.split(RegExp(r'\s+')).length.clamp(1, 40);
+    final totalFrames = ((words * 340) / frameMs).ceil().clamp(8, 500);
+
     _envelopeTimer = Timer.periodic(const Duration(milliseconds: frameMs), (_) {
       tick++;
-      final t = tick * (frameMs / 1000.0);
-      final charPos = ((t * 13.5).floor()) % chars.length;
-      final ch = chars[charPos];
-      final isPause = ch == ',' || ch == '.' || ch == '?' || ch == '!';
-      final isSibilant =
-          ch == 's' || ch == 'c' || ch == 'z' || ch == 'f' || ch == 'h' || ch == 't' || ch == 'k';
-      final isHighVowel = ch == 'i' || ch == 'e' || ch == 'y';
+      final progress = (tick / totalFrames).clamp(0.0, 1.0);
+      final charIdx = ((progress * (chars.length - 1)).round()).clamp(0, chars.length - 1);
+      final ch = chars[charIdx];
 
-      final carrier = math.sin(t * 24.0) * 0.5 + 0.5;
-      final phrase = math.sin(t * 4.8 + words * 0.3) * 0.35 + 0.65;
-      final targetE = isPause
-          ? 0.08
-          : ((carrier * phrase) * (isSibilant ? 0.72 : 1.0)).clamp(0.14, 0.96);
-      final targetF = isPause
-          ? 0.25
-          : (isSibilant
-                ? 0.88
-                : (isHighVowel ? 0.66 : 0.38 + 0.16 * math.sin(t * 9.0)));
-      speechEnergy.value = targetE;
-      speechFrequency.value = targetF.clamp(0.20, 0.98);
+      final isOpenVowel = ch == 'a' || ch == 'o' || ch == 'e';
+      final isBrightVowel = ch == 'i' || ch == 'u';
+      final isSibilant = ch == 's' || ch == 'c' || ch == 'z' || ch == 'f' || ch == 'k' || ch == 't';
+      final isPause = ch == ' ' || ch == ',' || ch == '.' || ch == '?' || ch == '!';
+
+      final syllabicPulse = 0.5 + 0.5 * math.sin(tick * 0.68);
+      double targetE;
+      double targetF;
+
+      if (isPause) {
+        targetE = 0.08 + 0.06 * syllabicPulse;
+        targetF = 0.35;
+      } else if (isOpenVowel) {
+        targetE = 0.62 + 0.32 * syllabicPulse;
+        targetF = 0.38 + 0.14 * math.sin(tick * 0.35);
+      } else if (isBrightVowel) {
+        targetE = 0.48 + 0.28 * syllabicPulse;
+        targetF = 0.66 + 0.16 * math.cos(tick * 0.42);
+      } else if (isSibilant) {
+        targetE = 0.34 + 0.22 * syllabicPulse;
+        targetF = 0.86;
+      } else {
+        targetE = 0.38 + 0.24 * syllabicPulse;
+        targetF = 0.52;
+      }
+
+      speechEnergy.value = (speechEnergy.value * 0.35 + targetE * 0.65).clamp(0.0, 1.0);
+      speechFrequency.value = (speechFrequency.value * 0.45 + targetF * 0.55).clamp(0.15, 1.0);
     });
   }
 
-  List<(double, double)>? _extractWavSpectralFrames(
-    Uint8List bytes, {
-    int frameMs = 35,
-  }) {
-    if (bytes.lengthInBytes < 44) return null;
-    if (bytes[0] != 0x52 ||
-        bytes[1] != 0x49 ||
-        bytes[2] != 0x46 ||
-        bytes[3] != 0x46 ||
-        bytes[8] != 0x57 ||
-        bytes[9] != 0x41 ||
-        bytes[10] != 0x56 ||
-        bytes[11] != 0x45) {
+  List<(double, double)>? _extractWavSpectralFrames(Uint8List bytes, {required int frameMs}) {
+    if (bytes.length < 44) return null;
+    if (bytes[0] != 0x52 || bytes[1] != 0x49 || bytes[2] != 0x46 || bytes[3] != 0x46) {
       return null;
     }
-
     final bd = ByteData.sublistView(bytes);
-    int audioFormat = 0;
+    int offset = 12;
     int channels = 1;
     int sampleRate = 24000;
     int bitsPerSample = 16;
-    int dataOffset = -1;
-    int dataLength = 0;
+    int audioFormat = 1;
+    int dataStart = -1;
+    int dataSize = 0;
 
-    int pos = 12;
-    while (pos + 8 <= bytes.lengthInBytes) {
-      final id0 = bytes[pos];
-      final id1 = bytes[pos + 1];
-      final id2 = bytes[pos + 2];
-      final id3 = bytes[pos + 3];
-      final chunkSize = bd.getUint32(pos + 4, Endian.little);
-      final bodyStart = pos + 8;
-      if (bodyStart > bytes.lengthInBytes) break;
+    while (offset + 8 <= bytes.length) {
+      final id0 = bytes[offset];
+      final id1 = bytes[offset + 1];
+      final id2 = bytes[offset + 2];
+      final id3 = bytes[offset + 3];
+      final chunkSize = bd.getUint32(offset + 4, Endian.little);
+      offset += 8;
 
-      if (id0 == 0x66 && id1 == 0x6D && id2 == 0x74 && id3 == 0x20 && chunkSize >= 16) {
-        if (bodyStart + 16 <= bytes.lengthInBytes) {
-          audioFormat = bd.getUint16(bodyStart, Endian.little);
-          channels = bd.getUint16(bodyStart + 2, Endian.little).clamp(1, 8);
-          sampleRate = bd.getUint32(bodyStart + 4, Endian.little).clamp(8000, 96000);
-          bitsPerSample = bd.getUint16(bodyStart + 14, Endian.little);
+      if (id0 == 0x66 && id1 == 0x6D && id2 == 0x74 && id3 == 0x20) {
+        if (offset + 16 <= bytes.length) {
+          audioFormat = bd.getUint16(offset, Endian.little);
+          channels = bd.getUint16(offset + 2, Endian.little).clamp(1, 2);
+          sampleRate = bd.getUint32(offset + 4, Endian.little).clamp(8000, 96000);
+          bitsPerSample = bd.getUint16(offset + 14, Endian.little);
         }
       } else if (id0 == 0x64 && id1 == 0x61 && id2 == 0x74 && id3 == 0x61) {
-        dataOffset = bodyStart;
-        dataLength = math.min(chunkSize, bytes.lengthInBytes - bodyStart);
+        dataStart = offset;
+        dataSize = math.min(chunkSize, bytes.length - offset);
         break;
       }
-      pos = bodyStart + chunkSize + (chunkSize.isOdd ? 1 : 0);
+      offset += chunkSize + (chunkSize.isOdd ? 1 : 0);
     }
 
-    if (dataOffset < 0 || dataLength <= 0) return null;
-    if (!((audioFormat == 1 && bitsPerSample == 16) ||
-        (audioFormat == 3 && bitsPerSample == 32))) {
-      return null;
-    }
+    if (dataStart < 0 || dataSize <= 0) return null;
+    if (audioFormat != 1 && audioFormat != 3) return null;
 
-    final bytesPerSample = bitsPerSample ~/ 8;
-    final blockAlign = bytesPerSample * channels;
-    final totalSamples = dataLength ~/ blockAlign;
-    final samplesPerFrame = math.max(64, (sampleRate * frameMs) ~/ 1000);
-    if (totalSamples < samplesPerFrame) return null;
+    final bytesPerSample = (bitsPerSample ~/ 8).clamp(2, 4);
+    final frameSamples = ((sampleRate * frameMs) ~/ 1000).clamp(64, 8192);
+    final stepBytes = frameSamples * channels * bytesPerSample;
+    if (stepBytes <= 0) return null;
 
-    final rawRms = <double>[];
-    final rawZcr = <double>[];
+    final frames = <(double, double)>[];
+    double maxRms = 0.01;
+    final rawMetrics = <(double, double)>[];
 
-    for (int start = 0; start + samplesPerFrame <= totalSamples; start += samplesPerFrame) {
+    for (int pos = dataStart; pos + stepBytes <= dataStart + dataSize; pos += stepBytes) {
       double sumSq = 0.0;
       int zeroCrossings = 0;
-      double prev = 0.0;
-      final step = sampleRate >= 44100 ? 2 : 1;
+      double prevSample = 0.0;
       int count = 0;
 
-      for (int i = 0; i < samplesPerFrame; i += step) {
-        final byteIdx = dataOffset + (start + i) * blockAlign;
-        double sample;
-        if (audioFormat == 1) {
-          sample = bd.getInt16(byteIdx, Endian.little) / 32768.0;
-        } else {
-          sample = bd.getFloat32(byteIdx, Endian.little).clamp(-1.0, 1.0);
+      final stride = channels * bytesPerSample * 2;
+      for (int i = pos; i + bytesPerSample <= pos + stepBytes; i += stride) {
+        double sample = 0.0;
+        if (audioFormat == 1 && bitsPerSample == 16) {
+          sample = bd.getInt16(i, Endian.little) / 32768.0;
+        } else if (audioFormat == 3 && bitsPerSample == 32) {
+          sample = bd.getFloat32(i, Endian.little);
+          if (!sample.isFinite) sample = 0.0;
         }
         sumSq += sample * sample;
-        if (count > 0 && ((sample >= 0.0 && prev < 0.0) || (sample < 0.0 && prev >= 0.0))) {
+        if (count > 0 && ((sample >= 0.0 && prevSample < 0.0) || (sample < 0.0 && prevSample >= 0.0))) {
           zeroCrossings++;
         }
-        prev = sample;
+        prevSample = sample;
         count++;
       }
 
       final rms = count > 0 ? math.sqrt(sumSq / count) : 0.0;
-      final effFs = sampleRate / step;
-      final zcrHz = count > 1 ? (zeroCrossings / (count - 1)) * (effFs * 0.5) : 350.0;
-      rawRms.add(rms);
-      rawZcr.add(zcrHz);
+      if (rms > maxRms) maxRms = rms;
+      final zcr = count > 1 ? (zeroCrossings / (count - 1)) : 0.15;
+      rawMetrics.add((rms, zcr));
     }
 
-    if (rawRms.isEmpty) return null;
-    final sorted = List<double>.from(rawRms)..sort();
-    final refPeak = math.max(0.06, sorted[(sorted.length * 0.92).floor().clamp(0, sorted.length - 1)]);
-
-    final out = <(double, double)>[];
-    for (int i = 0; i < rawRms.length; i++) {
-      final normE = (rawRms[i] / refPeak).clamp(0.0, 1.0);
-      final shapedE = normE < 0.05 ? 0.02 : math.pow(normE, 0.78).toDouble().clamp(0.04, 1.0);
-      final normF = ((rawZcr[i] - 220.0) / 3000.0).clamp(0.18, 1.0);
-      out.add((shapedE, normF));
+    for (final m in rawMetrics) {
+      final normE = math.pow((m.$1 / maxRms).clamp(0.0, 1.0), 0.72).toDouble();
+      final normF = ((m.$2 - 0.03) / 0.34).clamp(0.18, 1.0);
+      frames.add((normE, normF));
     }
-    return out;
+    return frames;
   }
 
   void _stopEnvelope() {
     _envelopeTimer?.cancel();
     _envelopeTimer = null;
     speechEnergy.value = 0.0;
-    speechFrequency.value = 0.45;
   }
 
   void _finishActive() {
@@ -627,44 +790,36 @@ class BuddyTtsService {
   }
 
   void _finishNative() {
-    final n = _nativeSpeakDone;
+    final c = _nativeSpeakDone;
     _nativeSpeakDone = null;
-    if (n != null && !n.isCompleted) {
-      n.complete();
+    if (c != null && !c.isCompleted) {
+      c.complete();
     }
   }
 
   Future<void> stop() async {
-    _finishActive();
-    _finishNative();
+    _cancelled = true;
     _stopEnvelope();
     isSpeaking.value = false;
     try {
       await _player.stop();
     } catch (_) {}
     if (_nativeBusy) {
-      _nativeBusy = false;
       try {
         await _tts.stop();
       } catch (_) {}
+      _nativeBusy = false;
     }
+    _finishActive();
+    _finishNative();
+    await DeviceControlService.instance.setAudioDucking(enable: false);
   }
 
   Future<void> dispose() async {
     await stop();
-    if (_ownsHttp) _http.close();
+    if (_ownsHttp) {
+      _http.close();
+    }
     await _player.dispose();
-    speechEnergy.dispose();
-    speechFrequency.dispose();
-    isSpeaking.dispose();
-  }
-
-  static String _jsonEscape(String s) {
-    final escaped = s
-        .replaceAll(r'\', r'\\')
-        .replaceAll('"', r'\"')
-        .replaceAll('\n', ' ')
-        .replaceAll('\r', ' ');
-    return '"$escaped"';
   }
 }

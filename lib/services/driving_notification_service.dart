@@ -115,4 +115,35 @@ class DrivingNotificationService {
       await _notificationsPlugin.cancel(id: monitoringNotificationId);
     } catch (_) {}
   }
+
+  /// Notifikasi kembali cepat (auto-cancel) saat aplikasi membuka Google Maps atau Spotify
+  Future<void> showQuickReturnNotification({
+    required String title,
+    required String body,
+  }) async {
+    try {
+      if (!_isInitialized) {
+        await initialize();
+      }
+      const androidDetails = AndroidNotificationDetails(
+        channelId,
+        channelName,
+        channelDescription: channelDesc,
+        importance: Importance.high,
+        priority: Priority.high,
+        ongoing: false,
+        autoCancel: true,
+        showWhen: true,
+        icon: '@mipmap/ic_launcher',
+        visibility: NotificationVisibility.public,
+      );
+      const notificationDetails = NotificationDetails(android: androidDetails);
+      await _notificationsPlugin.show(
+        id: 8882,
+        title: title,
+        body: body,
+        notificationDetails: notificationDetails,
+      );
+    } catch (_) {}
+  }
 }

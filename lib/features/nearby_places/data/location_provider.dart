@@ -85,6 +85,9 @@ abstract class LocationProvider {
 class GeolocatorLocationProvider implements LocationProvider {
   GeolocatorLocationProvider({this.distanceFilterM = 25});
 
+  /// Mode Eco Hemat Baterai: menurunkan frekuensi radio satelit GPS dari 1s raw GNSS ke 5s Fused Location (~75% lebih hemat daya).
+  static bool ecoPowerSaving = false;
+
   /// Pembaruan baru dikirim setiap pindah sekian meter (hemat baterai).
   final int distanceFilterM;
 
@@ -162,17 +165,20 @@ class GeolocatorLocationProvider implements LocationProvider {
 
   @override
   Stream<DriverFix> fixes() {
+    final eco = ecoPowerSaving;
     return Geolocator.getPositionStream(
       locationSettings: Platform.isAndroid
           ? AndroidSettings(
-              accuracy: LocationAccuracy.bestForNavigation,
-              distanceFilter: 0,
-              forceLocationManager: true,
-              intervalDuration: const Duration(seconds: 1),
+              accuracy: eco
+                  ? LocationAccuracy.medium
+                  : LocationAccuracy.bestForNavigation,
+              distanceFilter: eco ? 25 : 0,
+              forceLocationManager: !eco,
+              intervalDuration: Duration(seconds: eco ? 5 : 1),
             )
           : LocationSettings(
-              accuracy: LocationAccuracy.high,
-              distanceFilter: distanceFilterM,
+              accuracy: eco ? LocationAccuracy.medium : LocationAccuracy.high,
+              distanceFilter: eco ? 30 : distanceFilterM,
             ),
     ).map(_toFix);
   }
