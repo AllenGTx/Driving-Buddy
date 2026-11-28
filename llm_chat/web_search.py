@@ -1164,14 +1164,29 @@ async def resolve_in_app_music_stream(query: str, target_dur_s: int = 210) -> Op
             except Exception:
                 pass
 
-        # 3. Fallback ke YouTube videoId (untuk diekstrak langsung di HP) + preview studio resmi iTunes/Deezer (30 detik)
+        # 3. Selalu cari yt_video_id secara paralel untuk fallback YoutubeExplode di HP.
+        # Jika yt_video_id ditemukan, inject ke chosen apapun hasilnya (termasuk preview 30s).
+        # Ini memastikan Flutter SELALU bisa memutar lagu full via YoutubeExplode meski server
+        # gagal mendapat stream — cukup asal yt_video_id-nya valid & official.
+        yt_vid_task = _search_youtube_video_id(client, clean_q)
+
         if chosen is None:
             yt_vid, meta = await asyncio.gather(
-                _search_youtube_video_id(client, clean_q),
+                yt_vid_task,
                 search_music_track(clean_q, timeout_s=3.0),
             )
             prev = (meta.get("preview_url") or "").strip() if isinstance(meta, dict) else ""
-            if prev.startswith("http"):
+            if yt_vid:
+                # Prioritaskan yt_video_id: langsung kirim ke Flutter untuk YoutubeExplode
+                chosen = {
+                    "mode": "yt_video_id",
+                    "url": prev,  # sertakan preview sebagai audio backup 30s
+                    "yt_video_id": yt_vid,
+                    "mime": "audio/mp4",
+                    "headers": {},
+                    "duration_s": target_dur_s,
+                }
+            elif prev.startswith("http"):
                 chosen = {
                     "mode": "direct_url",
                     "url": prev,
@@ -1179,17 +1194,16 @@ async def resolve_in_app_music_stream(query: str, target_dur_s: int = 210) -> Op
                     "headers": {},
                     "duration_s": 30,
                 }
-                if yt_vid:
-                    chosen["yt_video_id"] = yt_vid
-            elif yt_vid:
-                chosen = {
-                    "mode": "yt_video_id",
-                    "url": "",
-                    "yt_video_id": yt_vid,
-                    "mime": "audio/mp4",
-                    "headers": {},
-                    "duration_s": target_dur_s,
-                }
+        else:
+            # chosen sudah ada (mungkin SoundCloud/JioSaavn), tapi tetap inject yt_video_id
+            # agar Flutter punya fallback YoutubeExplode jika chosen URL bermasalah.
+            if not chosen.get("yt_video_id"):
+                try:
+                    yt_vid = await asyncio.wait_for(yt_vid_task, timeout=4.0)
+                    if yt_vid:
+                        chosen["yt_video_id"] = yt_vid
+                except Exception:
+                    pass
 
     if chosen is not None:
         _STREAM_META_CACHE[cache_key] = (now, chosen)

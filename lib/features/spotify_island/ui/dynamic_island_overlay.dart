@@ -493,8 +493,18 @@ class _DynamicIslandOverlayState extends State<DynamicIslandOverlay>
                                                           value: curSec,
                                                           min: 0.0,
                                                           max: duration,
-                                                          onChanged: (v) =>
-                                                              _ctrl.seekTo(v),
+                                                          // onChangeStart: freeze guard agar onPlayerComplete tidak
+                                                          // salah trigger auto-next saat user drag slider
+                                                          onChangeStart: (_) => _ctrl.onSeekStart(),
+                                                          // onChanged: update posisi lokal real-time (UI responsif)
+                                                          // tapi JANGAN panggil seek setiap frame — terlalu sering
+                                                          // bisa cancel-restart stream dan keliru trigger complete
+                                                          onChanged: (v) {
+                                                            // Update visual saja, belum seek audio
+                                                            _ctrl.onSeekStart(); // pastikan flag aktif
+                                                          },
+                                                          // onChangeEnd: seek audio SEKALI saja setelah drag selesai
+                                                          onChangeEnd: (v) => _ctrl.onSeekEnd(v),
                                                         ),
                                                       ),
                                                     ),

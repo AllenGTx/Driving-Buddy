@@ -625,12 +625,24 @@ class VoiceBuddyController extends ChangeNotifier {
     }
     _setPhase(SiriOrbPhase.listening);
 
+    // Kecilkan musik saat mikrofon aktif agar tidak terdeteksi sebagai suara pengguna
+    final spotifyCtrlListen = SpotifyIslandController.instance;
+    final wasMusicPlaying = spotifyCtrlListen.isPlaying;
+    if (wasMusicPlaying) {
+      unawaited(spotifyCtrlListen.setBuddySpeechDucking(true));
+    }
+
     final query = await _stt.captureAndTranscribeCommand(
       buddyNameHint: activeNickname,
       holdMode: holdMode,
       initialSilenceTimeout:
           isFollowUp ? _followUpSilenceTimeout : _initialWakeSilenceTimeout,
     );
+
+    // Pulihkan volume musik segera setelah selesai mendengarkan
+    if (wasMusicPlaying) {
+      unawaited(spotifyCtrlListen.setBuddySpeechDucking(false));
+    }
     if (myTurn != _turnId) return;
 
     _holdingPtt = false;

@@ -141,6 +141,7 @@ def build_audio_router(
         file: UploadFile = File(...),
         hint: Optional[str] = Form(default=None),
         mode: Optional[str] = Form(default=None),
+        lang: Optional[str] = Form(default=None),
     ) -> Dict[str, Any]:
         raw = await file.read()
         if not raw or len(raw) > 8 * 1024 * 1024:
@@ -154,6 +155,11 @@ def build_audio_router(
         )
         clean_hint = re.sub(r"(?i)nama\s*buddy\s*:\s*", "", (hint or "")).strip()
         is_wake_mode = (mode or "").strip().lower() == "wake" or (mode is None and not clean_hint)
+        # Preferensi bahasa dari klien Flutter: 'en' untuk modul Inggris, 'id' untuk Indonesia.
+        # Kalau tidak dikirim, default ke Indonesia agar kompatibel dengan versi lama.
+        client_lang = (lang or "").strip().lower() or "id"
+        # Pastikan hanya 'en' atau 'id' yang diterima, lainnya fallback ke 'id'
+        whisper_lang = "en" if client_lang.startswith("en") else "id"
         vocab = (
             "Halo Rina, halo Furina, halo Jane, halo John, yo Rina, yo Jane, yo John, hai buddy."
             if is_wake_mode
@@ -181,7 +187,7 @@ def build_audio_router(
                         headers={"Authorization": f"Bearer {groq_key}"},
                         data={
                             "model": w_model,
-                            "language": "id",
+                            "language": whisper_lang,
                             "temperature": "0",
                             "prompt": vocab,
                         },
@@ -215,7 +221,7 @@ def build_audio_router(
                 cf_resp = await client.post(
                     f"https://api.cloudflare.com/client/v4/accounts/{cf_acc}/ai/run/@cf/openai/whisper-large-v3-turbo",
                     headers={"Authorization": f"Bearer {cf_tok}", "Content-Type": "application/json"},
-                    json={"audio": b64_cf, "language": "id", "initial_prompt": vocab},
+                    json={"audio": b64_cf, "language": whisper_lang, "initial_prompt": vocab},
                     timeout=5.0,
                 )
                 if cf_resp.status_code == 200:

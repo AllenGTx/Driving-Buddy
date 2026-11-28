@@ -114,6 +114,9 @@ class SpotifyIslandController extends ChangeNotifier {
   double _currentTimeSec = 0.0;
   double _durationSec = 210.0;
 
+  // Guard agar onPlayerComplete tidak trigger auto-next saat user sedang drag slider
+  bool _isSeeking = false;
+
   List<SpotifyTrackInfo> _playlist = const [];
   int _playlistIndex = 0;
 
@@ -197,11 +200,12 @@ class SpotifyIslandController extends ChangeNotifier {
       _isBuffering = false;
       // Guard: jangan auto-skip jika lagu gagal dalam 3 detik pertama
       // (stream URL invalid = AudioPlayer selesai instan → bukan akhir lagu sungguhan)
+      // Guard tambahan: jangan auto-skip saat user sedang drag slider
       final playedLongEnough = _currentTimeSec >= 3.0;
       _currentTimeSec = 0.0;
       notifyListeners();
       // Otomatis putar lagu berikutnya di antrean hanya jika lagu benar-benar sudah diputar
-      if (playedLongEnough && _isVisible && !_isClosing && _playlist.length > 1) {
+      if (playedLongEnough && !_isSeeking && _isVisible && !_isClosing && _playlist.length > 1) {
         unawaited(skipNext());
       }
     });
@@ -645,9 +649,9 @@ class SpotifyIslandController extends ChangeNotifier {
     // ── LANGKAH 1B: Jika backend mengembalikan yt_video_id (karena server terblokir label),
     // ekstrak langsung stream audio m4a penuh menggunakan IP HP pengguna sendiri (0 download ke memori).
     // PENTING: Jika yt_video_id tersedia, jangan putar preview dulu — langsung tunggu YoutubeExplode.
+    // Kondisi: mode yt_video_id ATAU durasi <= 45s (preview) ATAU ada yt_video_id apapun modenya
     if (resolvedYtVideoId != null &&
-        resolvedYtVideoId.isNotEmpty &&
-        (resolvedMode == 'yt_video_id' || resolvedDur <= 45)) {
+        resolvedYtVideoId.isNotEmpty) {
       final yt = YoutubeExplode();
       try {
         // Timeout 20 detik — lebih lama agar server YouTube sempat menjawab cipher
@@ -861,6 +865,20 @@ class SpotifyIslandController extends ChangeNotifier {
       ),
     );
     notifyListeners();
+  }
+
+  /// Dipanggil saat drag slider DIMULAI — freeze onPlayerComplete agar tidak trigger auto-next
+  void onSeekStart() {
+    _isSeeking = true;
+  }
+
+  /// Dipanggil saat drag slider SELESAI — seek final sekali saja, lalu buka guard
+  void onSeekEnd(double seconds) {
+    seekTo(seconds);
+    // Tunda sedikit agar AudioPlayer selesai seek sebelum guard dibuka
+    Future<void>.delayed(const Duration(milliseconds: 600), () {
+      _isSeeking = false;
+    });
   }
 
   /// Di-pause paksa saat Sirine Darurat Microsleep berbunyi demi keselamatan pengemudi!

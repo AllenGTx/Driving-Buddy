@@ -11,6 +11,7 @@ import 'package:record/record.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 
 import '../../services/device_control_service.dart';
+import '../../services/language_service.dart';
 import '../llm_chat/llm_chat_config.dart';
 import 'buddy_voice_config.dart';
 
@@ -69,11 +70,21 @@ class BuddySttService {
       _speechReady = await _speech.initialize(debugLogging: false);
       if (_speechReady) {
         final locales = await _speech.locales();
+        // Pilih locale sesuai preferensi modul bahasa pengguna:
+        // modul Inggris → cari en-US/en-GB; modul Indonesia → cari id/in
+        final isEn = LanguageService.instance.isEnglish;
         for (final loc in locales) {
           final id = loc.localeId.toLowerCase();
-          if (id.startsWith('id') || id.startsWith('in')) {
-            _resolvedSpeechLocale = loc.localeId;
-            break;
+          if (isEn) {
+            if (id.startsWith('en')) {
+              _resolvedSpeechLocale = loc.localeId;
+              break;
+            }
+          } else {
+            if (id.startsWith('id') || id.startsWith('in')) {
+              _resolvedSpeechLocale = loc.localeId;
+              break;
+            }
           }
         }
       }
@@ -550,9 +561,13 @@ class BuddySttService {
       if (!file.existsSync() || file.lengthSync() < 400) return null;
       await LlmChatConfig.shared.load();
       final uri = Uri.parse('${LlmChatConfig.shared.baseUrl}/stt');
+      // Kirim preferensi bahasa ke backend: 'en' untuk modul Inggris, 'id' untuk Indonesia.
+      // Whisper akan menggunakannya untuk melokalisasi transkripsi lebih akurat.
+      final lang = LanguageService.instance.isEnglish ? 'en' : 'id';
       final req = http.MultipartRequest('POST', uri)
         ..fields['hint'] = buddyNameHint
         ..fields['mode'] = mode
+        ..fields['lang'] = lang
         ..files.add(await http.MultipartFile.fromPath('file', filePath));
       final streamed = await _http.send(req).timeout(timeout);
       final resp = await http.Response.fromStream(streamed);
