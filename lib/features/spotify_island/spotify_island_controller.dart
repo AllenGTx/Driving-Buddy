@@ -1,9 +1,10 @@
 import 'dart:async';
 import 'dart:convert';
 import 'dart:io';
+import 'dart:typed_data';
 
 import 'package:audioplayers/audioplayers.dart';
-import 'package:flutter/foundation.dart';
+import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -20,6 +21,8 @@ class SpotifyTrackInfo {
     required this.durationSec,
     required this.spotifyQuery,
     this.streamPath = '',
+    this.coverBytes,
+    this.isAd = false,
   });
 
   final String title;
@@ -29,6 +32,32 @@ class SpotifyTrackInfo {
   final int durationSec;
   final String spotifyQuery;
   final String streamPath;
+  final Uint8List? coverBytes;
+  final bool isAd;
+
+  SpotifyTrackInfo copyWith({
+    String? title,
+    String? artist,
+    String? coverUrl,
+    String? previewUrl,
+    int? durationSec,
+    String? spotifyQuery,
+    String? streamPath,
+    Uint8List? coverBytes,
+    bool? isAd,
+  }) {
+    return SpotifyTrackInfo(
+      title: title ?? this.title,
+      artist: artist ?? this.artist,
+      coverUrl: coverUrl ?? this.coverUrl,
+      previewUrl: previewUrl ?? this.previewUrl,
+      durationSec: durationSec ?? this.durationSec,
+      spotifyQuery: spotifyQuery ?? this.spotifyQuery,
+      streamPath: streamPath ?? this.streamPath,
+      coverBytes: coverBytes ?? this.coverBytes,
+      isAd: isAd ?? this.isAd,
+    );
+  }
 
   factory SpotifyTrackInfo.fromJson(Map<String, dynamic> data, String fallbackQuery) {
     final title = (data['title'] ?? fallbackQuery).toString().trim();
@@ -62,9 +91,11 @@ class SpotifyIslandController extends ChangeNotifier {
   bool _initialized = false;
   bool _isConnected = false;
   bool _isSpotifyInstalled = false;
+  bool _isNotificationAccessGranted = false;
   bool _isVisible = false;
   bool _isClosing = false;
   bool _isExpanded = false;
+  bool _nativeSpotifyMode = false;
 
   /// True HANYA saat stream audio benar-benar sedang mengeluarkan suara (PlayerState.playing),
   /// sehingga timer & piringan vinyl tidak pernah jalan duluan sebelum lagu terdengar!
@@ -72,6 +103,12 @@ class SpotifyIslandController extends ChangeNotifier {
   bool _isBuffering = false;
   int _playSessionToken = 0;
   File? _activeMusicFile;
+
+  String _lastArtHash = '';
+  DateTime? _nativeLaunchGraceUntil;
+  String _previousNativeSignature = '';
+  Timer? _nativePollTimer;
+  bool _syncInFlight = false;
 
   double _currentTimeSec = 0.0;
   double _durationSec = 210.0;
@@ -90,6 +127,8 @@ class SpotifyIslandController extends ChangeNotifier {
 
   bool get isConnected => _isConnected;
   bool get isSpotifyInstalled => _isSpotifyInstalled;
+  bool get isNotificationAccessGranted => _isNotificationAccessGranted;
+  bool get isNativeSpotifyMode => _nativeSpotifyMode;
   bool get isVisible => _isVisible;
   bool get isClosing => _isClosing;
   bool get isExpanded => _isExpanded;
@@ -172,20 +211,73 @@ class SpotifyIslandController extends ChangeNotifier {
 
   Future<void> refreshInstallStatus() async {
     _isSpotifyInstalled = await DeviceControlService.instance.isSpotifyInstalled();
+    _isNotificationAccessGranted =
+        await DeviceControlService.instance.isNotificationAccessGranted();
+    if (!_isSpotifyInstalled && _isConnected) {
+      _isConnected = false;
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool(_prefConnectedKey, false);
+      } catch (_) {}
+    }
     notifyListeners();
   }
 
-  /// Mengaktifkan integrasi Spotify Dynamic Island langsung di dalam Driving Buddy
-  /// tanpa memaksa pengguna berpindah ke layar aplikasi luar.
+  /// Mengaktifkan integrasi Spotify hanya jika aplikasi Spotify benar-benar terpasang di perangkat.
   Future<bool> connectSpotify({bool openAppToAuthorize = false}) async {
     await refreshInstallStatus();
+    if (!_isSpotifyInstalled) {
+      _isConnected = false;
+      try {
+        final prefs = await SharedPreferences.getInstance();
+        await prefs.setBool(_prefConnectedKey, false);
+      } catch (_) {}
+      notifyListeners();
+      return false;
+    }
     _isConnected = true;
     try {
       final prefs = await SharedPreferences.getInstance();
-      await prefs.setBool(_prefConnectedKey, _isConnected);
+      await prefs.setBool(_prefConnectedKey, true);
     } catch (_) {}
     notifyListeners();
-    return _isConnected;
+    return true;
+  }
+
+  /// Sinkronkan lifecycle app:
+  /// - Home (`paused`): lagu tetap berjalan, Dynamic Island tetap ada, polling sementara dihentikan.
+  /// - Kembali dari Home (`resumed`): cek apakah session native masih aktif; jika iya, sync jam & lagu real-time.
+  Future<void> handleAppLifecycle(AppLifecycleState state) async {
+    if (state == AppLifecycleState.paused || state == AppLifecycleState.hidden) {
+      _nativePollTimer?.cancel();
+      _nativePollTimer = null;
+    } else if (state == AppLifecycleState.resumed) {
+      await refreshInstallStatus();
+      final sessionAlive =
+          await DeviceControlService.instance.isDynamicIslandSessionActive();
+      if (_isVisible && !sessionAlive) {
+        await _hideIslandImmediately();
+        return;
+      }
+      if (_isVisible && _nativeSpotifyMode && !_isClosing) {
+        await syncFromNativeSpotifyNow();
+        _startNativePlaybackPolling();
+      }
+    }
+  }
+
+  Future<void> _hideIslandImmediately() async {
+    _nativePollTimer?.cancel();
+    _nativePollTimer = null;
+    _playSessionToken++;
+    _nativeSpotifyMode = false;
+    _isVisible = false;
+    _isClosing = false;
+    _isExpanded = false;
+    _isBuffering = false;
+    _isPlaying = false;
+    _currentTimeSec = 0.0;
+    notifyListeners();
   }
 
   Future<void> disconnectSpotify() async {
@@ -263,22 +355,30 @@ class SpotifyIslandController extends ChangeNotifier {
     return fallback;
   }
 
+  String _fetchedCoverSignature = '';
+
   /// Tampilkan metadata lagu di Dynamic Island TANPA memulai stream internal.
-  /// Digunakan saat Spotify native yang memutar lagu (via MediaPlayFromSearch intent).
-  /// Dynamic Island hanya menampilkan cover art, judul, artis, dan timer pasif.
+  /// Digunakan saat Spotify native yang memutar lagu (`playing on device`),
+  /// lalu menyinkronkan lagu rekomendasi berikutnya, iklan, & waktu putar real-time dari MediaSession Spotify.
   Future<void> showIslandMetadataOnly(
     SpotifyTrackInfo track, {
     bool isDrivingSession = false,
+    String? previousSessionSignature,
   }) async {
     await init();
-    _playSessionToken++;           // batalkan stream lama jika ada
+    _playSessionToken++; // batalkan stream internal lama jika ada
+    _nativeSpotifyMode = true;
+    _lastArtHash = '';
+    _fetchedCoverSignature = '';
+    _nativeLaunchGraceUntil = DateTime.now().add(const Duration(seconds: 4));
+    _previousNativeSignature = previousSessionSignature ?? '';
 
     if (_playlist.isEmpty || _playlist.every((t) => t.spotifyQuery != track.spotifyQuery)) {
       _playlist = [track, ..._playlist.where((t) => t.spotifyQuery != track.spotifyQuery)].take(8).toList();
       _playlistIndex = 0;
     }
 
-    // Hentikan stream internal (Spotify native yang handle audio sekarang)
+    // Hentikan stream internal (Spotify native yang handle audio sepenuhnya)
     await _audioPlayer.stop();
     final oldFile = _activeMusicFile;
     _activeMusicFile = null;
@@ -289,39 +389,132 @@ class SpotifyIslandController extends ChangeNotifier {
     _durationSec = track.durationSec.toDouble();
     _isClosing = false;
     _isVisible = true;
-    _isPlaying = true;    // Spotify native sedang play — anggap playing untuk tampilan awal
+    _isPlaying = true;
     _isBuffering = false;
     notifyListeners();
 
-    // Poll status music system setiap 2 detik untuk sinkron play/pause dari Spotify native
+    await DeviceControlService.instance.setDynamicIslandSessionActive(true);
     _startNativePlaybackPolling();
   }
 
-  Timer? _nativePollTimer;
-
   void _startNativePlaybackPolling() {
     _nativePollTimer?.cancel();
-    _nativePollTimer = Timer.periodic(const Duration(seconds: 2), (_) async {
-      if (!_isVisible || _isClosing) {
-        _nativePollTimer?.cancel();
-        return;
-      }
-      try {
-        final playing = await DeviceControlService.instance.isSystemMusicActive();
-        if (_isPlaying != playing) {
-          _isPlaying = playing;
-          notifyListeners();
-        }
-        // Update timer pasif berdasarkan waktu nyata (hanya saat playing)
-        if (_isPlaying) {
-          _currentTimeSec = (_currentTimeSec + 2.0).clamp(0.0, _durationSec);
-          if (_currentTimeSec >= _durationSec) {
-            _nativePollTimer?.cancel();
-          }
-          notifyListeners();
-        }
-      } catch (_) {}
+    _nativePollTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+      unawaited(syncFromNativeSpotifyNow());
     });
+  }
+
+  /// Baca state real-time langsung dari MediaSession Spotify (judul, artis, iklan, durasi, posisi ms).
+  /// Dipanggil tiap 1 detik dan seketika saat pengguna kembali dari tombol Home.
+  Future<void> syncFromNativeSpotifyNow() async {
+    if (!_isVisible || _isClosing || !_nativeSpotifyMode || _syncInFlight) return;
+    _syncInFlight = true;
+    try {
+      final snap = await DeviceControlService.instance.getSpotifyPlaybackState(
+        lastArtHash: _lastArtHash,
+      );
+      if (!_isVisible || _isClosing || !_nativeSpotifyMode) return;
+
+      if (snap != null) {
+        _isNotificationAccessGranted = snap.listenerGranted;
+        if (snap.listenerGranted && snap.hasSession) {
+          final snapSig = '${snap.title}|${snap.artist}';
+          final grace = _nativeLaunchGraceUntil;
+          if (grace != null && DateTime.now().isBefore(grace)) {
+            final stalePausedOldTrack = !snap.isPlaying &&
+                _previousNativeSignature.isNotEmpty &&
+                snapSig == _previousNativeSignature;
+            if (stalePausedOldTrack) {
+              return;
+            }
+          }
+          _nativeLaunchGraceUntil = null;
+
+          final nextTitle = snap.title.isNotEmpty
+              ? snap.title
+              : (snap.isAd ? 'Iklan Spotify' : _track.title);
+          final nextArtist = snap.artist.isNotEmpty
+              ? snap.artist
+              : (snap.isAd ? 'Spotify Advertisement' : _track.artist);
+          final nextDurSec = snap.durationMs >= 1000
+              ? (snap.durationMs / 1000.0)
+              : _durationSec;
+          final nextPosSec = (snap.positionMs / 1000.0).clamp(0.0, nextDurSec);
+
+          final trackChanged = nextTitle != _track.title ||
+              nextArtist != _track.artist ||
+              snap.isAd != _track.isAd;
+
+          Uint8List? nextCoverBytes = _track.coverBytes;
+          String nextCoverUrl = _track.coverUrl;
+          if (snap.artBytes != null) {
+            nextCoverBytes = snap.artBytes;
+            _lastArtHash = snap.artHash;
+          } else if (snap.isAd) {
+            nextCoverBytes = null;
+            nextCoverUrl = '';
+            _lastArtHash = snap.artHash;
+          } else if (trackChanged && snap.artHash != _lastArtHash) {
+            nextCoverBytes = null;
+            nextCoverUrl = '';
+            _lastArtHash = snap.artHash;
+            unawaited(_enrichCoverForTrack(nextTitle, nextArtist));
+          }
+
+          _track = _track.copyWith(
+            title: nextTitle,
+            artist: nextArtist,
+            coverUrl: nextCoverUrl,
+            coverBytes: nextCoverBytes,
+            durationSec: nextDurSec.round().clamp(1, 3600),
+            spotifyQuery: '$nextTitle $nextArtist'.trim(),
+            isAd: snap.isAd,
+          );
+          _durationSec = nextDurSec;
+          _currentTimeSec = nextPosSec;
+          _isPlaying = snap.isPlaying;
+          _isBuffering = false;
+          notifyListeners();
+          return;
+        }
+      }
+
+      // Fallback bila Akses Notifikasi belum diaktifkan: tetap sinkronkan isMusicActive + timer pasif
+      final playing = await DeviceControlService.instance.isSystemMusicActive();
+      if (_isPlaying != playing) {
+        _isPlaying = playing;
+      }
+      if (_isPlaying) {
+        _currentTimeSec = (_currentTimeSec + 1.0).clamp(0.0, _durationSec);
+      }
+      notifyListeners();
+    } catch (_) {
+    } finally {
+      _syncInFlight = false;
+    }
+  }
+
+  Future<void> _enrichCoverForTrack(String title, String artist) async {
+    final sig = '$title|$artist';
+    if (_fetchedCoverSignature == sig || title.isEmpty) return;
+    _fetchedCoverSignature = sig;
+    try {
+      await LlmChatConfig.shared.load();
+      final q = Uri.encodeQueryComponent('$title $artist'.trim());
+      final uri = Uri.parse('${LlmChatConfig.shared.baseUrl}/music/search?q=$q');
+      final resp = await _http.get(uri).timeout(const Duration(seconds: 4));
+      if (resp.statusCode != 200 || !_isVisible || _isClosing) return;
+      final data = jsonDecode(resp.body) as Map<String, dynamic>;
+      final rawTracks = data['tracks'];
+      String foundCover = (data['cover_url'] ?? '').toString();
+      if (rawTracks is List && rawTracks.isNotEmpty && rawTracks.first is Map) {
+        foundCover = (rawTracks.first['cover_url'] ?? foundCover).toString();
+      }
+      if (foundCover.isNotEmpty && '${_track.title}|${_track.artist}' == sig) {
+        _track = _track.copyWith(coverUrl: foundCover);
+        notifyListeners();
+      }
+    } catch (_) {}
   }
 
   /// Memutar lagu otomatis 100% di dalam Dynamic Island Driving Buddy tanpa pernah membuka layar Spotify!
@@ -451,6 +644,12 @@ class SpotifyIslandController extends ChangeNotifier {
   Future<void> pausePlayback() async {
     if (!_isVisible) return;
     _isBuffering = false;
+    if (_nativeSpotifyMode) {
+      await DeviceControlService.instance.sendMediaCommand('pause');
+      _isPlaying = false;
+      notifyListeners();
+      return;
+    }
     await _audioPlayer.pause();
     _isPlaying = false;
     notifyListeners();
@@ -458,6 +657,16 @@ class SpotifyIslandController extends ChangeNotifier {
 
   Future<void> resumePlayback() async {
     if (!_isVisible) return;
+    if (_nativeSpotifyMode) {
+      await DeviceControlService.instance.sendMediaCommand('play');
+      _isPlaying = true;
+      notifyListeners();
+      unawaited(Future<void>.delayed(
+        const Duration(milliseconds: 250),
+        syncFromNativeSpotifyNow,
+      ));
+      return;
+    }
     if (_currentTimeSec <= 0.05 && !_isPlaying) {
       await _startInAppTrackStream(_track, sessionToken: ++_playSessionToken);
       return;
@@ -475,6 +684,12 @@ class SpotifyIslandController extends ChangeNotifier {
   }
 
   Future<SpotifyTrackInfo> skipNext() async {
+    if (_nativeSpotifyMode) {
+      await DeviceControlService.instance.sendMediaCommand('next');
+      await Future<void>.delayed(const Duration(milliseconds: 650));
+      await syncFromNativeSpotifyNow();
+      return _track;
+    }
     if (_playlist.length > 1) {
       _playlistIndex = (_playlistIndex + 1) % _playlist.length;
       final nextTrack = _playlist[_playlistIndex];
@@ -499,6 +714,12 @@ class SpotifyIslandController extends ChangeNotifier {
   }
 
   Future<SpotifyTrackInfo> skipPrevious() async {
+    if (_nativeSpotifyMode) {
+      await DeviceControlService.instance.sendMediaCommand('previous');
+      await Future<void>.delayed(const Duration(milliseconds: 650));
+      await syncFromNativeSpotifyNow();
+      return _track;
+    }
     if (_currentTimeSec > 4.0 || _playlist.length <= 1) {
       seekTo(0.0);
       if (!_isPlaying) {
@@ -515,6 +736,11 @@ class SpotifyIslandController extends ChangeNotifier {
   void seekTo(double seconds) {
     final target = seconds.clamp(0.0, _durationSec);
     _currentTimeSec = target;
+    if (_nativeSpotifyMode) {
+      unawaited(DeviceControlService.instance.seekSpotify((target * 1000).round()));
+      notifyListeners();
+      return;
+    }
     unawaited(
       _audioPlayer.seek(
         Duration(milliseconds: (target * 1000).round()),
@@ -528,7 +754,11 @@ class SpotifyIslandController extends ChangeNotifier {
     if (_isPlaying || _isBuffering) {
       _playSessionToken++;
       _isBuffering = false;
-      await _audioPlayer.pause();
+      if (_nativeSpotifyMode) {
+        await DeviceControlService.instance.sendMediaCommand('pause');
+      } else {
+        await _audioPlayer.pause();
+      }
       _isPlaying = false;
       notifyListeners();
     }
@@ -541,13 +771,20 @@ class SpotifyIslandController extends ChangeNotifier {
   /// Menutup Dynamic Island sepenuhnya (mengecil dan naik ke atas lalu hilang, serta menghentikan audio).
   Future<void> closeIsland() async {
     if (!_isVisible || _isClosing) return;
+    _nativePollTimer?.cancel();
+    _nativePollTimer = null;
     _playSessionToken++;
     _isClosing = true;
     _isExpanded = false;
     _isBuffering = false;
+    final wasPlayingNative = _nativeSpotifyMode && _isPlaying;
     _isPlaying = false;
     notifyListeners();
 
+    if (wasPlayingNative) {
+      await DeviceControlService.instance.sendMediaCommand('pause');
+    }
+    await DeviceControlService.instance.setDynamicIslandSessionActive(false);
     await _audioPlayer.stop();
     _currentTimeSec = 0.0;
     final oldFile = _activeMusicFile;
@@ -557,6 +794,7 @@ class SpotifyIslandController extends ChangeNotifier {
     }
 
     await Future<void>.delayed(const Duration(milliseconds: 280));
+    _nativeSpotifyMode = false;
     _isVisible = false;
     _isClosing = false;
     notifyListeners();

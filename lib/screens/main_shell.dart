@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import '../core/app_colors.dart';
 import '../core/design_tokens.dart';
 import '../features/nearby_places/nearby_places.dart';
+import '../features/spotify_island/spotify_island_controller.dart';
 import '../features/spotify_island/ui/dynamic_island_overlay.dart';
 import '../features/voice_buddy/ui/buddy_floating_sheet.dart';
 import '../features/voice_buddy/voice_buddy_controller.dart';
@@ -78,6 +79,7 @@ class _MainShellState extends State<MainShell> with WidgetsBindingObserver {
   void didChangeAppLifecycleState(AppLifecycleState state) {
     final driving = _monitorKey.currentState?.isMonitoring ?? false;
     _voiceBuddyController.handleAppLifecycle(state, isDriving: driving);
+    unawaited(SpotifyIslandController.instance.handleAppLifecycle(state));
   }
 
   @override

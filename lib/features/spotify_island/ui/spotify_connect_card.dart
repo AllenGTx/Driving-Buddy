@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 
 import '../../../core/app_colors.dart';
 import '../../../core/design_tokens.dart';
+import '../../../services/device_control_service.dart';
 import '../../../services/language_service.dart';
 import '../../../services/theme_service.dart';
 import '../spotify_island_controller.dart';
@@ -33,15 +34,57 @@ class _SpotifyConnectCardState extends State<SpotifyConnectCard> {
       if (_spotify.isConnected) {
         await _spotify.disconnectSpotify();
       } else {
-        await _spotify.connectSpotify(openAppToAuthorize: false);
-        if (mounted) {
-          final isEn = LanguageService.instance.isEnglish;
+        final ok = await _spotify.connectSpotify(openAppToAuthorize: true);
+        if (!mounted) return;
+        final isEn = LanguageService.instance.isEnglish;
+        if (!ok) {
           ScaffoldMessenger.of(context).showSnackBar(
             SnackBar(
               content: Text(
                 isEn
-                    ? 'Spotify Dynamic Island activated! Ask Buddy to play any song.'
-                    : 'Spotify Dynamic Island aktif! Sekarang minta Buddy setel lagu lewat suara tanpa keluar aplikasi.',
+                    ? 'Spotify app is not installed on this phone yet. Please install & log in to Spotify first.'
+                    : 'Aplikasi Spotify belum terpasang di HP ini. Install & login akun Spotify kamu terlebih dahulu.',
+              ),
+              behavior: SnackBarBehavior.floating,
+              duration: const Duration(seconds: 4),
+            ),
+          );
+          return;
+        }
+        if (!_spotify.isNotificationAccessGranted) {
+          await showDialog<void>(
+            context: context,
+            builder: (ctx) => AlertDialog(
+              title: Text(
+                isEn ? 'Enable Spotify Live Sync' : 'Aktifkan Sinkronisasi Spotify',
+              ),
+              content: Text(
+                isEn
+                    ? 'Allow Notification Access for Driving Buddy so Dynamic Island automatically syncs track titles, Spotify recommendations, ads, and playback time.'
+                    : 'Izinkan Akses Notifikasi untuk Driving Buddy agar lagu berikutnya, iklan Spotify, dan timer Dynamic Island tersinkron otomatis. Pastikan kamu juga sudah login di aplikasi Spotify.',
+              ),
+              actions: [
+                TextButton(
+                  onPressed: () => Navigator.of(ctx).pop(),
+                  child: Text(isEn ? 'Later' : 'Nanti'),
+                ),
+                FilledButton(
+                  onPressed: () {
+                    Navigator.of(ctx).pop();
+                    DeviceControlService.instance.openNotificationAccessSettings();
+                  },
+                  child: Text(isEn ? 'Open Settings' : 'Buka Pengaturan'),
+                ),
+              ],
+            ),
+          );
+        } else {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text(
+                isEn
+                    ? 'Spotify connected! Ask Buddy to play any song.'
+                    : 'Spotify terhubung! Sekarang minta Buddy setel lagu lewat suara.',
               ),
               behavior: SnackBarBehavior.floating,
               duration: const Duration(seconds: 3),

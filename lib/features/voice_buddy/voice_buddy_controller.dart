@@ -761,9 +761,12 @@ class VoiceBuddyController extends ChangeNotifier {
     if (isRateLimited) {
       // Semua provider sedang sibuk sementara → beritahu user, lalu dismiss (jangan loop "capek")
       final isEn = LanguageService.instance.isEnglish;
+      final profName = currentProf == BuddyVoiceProfile.furina
+          ? 'Furina'
+          : (currentProf == BuddyVoiceProfile.jane ? 'Jane' : 'John');
       final busyMsg = isEn
-          ? 'All AI providers are busy right now. Please try again in a moment.'
-          : 'Semua provider AI sedang sibuk. Coba lagi sebentar ya.';
+          ? '$profName is super busy right now..., please try again in a moment.'
+          : '$profName sedang sibuk banget......, coba lagi sebentar ya';
       _replyText = busyMsg;
       notifyListeners();
       await _tts.speakReply(
@@ -1036,15 +1039,36 @@ class VoiceBuddyController extends ChangeNotifier {
     await spotifyCtrl.init();
     if (turnId != _turnId) return true;
 
-    // Jika pengguna belum klik Hubungkan, otomatis aktifkan Dynamic Island in-app agar lagu tetap langsung jalan mulus!
-    if (!spotifyCtrl.isConnected) {
-      await spotifyCtrl.connectSpotify(openAppToAuthorize: false);
+    // Case 1: Cek dulu apakah Spotify di Beranda sudah terhubung & Spotify terpasang!
+    // Jangan auto-connect dan jangan munculkan Dynamic Island kalau user belum menghubungkan Spotify.
+    if (!spotifyCtrl.isSpotifyInstalled || !spotifyCtrl.isConnected) {
+      final needConnectMsg = !spotifyCtrl.isSpotifyInstalled
+          ? (isEn
+                ? 'Spotify app is not installed on your phone yet. Please install Spotify, log in, then tap Connect on the Home screen.'
+                : 'Aplikasi Spotify belum terpasang di HP kamu nih. Install dan login Spotify dulu, lalu tekan Hubungkan di beranda ya.')
+          : (isEn
+                ? 'Spotify is not connected on your Home screen yet. Please tap Connect Spotify on the Home screen first before playing music.'
+                : 'Spotify kamu di beranda belum terhubung nih. Hubungkan Spotify dulu di kartu beranda sebelum menyetel lagu ya.');
+      _replyText = needConnectMsg;
+      notifyListeners();
+      await _tts.speakReply(
+        profile: profile,
+        text: needConnectMsg,
+        onPlaybackStart: () {
+          if (turnId != _turnId) return;
+          _replyText = needConnectMsg;
+          _setPhase(SiriOrbPhase.speaking);
+        },
+      );
+      if (turnId != _turnId) return true;
+      _scheduleDismissAndResume();
+      return true;
     }
 
     if (mentionsSpotifyConnect && playMatch == null) {
       final alreadyMsg = isEn
-          ? 'Spotify Dynamic Island is active! Just tell me what song you want to hear.'
-          : 'Pemutar Spotify Dynamic Island kamu sudah aktif kok, tinggal bilang mau diputerin lagu apa ya.';
+          ? 'Spotify is already connected! Just tell me what song you want to hear.'
+          : 'Spotify kamu di beranda sudah terhubung kok, tinggal bilang mau diputerin lagu apa ya.';
       _replyText = alreadyMsg;
       notifyListeners();
       await _tts.speakReply(
@@ -1069,14 +1093,19 @@ class VoiceBuddyController extends ChangeNotifier {
     final track = await spotifyCtrl.fetchTrackMetadata(rawSongQuery);
     if (turnId != _turnId) return true;
 
+    final prevSnap = await DeviceControlService.instance.getSpotifyPlaybackState();
+    final prevSig = prevSnap != null && prevSnap.hasSession
+        ? '${prevSnap.title}|${prevSnap.artist}'
+        : '';
+
     // Hentikan lagu lama bila sedang berputar supaya suara asisten jernih sebelum lagu baru mulai
     if (spotifyCtrl.isPlaying) {
       await spotifyCtrl.pausePlayback();
     }
 
     final confirmMsg = isEn
-        ? 'Okay, playing ${track.title} by ${track.artist} right here for you.'
-        : 'Oke, aku puterin lagu ${track.title} dari ${track.artist} sekarang ya.';
+        ? 'Okay, playing ${track.title} by ${track.artist} on Spotify now.'
+        : 'Oke, aku puterin lagu ${track.title} dari ${track.artist} di Spotify sekarang ya.';
     _replyText = confirmMsg;
     notifyListeners();
     await _tts.speakReply(
@@ -1090,14 +1119,18 @@ class VoiceBuddyController extends ChangeNotifier {
     );
     if (turnId != _turnId) return true;
 
-    // Sembunyikan Orb ke mode idle, lalu jalankan Spotify native (untuk sinkron "playing on NEF-JX9")
-    // dan tampilkan metadata di Dynamic Island tanpa stream internal Driving Buddy.
+    // 1. Buka/putar di Spotify native ("playing on NEF-JX9") -> pastikan berhasil diluncurkan!
     await dismissSheet();
-    // 1. Buka Spotify native via MediaPlayFromSearch intent → Spotify yang handle audio sepenuhnya
-    await DeviceControlService.instance.playSpotifyQuery(track.spotifyQuery);
-    // 2. Tampilkan Dynamic Island dengan metadata lagu (cover art, judul, artis, timer pasif)
-    //    tapi TANPA memulai stream internal (Spotify yang streaming, bukan kita)
-    await spotifyCtrl.showIslandMetadataOnly(track, isDrivingSession: _isDrivingActive);
+    final launched = await DeviceControlService.instance.playSpotifyQuery(track.spotifyQuery);
+    if (!launched) {
+      return true;
+    }
+    // 2. Tampilkan Dynamic Island & mulai sinkronisasi live MediaSession Spotify (judul, rekomendasi, iklan, jam real-time)
+    await spotifyCtrl.showIslandMetadataOnly(
+      track,
+      isDrivingSession: _isDrivingActive,
+      previousSessionSignature: prevSig,
+    );
     return true;
   }
 

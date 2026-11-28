@@ -1,4 +1,5 @@
 import 'dart:math' as math;
+import 'dart:typed_data';
 
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
@@ -232,6 +233,7 @@ class _DynamicIslandOverlayState extends State<DynamicIslandOverlay>
                                             children: [
                                               _MiniVinylDisc(
                                                 coverUrl: track.coverUrl,
+                                                coverBytes: track.coverBytes,
                                                 angle: _vinylAngle,
                                                 size: 21,
                                               ),
@@ -311,6 +313,7 @@ class _DynamicIslandOverlayState extends State<DynamicIslandOverlay>
                                                   children: [
                                                     _SleeveWithSpinningVinyl(
                                                       coverUrl: track.coverUrl,
+                                                      coverBytes: track.coverBytes,
                                                       angle: _vinylAngle,
                                                     ),
                                                     const SizedBox(width: 12),
@@ -322,23 +325,55 @@ class _DynamicIslandOverlayState extends State<DynamicIslandOverlay>
                                                         mainAxisSize:
                                                             MainAxisSize.min,
                                                         children: [
-                                                          Text(
-                                                            track.title,
-                                                            maxLines: 1,
-                                                            overflow:
-                                                                TextOverflow
-                                                                    .ellipsis,
-                                                            style:
-                                                                const TextStyle(
-                                                                  fontSize: 15.5,
-                                                                  fontWeight:
-                                                                      FontWeight
-                                                                          .w800,
-                                                                  letterSpacing:
-                                                                      -0.3,
-                                                                  color: Colors
-                                                                      .white,
+                                                          Row(
+                                                            children: [
+                                                              if (track.isAd) ...[
+                                                                Container(
+                                                                  margin: const EdgeInsets.only(right: 6),
+                                                                  padding: const EdgeInsets.symmetric(
+                                                                    horizontal: 5,
+                                                                    vertical: 1.5,
+                                                                  ),
+                                                                  decoration: BoxDecoration(
+                                                                    color: const Color(0xFFF59E0B).withValues(alpha: 0.22),
+                                                                    borderRadius: BorderRadius.circular(4),
+                                                                    border: Border.all(
+                                                                      color: const Color(0xFFF59E0B).withValues(alpha: 0.6),
+                                                                      width: 0.7,
+                                                                    ),
+                                                                  ),
+                                                                  child: const Text(
+                                                                    'IKLAN',
+                                                                    style: TextStyle(
+                                                                      fontSize: 8.5,
+                                                                      fontWeight: FontWeight.w800,
+                                                                      color: Color(0xFFFBBF24),
+                                                                      letterSpacing: 0.4,
+                                                                    ),
+                                                                  ),
                                                                 ),
+                                                              ],
+                                                              Expanded(
+                                                                child: Text(
+                                                                  track.title,
+                                                                  maxLines: 1,
+                                                                  overflow:
+                                                                      TextOverflow
+                                                                          .ellipsis,
+                                                                  style:
+                                                                      const TextStyle(
+                                                                        fontSize: 15.5,
+                                                                        fontWeight:
+                                                                            FontWeight
+                                                                                .w800,
+                                                                        letterSpacing:
+                                                                            -0.3,
+                                                                        color: Colors
+                                                                            .white,
+                                                                      ),
+                                                                ),
+                                                              ),
+                                                            ],
                                                           ),
                                                           const SizedBox(
                                                             height: 2,
@@ -599,14 +634,44 @@ class _DynamicIslandOverlayState extends State<DynamicIslandOverlay>
   }
 }
 
+Widget _buildCoverImage({
+  required String coverUrl,
+  required Uint8List? coverBytes,
+  required double size,
+  required double fallbackIconSize,
+}) {
+  if (coverBytes != null && coverBytes.isNotEmpty) {
+    return Image.memory(
+      coverBytes,
+      width: size,
+      height: size,
+      fit: BoxFit.cover,
+      gaplessPlayback: true,
+      errorBuilder: (_, _, _) => Center(child: SpotifyLogoMark(size: fallbackIconSize)),
+    );
+  }
+  if (coverUrl.isNotEmpty) {
+    return Image.network(
+      coverUrl,
+      width: size,
+      height: size,
+      fit: BoxFit.cover,
+      errorBuilder: (_, _, _) => Center(child: SpotifyLogoMark(size: fallbackIconSize)),
+    );
+  }
+  return Center(child: SpotifyLogoMark(size: fallbackIconSize));
+}
+
 class _MiniVinylDisc extends StatelessWidget {
   const _MiniVinylDisc({
     required this.coverUrl,
+    this.coverBytes,
     required this.angle,
     required this.size,
   });
 
   final String coverUrl;
+  final Uint8List? coverBytes;
   final double angle;
   final double size;
 
@@ -628,16 +693,12 @@ class _MiniVinylDisc extends StatelessWidget {
         child: Stack(
           alignment: Alignment.center,
           children: [
-            if (coverUrl.isNotEmpty)
-              Image.network(
-                coverUrl,
-                width: size,
-                height: size,
-                fit: BoxFit.cover,
-                errorBuilder: (_, _, _) => const SpotifyLogoMark(size: 16),
-              )
-            else
-              const SpotifyLogoMark(size: 16),
+            _buildCoverImage(
+              coverUrl: coverUrl,
+              coverBytes: coverBytes,
+              size: size,
+              fallbackIconSize: 16,
+            ),
             Container(
               width: 5.5,
               height: 5.5,
@@ -657,10 +718,12 @@ class _MiniVinylDisc extends StatelessWidget {
 class _SleeveWithSpinningVinyl extends StatelessWidget {
   const _SleeveWithSpinningVinyl({
     required this.coverUrl,
+    this.coverBytes,
     required this.angle,
   });
 
   final String coverUrl;
+  final Uint8List? coverBytes;
   final double angle;
 
   @override
@@ -705,17 +768,12 @@ class _SleeveWithSpinningVinyl extends StatelessWidget {
                   child: Stack(
                     alignment: Alignment.center,
                     children: [
-                      if (coverUrl.isNotEmpty)
-                        Image.network(
-                          coverUrl,
-                          fit: BoxFit.cover,
-                          width: 38,
-                          height: 38,
-                          errorBuilder: (_, _, _) =>
-                              const SpotifyLogoMark(size: 24),
-                        )
-                      else
-                        const SpotifyLogoMark(size: 24),
+                      _buildCoverImage(
+                        coverUrl: coverUrl,
+                        coverBytes: coverBytes,
+                        size: 38,
+                        fallbackIconSize: 24,
+                      ),
                       Container(
                         width: 7,
                         height: 7,
@@ -754,16 +812,12 @@ class _SleeveWithSpinningVinyl extends StatelessWidget {
               ],
             ),
             clipBehavior: Clip.antiAlias,
-            child: coverUrl.isNotEmpty
-                ? Image.network(
-                    coverUrl,
-                    fit: BoxFit.cover,
-                    width: 56,
-                    height: 56,
-                    errorBuilder: (_, _, _) =>
-                        const Center(child: SpotifyLogoMark(size: 30)),
-                  )
-                : const Center(child: SpotifyLogoMark(size: 30)),
+            child: _buildCoverImage(
+              coverUrl: coverUrl,
+              coverBytes: coverBytes,
+              size: 56,
+              fallbackIconSize: 30,
+            ),
           ),
         ],
       ),

@@ -1,5 +1,61 @@
+import 'dart:convert';
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
+
+class SpotifyPlaybackSnapshot {
+  const SpotifyPlaybackSnapshot({
+    required this.listenerGranted,
+    required this.hasSession,
+    required this.isPlaying,
+    required this.isAd,
+    required this.title,
+    required this.artist,
+    required this.album,
+    required this.durationMs,
+    required this.positionMs,
+    required this.artUri,
+    required this.artHash,
+    this.artBytes,
+  });
+
+  final bool listenerGranted;
+  final bool hasSession;
+  final bool isPlaying;
+  final bool isAd;
+  final String title;
+  final String artist;
+  final String album;
+  final int durationMs;
+  final int positionMs;
+  final String artUri;
+  final String artHash;
+  final Uint8List? artBytes;
+
+  static SpotifyPlaybackSnapshot? fromMap(Map<dynamic, dynamic>? raw) {
+    if (raw == null) return null;
+    Uint8List? decodedArt;
+    final b64 = (raw['artBase64'] ?? '').toString();
+    if (b64.isNotEmpty) {
+      try {
+        decodedArt = base64Decode(b64);
+      } catch (_) {}
+    }
+    return SpotifyPlaybackSnapshot(
+      listenerGranted: raw['listenerGranted'] == true,
+      hasSession: raw['hasSession'] == true,
+      isPlaying: raw['isPlaying'] == true,
+      isAd: raw['isAd'] == true,
+      title: (raw['title'] ?? '').toString().trim(),
+      artist: (raw['artist'] ?? '').toString().trim(),
+      album: (raw['album'] ?? '').toString().trim(),
+      durationMs: (raw['durationMs'] as num?)?.toInt() ?? 0,
+      positionMs: (raw['positionMs'] as num?)?.toInt() ?? 0,
+      artUri: (raw['artUri'] ?? '').toString().trim(),
+      artHash: (raw['artHash'] ?? '').toString().trim(),
+      artBytes: decodedArt,
+    );
+  }
+}
 
 /// Jembatan native Android ringan untuk:
 /// 1. Deteksi panggilan telepon / WhatsApp VoIP aktif (`AudioManager.mode`) tanpa izin privasi tambahan.
@@ -74,6 +130,82 @@ class DeviceControlService {
       final res = await _channel.invokeMethod<bool>('playSpotifyQuery', {
         'query': query,
       });
+      return res ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<bool> isNotificationAccessGranted() async {
+    if (kIsWeb) return false;
+    try {
+      final res = await _channel.invokeMethod<bool>('isNotificationAccessGranted');
+      return res ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<bool> openNotificationAccessSettings() async {
+    if (kIsWeb) return false;
+    try {
+      final res = await _channel.invokeMethod<bool>('openNotificationAccessSettings');
+      return res ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<bool> openSpotifyApp() async {
+    if (kIsWeb) return false;
+    try {
+      final res = await _channel.invokeMethod<bool>('openSpotifyApp');
+      return res ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<SpotifyPlaybackSnapshot?> getSpotifyPlaybackState({
+    String lastArtHash = '',
+  }) async {
+    if (kIsWeb) return null;
+    try {
+      final res = await _channel.invokeMethod<Map<dynamic, dynamic>>(
+        'getSpotifyPlaybackState',
+        {'lastArtHash': lastArtHash},
+      );
+      return SpotifyPlaybackSnapshot.fromMap(res);
+    } catch (_) {
+      return null;
+    }
+  }
+
+  Future<bool> seekSpotify(int positionMs) async {
+    if (kIsWeb) return false;
+    try {
+      final res = await _channel.invokeMethod<bool>('seekSpotify', {
+        'positionMs': positionMs,
+      });
+      return res ?? false;
+    } catch (_) {
+      return false;
+    }
+  }
+
+  Future<void> setDynamicIslandSessionActive(bool active) async {
+    if (kIsWeb) return;
+    try {
+      await _channel.invokeMethod<bool>('setDynamicIslandSessionActive', {
+        'active': active,
+      });
+    } catch (_) {}
+  }
+
+  Future<bool> isDynamicIslandSessionActive() async {
+    if (kIsWeb) return false;
+    try {
+      final res = await _channel.invokeMethod<bool>('isDynamicIslandSessionActive');
       return res ?? false;
     } catch (_) {
       return false;

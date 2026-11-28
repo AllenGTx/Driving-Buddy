@@ -8,11 +8,16 @@ import android.content.pm.PackageManager
 import android.media.AudioAttributes
 import android.media.AudioFocusRequest
 import android.media.AudioManager
+import android.media.MediaMetadata
+import android.media.session.PlaybackState
 import android.net.Uri
 import android.os.Build
+import android.os.Bundle
+import android.os.Handler
+import android.os.Looper
 import android.provider.MediaStore
 import android.provider.OpenableColumns
-import android.view.KeyEvent
+import android.provider.Settings
 import io.flutter.embedding.android.FlutterActivity
 import io.flutter.embedding.engine.FlutterEngine
 import io.flutter.plugin.common.MethodChannel
@@ -26,6 +31,31 @@ class MainActivity : FlutterActivity() {
     private var pendingResult: MethodChannel.Result? = null
     private var duckFocusRequest: AudioFocusRequest? = null
     private var exclusiveFocusRequest: AudioFocusRequest? = null
+    private val mainHandler = Handler(Looper.getMainLooper())
+
+    override fun onCreate(savedInstanceState: Bundle?) {
+        super.onCreate(savedInstanceState)
+        if (savedInstanceState == null) {
+            // Cold launch baru -> pastikan status Dynamic Island sesi lama tidak terbawa
+            SpotifySessionPrefs.setDynamicIslandActive(applicationContext, false)
+            try {
+                stopService(Intent(this, AppTaskWatcherService::class.java))
+            } catch (_: Exception) {
+            }
+        }
+    }
+
+    override fun onDestroy() {
+        if (isFinishing && SpotifySessionPrefs.isDynamicIslandActive(applicationContext)) {
+            SpotifyMediaHelper.pauseSpotify(applicationContext)
+            SpotifySessionPrefs.setDynamicIslandActive(applicationContext, false)
+            try {
+                stopService(Intent(this, AppTaskWatcherService::class.java))
+            } catch (_: Exception) {
+            }
+        }
+        super.onDestroy()
+    }
 
     override fun configureFlutterEngine(flutterEngine: FlutterEngine) {
         super.configureFlutterEngine(flutterEngine)
@@ -99,25 +129,84 @@ class MainActivity : FlutterActivity() {
                     val installed = isPkgInstalled("com.spotify.music") || isPkgInstalled("com.spotify.lite")
                     result.success(installed)
                 }
+                "isNotificationAccessGranted" -> {
+                    result.success(SpotifyMediaHelper.isNotificationAccessGranted(this))
+                }
+                "openNotificationAccessSettings" -> {
+                    try {
+                        val intent = Intent(Settings.ACTION_NOTIFICATION_LISTENER_SETTINGS).apply {
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                        }
+                        startActivity(intent)
+                        result.success(true)
+                    } catch (_: Exception) {
+                        result.success(false)
+                    }
+                }
+                "openSpotifyApp" -> {
+                    val pkg = when {
+                        isPkgInstalled("com.spotify.music") -> "com.spotify.music"
+                        isPkgInstalled("com.spotify.lite") -> "com.spotify.lite"
+                        else -> null
+                    }
+                    if (pkg == null) {
+                        result.success(false)
+                    } else {
+                        try {
+                            val launch = packageManager.getLaunchIntentForPackage(pkg)?.apply {
+                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                            if (launch != null) {
+                                startActivity(launch)
+                                result.success(true)
+                            } else {
+                                result.success(false)
+                            }
+                        } catch (_: Exception) {
+                            result.success(false)
+                        }
+                    }
+                }
+                "getSpotifyPlaybackState" -> {
+                    val lastArtHash = call.argument<String>("lastArtHash") ?: ""
+                    result.success(SpotifyMediaHelper.getPlaybackSnapshot(this, lastArtHash))
+                }
+                "seekSpotify" -> {
+                    val posMs = call.argument<Number>("positionMs")?.toLong() ?: 0L
+                    result.success(SpotifyMediaHelper.seekSpotify(this, posMs))
+                }
+                "setDynamicIslandSessionActive" -> {
+                    val active = call.argument<Boolean>("active") ?: false
+                    SpotifySessionPrefs.setDynamicIslandActive(applicationContext, active)
+                    val svcIntent = Intent(this, AppTaskWatcherService::class.java)
+                    try {
+                        if (active) {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+                                startForegroundService(svcIntent)
+                            } else {
+                                startService(svcIntent)
+                            }
+                        } else {
+                            stopService(svcIntent)
+                        }
+                        result.success(true)
+                    } catch (_: Exception) {
+                        result.success(false)
+                    }
+                }
+                "isDynamicIslandSessionActive" -> {
+                    result.success(SpotifySessionPrefs.isDynamicIslandActive(applicationContext))
+                }
                 "isMusicActive" -> {
-                    result.success(audioManager.isMusicActive)
+                    SpotifyMediaHelper.refreshStateFromMediaSession(this)
+                    val hasActiveSession = SpotifyMediaHelper.findActiveSpotifyController(this) != null
+                    result.success(
+                        if (hasActiveSession) SpotifyStateHolder.isPlaying else audioManager.isMusicActive
+                    )
                 }
                 "sendMediaCommand" -> {
                     val cmd = call.argument<String>("command") ?: "play_pause"
-                    val keyCode = when (cmd) {
-                        "play" -> KeyEvent.KEYCODE_MEDIA_PLAY
-                        "pause" -> KeyEvent.KEYCODE_MEDIA_PAUSE
-                        "next" -> KeyEvent.KEYCODE_MEDIA_NEXT
-                        "previous" -> KeyEvent.KEYCODE_MEDIA_PREVIOUS
-                        else -> KeyEvent.KEYCODE_MEDIA_PLAY_PAUSE
-                    }
-                    try {
-                        audioManager.dispatchMediaKeyEvent(KeyEvent(KeyEvent.ACTION_DOWN, keyCode))
-                        audioManager.dispatchMediaKeyEvent(KeyEvent(KeyEvent.ACTION_UP, keyCode))
-                        result.success(true)
-                    } catch (e: Exception) {
-                        result.success(false)
-                    }
+                    result.success(SpotifyMediaHelper.sendSpotifyCommand(this, cmd))
                 }
                 "playSpotifyQuery" -> {
                     val query = call.argument<String>("query") ?: ""
@@ -130,30 +219,57 @@ class MainActivity : FlutterActivity() {
                         result.success(false)
                         return@setMethodCallHandler
                     }
-                    try {
-                        val playIntent = Intent(MediaStore.INTENT_ACTION_MEDIA_PLAY_FROM_SEARCH).apply {
-                            setPackage(pkg)
-                            putExtra(MediaStore.EXTRA_MEDIA_FOCUS, "vnd.android.cursor.item/*")
-                            putExtra(SearchManager.QUERY, query)
-                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                        }
-                        startActivity(playIntent)
-                        result.success(true)
-                    } catch (e: Exception) {
+
+                    val existingCtrl = SpotifyMediaHelper.findActiveSpotifyController(this)
+                    val actions = existingCtrl?.playbackState?.actions ?: 0L
+                    if (existingCtrl != null && (actions and PlaybackState.ACTION_PLAY_FROM_SEARCH) != 0L) {
+                        val beforeTitle = existingCtrl.metadata?.getString(MediaMetadata.METADATA_KEY_TITLE) ?: ""
                         try {
-                            val searchUri = Uri.parse("spotify:search:${Uri.encode(query)}")
-                            val fallback = Intent(Intent.ACTION_VIEW, searchUri).apply {
-                                setPackage(pkg)
-                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                            }
-                            startActivity(fallback)
+                            existingCtrl.transportControls.playFromSearch(query, Bundle())
+                            mainHandler.postDelayed({
+                                val nowCtrl = SpotifyMediaHelper.findActiveSpotifyController(this@MainActivity)
+                                val nowTitle = nowCtrl?.metadata?.getString(MediaMetadata.METADATA_KEY_TITLE) ?: ""
+                                val nowState = nowCtrl?.playbackState?.state
+                                val started = (nowTitle.isNotEmpty() && nowTitle != beforeTitle) ||
+                                    nowState == PlaybackState.STATE_PLAYING
+                                if (!started) {
+                                    launchSpotifySearchIntent(pkg, query)
+                                }
+                            }, 1300L)
                             result.success(true)
+                            return@setMethodCallHandler
                         } catch (_: Exception) {
-                            result.success(false)
                         }
                     }
+
+                    result.success(launchSpotifySearchIntent(pkg, query))
                 }
                 else -> result.notImplemented()
+            }
+        }
+    }
+
+    private fun launchSpotifySearchIntent(pkg: String, query: String): Boolean {
+        return try {
+            val playIntent = Intent(MediaStore.INTENT_ACTION_MEDIA_PLAY_FROM_SEARCH).apply {
+                setPackage(pkg)
+                putExtra(MediaStore.EXTRA_MEDIA_FOCUS, "vnd.android.cursor.item/*")
+                putExtra(SearchManager.QUERY, query)
+                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+            }
+            startActivity(playIntent)
+            true
+        } catch (_: Exception) {
+            try {
+                val searchUri = Uri.parse("spotify:search:${Uri.encode(query)}")
+                val fallback = Intent(Intent.ACTION_VIEW, searchUri).apply {
+                    setPackage(pkg)
+                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                }
+                startActivity(fallback)
+                true
+            } catch (_: Exception) {
+                false
             }
         }
     }
