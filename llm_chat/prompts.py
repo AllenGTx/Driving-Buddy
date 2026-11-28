@@ -116,9 +116,25 @@ def _resolve_persona_key(voice_profile: Optional[str], buddy_name: Optional[str]
     return ""
 
 
-def _deflection_for_persona(voice_profile: Optional[str], buddy_name: Optional[str]) -> str:
+def _deflection_for_persona(
+    voice_profile: Optional[str],
+    buddy_name: Optional[str],
+    language: str = "id",
+) -> str:
     key = _resolve_persona_key(voice_profile, buddy_name)
     display = (buddy_name or "").strip()
+    is_en = (language or "id").strip().lower().startswith("en")
+    if is_en:
+        if key == "john":
+            who = display or "John"
+            return f"Take it easy bro, no need to worry about technical stuff. I'm {who}, your buddy riding shotgun!"
+        if key == "jane":
+            who = display or "Jane"
+            return f"Hehe, no need to think about technical stuff! I'm {who}, your driving buddy keeping you company on the road."
+        if key == "furina":
+            who = display or "Rina"
+            return f"Hey, why are you asking that? I'm {who}, your driving buddy right here with you on the road!"
+        return "No worries, I'm your driving buddy right here to keep you company on the road!"
     if key == "john":
         who = display or "John"
         return f"Santai aja bro, gak usah mikirin teknis gitu. Aku {who}, temen baik kamu yang siap nemenin nyetir sampai tujuan!"
@@ -139,9 +155,18 @@ def build_messages(
     voice_profile: Optional[str] = None,
     nearby_places: Optional[Sequence[NearbyPlaceBrief]] = None,
     web_search_context: Optional[str] = None,
+    language: str = "id",
 ) -> List[Dict[str, str]]:
     """Susun daftar pesan untuk LLM: 1 system message (aturan + konteks) + riwayat + pesan baru."""
     blocks = [SYSTEM_PROMPT]
+    is_en = (language or "id").strip().lower().startswith("en")
+    if is_en:
+        blocks.append(
+            "ACTIVE LANGUAGE MODE: ENGLISH. "
+            "You MUST ALWAYS reply in natural, warm, casual spoken English matching your persona, "
+            "even if the user's message is very short, unclear, or mentions Indonesian song titles, names, or places. "
+            "Never switch to Indonesian unless the user explicitly writes a full Indonesian sentence."
+        )
     clean_name = (buddy_name or "").strip()
     persona_key = _resolve_persona_key(voice_profile, buddy_name)
     if persona_key == "furina":

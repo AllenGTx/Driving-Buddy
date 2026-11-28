@@ -128,6 +128,7 @@ def build_router(
                 voice_profile=req.voice_profile,
                 nearby_places=req.nearby_places,
                 web_search_context=web_ctx,
+                language=req.language,
             )
             try:
                 result = await llm.complete(messages)

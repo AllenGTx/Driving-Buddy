@@ -560,7 +560,15 @@ class VoiceBuddyController extends ChangeNotifier {
     _dismissTimer?.cancel();
     await _stt.pauseWakeWordWatch();
 
-    if (match.kind == WakeMatchKind.wakeOnly) {
+    final remAlpha = match.remainingCommand.replaceAll(RegExp(r'[^a-zA-Z0-9\s]'), ' ').trim();
+    final isFillerRemainder = match.kind == WakeMatchKind.commandWithWake &&
+        (remAlpha.replaceAll(' ', '').length <= 2 ||
+            RegExp(
+              r'^(?:uh+|um+|hm+|er+m*|ah+|eh+|oh+|huh+|yo|hey|hei|hi|j)(?:\s+(?:uh+|um+|hm+|er+m*|ah+|eh+|oh+|huh+|yo|hey|hei|hi|j))*$',
+              caseSensitive: false,
+            ).hasMatch(remAlpha));
+
+    if (match.kind == WakeMatchKind.wakeOnly || isFillerRemainder) {
       final chosenAck = _tts.pickWakeAckText(voiceProfile);
       _transcriptText = transcript;
       _replyText = chosenAck;
@@ -685,6 +693,26 @@ class VoiceBuddyController extends ChangeNotifier {
     final effectiveQuery = stripped.kind == WakeMatchKind.commandWithWake
         ? stripped.remainingCommand
         : query.trim();
+
+    // Tolak gumaman/noise pendek ("uhh", "um", "J, yo J, yo J.") agar tidak langsung masuk ke "Thinking of an answer..."
+    final alphaNumOnly = effectiveQuery.replaceAll(RegExp(r'[^a-zA-Z0-9\s]'), ' ').trim();
+    final isPureFillerOrNoise = alphaNumOnly.replaceAll(' ', '').length <= 2 ||
+        RegExp(
+          r'^(?:uh+|um+|hm+|er+m*|ah+|eh+|oh+|huh+|yo|hey|hei|hi|j)(?:\s+(?:uh+|um+|hm+|er+m*|ah+|eh+|oh+|huh+|yo|hey|hei|hi|j))*$',
+          caseSensitive: false,
+        ).hasMatch(alphaNumOnly);
+    if (isPureFillerOrNoise) {
+      if (RegExp(r'\b(?:yo|hey|hei)\s+j\b', caseSensitive: false).hasMatch(alphaNumOnly)) {
+        await _listenAndAnswerAfterWake(
+          isFollowUp: isFollowUp,
+          followUpDepth: followUpDepth,
+          turnId: myTurn,
+        );
+      } else {
+        await dismissSheet();
+      }
+      return;
+    }
 
     final signOff = WakeWordMatcher.isConversationSignOff(
       effectiveQuery,

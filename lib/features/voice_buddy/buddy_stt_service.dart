@@ -203,10 +203,10 @@ class BuddySttService {
               sampleRate: 16000,
               numChannels: 1,
               autoGain: true,
-              echoCancel: false,
-              noiseSuppress: false,
+              echoCancel: true,
+              noiseSuppress: true,
               androidConfig: AndroidRecordConfig(
-                audioSource: AndroidAudioSource.mic,
+                audioSource: AndroidAudioSource.voiceRecognition,
                 manageBluetooth: false,
               ),
             ),
@@ -284,7 +284,7 @@ class BuddySttService {
           break;
         }
 
-        if (heardBurst && speechTicks >= 1) {
+        if (heardBurst && speechTicks >= 2) {
           final text = await _uploadToServerStt(
             filePath: segPath,
             buddyNameHint: BuddyVoiceConfig.instance.activeNickname,
@@ -295,7 +295,9 @@ class BuddySttService {
 
           if (!_watchActive || _appBackgrounded) break;
           final cleaned = (text ?? '').trim();
-          if (cleaned.isNotEmpty) {
+          // Tolak transkripsi sangat pendek (1 huruf seperti "J") — noise musik atau batuk
+          final cleanedAlpha = cleaned.replaceAll(RegExp(r'[^a-zA-Z0-9]'), '');
+          if (cleaned.isNotEmpty && cleanedAlpha.length >= 2) {
             final isMatch = _wakeCandidateMatcher?.call(cleaned) ?? false;
             if (isMatch) {
               _watchActive = false;
@@ -425,10 +427,10 @@ class BuddySttService {
             sampleRate: 16000,
             numChannels: 1,
             autoGain: true,
-            echoCancel: false,
-            noiseSuppress: false,
+            echoCancel: true,
+            noiseSuppress: true,
             androidConfig: AndroidRecordConfig(
-              audioSource: AndroidAudioSource.mic,
+              audioSource: AndroidAudioSource.voiceRecognition,
               manageBluetooth: false,
             ),
           ),

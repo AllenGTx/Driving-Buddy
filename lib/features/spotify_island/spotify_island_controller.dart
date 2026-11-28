@@ -548,13 +548,60 @@ class SpotifyIslandController extends ChangeNotifier {
 
   String _prewarmQuery = '';
   Future<Map<String, dynamic>?>? _prewarmFuture;
+  String _prewarmYtQuery = '';
+  Future<String?>? _prewarmYtUrlFuture;
 
-  /// Pre-resolve metadata stream audio secara paralel di background (mis. saat asisten berbicara konfirmasi).
+  Future<AudioOnlyStreamInfo?> _pickBestM4aStream(
+    YoutubeExplode yt,
+    String videoId,
+  ) async {
+    StreamManifest? manifest;
+    try {
+      manifest = await yt.videos.streamsClient
+          .getManifest(
+            videoId,
+            ytClients: [YoutubeApiClient.androidVr, YoutubeApiClient.ios],
+          )
+          .timeout(const Duration(seconds: 10));
+    } catch (_) {
+      try {
+        manifest = await yt.videos.streamsClient
+            .getManifest(
+              videoId,
+              ytClients: [YoutubeApiClient.tv, YoutubeApiClient.android],
+            )
+            .timeout(const Duration(seconds: 12));
+      } catch (_) {
+        manifest = null;
+      }
+    }
+    if (manifest == null || manifest.audioOnly.isEmpty) return null;
+
+    final m4aStreams = manifest.audioOnly
+        .where((s) =>
+            s.codec.mimeType.contains('mp4') ||
+            s.codec.mimeType.contains('m4a'))
+        .toList();
+    final poolStreams = m4aStreams.isNotEmpty
+        ? m4aStreams
+        : manifest.audioOnly.toList();
+    final compactM4a = poolStreams
+        .where((s) => s.bitrate.kiloBitsPerSecond <= 165)
+        .toList();
+    final pickFrom = compactM4a.isNotEmpty ? compactM4a : poolStreams;
+    return pickFrom.isNotEmpty
+        ? pickFrom.reduce((a, b) =>
+            a.bitrate.bitsPerSecond > b.bitrate.bitsPerSecond ? a : b)
+        : manifest.audioOnly.withHighestBitrate();
+  }
+
+  /// Pre-resolve metadata stream audio + URL YoutubeExplode secara paralel saat asisten berbicara.
   Future<void> prewarmTrackStream(SpotifyTrackInfo track) async {
     final q = track.spotifyQuery.trim();
     if (q.isEmpty) return;
     _prewarmQuery = q;
-    _prewarmFuture = () async {
+    _prewarmYtQuery = q;
+    final metaFuture = () async {
       try {
         await LlmChatConfig.shared.load();
         final baseUrl = LlmChatConfig.shared.baseUrl;
@@ -567,7 +614,25 @@ class SpotifyIslandController extends ChangeNotifier {
       } catch (_) {}
       return null;
     }();
-    await _prewarmFuture;
+    _prewarmFuture = metaFuture;
+
+    _prewarmYtUrlFuture = () async {
+      final data = await metaFuture;
+      final vid = (data?['yt_video_id'] as String?)?.trim() ?? '';
+      if (vid.isEmpty) return null;
+      final yt = YoutubeExplode();
+      try {
+        final streamInfo = await _pickBestM4aStream(yt, vid);
+        final u = streamInfo?.url.toString() ?? '';
+        return u.startsWith('http') ? u : null;
+      } catch (_) {
+        return null;
+      } finally {
+        yt.close();
+      }
+    }();
+
+    await metaFuture;
   }
 
   /// Memutar lagu otomatis 100% di dalam Dynamic Island Driving Buddy tanpa pernah membuka layar Spotify!
@@ -647,94 +712,118 @@ class SpotifyIslandController extends ChangeNotifier {
     if (sessionToken != _playSessionToken || !_isVisible || _isClosing) return;
 
     // ── LANGKAH 1B: Jika backend mengembalikan yt_video_id (karena server terblokir label),
-    // ekstrak langsung stream audio m4a penuh menggunakan IP HP pengguna sendiri (0 download ke memori).
-    // PENTING: Jika yt_video_id tersedia, jangan putar preview dulu — langsung tunggu YoutubeExplode.
-    // Kondisi: mode yt_video_id ATAU durasi <= 45s (preview) ATAU ada yt_video_id apapun modenya
+    // ekstrak langsung stream audio m4a penuh menggunakan IP HP pengguna sendiri.
+    // Gunakan hasil prewarm jika sudah siap saat asisten berbicara, lalu putar langsung via UrlSource (instan <0.5s)!
     if (resolvedYtVideoId != null &&
         resolvedYtVideoId.isNotEmpty) {
-      final yt = YoutubeExplode();
-      try {
-        // Timeout 20 detik — lebih lama agar server YouTube sempat menjawab cipher
-        final manifest = await yt.videos.streamsClient
-            .getManifest(resolvedYtVideoId)
-            .timeout(const Duration(seconds: 20));
-        if (sessionToken != _playSessionToken || !_isVisible || _isClosing) return;
-
-        // ── Filter hanya format m4a/mp4 agar Android audioplayers tidak keluar suara aneh (WebM/Opus).
-        // Utamakan bitrate efisien (<= 160kbps) agar unduhan ke file temp cepat (~1-2 detik), fallback m4a tertinggi.
-        final m4aStreams = manifest.audioOnly
-            .where((s) =>
-                s.codec.mimeType.contains('mp4') ||
-                s.codec.mimeType.contains('m4a'))
-            .toList();
-        final poolStreams = m4aStreams.isNotEmpty
-            ? m4aStreams
-            : manifest.audioOnly.toList();
-        final compactM4a = poolStreams
-            .where((s) => s.bitrate.kiloBitsPerSecond <= 165)
-            .toList();
-        final pickFrom = compactM4a.isNotEmpty ? compactM4a : poolStreams;
-        final audioStream = pickFrom.isNotEmpty
-            ? pickFrom.reduce((a, b) =>
-                a.bitrate.bitsPerSecond > b.bitrate.bitsPerSecond ? a : b)
-            : manifest.audioOnly.withHighestBitrate();
-
-        // 1) Unduh stream resmi m4a melalui YoutubeHttpClient ke file temp sementara (~2-4 MB),
-        //    lalu putar via DeviceFileSource: bebas 403 Forbidden, seek slider instan, & file lama otomatis dihapus!
+      if (_prewarmYtQuery == track.spotifyQuery.trim() && _prewarmYtUrlFuture != null) {
         try {
-          final dir = await getTemporaryDirectory();
-          final nextFile = File('${dir.path}/buddy_track_$sessionToken.m4a');
-          final sink = nextFile.openWrite();
-          try {
-            await for (final chunk in yt.videos.streamsClient
-                .get(audioStream)
-                .timeout(const Duration(seconds: 22))) {
-              if (sessionToken != _playSessionToken || !_isVisible || _isClosing) {
-                break;
-              }
-              sink.add(chunk);
-            }
-            await sink.flush();
-          } finally {
-            await sink.close();
-          }
-
-          if (sessionToken != _playSessionToken || !_isVisible || _isClosing) {
-            unawaited(nextFile.delete().catchError((_) => nextFile));
-            return;
-          }
-
-          if (nextFile.existsSync() && nextFile.lengthSync() > 16384) {
-            final prevFile = _activeMusicFile;
-            _activeMusicFile = nextFile;
-            if (prevFile != null && prevFile.path != nextFile.path) {
-              unawaited(prevFile.delete().catchError((_) => prevFile));
-            }
+          final prewarmedUrl = await _prewarmYtUrlFuture;
+          if (sessionToken != _playSessionToken || !_isVisible || _isClosing) return;
+          if (prewarmedUrl != null && prewarmedUrl.startsWith('http')) {
             if (resolvedDur > 60 && (_durationSec - resolvedDur).abs() >= 2) {
               _durationSec = resolvedDur.toDouble();
               notifyListeners();
             }
             await _audioPlayer.setVolume(0.92);
-            await _audioPlayer.play(DeviceFileSource(nextFile.path));
+            await _audioPlayer.play(UrlSource(prewarmedUrl));
+            if (sessionToken != _playSessionToken) return;
             return;
-          } else {
-            unawaited(nextFile.delete().catchError((_) => nextFile));
           }
         } catch (_) {
           if (sessionToken != _playSessionToken || !_isVisible || _isClosing) return;
         }
+      }
 
-        // 2) Fallback: coba UrlSource langsung jika download chunk gagal
-        final ytAudioUrl = audioStream.url.toString();
-        if (ytAudioUrl.startsWith('http')) {
-          if (resolvedDur > 60 && (_durationSec - resolvedDur).abs() >= 2) {
-            _durationSec = resolvedDur.toDouble();
-            notifyListeners();
+      final yt = YoutubeExplode();
+      try {
+        final audioStream = await _pickBestM4aStream(yt, resolvedYtVideoId);
+        if (sessionToken != _playSessionToken || !_isVisible || _isClosing) return;
+        if (audioStream != null) {
+          final ytAudioUrl = audioStream.url.toString();
+          // 1) Utama: putar langsung via UrlSource (mulai instan tanpa tunggu unduh penuh!)
+          if (ytAudioUrl.startsWith('http')) {
+            try {
+              if (resolvedDur > 60 && (_durationSec - resolvedDur).abs() >= 2) {
+                _durationSec = resolvedDur.toDouble();
+                notifyListeners();
+              }
+              await _audioPlayer.setVolume(0.92);
+              await _audioPlayer.play(UrlSource(ytAudioUrl));
+              if (sessionToken != _playSessionToken) return;
+              return;
+            } catch (_) {
+              if (sessionToken != _playSessionToken || !_isVisible || _isClosing) return;
+            }
           }
-          await _audioPlayer.setVolume(0.92);
-          await _audioPlayer.play(UrlSource(ytAudioUrl));
-          if (sessionToken != _playSessionToken) return;
-          return;
+
+          // 2) Cadangan: jika UrlSource ditolak (mis. 403 header), unduh ke file temp via YoutubeHttpClient
+          // Unduh chunk demi chunk — mulai putar begitu cukup data masuk (>= 256 KB)
+          try {
+            final dir = await getTemporaryDirectory();
+            final nextFile = File('${dir.path}/buddy_track_$sessionToken.m4a');
+            final sink = nextFile.openWrite();
+            bool startedPlaying = false;
+            int bytesWritten = 0;
+            try {
+              await (() async {
+                await for (final chunk in yt.videos.streamsClient.get(audioStream)) {
+                  if (sessionToken != _playSessionToken || !_isVisible || _isClosing) {
+                    break;
+                  }
+                  sink.add(chunk);
+                  bytesWritten += chunk.length;
+                  // Mulai putar begitu ada >256 KB — tidak perlu tunggu unduh penuh
+                  if (!startedPlaying && bytesWritten >= 262144) {
+                    startedPlaying = true;
+                    await sink.flush();
+                    if (sessionToken == _playSessionToken && _isVisible && !_isClosing) {
+                      if (resolvedDur > 60 && (_durationSec - resolvedDur).abs() >= 2) {
+                        _durationSec = resolvedDur.toDouble();
+                        notifyListeners();
+                      }
+                      await _audioPlayer.setVolume(0.92);
+                      await _audioPlayer.play(DeviceFileSource(nextFile.path));
+                    }
+                  }
+                }
+              })().timeout(const Duration(seconds: 60));
+              await sink.flush();
+            } finally {
+              await sink.close();
+            }
+
+            if (sessionToken != _playSessionToken || !_isVisible || _isClosing) {
+              unawaited(nextFile.delete().catchError((_) => nextFile));
+              return;
+            }
+
+            if (!startedPlaying && nextFile.existsSync() && nextFile.lengthSync() > 16384) {
+              final prevFile = _activeMusicFile;
+              _activeMusicFile = nextFile;
+              if (prevFile != null && prevFile.path != nextFile.path) {
+                unawaited(prevFile.delete().catchError((_) => prevFile));
+              }
+              if (resolvedDur > 60 && (_durationSec - resolvedDur).abs() >= 2) {
+                _durationSec = resolvedDur.toDouble();
+                notifyListeners();
+              }
+              await _audioPlayer.setVolume(0.92);
+              await _audioPlayer.play(DeviceFileSource(nextFile.path));
+              return;
+            } else if (startedPlaying) {
+              final prevFile = _activeMusicFile;
+              _activeMusicFile = nextFile;
+              if (prevFile != null && prevFile.path != nextFile.path) {
+                unawaited(prevFile.delete().catchError((_) => prevFile));
+              }
+              return;
+            } else {
+              unawaited(nextFile.delete().catchError((_) => nextFile));
+            }
+          } catch (_) {
+            if (sessionToken != _playSessionToken || !_isVisible || _isClosing) return;
+          }
         }
       } catch (_) {
         // YoutubeExplode gagal/timeout → lanjut ke fallback berikutnya
@@ -745,7 +834,8 @@ class SpotifyIslandController extends ChangeNotifier {
     }
 
     // ── LANGKAH 2A: Putar dari URL progresif langsung (MP3/M4A)
-    if (resolvedUrl != null && resolvedMode == 'direct' && resolvedUrl.startsWith('http')) {
+    // Backend mengirim mode='direct_url' (bukan 'direct')
+    if (resolvedUrl != null && (resolvedMode == 'direct_url' || resolvedMode == 'direct') && resolvedUrl.startsWith('http')) {
       try {
         await _audioPlayer.setVolume(0.92);
         await _audioPlayer.play(UrlSource(resolvedUrl));
@@ -789,8 +879,10 @@ class SpotifyIslandController extends ChangeNotifier {
       }
     }
 
-    // ── LANGKAH 3: Fallback ke preview 30 detik resmi bila sumber lagu penuh diblokir jaringan
-    if (track.previewUrl.isNotEmpty) {
+    // ── LANGKAH 3: Fallback ke preview 30 detik resmi HANYA bila tidak ada yt_video_id.
+    // Jika yt_video_id tersedia berarti backend sudah menemukan video resmi — JANGAN putar preview 30s.
+    final hasYtVideoId = resolvedYtVideoId != null && resolvedYtVideoId.isNotEmpty;
+    if (!hasYtVideoId && track.previewUrl.isNotEmpty) {
       try {
         _durationSec = 30.0;
         notifyListeners();

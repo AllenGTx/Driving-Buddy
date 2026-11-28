@@ -47,12 +47,20 @@ class BuddyTtsService {
 
   static const String furinaTiredText =
       'Maaf ya... Furina lagi capek nih, butuh istirahat. Mungkin kamu mau bicara sama Jane?';
+  static const String furinaTiredTextEn =
+      'Sorry... Furina is really tired right now and needs some rest. Maybe you would like to talk to Jane?';
   static const String furinaTiredAsset = 'audio/furina/tired.wav';
+  static const String furinaTiredAssetEn = 'audio/furina/tired_en.mp3';
 
   static const List<(String, String)> _furinaWakeReplies = [
     ('audio/furina/wake_1.wav', 'Ya? Ada apa?'),
     ('audio/furina/wake_2.wav', 'Ya? Mau tanya apa?'),
     ('audio/furina/wake_3.wav', 'Ya? Gimana sayang...?'),
+  ];
+
+  static const List<(String, String)> _furinaWakeRepliesEn = [
+    ('audio/furina/wake_1_en.mp3', 'Yes? What is it?'),
+    ('audio/furina/wake_2_en.mp3', 'Hey! What would you like to ask?'),
   ];
 
   static const List<(String, String)> _janeWakeReplies = [
@@ -61,15 +69,32 @@ class BuddyTtsService {
     // wake_3.wav dihapus dari pool: TTS mengucapkan "kok" jadi "tok" (artefak Edge TTS)
   ];
 
+  static const List<(String, String)> _janeWakeRepliesEn = [
+    ('audio/jane/wake_1_en.mp3', 'Hi! What can Jane help you with?'),
+    ('audio/jane/wake_2_en.mp3', 'Hey there! Need anything on the road?'),
+  ];
+
   static const List<(String, String)> _johnWakeReplies = [
     ('audio/john/wake_1.wav', 'Ya bro? Ada yang bisa John bantu?'),
     ('audio/john/wake_2.wav', 'Siap! Mau tanya apa nih?'),
     ('audio/john/wake_3.wav', 'Iya bro, John dengerin!'),
   ];
 
+  static const List<(String, String)> _johnWakeRepliesEn = [
+    ('audio/john/wake_1_en.mp3', 'Yes? How can John help?'),
+    ('audio/john/wake_2_en.mp3', 'Hey bro, John is listening! What do you need?'),
+  ];
+
   static String offlineSignalTextFor(BuddyVoiceProfile profile, {bool isEnglish = false}) {
     if (isEnglish) {
-      return 'Internet signal is currently lost, but I am still right here watching your alertness on the road!';
+      return switch (profile) {
+        BuddyVoiceProfile.furina =>
+          'Oh no, the signal dropped... Do not worry though, Rina is still right here keeping you safe on the road!',
+        BuddyVoiceProfile.john =>
+          'Internet signal is currently lost bro, but our safety sensors are still right here watching out for you!',
+        BuddyVoiceProfile.jane =>
+          'Internet signal is currently lost, but I am still right here watching your alertness on the road!',
+      };
     }
     return switch (profile) {
       BuddyVoiceProfile.furina =>
@@ -81,11 +106,20 @@ class BuddyTtsService {
     };
   }
 
-  static String offlineSignalAssetFor(BuddyVoiceProfile profile) {
-    return 'audio/${profile.name}/offline_signal.wav';
+  static String offlineSignalAssetFor(BuddyVoiceProfile profile, {bool isEnglish = false}) {
+    return isEnglish
+        ? 'audio/${profile.name}/offline_signal_en.mp3'
+        : 'audio/${profile.name}/offline_signal.wav';
   }
 
-  List<(String, String)> _wakePoolFor(BuddyVoiceProfile p) {
+  List<(String, String)> _wakePoolFor(BuddyVoiceProfile p, {bool isEnglish = false}) {
+    if (isEnglish) {
+      return switch (p) {
+        BuddyVoiceProfile.furina => _furinaWakeRepliesEn,
+        BuddyVoiceProfile.john => _johnWakeRepliesEn,
+        BuddyVoiceProfile.jane => _janeWakeRepliesEn,
+      };
+    }
     return switch (p) {
       BuddyVoiceProfile.furina => _furinaWakeReplies,
       BuddyVoiceProfile.john => _johnWakeReplies,
@@ -93,8 +127,41 @@ class BuddyTtsService {
     };
   }
 
-  List<(String, String)> _drowsyPoolFor(BuddyVoiceProfile p, {required int yawnCount}) {
+  List<(String, String)> _drowsyPoolFor(BuddyVoiceProfile p, {required int yawnCount, bool isEnglish = false}) {
     final folder = p.name;
+    if (isEnglish) {
+      if (yawnCount >= 2) {
+        return [
+          (
+            'audio/$folder/drowsy_yawn_en.mp3',
+            switch (p) {
+              BuddyVoiceProfile.john =>
+                'Hey bro, you yawned twice in five minutes! Pull over for a quick rest if you feel sleepy.',
+              _ =>
+                'Hey, you yawned twice in five minutes! If you are getting sleepy, please pull over for a bit.',
+            },
+          ),
+        ];
+      }
+      return [
+        (
+          'audio/$folder/drowsy_eyes_en.mp3',
+          switch (p) {
+            BuddyVoiceProfile.furina => 'Oh my, getting sleepy? Let us look for a nice spot to rest for a bit.',
+            BuddyVoiceProfile.john => 'Whoa, your eyes are looking heavy bro. Let us find the nearest rest area soon!',
+            BuddyVoiceProfile.jane => 'Hey, your eyes are looking a bit heavy. Let us find a rest stop soon, okay?',
+          },
+        ),
+        (
+          'audio/$folder/drowsy_general_en.mp3',
+          switch (p) {
+            BuddyVoiceProfile.furina => 'You look a little tired on the road. Let us take a short break so you feel refreshed!',
+            BuddyVoiceProfile.john => 'Looks like you are getting tired driving. Let us take a quick break to stay sharp!',
+            BuddyVoiceProfile.jane => 'You seem a little tired on the road. Let us take a quick break so you stay fresh!',
+          },
+        ),
+      ];
+    }
     if (yawnCount >= 2) {
       return [
         (
@@ -180,12 +247,7 @@ class BuddyTtsService {
   String pickWakeAckText([BuddyVoiceProfile? profile]) {
     final p = profile ?? BuddyVoiceConfig.instance.profile;
     final isEn = LanguageService.instance.isEnglish;
-    if (isEn && p != BuddyVoiceProfile.furina) {
-      return p == BuddyVoiceProfile.john
-          ? 'Yes? How can John help?'
-          : 'Hi! What can Jane help you with?';
-    }
-    final pool = _wakePoolFor(p);
+    final pool = _wakePoolFor(p, isEnglish: isEn);
     return pool[_rng.nextInt(pool.length)].$2;
   }
 
@@ -195,23 +257,14 @@ class BuddyTtsService {
     VoidCallback? onPlaybackStart,
   }) async {
     final isEn = LanguageService.instance.isEnglish;
-    if (!isEn || profile == BuddyVoiceProfile.furina) {
-      final pool = _wakePoolFor(profile);
-      final pick = chosenText != null
-          ? pool.firstWhere((e) => e.$2 == chosenText, orElse: () => pool[0])
-          : pool[_rng.nextInt(pool.length)];
-      await _speakLocalAssetImmediate(
-        assetRelPath: pick.$1,
-        text: pick.$2,
-        profile: profile,
-        onPlaybackStart: onPlaybackStart,
-      );
-      return;
-    }
-    final text = chosenText ?? pickWakeAckText(profile);
-    await _speakWithAssetOrDynamic(
+    final pool = _wakePoolFor(profile, isEnglish: isEn);
+    final pick = chosenText != null
+        ? pool.firstWhere((e) => e.$2 == chosenText, orElse: () => pool[0])
+        : pool[_rng.nextInt(pool.length)];
+    await _speakLocalAssetImmediate(
+      assetRelPath: pick.$1,
+      text: pick.$2,
       profile: profile,
-      text: text,
       onPlaybackStart: onPlaybackStart,
     );
   }
@@ -221,7 +274,8 @@ class BuddyTtsService {
     BuddyVoiceProfile? profile,
   }) {
     final p = profile ?? BuddyVoiceConfig.instance.profile;
-    final pool = _drowsyPoolFor(p, yawnCount: yawnCount);
+    final isEn = LanguageService.instance.isEnglish;
+    final pool = _drowsyPoolFor(p, yawnCount: yawnCount, isEnglish: isEn);
     return pool[_rng.nextInt(pool.length)].$2;
   }
 
@@ -231,7 +285,8 @@ class BuddyTtsService {
     String? chosenText,
     VoidCallback? onPlaybackStart,
   }) async {
-    final pool = _drowsyPoolFor(profile, yawnCount: yawnCount);
+    final isEn = LanguageService.instance.isEnglish;
+    final pool = _drowsyPoolFor(profile, yawnCount: yawnCount, isEnglish: isEn);
     final pick = chosenText != null
         ? pool.firstWhere((e) => e.$2 == chosenText, orElse: () => pool[0])
         : pool[_rng.nextInt(pool.length)];
@@ -249,18 +304,10 @@ class BuddyTtsService {
   }) async {
     final isEn = LanguageService.instance.isEnglish;
     final txt = offlineSignalTextFor(profile, isEnglish: isEn);
-    if (!isEn) {
-      await _speakLocalAssetImmediate(
-        assetRelPath: offlineSignalAssetFor(profile),
-        text: txt,
-        profile: profile,
-        onPlaybackStart: onPlaybackStart,
-      );
-      return;
-    }
-    await _speakWithAssetOrDynamic(
-      profile: profile,
+    await _speakLocalAssetImmediate(
+      assetRelPath: offlineSignalAssetFor(profile, isEnglish: isEn),
       text: txt,
+      profile: profile,
       onPlaybackStart: onPlaybackStart,
     );
   }
@@ -281,7 +328,10 @@ class BuddyTtsService {
       if (wavBytes != null && wavBytes.lengthInBytes > 256) {
         isSpeaking.value = true;
         onPlaybackStart?.call();
-        _startWavOrSyllableEnvelope(text, wavBytes: wavBytes);
+        _startWavOrSyllableEnvelope(
+          text,
+          wavBytes: assetRelPath.endsWith('.wav') ? wavBytes : null,
+        );
         final done = Completer<void>();
         _activeSpeak = done;
         await _player.setReleaseMode(ReleaseMode.stop);
@@ -325,9 +375,10 @@ class BuddyTtsService {
     VoidCallback? onPlaybackStart,
   }) async {
     if (isTiredFallback && profile == BuddyVoiceProfile.furina) {
+      final isEn = LanguageService.instance.isEnglish;
       await _speakLocalAssetImmediate(
-        assetRelPath: furinaTiredAsset,
-        text: furinaTiredText,
+        assetRelPath: isEn ? furinaTiredAssetEn : furinaTiredAsset,
+        text: isEn ? furinaTiredTextEn : furinaTiredText,
         profile: BuddyVoiceProfile.furina,
         onPlaybackStart: onPlaybackStart,
       );
@@ -464,15 +515,18 @@ class BuddyTtsService {
       if (profile == BuddyVoiceProfile.furina &&
           firstStatus == _CloudTtsStatus.exhausted503 &&
           !_cancelled) {
-        final tiredBytes = await _loadAssetBytes('assets/$furinaTiredAsset');
+        final isEn = LanguageService.instance.isEnglish;
+        final tiredAsset = isEn ? furinaTiredAssetEn : furinaTiredAsset;
+        final tiredTxt = isEn ? furinaTiredTextEn : furinaTiredText;
+        final tiredBytes = await _loadAssetBytes('assets/$tiredAsset');
         if (tiredBytes != null && tiredBytes.lengthInBytes > 256) {
           fireStartOnce();
-          _startWavOrSyllableEnvelope(furinaTiredText, wavBytes: tiredBytes);
+          _startWavOrSyllableEnvelope(tiredTxt, wavBytes: tiredAsset.endsWith('.wav') ? tiredBytes : null);
           final done = Completer<void>();
           _activeSpeak = done;
           await _player.setReleaseMode(ReleaseMode.stop);
           await _player.setVolume(1.0);
-          await _player.play(AssetSource(furinaTiredAsset));
+          await _player.play(AssetSource(tiredAsset));
           await done.future.timeout(const Duration(seconds: 14), onTimeout: () {});
         }
         await activateJaneHandoff();
@@ -497,11 +551,13 @@ class BuddyTtsService {
           _startWavOrSyllableEnvelope(trimmed);
           await _speakNative(profile, trimmed);
         } else {
-          final offPath = offlineSignalAssetFor(profile);
+          final isEn = LanguageService.instance.isEnglish;
+          final offPath = offlineSignalAssetFor(profile, isEnglish: isEn);
+          final offTxt = offlineSignalTextFor(profile, isEnglish: isEn);
           final offBytes = await _loadAssetBytes('assets/$offPath');
           if (offBytes != null && offBytes.lengthInBytes > 256) {
             fireStartOnce();
-            _startWavOrSyllableEnvelope(offlineSignalTextFor(profile), wavBytes: offBytes);
+            _startWavOrSyllableEnvelope(offTxt, wavBytes: offPath.endsWith('.wav') ? offBytes : null);
             final done = Completer<void>();
             _activeSpeak = done;
             await _player.setReleaseMode(ReleaseMode.stop);
@@ -537,8 +593,12 @@ class BuddyTtsService {
   Future<http.Response?> _fetchCloudTtsBytes(
     String text, {
     required BuddyVoiceProfile profile,
-    Duration timeout = const Duration(seconds: 26),
+    Duration? timeout,
   }) async {
+    final effTimeout = timeout ??
+        (profile == BuddyVoiceProfile.furina
+            ? const Duration(seconds: 15)
+            : const Duration(seconds: 10));
     try {
       await LlmChatConfig.shared.load();
       final isEn = LanguageService.instance.isEnglish;
@@ -554,7 +614,7 @@ class BuddyTtsService {
               'language': lang,
             }),
           )
-          .timeout(timeout);
+          .timeout(effTimeout);
     } catch (_) {
       return null;
     }

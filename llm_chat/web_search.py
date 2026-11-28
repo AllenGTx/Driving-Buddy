@@ -563,8 +563,8 @@ def _score_track_match(clean_q: str, title: str, artist: str) -> float:
         score += 8.0
     elif exact_artist_matches > 0:
         score += 3.0 * exact_artist_matches
-    if any(w in t_low for w in ("karaoke", "tribute", "instrumental", "8-bit", "ringtone", "cover")):
-        score -= 8.0
+    if _is_unwanted_variant(title, clean_q) or any(w in t_low for w in ("karaoke", "tribute", "instrumental", "8-bit", "ringtone", "cover")):
+        score -= 40.0
     return score
 
 

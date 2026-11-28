@@ -70,10 +70,18 @@ _HALLUCINATION_PATTERNS = (
 )
 
 
+_PURE_HESITATION_RE = re.compile(
+    r"^(?:uh+|um+|hm+|er+m*|ah+|eh+|oh+|huh+)(?:[\s,.\-!?]+(?:uh+|um+|hm+|er+m*|ah+|eh+|oh+|huh+))*$",
+    re.IGNORECASE,
+)
+
+
 def clean_stt_transcript(raw_text: str) -> str:
     """Bersihkan artefak halusinasi Whisper saat audio berisi derau kabin atau hening."""
     text = (raw_text or "").strip()
     if not text:
+        return ""
+    if _PURE_HESITATION_RE.fullmatch(text.strip(" .,!?-")):
         return ""
     # Jika Whisper hanya membeo ulang kalimat prompt karena rekaman kosong/bising
     norm = re.sub(r"[^\w\s]", "", text.lower()).strip()
@@ -160,15 +168,25 @@ def build_audio_router(
         client_lang = (lang or "").strip().lower() or "id"
         # Pastikan hanya 'en' atau 'id' yang diterima, lainnya fallback ke 'id'
         whisper_lang = "en" if client_lang.startswith("en") else "id"
-        vocab = (
-            "Halo Rina, halo Furina, halo Jane, halo John, yo Rina, yo Jane, yo John, hai buddy."
-            if is_wake_mode
-            else (
-                f"Halo {clean_hint}. {STT_VOCAB_PROMPT}"
-                if clean_hint and clean_hint.lower() not in STT_VOCAB_PROMPT.lower()
-                else STT_VOCAB_PROMPT
+        if whisper_lang == "en":
+            wake_vocab = "Hey Jane, yo Jane, hey John, yo John, hey Rina, hey Furina, hey buddy."
+            cmd_vocab = (
+                f"Hey {clean_hint}. Play Earrings by Malcolm Todd, Oh Lord by Foxy Shazam, "
+                "Last Night on Earth by Green Day, directions to nearest gas station."
+                if clean_hint
+                else "Hey Jane, hey John, play a song, directions to nearest rest area."
             )
-        )
+            vocab = wake_vocab if is_wake_mode else cmd_vocab
+        else:
+            vocab = (
+                "Halo Rina, halo Furina, halo Jane, halo John, yo Rina, yo Jane, yo John, hai buddy."
+                if is_wake_mode
+                else (
+                    f"Halo {clean_hint}. {STT_VOCAB_PROMPT}"
+                    if clean_hint and clean_hint.lower() not in STT_VOCAB_PROMPT.lower()
+                    else STT_VOCAB_PROMPT
+                )
+            )
         errors = []
         suspect_whisper_text: Optional[str] = None
         client = _client(5.0)
