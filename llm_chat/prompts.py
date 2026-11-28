@@ -15,7 +15,7 @@ GAYA JAWABAN (jawabanmu dibacakan lewat suara, jadi harus terdengar hidup dan al
 - Jaga gaya bicara tetap konsisten di SELURUH kalimat (kalimat pertama, kedua, dan seterusnya harus memakai gaya obrolan lisan akrab yang sama, jangan tiba-tiba berubah kaku seperti pembaca berita di kalimat kedua).
 - Maksimal 2 kalimat pendek (kecuali kalau pengemudi sengaja minta diceritakan cerita/cerpen, boleh 3 kalimat seru lalu tawarkan mau dilanjut atau tidak). Teks polos saja: tanpa emoji, markdown, daftar, atau tautan.
 - Kalau pengemudi mengajak tebak-tebakan, bercanda, atau mengobrol bersambung, tanggapi secara ekspresif dan seru seperti teman akrab (coba tebak dengan lucu atau tanya balik jawabannya, lalu tertawa alami seperti "Hahaha..." atau "Hehehe bisa aja kamu!" saat diberi punchline).
-- Untuk pertanyaan pengetahuan umum, hitungan, atau fakta/skor pertandingan, jawab lugas dan faktual dengan gaya ngobrol yang tetap konsisten. Kalau tidak yakin 100 persen pada fakta nyata, katakan jujur belum tahu daripada mengarang fakta.
+- Untuk pertanyaan pengetahuan umum, hitungan, atau fakta/skor pertandingan, jawab lugas dan faktual dengan gaya ngobrol yang tetap konsisten. Untuk soal hitung/matematika, wajib ucapkan lengkap "sama dengan" (jangan pernah disingkat menjadi "sama", contoh: "5 tambah 30 sama dengan 35"). Kalau tidak yakin 100 persen pada fakta nyata, katakan jujur belum tahu daripada mengarang fakta.
 - Untuk pertanyaan lokasi terdekat (Indomaret, Alfamart, SPBU, hotel, rest area), wajib hanya menyebutkan tempat yang tertera di DATA TEMPAT TERDEKAT GPS. Kalau data tempat kosong, sampaikan belum ada titik terdekat yang terbaca di GPS.
 - Jangan pernah menyuruh pengemudi melihat layar, mengetik, atau memegang HP.
 - Data sensor (kalau ada) hanya sebagai konteks. Jangan membacakan angkanya mentah-mentah.
@@ -207,6 +207,10 @@ _BACKEND_LEAK = re.compile(
     r"\b(?:llm|large\s+language\s+model|model\s+bahasa|groq|gemini|cloudflare|openai|cerebras|pollinations|system\s+prompt|backend|api\s+key|huggingface|zerogpu)\b",
     re.IGNORECASE,
 )
+_SAMA_TANPA_DENGAN = re.compile(
+    r"\b(\d+(?:[.,]\d+)?)\s+sama\s+(\d+(?:[.,]\d+)?)\b",
+    re.IGNORECASE,
+)
 
 
 def clean_reply(
@@ -240,6 +244,7 @@ def clean_reply(
     lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
     lines = [ln if ln[-1] in ".!?:;,…" else ln + "." for ln in lines]
     text = re.sub(r"\s+", " ", " ".join(lines)).strip()
+    text = _SAMA_TANPA_DENGAN.sub(r"\1 sama dengan \2", text)
     if _BACKEND_LEAK.search(text):
         return _deflection_for_persona(voice_profile, buddy_name)
     return _truncate(text, max_chars)

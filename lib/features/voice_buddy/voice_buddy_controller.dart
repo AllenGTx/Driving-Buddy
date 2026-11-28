@@ -1107,7 +1107,25 @@ class VoiceBuddyController extends ChangeNotifier {
     // Hentikan polling native sementara agar tidak bentrok dengan proses ganti lagu Spotify
     spotifyCtrl.pauseNativePolling();
 
-    // 1. Putar lagu di Spotify 100% di latar belakang via Spotify URI (lagu yang diminta, bukan lagu lama!)
+    // 1. Ucapkan konfirmasi AI TERLEBIH DAHULU sampai selesai, baru putar musik Spotify!
+    // Ini mencegah lagu lama sempat berbunyi 1 detik sebelum AI selesai berbicara.
+    final confirmMsg = isEn
+        ? 'Okay, playing ${track.title} by ${track.artist} on Spotify in the background.'
+        : 'Oke, aku puterin lagu ${track.title} dari ${track.artist} di Spotify di latar belakang ya.';
+    _replyText = confirmMsg;
+    notifyListeners();
+    await _tts.speakReply(
+      profile: profile,
+      text: confirmMsg,
+      onPlaybackStart: () {
+        if (turnId != _turnId) return;
+        _replyText = confirmMsg;
+        _setPhase(SiriOrbPhase.speaking);
+      },
+    );
+    if (turnId != _turnId) return true;
+
+    // 2. Setelah AI selesai bicara, putar lagu di Spotify 100% di latar belakang via MediaSession
     final launchStatus = await DeviceControlService.instance.playSpotifyQuery(
       track.spotifyQuery,
       title: track.title,
@@ -1140,28 +1158,12 @@ class VoiceBuddyController extends ChangeNotifier {
       return true;
     }
 
-    // 2. Tampilkan Dynamic Island & mulai sinkronisasi live MediaSession Spotify (judul, rekomendasi, iklan, jam real-time)
+    // 3. Tampilkan Dynamic Island & mulai sinkronisasi live MediaSession Spotify (judul, rekomendasi, iklan, jam real-time)
     await spotifyCtrl.showIslandMetadataOnly(
       track,
       isDrivingSession: _isDrivingActive,
       previousSessionSignature: prevSig,
     );
-
-    final confirmMsg = isEn
-        ? 'Okay, playing ${track.title} by ${track.artist} on Spotify in the background.'
-        : 'Oke, aku puterin lagu ${track.title} dari ${track.artist} di Spotify di latar belakang ya.';
-    _replyText = confirmMsg;
-    notifyListeners();
-    await _tts.speakReply(
-      profile: profile,
-      text: confirmMsg,
-      onPlaybackStart: () {
-        if (turnId != _turnId) return;
-        _replyText = confirmMsg;
-        _setPhase(SiriOrbPhase.speaking);
-      },
-    );
-    if (turnId != _turnId) return true;
     await dismissSheet();
     return true;
   }

@@ -240,9 +240,6 @@ class MainActivity : FlutterActivity() {
                     val existingCtrl = SpotifyMediaHelper.findActiveSpotifyController(this)
                     if (existingCtrl != null) {
                         try {
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                                existingCtrl.transportControls.prepareFromSearch(query, extras)
-                            }
                             existingCtrl.transportControls.playFromSearch(query, extras)
                             result.success("ok")
                             return@setMethodCallHandler
@@ -300,9 +297,6 @@ class MainActivity : FlutterActivity() {
                         try {
                             val token = mb.sessionToken
                             val ctrl = MediaController(this@MainActivity, token)
-                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
-                                ctrl.transportControls.prepareFromSearch(query, extras)
-                            }
                             ctrl.transportControls.playFromSearch(query, extras)
                             finishWith("ok")
                         } catch (_: Exception) {

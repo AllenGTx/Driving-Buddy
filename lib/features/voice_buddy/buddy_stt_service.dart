@@ -155,11 +155,20 @@ class BuddySttService {
         }
 
         // Jika server sedang offline total, gunakan fallback SpeechToText on-device
+        // PENTING: JANGAN panggil SpeechRecognizer saat musik sedang aktif, karena SpeechRecognizer.listen()
+        // di Android merebut AudioFocus tiap ~1 detik dan membuat lagu Spotify tersendat-sendat!
         final offlineNow = _serverSttDownUntil != null &&
             DateTime.now().isBefore(_serverSttDownUntil!);
         if (offlineNow) {
-          await _listenOfflineWakeOnce();
-          await Future<void>.delayed(const Duration(milliseconds: 400));
+          final musicPlaying = await DeviceControlService.instance.isSystemMusicActive();
+          if (!musicPlaying) {
+            await _listenOfflineWakeOnce();
+            await Future<void>.delayed(const Duration(milliseconds: 400));
+            continue;
+          }
+          // Jika musik aktif dan server sempat timeout, beri jeda singkat lalu lanjut pakai recorder akustik (non-intrusif)
+          _serverSttDownUntil = null;
+          await Future<void>.delayed(const Duration(seconds: 2));
           continue;
         }
 
