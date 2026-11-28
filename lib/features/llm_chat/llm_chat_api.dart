@@ -121,6 +121,8 @@ class LlmChatApi {
     String? voiceProfile,
     List<LlmNearbyPlaceBrief>? nearbyPlaces,
     bool reset = false,
+    bool includeAudio = false,
+    String language = 'id',
   }) async {
     final text = message.trim();
     if (text.isEmpty || text.length > maxMessageChars) {
@@ -146,6 +148,8 @@ class LlmChatApi {
       if (nearbyPlaces != null && nearbyPlaces.isNotEmpty)
         'nearby_places': nearbyPlaces.take(6).map((p) => p.toJson()).toList(),
       if (reset) 'reset': true,
+      if (includeAudio) 'include_audio': true,
+      if (includeAudio) 'language': language,
     };
     await config.load();
     final response = await _send(
@@ -193,6 +197,8 @@ class LlmChatApi {
     String? voiceProfile,
     List<LlmNearbyPlaceBrief>? nearbyPlaces,
     bool reset = false,
+    bool includeAudio = false,
+    String language = 'id',
   }) async {
     try {
       return await send(
@@ -203,6 +209,8 @@ class LlmChatApi {
         voiceProfile: voiceProfile,
         nearbyPlaces: nearbyPlaces,
         reset: reset,
+        includeAudio: includeAudio,
+        language: language,
       );
     } on LlmChatException catch (e) {
       return LlmReply(
@@ -215,6 +223,20 @@ class LlmChatApi {
         error: e.kind.name,
       );
     }
+  }
+
+  /// Hangatkan koneksi DNS/TLS ke server HuggingFace Space saat aplikasi dibuka
+  /// agar panggilan suara pertama tidak perlu menunggu handshake dingin.
+  Future<void> warmUpConnection() async {
+    try {
+      await config.load();
+      await _client
+          .get(
+            _uri('/chat/health'),
+            headers: const {'Accept': 'application/json'},
+          )
+          .timeout(const Duration(seconds: 5));
+    } catch (_) {}
   }
 
   /// Balasan darurat berdasarkan tingkat kantuk (0 aman, 1 mulai ngantuk, 2 bahaya).

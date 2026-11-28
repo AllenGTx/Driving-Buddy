@@ -94,6 +94,9 @@ class LlmReply {
     required this.latencyMs,
     this.fallback = false,
     this.error,
+    this.audioB64,
+    this.audioMime,
+    this.ttsError,
   });
 
   factory LlmReply.fromJson(Map<String, dynamic> json) {
@@ -109,6 +112,9 @@ class LlmReply {
       latencyMs: (json['latency_ms'] as num?)?.toInt() ?? 0,
       fallback: json['fallback'] == true,
       error: json['error'] as String?,
+      audioB64: json['audio_b64'] as String?,
+      audioMime: json['audio_mime'] as String?,
+      ttsError: json['tts_error'] as String?,
     );
   }
 
@@ -125,6 +131,9 @@ class LlmReply {
 
   /// Penyebab fallback: timeout, network, rate_limited, auth, upstream, ...
   final String? error;
+  final String? audioB64;
+  final String? audioMime;
+  final String? ttsError;
 }
 
 /// Hasil GET /chat/health.

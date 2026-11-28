@@ -18,11 +18,19 @@ log = logging.getLogger("driving_buddy.llm")
 # PENTING: Whisper `prompt` adalah contoh kalimat transkrip sebelumnya, BUKAN instruksi sistem!
 # Jangan gunakan kata seperti "Ejaan nama tepat:" karena memicu halusinasi "X dieja X-Y-Z".
 STT_VOCAB_PROMPT = (
-    "Yo Rina, Yo Furina, Yo Jane, Yo John, halo Rina. "
+    "Yo Rina, Yo Furina, Yo Jane, Yo John, halo Rina, hai John, hai Jane. "
+    "Berapa 5 kali 5, 10 tambah 5, 20 bagi 4, seratus dikali dua. "
+    "Skor Man United vs Liverpool, skor Manchester United, Man Utd, Premier League, Arsenal, Chelsea, Real Madrid, Barcelona, Sporting Lisbon. "
     "Cerpennya kok pendek banget belum selesai, lanjutin ceritanya dong, gitu aja jir, wkwk, santai aja bro. "
-    "Coba cari di Google apakah benar berita terbaru kemarin atau skor pertandingan sepak bola. "
+    "Kamu ini AI atau LLM apa, coba cari di Google apakah benar berita terbaru kemarin. "
     "Tolong arahkan saya ke Indomaret, Alfamart, SPBU Pertamina, rest area, atau hotel terdekat. "
-    "Tolong setelkan lagu di Spotify."
+    "Tolong setelkan lagu Last Night on Earth Green Day, Cancer My Chemical Romance di Spotify."
+)
+
+_STT_CORRECTIONS = (
+    (re.compile(r"\bskrol\s+(?:ro)?man(?:chester)?\s+united\b", re.IGNORECASE), "skor Man United"),
+    (re.compile(r"\bskroll?\s+(?:mu|man\s*u)\b", re.IGNORECASE), "skor Man U"),
+    (re.compile(r"\b(?:li|ri|ni)ma\s+kali\s+(?:li|ri|ni)ma\b", re.IGNORECASE), "5 kali 5"),
 )
 
 _HALLUCINATION_PATTERNS = (
@@ -57,6 +65,8 @@ def clean_stt_transcript(raw_text: str) -> str:
                     return ""
                 return " ".join(words[:-1]).strip()
             return ""
+    for pat, repl in _STT_CORRECTIONS:
+        text = pat.sub(repl, text)
     return text
 
 
@@ -87,138 +97,168 @@ def build_audio_router(
 
     router = APIRouter(tags=["audio"])
 
+    shared_client = (
+        http
+        if http is not None
+        else httpx.AsyncClient(
+            timeout=httpx.Timeout(12.0, connect=2.5),
+            limits=httpx.Limits(max_connections=20, max_keepalive_connections=10),
+        )
+    )
+
     def _client(timeout_s: float) -> httpx.AsyncClient:
-        if http is not None:
-            return http
-        return httpx.AsyncClient(timeout=httpx.Timeout(timeout_s, connect=min(2.0, timeout_s)))
+        return shared_client
 
     @router.post("/stt", summary="Transkripsi suara pengemudi dengan rantai failover otomatis")
     async def transcribe_audio(
         file: UploadFile = File(...),
         hint: Optional[str] = Form(default=None),
+        mode: Optional[str] = Form(default=None),
     ) -> Dict[str, Any]:
         raw = await file.read()
         if not raw or len(raw) > 8 * 1024 * 1024:
             raise HTTPException(status_code=422, detail={"error": "invalid_audio", "message": "Ukuran audio tidak valid."})
 
         filename = file.filename or "speech.m4a"
-        mime = file.content_type or "audio/mp4"
+        mime = (
+            "audio/wav"
+            if filename.lower().endswith(".wav")
+            else (file.content_type or "audio/mp4")
+        )
         clean_hint = re.sub(r"(?i)nama\s*buddy\s*:\s*", "", (hint or "")).strip()
-        vocab = f"Halo {clean_hint}. {STT_VOCAB_PROMPT}" if clean_hint and clean_hint.lower() not in STT_VOCAB_PROMPT.lower() else STT_VOCAB_PROMPT
+        is_wake_mode = (mode or "").strip().lower() == "wake" or (mode is None and not clean_hint)
+        vocab = (
+            "Halo Rina, halo Furina, halo Jane, halo John, yo Rina, yo Jane, yo John, hai buddy."
+            if is_wake_mode
+            else (
+                f"Halo {clean_hint}. {STT_VOCAB_PROMPT}"
+                if clean_hint and clean_hint.lower() not in STT_VOCAB_PROMPT.lower()
+                else STT_VOCAB_PROMPT
+            )
+        )
         errors = []
+        suspect_whisper_text: Optional[str] = None
+        client = _client(5.0)
 
-        # Tier 1: Groq Whisper (prioritaskan whisper-large-v3 penuh untuk akurasi kosakata Indonesia tertinggi, lalu turbo)
+        # Tier 1: Groq Whisper (wake -> turbo super cepat; command -> large-v3 akurasi maksimal)
         if groq_key:
-            for w_model in ("whisper-large-v3", "whisper-large-v3-turbo"):
+            model_order = (
+                ("whisper-large-v3-turbo", "whisper-large-v3")
+                if is_wake_mode
+                else ("whisper-large-v3", "whisper-large-v3-turbo")
+            )
+            for w_model in model_order:
                 try:
-                    client = _client(4.5)
-                    try:
-                        resp = await client.post(
-                            "https://api.groq.com/openai/v1/audio/transcriptions",
-                            headers={"Authorization": f"Bearer {groq_key}"},
-                            data={
-                                "model": w_model,
-                                "language": "id",
-                                "temperature": "0",
-                                "prompt": vocab,
-                            },
-                            files={"file": (filename, raw, mime)},
-                        )
-                        if resp.status_code == 200:
-                            text = clean_stt_transcript(resp.json().get("text") or "")
-                            if text:
-                                return {"text": text, "provider": f"groq_{w_model}"}
+                    resp = await client.post(
+                        "https://api.groq.com/openai/v1/audio/transcriptions",
+                        headers={"Authorization": f"Bearer {groq_key}"},
+                        data={
+                            "model": w_model,
+                            "language": "id",
+                            "temperature": "0",
+                            "prompt": vocab,
+                        },
+                        files={"file": (filename, raw, mime)},
+                        timeout=3.5 if is_wake_mode else 4.5,
+                    )
+                    if resp.status_code == 200:
+                        text = clean_stt_transcript(resp.json().get("text") or "")
+                        if not text:
                             return {"text": "", "provider": f"groq_{w_model}_empty"}
-                        errors.append(f"groq({w_model}):{resp.status_code}")
-                        if resp.status_code != 429 and resp.status_code < 500:
+                        # Pada mode command, bila hasil sangat pendek aneh (mis. "e5" dari "5 kali 5") dan ada Gemini, cek ulang!
+                        looks_garbled = (
+                            not is_wake_mode
+                            and gemini_key
+                            and (len(text) <= 4 or bool(re.fullmatch(r"[a-zA-Z]\d+", text)))
+                        )
+                        if looks_garbled:
+                            suspect_whisper_text = text
                             break
-                    finally:
-                        if http is None:
-                            await client.aclose()
+                        return {"text": text, "provider": f"groq_{w_model}"}
+                    errors.append(f"groq({w_model}):{resp.status_code}")
+                    if resp.status_code != 429 and resp.status_code < 500:
+                        break
                 except Exception as exc:
                     errors.append(f"groq({w_model}):{type(exc).__name__}")
 
         # Tier 2: Cloudflare Workers AI Whisper-Large-V3-Turbo (Gratis Cadangan)
-        if cf_tok and cf_acc:
+        if suspect_whisper_text is None and cf_tok and cf_acc:
             try:
-                client = _client(5.0)
-                try:
-                    b64_cf = base64.b64encode(raw).decode("ascii")
-                    cf_resp = await client.post(
-                        f"https://api.cloudflare.com/client/v4/accounts/{cf_acc}/ai/run/@cf/openai/whisper-large-v3-turbo",
-                        headers={"Authorization": f"Bearer {cf_tok}", "Content-Type": "application/json"},
-                        json={"audio": b64_cf, "language": "id", "initial_prompt": vocab},
-                    )
-                    if cf_resp.status_code == 200:
-                        res_obj = cf_resp.json().get("result") or {}
-                        text = clean_stt_transcript(res_obj.get("text") or "")
-                        if text:
-                            return {"text": text, "provider": "cloudflare_whisper"}
-                    errors.append(f"cloudflare_stt:{cf_resp.status_code}")
-                finally:
-                    if http is None:
-                        await client.aclose()
+                b64_cf = base64.b64encode(raw).decode("ascii")
+                cf_resp = await client.post(
+                    f"https://api.cloudflare.com/client/v4/accounts/{cf_acc}/ai/run/@cf/openai/whisper-large-v3-turbo",
+                    headers={"Authorization": f"Bearer {cf_tok}", "Content-Type": "application/json"},
+                    json={"audio": b64_cf, "language": "id", "initial_prompt": vocab},
+                    timeout=5.0,
+                )
+                if cf_resp.status_code == 200:
+                    res_obj = cf_resp.json().get("result") or {}
+                    text = clean_stt_transcript(res_obj.get("text") or "")
+                    if text:
+                        return {"text": text, "provider": "cloudflare_whisper"}
+                errors.append(f"cloudflare_stt:{cf_resp.status_code}")
             except Exception as exc:
                 errors.append(f"cloudflare_stt:{type(exc).__name__}")
 
-        # Tier 2: Voicebox Local Whisper (:17493/transcribe) bila tidak di-skip
-        if not skip_local_voicebox:
+        # Tier 3: Voicebox Local Whisper (:17493/transcribe) bila tidak di-skip
+        if suspect_whisper_text is None and not skip_local_voicebox:
             try:
-                client = _client(2.5)
-                try:
-                    resp = await client.post(
-                        f"{voicebox_url}/transcribe",
-                        files={"file": (filename, raw, mime)},
-                    )
-                    if resp.status_code == 200:
-                        body = resp.json()
-                        text = clean_stt_transcript(body.get("text") or body.get("transcript") or "")
-                        if text:
-                            return {"text": text, "provider": "voicebox_whisper"}
-                    errors.append(f"voicebox:{resp.status_code}")
-                finally:
-                    if http is None:
-                        await client.aclose()
+                resp = await client.post(
+                    f"{voicebox_url}/transcribe",
+                    files={"file": (filename, raw, mime)},
+                    timeout=2.5,
+                )
+                if resp.status_code == 200:
+                    body = resp.json()
+                    text = clean_stt_transcript(body.get("text") or body.get("transcript") or "")
+                    if text:
+                        return {"text": text, "provider": "voicebox_whisper"}
+                errors.append(f"voicebox:{resp.status_code}")
             except Exception as exc:
                 errors.append(f"voicebox:{type(exc).__name__}")
 
-        # Tier 3: Gemini Multimodal Audio STT
+        # Tier 4 / Recovery: Gemini 2.5 Flash Multimodal Audio STT (sangat akurat untuk angka, hitungan & campuran Inggris-Indonesia)
         if gemini_key:
             try:
-                client = _client(5.0)
-                try:
-                    b64 = base64.b64encode(raw).decode("ascii")
-                    payload = {
-                        "contents": [{
-                            "parts": [
-                                {
-                                    "text": (
-                                        "Transkripsikan ucapan Bahasa Indonesia pada audio ini persis apa adanya "
-                                        "tanpa tambahan penjelasan atau ejaan. Jika hanya suara bising/hening tanpa "
-                                        "ucapan manusia, kembalikan teks kosong."
-                                    )
-                                },
-                                {"inline_data": {"mime_type": mime, "data": b64}},
-                            ]
-                        }],
-                        "generationConfig": {"temperature": 0.0, "maxOutputTokens": 128},
-                    }
-                    resp = await client.post(
-                        f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={gemini_key}",
-                        json=payload,
-                    )
-                    if resp.status_code == 200:
-                        cands = resp.json().get("candidates") or []
-                        if cands:
-                            parts = cands[0].get("content", {}).get("parts") or []
-                            text = clean_stt_transcript("".join(p.get("text", "") for p in parts))
+                b64 = base64.b64encode(raw).decode("ascii")
+                payload = {
+                    "contents": [{
+                        "parts": [
+                            {
+                                "text": (
+                                    "Transkripsikan ucapan pengemudi Indonesia ini persis apa adanya (bisa bercampur "
+                                    "angka hitungan seperti '5 kali 5', istilah Inggris/bola seperti 'skor Man United vs Liverpool', "
+                                    "atau judul lagu), tanpa penjelasan tambahan atau ejaan. Jika hanya bising/hening, "
+                                    "kembalikan string kosong."
+                                )
+                            },
+                            {"inline_data": {"mime_type": mime, "data": b64}},
+                        ]
+                    }],
+                    "generationConfig": {
+                        "temperature": 0.0,
+                        "maxOutputTokens": 96,
+                        "thinkingConfig": {"thinkingBudget": 0},
+                    },
+                }
+                resp = await client.post(
+                    f"https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key={gemini_key}",
+                    json=payload,
+                    timeout=4.5,
+                )
+                if resp.status_code == 200:
+                    cands = resp.json().get("candidates") or []
+                    if cands:
+                        parts = cands[0].get("content", {}).get("parts") or []
+                        text = clean_stt_transcript("".join(p.get("text", "") for p in parts))
+                        if text:
                             return {"text": text, "provider": "gemini_audio"}
-                    errors.append(f"gemini:{resp.status_code}")
-                finally:
-                    if http is None:
-                        await client.aclose()
+                errors.append(f"gemini:{resp.status_code}")
             except Exception as exc:
                 errors.append(f"gemini:{type(exc).__name__}")
+
+        if suspect_whisper_text:
+            return {"text": suspect_whisper_text, "provider": "groq_fallback_short"}
 
         raise HTTPException(
             status_code=503,
@@ -233,40 +273,36 @@ def build_audio_router(
         if not skip_local_voicebox:
             try:
                 client = _client(4.0)
-                try:
-                    prof_resp = await client.get(f"{voicebox_url}/profiles")
-                    profile_id = None
-                    if prof_resp.status_code == 200:
-                        items = prof_resp.json()
-                        if isinstance(items, dict):
-                            items = items.get("profiles") or items.get("items") or []
-                        for p in items or []:
-                            if str(p.get("name", "")).lower() == req.voice_profile.lower():
-                                profile_id = p.get("id") or p.get("profile_id")
-                                break
-                    gen_payload: Dict[str, Any] = {
-                        "text": req.text,
-                        "profile": req.voice_profile,
-                        "language": lang,
-                    }
-                    if profile_id:
-                        gen_payload["profile_id"] = profile_id
+                prof_resp = await client.get(f"{voicebox_url}/profiles", timeout=4.0)
+                profile_id = None
+                if prof_resp.status_code == 200:
+                    items = prof_resp.json()
+                    if isinstance(items, dict):
+                        items = items.get("profiles") or items.get("items") or []
+                    for p in items or []:
+                        if str(p.get("name", "")).lower() == req.voice_profile.lower():
+                            profile_id = p.get("id") or p.get("profile_id")
+                            break
+                gen_payload: Dict[str, Any] = {
+                    "text": req.text,
+                    "profile": req.voice_profile,
+                    "language": lang,
+                }
+                if profile_id:
+                    gen_payload["profile_id"] = profile_id
 
-                    resp = await client.post(f"{voicebox_url}/generate", json=gen_payload)
-                    if resp.status_code == 200:
-                        ctype = resp.headers.get("content-type", "")
-                        if "audio/" in ctype or resp.content[:4] in (b"RIFF", b"ID3\x03", b"ID3\x04", b"\xff\xfb"):
-                            return Response(content=resp.content, media_type=ctype if "audio/" in ctype else "audio/wav")
-                        data = resp.json()
-                        audio_url = data.get("audio_url") or data.get("url") or data.get("path")
-                        if audio_url:
-                            dl_url = audio_url if str(audio_url).startswith("http") else f"{voicebox_url}/{str(audio_url).lstrip('/')}"
-                            audio_resp = await client.get(dl_url)
-                            if audio_resp.status_code == 200:
-                                return Response(content=audio_resp.content, media_type=audio_resp.headers.get("content-type", "audio/wav"))
-                finally:
-                    if http is None:
-                        await client.aclose()
+                resp = await client.post(f"{voicebox_url}/generate", json=gen_payload, timeout=4.0)
+                if resp.status_code == 200:
+                    ctype = resp.headers.get("content-type", "")
+                    if "audio/" in ctype or resp.content[:4] in (b"RIFF", b"ID3\x03", b"ID3\x04", b"\xff\xfb"):
+                        return Response(content=resp.content, media_type=ctype if "audio/" in ctype else "audio/wav")
+                    data = resp.json()
+                    audio_url = data.get("audio_url") or data.get("url") or data.get("path")
+                    if audio_url:
+                        dl_url = audio_url if str(audio_url).startswith("http") else f"{voicebox_url}/{str(audio_url).lstrip('/')}"
+                        audio_resp = await client.get(dl_url, timeout=4.0)
+                        if audio_resp.status_code == 200:
+                            return Response(content=audio_resp.content, media_type=audio_resp.headers.get("content-type", "audio/wav"))
             except Exception as exc:
                 log.debug("[TTS] Voicebox lokal belum aktif: %s", exc)
 
@@ -282,30 +318,27 @@ def build_audio_router(
 
             try:
                 client = _client(28.0)
-                try:
-                    resp = await client.post(
-                        furina_cloud_url,
-                        headers=fwd_headers,
-                        json={
-                            "text": req.text,
-                            "language": req.language,
-                            "voice_profile": req.voice_profile.lower(),
-                        },
+                resp = await client.post(
+                    furina_cloud_url,
+                    headers=fwd_headers,
+                    json={
+                        "text": req.text,
+                        "language": req.language,
+                        "voice_profile": req.voice_profile.lower(),
+                    },
+                    timeout=28.0,
+                )
+                if resp.status_code == 200 and resp.content:
+                    out_headers: Dict[str, str] = {}
+                    for h in ("x-furina-provider", "x-voice-provider"):
+                        val = resp.headers.get(h)
+                        if val:
+                            out_headers[h] = val
+                    return Response(
+                        content=resp.content,
+                        media_type=resp.headers.get("content-type", "audio/wav"),
+                        headers=out_headers,
                     )
-                    if resp.status_code == 200 and resp.content:
-                        out_headers: Dict[str, str] = {}
-                        for h in ("x-furina-provider", "x-voice-provider"):
-                            val = resp.headers.get(h)
-                            if val:
-                                out_headers[h] = val
-                        return Response(
-                            content=resp.content,
-                            media_type=resp.headers.get("content-type", "audio/wav"),
-                            headers=out_headers,
-                        )
-                finally:
-                    if http is None:
-                        await client.aclose()
             except Exception as exc:
                 log.warning("[TTS] Cloud TTS gagal: %s", exc)
 

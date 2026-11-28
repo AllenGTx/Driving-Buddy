@@ -64,11 +64,10 @@ float vnoise(vec3 x) {
   return mix(nxy0, nxy1, u.z);
 }
 
-// Three octaves of value noise: weights 0.55, 0.30, 0.15 at 1x, 2.1x, 4.3x
-float fbm3(vec3 p) {
-  return 0.55 * vnoise(p)
-       + 0.30 * vnoise(p * 2.1 + vec3(1.7, 9.2, 3.4))
-       + 0.15 * vnoise(p * 4.3 + vec3(8.3, 2.8, 5.1));
+// Two octaves of value noise for 60/120fps mobile GPU frame budget
+float fbm2(vec3 p) {
+  return 0.64 * vnoise(p)
+       + 0.36 * vnoise(p * 2.15 + vec3(1.7, 9.2, 3.4));
 }
 
 float sdRoundRect(vec2 p, vec2 b, float r) {
@@ -109,12 +108,12 @@ void main() {
     float chord = 2.0 * max(0.0, dot(-ray, normal));
     vec3 entry = vec3(p.x, p.y, z);
 
-    // 2. Volumetric weather fog & plasma threads along 10 chord samples
+    // 2. Volumetric weather fog & plasma threads along 5 optimized chord samples (4.3x lighter for mobile GPUs)
     vec3 accum = uDeep * (0.16 + 0.10 * z);
-    float stepLen = chord / 10.0;
+    float stepLen = chord * 0.2;
 
-    for (int i = 0; i < 10; i++) {
-      float t = (float(i) + 0.5) * 0.1;
+    for (int i = 0; i < 5; i++) {
+      float t = (float(i) + 0.5) * 0.2;
       vec3 pos = entry + ray * (chord * t);
       float distFromCenter = length(pos);
 
@@ -129,30 +128,29 @@ void main() {
       );
       twisted.xy += uPointer * 0.10;
 
-      // Sample at position * 2.1, domain-warped by second copy of 3-octave noise * 1.6
+      // Sample at position * 2.1, domain-warped cleanly for smooth volumetric folds
       vec3 baseCoord = twisted * 2.1;
       vec3 warp = vec3(
-        fbm3(baseCoord + vec3(0.0, 0.0, uPhase * 0.18)),
-        fbm3(baseCoord + vec3(5.2, 1.3, -uPhase * 0.15)),
-        fbm3(baseCoord + vec3(2.8, 7.1, uPhase * 0.13))
+        vnoise(baseCoord + vec3(0.0, 0.0, uPhase * 0.18)),
+        vnoise(baseCoord + vec3(5.2, 1.3, -uPhase * 0.15)),
+        vnoise(baseCoord + vec3(2.8, 7.1, uPhase * 0.13))
       ) - 0.5;
-      vec3 warpedCoord = baseCoord + warp * 1.6;
+      vec3 warpedCoord = baseCoord + warp * 1.45;
 
-      float nVal = fbm3(warpedCoord);
+      float nVal = fbm2(warpedCoord);
       float density = smoothstep(0.35, 0.78, nVal);
       float shellFade = smoothstep(1.02, 0.35, distFromCenter);
       vec3 fogColor = mix(uDeep, uBright, smoothstep(0.42, 0.88, nVal));
 
-      // 3. Living plasma threads: (1 - |2n - 1|)^10 scaled by 0.5 + energy * 2.2
-      float nThread = vnoise(warpedCoord * 1.6 + vec3(uPhase * 0.12));
+      // 3. Living plasma threads: (1 - |2n - 1|)^8 scaled by 0.55 + energy * 2.1
+      float nThread = vnoise(warpedCoord * 1.55 + vec3(uPhase * 0.12));
       float ridge = max(0.0, 1.0 - abs(2.0 * nThread - 1.0));
       float r2_ = ridge * ridge;
       float r4_ = r2_ * r2_;
-      float r8_ = r4_ * r4_;
-      float threads = (r8_ * r2_) * (0.5 + uEnergy * 2.2);
+      float threads = (r4_ * r4_) * (0.55 + uEnergy * 2.1);
 
-      vec3 sampleLight = fogColor * (density * 1.55)
-                       + mix(uBright, vec3(1.0, 0.98, 0.94), 0.38) * (threads * 0.95);
+      vec3 sampleLight = fogColor * (density * 1.62)
+                       + mix(uBright, vec3(1.0, 0.98, 0.94), 0.38) * (threads * 0.92);
       accum += sampleLight * shellFade * stepLen;
     }
 

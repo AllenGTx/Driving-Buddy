@@ -196,10 +196,9 @@ class _BuddyFloatingSheetState extends State<BuddyFloatingSheet>
               type: MaterialType.transparency,
               child: Stack(
                 children: [
-                  // 1. Studio Dark Room #040406 + Backdrop Blur (TIDAK menutup saat tak sengaja tersentuh!)
+                  // 1. Studio Dark Room #040406 + Backdrop Blur ringan 10px terisolasi di RepaintBoundary (60/120fps)
                   Positioned.fill(
-                    child: AbsorbPointer(
-                      absorbing: false,
+                    child: RepaintBoundary(
                       child: GestureDetector(
                         behavior: HitTestBehavior.opaque,
                         onTap: () {
@@ -209,8 +208,8 @@ class _BuddyFloatingSheetState extends State<BuddyFloatingSheet>
                           opacity: opacityT,
                           child: BackdropFilter(
                             filter: ImageFilter.blur(
-                              sigmaX: 20.0,
-                              sigmaY: 20.0,
+                              sigmaX: 10.0,
+                              sigmaY: 10.0,
                             ),
                             child: DecoratedBox(
                               decoration: BoxDecoration(
@@ -218,8 +217,12 @@ class _BuddyFloatingSheetState extends State<BuddyFloatingSheet>
                                   center: const Alignment(0.0, -0.18),
                                   radius: 0.95,
                                   colors: [
-                                    const Color(0xFF1E0D06).withValues(alpha: 0.86),
-                                    const Color(0xFF040406).withValues(alpha: 0.94),
+                                    (controller.phase == SiriOrbPhase.thinking
+                                            ? const Color(0xFF280707)
+                                            : const Color(0xFF1E0D06))
+                                        .withValues(alpha: 0.86),
+                                    const Color(0xFF040406)
+                                        .withValues(alpha: 0.94),
                                   ],
                                 ),
                               ),
@@ -303,9 +306,10 @@ class _BuddyFloatingSheetState extends State<BuddyFloatingSheet>
                                             onTap: controller.onOrbTapped,
                                             child: SiriOrangeOrb(
                                               phase: controller.phase,
-                                              energy: controller.orbEnergy,
-                                              frequency:
-                                                  controller.orbFrequency,
+                                              energyListenable:
+                                                  controller.orbEnergyListenable,
+                                              frequencyListenable:
+                                                  controller.orbFrequencyListenable,
                                               size: orbCanvasSize,
                                               pressKick: _pressKickCounter,
                                               pointerOffset: _pointerOffset,
@@ -460,13 +464,20 @@ class _StatusShimmerLine extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final pillBg = isThinking
+        ? const Color(0xFFE53935).withValues(alpha: 0.16)
+        : const Color(0xFFFF7A2E).withValues(alpha: 0.13);
+    final pillBorder = isThinking
+        ? const Color(0xFFFF5252).withValues(alpha: 0.45)
+        : const Color(0xFFFF9E44).withValues(alpha: 0.34);
+
     final basePill = Container(
       padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 6),
       decoration: BoxDecoration(
-        color: const Color(0xFFFF7A2E).withValues(alpha: 0.13),
+        color: pillBg,
         borderRadius: BorderRadius.circular(999),
         border: Border.all(
-          color: const Color(0xFFFF9E44).withValues(alpha: 0.34),
+          color: pillBorder,
         ),
       ),
       child: Text(
@@ -494,9 +505,9 @@ class _StatusShimmerLine extends StatelessWidget {
               begin: Alignment(sweepPos - 0.45, 0.0),
               end: Alignment(sweepPos + 0.45, 0.0),
               colors: [
-                const Color(0xFFF2F2F5).withValues(alpha: 0.62),
-                const Color(0xFFFFE082),
-                const Color(0xFFF2F2F5).withValues(alpha: 0.62),
+                const Color(0xFFF2F2F5).withValues(alpha: 0.64),
+                const Color(0xFFFF8A80),
+                const Color(0xFFF2F2F5).withValues(alpha: 0.64),
               ],
               stops: const [0.0, 0.5, 1.0],
             ).createShader(bounds);

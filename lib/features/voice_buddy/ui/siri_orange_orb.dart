@@ -1,33 +1,27 @@
 import 'dart:math' as math;
 import 'dart:ui' as ui;
 
+import 'package:flutter/foundation.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
 import '../voice_buddy_controller.dart';
 
 /// Marble Volumetric Studio Glass Orb (GLSL FragmentShader `shaders/marble_orb.frag`)
-/// + Irregular Voice-Reactive Aura Ribbons Strictly BEHIND the Orb Rotating Clockwise:
+/// + Irregular Voice-Reactive Aura Ribbons Strictly BEHIND the Orb Rotating Clockwise.
 ///
-/// 1. **Lapisan Belakang (`_ClockwiseIrregularBackAuraPainter`)**:
-///    - Garis aura organik tak beraturan yang mekar mengikuti amplitudo suara saat diajak mengobrol.
-///    - Diposisikan **100% di belakang bola kaca** (area dalam bola `r < rBall` dipotong bersih sehingga
-///      tidak pernah ada garis atau pita aneh yang memotong tengah bola!).
-///    - Berputar pelan secara kontinu **searah jarum jam dinding (`+clockwiseAngle`)**.
-/// 2. **Lapisan Utama (`shaders/marble_orb.frag` per-pixel raymarched 3D glass orb)**:
-///    - Pembiasan kaca studio 3D (`refract` rasio `1/1.4`), 10 sampel chord volumetrik, puntiran vertikal
-///      `phase * 0.7 + y * (0.6 + energy)`, *domain-warped* 3-octave value noise yang melipat hidup
-///      di seluruh isi bola (tidak hitam kosong dan tanpa garis kotak horizontal!).
-///    - Filamen cahaya tipis `(1 - |2n - 1|)^10`, pembiasan tepi R/G/B `(1 - z)^{2.1, 2.6, 3.3}`,
-///      pantulan jendela studio miring 20° di kiri-atas, pantulan kanan-bawah, serta elips cahaya meja `1.26r`.
-///    - Bertransisi warna halus (~600ms, `3.2/s`) antar status sehingga cuaca di dalam bola tampak hidup
-///      bergerak dan berganti nuansa warna dengan identitas utama Hangat Amber-Oranye.
+/// Dioptimalkan khusus agar berjalan mulus 60/120fps di perangkat mobile kelas menengah:
+/// - Zero per-frame `setState()` (seluruh animasi digerakkan lewat `ChangeNotifier` repaint + `RepaintBoundary`).
+/// - Zero per-frame `Path.combine` & `MaskFilter.blur` di kanvas CustomPainter.
+/// - Menerima `energyListenable` / `frequencyListenable` langsung tanpa memicu rebuild tree overlay.
 class SiriOrangeOrb extends StatefulWidget {
   const SiriOrangeOrb({
     super.key,
     required this.phase,
-    required this.energy,
+    this.energy = 0.0,
     this.frequency = 0.45,
+    this.energyListenable,
+    this.frequencyListenable,
     this.size = 285.0,
     this.pressKick = 0.0,
     this.pointerOffset = Offset.zero,
@@ -36,6 +30,8 @@ class SiriOrangeOrb extends StatefulWidget {
   final SiriOrbPhase phase;
   final double energy;
   final double frequency;
+  final ValueListenable<double>? energyListenable;
+  final ValueListenable<double>? frequencyListenable;
   final double size;
   final double pressKick;
   final Offset pointerOffset;
@@ -92,16 +88,33 @@ class _MarbleStateTone {
   }
 }
 
+class _OrbPaintState extends ChangeNotifier {
+  double fogPhase = 0.0;
+  double clockwiseAuraAngle = 0.0;
+  double auraMorphPhase = 0.0;
+  double liveVoice = 0.0;
+  double frequency = 0.45;
+  double easedEnergy = 0.24;
+  double flareKick = 0.0;
+  double breathScale = 1.0;
+  bool isVoiceInteractive = false;
+  bool isThinking = false;
+  Offset easedPointer = Offset.zero;
+  _MarbleStateTone tone = _SiriOrangeOrbState._toneSummonAmber;
+
+  void notifyFrame() => notifyListeners();
+}
+
 class _SiriOrangeOrbState extends State<SiriOrangeOrb>
     with SingleTickerProviderStateMixin {
   static ui.FragmentProgram? _cachedProgram;
   static bool _loadingProgram = false;
 
   // Palet cuaca kaca volumetrik Marble:
-  // - Asking / Listening / Summon: Golden-Amber ikonik persis referensi Marble ("May I go ahead?")
-  // - Thinking: Berputar cepat dengan gradasi Violet-Amber menyala
-  // - Speaking: Berpendar hangat Molten Amber <-> Emerald-Gold yang bernapas mengikuti suara
-  // - Idle / Ready: Warm Studio Copper-Amber dengan kilau biru lembut di bibir kaca
+  // - Asking / Listening / Summon: Golden-Amber
+  // - Thinking: MERAH menyala (sesuai permintaan user, tidak lagi ungu!)
+  // - Speaking: Hangat Amber-Emas bercahaya hidup mengikuti suara
+  // - Idle / Ready: Studio Copper-Amber dengan kilau tepi lembut
   static const _MarbleStateTone _toneSummonAmber = _MarbleStateTone(
     deep: _Vec3(1.00, 0.40, 0.06),
     bright: _Vec3(1.00, 0.88, 0.45),
@@ -114,16 +127,16 @@ class _SiriOrangeOrbState extends State<SiriOrangeOrb>
     rim: _Vec3(1.00, 0.72, 0.32),
   );
 
-  static const _MarbleStateTone _toneThinkingViolet = _MarbleStateTone(
-    deep: _Vec3(0.58, 0.20, 0.98),
-    bright: _Vec3(0.96, 0.78, 1.00),
-    rim: _Vec3(0.84, 0.56, 1.00),
+  static const _MarbleStateTone _toneThinkingRed = _MarbleStateTone(
+    deep: _Vec3(0.95, 0.06, 0.05),
+    bright: _Vec3(1.00, 0.44, 0.20),
+    rim: _Vec3(1.00, 0.20, 0.14),
   );
 
   static const _MarbleStateTone _toneSpeakingWarmEmerald = _MarbleStateTone(
     deep: _Vec3(0.94, 0.44, 0.08),
-    bright: _Vec3(0.92, 1.00, 0.68),
-    rim: _Vec3(0.52, 0.96, 0.72),
+    bright: _Vec3(0.96, 0.98, 0.62),
+    rim: _Vec3(0.98, 0.78, 0.34),
   );
 
   static const _MarbleStateTone _toneReadyWarmBlue = _MarbleStateTone(
@@ -132,27 +145,19 @@ class _SiriOrangeOrbState extends State<SiriOrangeOrb>
     rim: _Vec3(0.62, 0.78, 1.00),
   );
 
+  final _OrbPaintState _paintState = _OrbPaintState();
   ui.FragmentShader? _shader;
   late final Ticker _ticker;
   Duration _lastTick = Duration.zero;
-
   double _clockSec = 0.0;
-  double _fogPhase = 0.0;
-  double _clockwiseAuraAngle = 0.0;
-  double _auraMorphPhase = 0.0;
-  double _easedEnergy = 0.24;
-  double _flareKick = 0.0;
   double _lastExternalKick = 0.0;
-  Offset _easedPointer = Offset.zero;
-
-  _MarbleStateTone _currentTone = _toneSummonAmber;
 
   @override
   void initState() {
     super.initState();
     _ensureShaderLoaded();
     if (widget.phase == SiriOrbPhase.summon) {
-      _flareKick = 0.85;
+      _paintState.flareKick = 0.85;
     }
     _ticker = createTicker(_onTick)..start();
   }
@@ -160,6 +165,7 @@ class _SiriOrangeOrbState extends State<SiriOrangeOrb>
   Future<void> _ensureShaderLoaded() async {
     if (_cachedProgram != null) {
       _shader = _cachedProgram!.fragmentShader();
+      _paintState.notifyFrame();
       if (mounted) setState(() {});
       return;
     }
@@ -169,9 +175,9 @@ class _SiriOrangeOrbState extends State<SiriOrangeOrb>
       final prog = await ui.FragmentProgram.fromAsset('shaders/marble_orb.frag');
       _cachedProgram = prog;
       if (mounted) {
-        setState(() {
-          _shader = prog.fragmentShader();
-        });
+        _shader = prog.fragmentShader();
+        _paintState.notifyFrame();
+        setState(() {});
       }
     } catch (_) {
       // Pada unit test headless tanpa GPU shader bundle, fallback radial painter dipakai otomatis.
@@ -185,17 +191,17 @@ class _SiriOrangeOrbState extends State<SiriOrangeOrb>
     super.didUpdateWidget(oldWidget);
     if (widget.phase == SiriOrbPhase.summon &&
         oldWidget.phase != SiriOrbPhase.summon) {
-      _flareKick = 0.90;
+      _paintState.flareKick = 0.90;
     }
     if (widget.pressKick > _lastExternalKick) {
-      _flareKick = 1.0;
+      _paintState.flareKick = 1.0;
     }
     _lastExternalKick = widget.pressKick;
   }
 
   _MarbleStateTone _targetToneFor(SiriOrbPhase p) {
     return switch (p) {
-      SiriOrbPhase.thinking => _toneThinkingViolet,
+      SiriOrbPhase.thinking => _toneThinkingRed,
       SiriOrbPhase.listening => _MarbleStateTone.lerp(
         _toneListeningAmber,
         const _MarbleStateTone(
@@ -225,27 +231,29 @@ class _SiriOrangeOrbState extends State<SiriOrangeOrb>
     final reducedMotion =
         mounted && (MediaQuery.maybeDisableAnimationsOf(context) ?? false);
 
-    // Flare press decay: exp(-2.2 * dt)
-    if (_flareKick > 0.002) {
-      _flareKick *= math.exp(-2.2 * dt);
+    if (_paintState.flareKick > 0.002) {
+      _paintState.flareKick *= math.exp(-2.2 * dt);
     } else {
-      _flareKick = 0.0;
+      _paintState.flareKick = 0.0;
     }
 
-    // Smooth color state blend at 3.2 per second (~600ms transition, never instant)
     final targetTone = _targetToneFor(widget.phase);
-    final toneAlpha = (1.0 - math.exp(-3.2 * dt)).clamp(0.0, 1.0);
-    _currentTone = _MarbleStateTone.lerp(_currentTone, targetTone, toneAlpha);
+    final toneAlpha = (1.0 - math.exp(-3.4 * dt)).clamp(0.0, 1.0);
+    _paintState.tone = _MarbleStateTone.lerp(_paintState.tone, targetTone, toneAlpha);
 
-    // Pointer eased at 4 per second
     final ptrAlpha = (1.0 - math.exp(-4.0 * dt)).clamp(0.0, 1.0);
-    _easedPointer = Offset.lerp(_easedPointer, widget.pointerOffset, ptrAlpha)!;
+    _paintState.easedPointer =
+        Offset.lerp(_paintState.easedPointer, widget.pointerOffset, ptrAlpha)!;
 
-    // Energy eased at 5 per second (Marble spec + live voice amplitude + press flare +0.7)
-    final liveVoice = widget.energy.clamp(0.0, 1.0);
+    final rawEnergy = widget.energyListenable?.value ?? widget.energy;
+    final rawFreq = widget.frequencyListenable?.value ?? widget.frequency;
+    final liveVoice = rawEnergy.clamp(0.0, 1.0);
+    _paintState.liveVoice = liveVoice;
+    _paintState.frequency = rawFreq.clamp(0.15, 1.0);
+
     final sinAsk = math.sin(2.4 * _clockSec);
     final double stateTargetEnergy = switch (widget.phase) {
-      SiriOrbPhase.thinking => 0.62 + 0.16 * math.sin(3.1 * _clockSec),
+      SiriOrbPhase.thinking => 0.65 + 0.15 * math.sin(3.1 * _clockSec),
       SiriOrbPhase.listening => math.max(
         liveVoice * 1.15,
         0.38 + 0.36 * (sinAsk * sinAsk),
@@ -256,100 +264,98 @@ class _SiriOrangeOrbState extends State<SiriOrangeOrb>
     };
     final targetEnergy = reducedMotion
         ? 0.30
-        : (stateTargetEnergy + _flareKick * 0.70).clamp(0.0, 1.75);
+        : (stateTargetEnergy + _paintState.flareKick * 0.70).clamp(0.0, 1.75);
     final energyAlpha = (1.0 - math.exp(-5.0 * dt)).clamp(0.0, 1.0);
-    _easedEnergy += (targetEnergy - _easedEnergy) * energyAlpha;
+    _paintState.easedEnergy += (targetEnergy - _paintState.easedEnergy) * energyAlpha;
 
-    // Fog speed integrated in Dart (phase += dt * speed) so changing speed never jumps
     final double baseSpeed = switch (widget.phase) {
-      SiriOrbPhase.thinking => 0.75,
+      SiriOrbPhase.thinking => 0.80,
       SiriOrbPhase.listening => 0.22 + liveVoice * 0.32,
       SiriOrbPhase.speaking => 0.24 + liveVoice * 0.38,
       SiriOrbPhase.summon => 0.42,
       _ => 0.12,
     };
-    final fogSpeed = baseSpeed + _flareKick * 1.60;
+    final fogSpeed = baseSpeed + _paintState.flareKick * 1.60;
 
     if (!reducedMotion) {
-      _fogPhase += dt * fogSpeed;
-      // Putaran pelan searah jarum jam dinding (+dt * rad/s, positif = searah jarum jam di layar Flutter!)
+      _paintState.fogPhase += dt * fogSpeed;
       final clockwiseSpeed =
-          0.34 + 0.22 * (liveVoice.clamp(0.0, 1.0)) + _flareKick * 0.45;
-      _clockwiseAuraAngle =
-          (_clockwiseAuraAngle + dt * clockwiseSpeed) % (2.0 * math.pi);
-      _auraMorphPhase += dt * (1.15 + 1.45 * liveVoice);
+          0.34 + 0.22 * liveVoice + _paintState.flareKick * 0.45;
+      _paintState.clockwiseAuraAngle =
+          (_paintState.clockwiseAuraAngle + dt * clockwiseSpeed) % (2.0 * math.pi);
+      _paintState.auraMorphPhase += dt * (1.15 + 1.45 * liveVoice);
     }
 
-    if (mounted) setState(() {});
+    _paintState.isThinking = widget.phase == SiriOrbPhase.thinking;
+    _paintState.isVoiceInteractive =
+        widget.phase == SiriOrbPhase.listening ||
+        widget.phase == SiriOrbPhase.speaking ||
+        widget.phase == SiriOrbPhase.summon ||
+        widget.phase == SiriOrbPhase.thinking;
+
+    _paintState.breathScale = reducedMotion
+        ? 1.0
+        : (1.0 +
+                  0.018 * _paintState.easedEnergy.clamp(0.0, 1.0) +
+                  0.026 * _paintState.flareKick)
+              .clamp(0.96, 1.08);
+
+    // Picu repaint GPU kanvas langsung tanpa `setState()` widget tree!
+    _paintState.notifyFrame();
   }
 
   @override
   void dispose() {
     _ticker.dispose();
+    _paintState.dispose();
     _shader?.dispose();
     super.dispose();
   }
 
   @override
   Widget build(BuildContext context) {
-    final reducedMotion = MediaQuery.maybeDisableAnimationsOf(context) ?? false;
-    final liveVoice = widget.energy.clamp(0.0, 1.0);
-    final isVoiceInteractive =
-        widget.phase == SiriOrbPhase.listening ||
-        widget.phase == SiriOrbPhase.speaking ||
-        widget.phase == SiriOrbPhase.summon ||
-        widget.phase == SiriOrbPhase.thinking;
-
-    final breathScale = reducedMotion
-        ? 1.0
-        : (1.0 + 0.018 * _easedEnergy.clamp(0.0, 1.0) + 0.026 * _flareKick)
-              .clamp(0.96, 1.08);
-
-    // Pergeseran halus 1.2% mengikuti sentuhan / pointer sesuai spesifikasi Marble
-    final shiftPx = Offset(
-      _easedPointer.dx * widget.size * 0.014,
-      _easedPointer.dy * widget.size * 0.014,
-    );
-
+    final activeShader = _shader ?? _cachedProgram?.fragmentShader();
     return Semantics(
       label: 'Bola kaca cuaca asisten suara',
       child: RepaintBoundary(
-        child: Transform.translate(
-          offset: shiftPx,
-          child: Transform.scale(
-            scale: breathScale,
-            child: SizedBox.square(
-              dimension: widget.size,
-              child: Stack(
-                fit: StackFit.expand,
-                children: [
-                  // LAPISAN 1 (MURNI DI BELAKANG BOLA):
-                  // Garis gelombang tak beraturan yang berputar searah jarum jam dinding saat diajak bicara
-                  CustomPaint(
-                    painter: _ClockwiseIrregularBackAuraPainter(
-                      clockwiseAngle: _clockwiseAuraAngle,
-                      morphPhase: _auraMorphPhase,
-                      voiceEnergy: liveVoice,
-                      stateEnergy: _easedEnergy,
-                      frequency: widget.frequency.clamp(0.15, 1.0),
-                      isActive: isVoiceInteractive,
-                      tone: _currentTone,
-                    ),
-                  ),
-
-                  // LAPISAN 2 (DI DEPAN):
-                  // Bola Kaca Volumetrik Marble Per-Pixel (menutup area r <= rBall dengan mulus 2px AA)
-                  CustomPaint(
-                    painter: _MarbleShaderOrbPainter(
-                      shader: _shader ?? _cachedProgram?.fragmentShader(),
-                      fogPhase: _fogPhase,
-                      energy: _easedEnergy,
-                      pointer: _easedPointer,
-                      tone: _currentTone,
-                    ),
-                  ),
-                ],
+        child: AnimatedBuilder(
+          animation: _paintState,
+          builder: (context, child) {
+            final shiftPx = Offset(
+              _paintState.easedPointer.dx * widget.size * 0.014,
+              _paintState.easedPointer.dy * widget.size * 0.014,
+            );
+            return Transform.translate(
+              offset: shiftPx,
+              child: Transform.scale(
+                scale: _paintState.breathScale,
+                child: child,
               ),
+            );
+          },
+          child: SizedBox.square(
+            dimension: widget.size,
+            child: Stack(
+              fit: StackFit.expand,
+              children: [
+                RepaintBoundary(
+                  child: CustomPaint(
+                    isComplex: true,
+                    willChange: true,
+                    painter: _ClockwiseIrregularBackAuraPainter(_paintState),
+                  ),
+                ),
+                RepaintBoundary(
+                  child: CustomPaint(
+                    isComplex: true,
+                    willChange: true,
+                    painter: _MarbleShaderOrbPainter(
+                      state: _paintState,
+                      shader: activeShader,
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
         ),
@@ -359,104 +365,93 @@ class _SiriOrangeOrbState extends State<SiriOrangeOrb>
 }
 
 class _ClockwiseIrregularBackAuraPainter extends CustomPainter {
-  const _ClockwiseIrregularBackAuraPainter({
-    required this.clockwiseAngle,
-    required this.morphPhase,
-    required this.voiceEnergy,
-    required this.stateEnergy,
-    required this.frequency,
-    required this.isActive,
-    required this.tone,
-  });
+  _ClockwiseIrregularBackAuraPainter(this.state) : super(repaint: state);
 
-  final double clockwiseAngle;
-  final double morphPhase;
-  final double voiceEnergy;
-  final double stateEnergy;
-  final double frequency;
-  final bool isActive;
-  final _MarbleStateTone tone;
+  final _OrbPaintState state;
+  Size? _cachedCutoutSize;
+  Path? _cachedCutoutPath;
+
+  // Stroke paints dipakai ulang agar tidak membuat objek Paint di setiap frame.
+  final Paint _softGlowPaint = Paint()
+    ..isAntiAlias = true
+    ..style = PaintingStyle.stroke
+    ..blendMode = BlendMode.plus;
+
+  final Paint _coreLinePaint = Paint()
+    ..isAntiAlias = true
+    ..style = PaintingStyle.stroke
+    ..strokeJoin = StrokeJoin.round
+    ..blendMode = BlendMode.plus;
+
+  Path _getCutoutPath(Size size, Offset center, double rBall) {
+    if (_cachedCutoutSize == size && _cachedCutoutPath != null) {
+      return _cachedCutoutPath!;
+    }
+    // PathFillType.evenOdd memotong area lingkaran tengah seketika tanpa operasi CSG Path.combine tiap frame!
+    final p = Path()
+      ..fillType = PathFillType.evenOdd
+      ..addRect(Offset.zero & size)
+      ..addOval(Rect.fromCircle(center: center, radius: rBall * 0.985));
+    _cachedCutoutSize = size;
+    _cachedCutoutPath = p;
+    return p;
+  }
 
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width * 0.5, size.height * 0.46);
     final rBall = math.min(size.width, size.height) * 0.34;
 
-    final activeBoost = isActive ? 1.0 : 0.35;
-    final e = (voiceEnergy * 0.85 + stateEnergy * 0.32).clamp(0.0, 1.35) *
+    final activeBoost = state.isVoiceInteractive ? 1.0 : 0.35;
+    final e =
+        (state.liveVoice * 0.85 + state.easedEnergy * 0.32).clamp(0.0, 1.35) *
         activeBoost;
     if (e < 0.03) return;
 
-    // Potong area dalam lingkaran bola kaca (PathOperation.difference) sehingga 100% garis tak beraturan
-    // HANYA terlihat muncul dari BELAKANG bola kaca, tidak pernah melintasi bagian depan bola!
-    final outerBounds = Path()..addRect(Offset.zero & size);
-    final innerBallCutout = Path()
-      ..addOval(Rect.fromCircle(center: center, radius: rBall * 0.985));
-    final strictlyBehindOrbClip = Path.combine(
-      PathOperation.difference,
-      outerBounds,
-      innerBallCutout,
-    );
-
     canvas.save();
-    canvas.clipPath(strictlyBehindOrbClip);
-
-    // Putar kanvas searah jarum jam dinding (+clockwiseAngle di koordinat layar Flutter = searah jarum jam!)
+    canvas.clipPath(_getCutoutPath(size, center, rBall));
     canvas.translate(center.dx, center.dy);
-    canvas.rotate(clockwiseAngle);
+    canvas.rotate(state.clockwiseAuraAngle);
 
-    final warmMain = const Color(0xFFFF7A26);
-    final goldCrest = const Color(0xFFFFCA62);
-    final stateAccent = tone.rim.toDisplayColor();
-    final rubyFringe = const Color(0xFFFF3D57);
+    final List<Color> ribbonColors = state.isThinking
+        ? <Color>[
+            const Color(0xFFFF2424),
+            const Color(0xFFFF6A45),
+            state.tone.rim.toDisplayColor(),
+          ]
+        : <Color>[
+            const Color(0xFFFF7A26),
+            const Color(0xFFFFCA62),
+            state.tone.rim.toDisplayColor(),
+          ];
 
-    final ribbonColors = <Color>[
-      warmMain,
-      goldCrest,
-      stateAccent,
-      rubyFringe,
-    ];
-
-    // 4 pita kontur tak beraturan organik yang mekar halus di belakang tepi bola saat berbicara
-    for (int layer = 0; layer < 4; layer++) {
+    // 3 pita kontur tak beraturan organik (40 titik kurva -> 0 MaskFilter blur, mulus 60/120fps)
+    for (int layer = 0; layer < 3; layer++) {
       final double l = layer.toDouble();
-      final double phaseOffset = l * 1.42;
+      final double phaseOffset = l * 1.48;
       final Path irregularLoop = _buildIrregularContourPath(
-        baseRadius: rBall * (0.995 + 0.032 * l + 0.048 * e),
-        wobbleAmp: rBall * (0.042 + 0.135 * e) * (1.0 - 0.10 * l),
-        morph: morphPhase + phaseOffset,
-        freqBoost: frequency,
+        baseRadius: rBall * (0.995 + 0.036 * l + 0.048 * e),
+        wobbleAmp: rBall * (0.042 + 0.130 * e) * (1.0 - 0.12 * l),
+        morph: state.auraMorphPhase + phaseOffset,
+        freqBoost: state.frequency,
         seed: layer,
       );
 
       final Color col = ribbonColors[layer];
-      final double baseAlpha = ((0.30 + 0.44 * e) * (1.0 - 0.14 * l))
-          .clamp(0.0, 0.82);
+      final double baseAlpha =
+          ((0.30 + 0.44 * e) * (1.0 - 0.15 * l)).clamp(0.0, 0.82);
 
-      // Pendaran aura lembut di belakang pita
-      canvas.drawPath(
-        irregularLoop,
-        Paint()
-          ..isAntiAlias = true
-          ..style = PaintingStyle.stroke
-          ..strokeWidth = 5.5 - l * 0.7
-          ..blendMode = BlendMode.plus
-          ..color = col.withValues(alpha: baseAlpha * 0.34)
-          ..maskFilter = const MaskFilter.blur(BlurStyle.normal, 4.5),
-      );
+      // Pendaran aura lebar ringan (pengganti MaskFilter.blur yang berat di GPU mobile)
+      _softGlowPaint
+        ..strokeWidth = 6.2 - l * 0.8
+        ..color = col.withValues(alpha: baseAlpha * 0.24);
+      canvas.drawPath(irregularLoop, _softGlowPaint);
 
-      // Garis kontur tak beraturan tajam berkilau
-      canvas.drawPath(
-        irregularLoop,
-        Paint()
-          ..isAntiAlias = true
-          ..style = PaintingStyle.stroke
-          ..strokeJoin = StrokeJoin.round
-          ..strokeWidth = (2.1 - l * 0.25).clamp(1.1, 2.4)
-          ..blendMode = BlendMode.plus
-          ..color = Color.lerp(col, Colors.white, 0.34)!
-              .withValues(alpha: baseAlpha),
-      );
+      _coreLinePaint
+        ..strokeWidth = (2.1 - l * 0.25).clamp(1.1, 2.3)
+        ..color = Color.lerp(col, Colors.white, 0.34)!
+            .withValues(alpha: baseAlpha);
+      canvas.drawPath(irregularLoop, _coreLinePaint);
     }
 
     canvas.restore();
@@ -469,18 +464,16 @@ class _ClockwiseIrregularBackAuraPainter extends CustomPainter {
     required double freqBoost,
     required int seed,
   }) {
-    const int steps = 84;
+    const int steps = 40;
     final List<Offset> pts = List<Offset>.generate(steps, (i) {
       final double theta = (i / steps) * 2.0 * math.pi;
-      // Harmonik asimetris tak beraturan (3, 5, 7 gelombang) agar kontur organik, tidak bundar kaku
       final double n1 = math.sin(3.0 * theta + morph * 0.85 + seed * 1.9);
       final double n2 =
           0.62 * math.cos(5.0 * theta - morph * 1.15 + seed * 2.7);
       final double n3 =
           (0.32 + 0.22 * freqBoost) *
           math.sin(7.0 * theta + morph * 1.45 - seed * 1.1);
-      final double r =
-          baseRadius + wobbleAmp * ((n1 + n2 + n3) / 1.94);
+      final double r = baseRadius + wobbleAmp * ((n1 + n2 + n3) / 1.94);
       return Offset(r * math.cos(theta), r * math.sin(theta));
     });
 
@@ -506,46 +499,36 @@ class _ClockwiseIrregularBackAuraPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _ClockwiseIrregularBackAuraPainter old) {
-    return old.clockwiseAngle != clockwiseAngle ||
-        old.morphPhase != morphPhase ||
-        old.voiceEnergy != voiceEnergy ||
-        old.stateEnergy != stateEnergy ||
-        old.isActive != isActive;
+    return old.state != state;
   }
 }
 
 class _MarbleShaderOrbPainter extends CustomPainter {
-  const _MarbleShaderOrbPainter({
+  _MarbleShaderOrbPainter({
+    required this.state,
     required this.shader,
-    required this.fogPhase,
-    required this.energy,
-    required this.pointer,
-    required this.tone,
-  });
+  }) : super(repaint: state);
 
+  final _OrbPaintState state;
   final ui.FragmentShader? shader;
-  final double fogPhase;
-  final double energy;
-  final Offset pointer;
-  final _MarbleStateTone tone;
 
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width * 0.5, size.height * 0.46);
     final rBall = math.min(size.width, size.height) * 0.34;
+    final tone = state.tone;
 
     final frag = shader;
     if (frag != null) {
-      // Set uniforms in exact GLSL order (0..17)
       frag.setFloat(0, size.width);
       frag.setFloat(1, size.height);
       frag.setFloat(2, center.dx);
       frag.setFloat(3, center.dy);
       frag.setFloat(4, rBall);
-      frag.setFloat(5, fogPhase);
-      frag.setFloat(6, energy);
-      frag.setFloat(7, pointer.dx);
-      frag.setFloat(8, pointer.dy);
+      frag.setFloat(5, state.fogPhase);
+      frag.setFloat(6, state.easedEnergy);
+      frag.setFloat(7, state.easedPointer.dx);
+      frag.setFloat(8, state.easedPointer.dy);
       frag.setFloat(9, tone.deep.r);
       frag.setFloat(10, tone.deep.g);
       frag.setFloat(11, tone.deep.b);
@@ -563,7 +546,6 @@ class _MarbleShaderOrbPainter extends CustomPainter {
       return;
     }
 
-    // Fallback tanpa WebGL/Impeller (mis. saat unit test headless): gradien radial warna status sesuai spesifikasi Marble
     canvas.drawCircle(
       center,
       rBall,
@@ -583,11 +565,6 @@ class _MarbleShaderOrbPainter extends CustomPainter {
 
   @override
   bool shouldRepaint(covariant _MarbleShaderOrbPainter old) {
-    return old.fogPhase != fogPhase ||
-        old.energy != energy ||
-        old.pointer != pointer ||
-        old.tone.deep.r != tone.deep.r ||
-        old.tone.bright.g != tone.bright.g ||
-        old.shader != shader;
+    return old.state != state || old.shader != shader;
   }
 }

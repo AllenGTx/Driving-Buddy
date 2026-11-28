@@ -18,8 +18,8 @@ class BuddySttService {
     : _http = httpClient ?? http.Client(),
       _ownsHttp = httpClient == null;
 
-  /// Jeda hening sesudah pengemudi selesai bicara (~1.65 detik).
-  static const Duration siriTrailingSilenceCutoff = Duration(milliseconds: 1650);
+  /// Jeda hening sesudah pengemudi selesai bicara (~1.25 detik agar respons cepat).
+  static const Duration siriTrailingSilenceCutoff = Duration(milliseconds: 1250);
 
   /// Batas tunggu suara pertama sesudah orb terbuka (2.2 detik).
   static const Duration siriInitialSilenceTimeout = Duration(milliseconds: 2200);
@@ -162,30 +162,29 @@ class BuddySttService {
         }
 
         final segPath =
-            '${tempDir.path}/buddy_wake_seg_${DateTime.now().millisecondsSinceEpoch}.m4a';
+            '${tempDir.path}/buddy_wake_seg_${DateTime.now().millisecondsSinceEpoch}.wav';
         bool heardBurst = false;
         int speechTicks = 0;
         int quietAfterSpeechTicks = 0;
         int windowTicks = 0;
         double burstPeakDb = -40.0;
 
-        final int pollMs = _ecoMode ? 105 : 75; // Eco Mode ~9.5 Hz: ekstra hemat baterai DSP
+        final int pollMs = _ecoMode ? 85 : 50;
         final windowDone = Completer<void>();
         _wakeWindowCompleter = windowDone;
         StreamSubscription<Amplitude>? sub;
 
         try {
           await _recorder.start(
-            RecordConfig(
-              encoder: AudioEncoder.aacLc,
+            const RecordConfig(
+              encoder: AudioEncoder.wav,
               sampleRate: 16000,
               numChannels: 1,
-              bitRate: _ecoMode ? 32000 : 48000,
               autoGain: true,
-              echoCancel: true,
-              noiseSuppress: true,
-              androidConfig: const AndroidRecordConfig(
-                audioSource: AndroidAudioSource.voiceRecognition,
+              echoCancel: false,
+              noiseSuppress: false,
+              androidConfig: AndroidRecordConfig(
+                audioSource: AndroidAudioSource.mic,
                 manageBluetooth: false,
               ),
             ),
@@ -204,12 +203,18 @@ class BuddySttService {
                 ? amp.current.clamp(-60.0, 0.0)
                 : -60.0;
 
-            if (!heardBurst && curDb < rollingAmbientDb + 3.5) {
+            // Kalibrasi cepat lantai bising di 3 tick pertama (~150ms) agar saat app baru dibuka tidak langsung false-trigger
+            if (windowTicks <= 3) {
+              rollingAmbientDb = windowTicks == 1
+                  ? curDb.clamp(-52.0, -24.0)
+                  : (rollingAmbientDb * 0.65 + curDb.clamp(-52.0, -24.0) * 0.35);
+              return;
+            } else if (!heardBurst && curDb < rollingAmbientDb + 3.5) {
               rollingAmbientDb =
                   (rollingAmbientDb * 0.90 + curDb * 0.10).clamp(-52.0, -24.0);
             }
 
-            final onsetDb = math.max(-36.0, rollingAmbientDb + 6.2);
+            final onsetDb = math.max(-35.0, rollingAmbientDb + 6.5);
             final endDb = heardBurst
                 ? math.max(rollingAmbientDb + 3.2, burstPeakDb - 10.5)
                 : onsetDb;
@@ -218,35 +223,32 @@ class BuddySttService {
               speechTicks++;
               quietAfterSpeechTicks = 0;
               if (curDb > burstPeakDb) burstPeakDb = curDb;
-              // >= 2 tick (~150ms) vokal di atas ambang bising -> semburan kata panggil valid
               if (speechTicks >= 2) {
                 heardBurst = true;
               }
-              // Batas maksimum kalimat panggil langsung (~3.6 detik = 48 tick)
-              if (heardBurst && speechTicks >= 48 && !windowDone.isCompleted) {
+              if (heardBurst && speechTicks >= 64 && !windowDone.isCompleted) {
                 windowDone.complete();
               }
             } else if (heardBurst) {
               quietAfterSpeechTicks++;
-              // Jeda ~525ms (7 tick) sesudah sapaan "Rina" / "Hei Rina" -> langsung proses!
-              if (quietAfterSpeechTicks >= 7 && !windowDone.isCompleted) {
+              // Jeda ~300ms (6 tick x 50ms) sesudah sapaan -> langsung proses!
+              if (quietAfterSpeechTicks >= 6 && !windowDone.isCompleted) {
                 windowDone.complete();
               }
             } else {
               speechTicks = 0;
-              // 6 detik hening total -> reset buffer lokal (0 internet, 0 token!)
-              if (windowTicks >= 80 && !windowDone.isCompleted) {
+              if (windowTicks >= 110 && !windowDone.isCompleted) {
                 windowDone.complete();
               }
             }
           });
 
           await windowDone.future.timeout(
-            const Duration(milliseconds: 6500),
+            const Duration(milliseconds: 6200),
             onTimeout: () {},
           );
         } catch (_) {
-          await Future<void>.delayed(const Duration(milliseconds: 500));
+          await Future<void>.delayed(const Duration(milliseconds: 350));
         } finally {
           _wakeWindowCompleter = null;
           await sub?.cancel();
@@ -264,7 +266,8 @@ class BuddySttService {
           final text = await _uploadToServerStt(
             filePath: segPath,
             buddyNameHint: '',
-            timeout: const Duration(milliseconds: 3800),
+            mode: 'wake',
+            timeout: const Duration(milliseconds: 3500),
           );
           unawaited(File(segPath).delete().catchError((_) => File(segPath)));
 
@@ -391,20 +394,19 @@ class BuddySttService {
     try {
       final tempDir = await getTemporaryDirectory();
       final outPath =
-          '${tempDir.path}/buddy_cmd_${DateTime.now().millisecondsSinceEpoch}.m4a';
+          '${tempDir.path}/buddy_cmd_${DateTime.now().millisecondsSinceEpoch}.wav';
 
       if (await _recorder.hasPermission()) {
         await _recorder.start(
           const RecordConfig(
-            encoder: AudioEncoder.aacLc,
+            encoder: AudioEncoder.wav,
             sampleRate: 16000,
             numChannels: 1,
-            bitRate: 96000,
             autoGain: true,
-            echoCancel: true,
-            noiseSuppress: true,
+            echoCancel: false,
+            noiseSuppress: false,
             androidConfig: AndroidRecordConfig(
-              audioSource: AndroidAudioSource.voiceRecognition,
+              audioSource: AndroidAudioSource.mic,
               manageBluetooth: false,
             ),
           ),
@@ -504,6 +506,7 @@ class BuddySttService {
       final serverTranscript = await _uploadToServerStt(
         filePath: recordedPath,
         buddyNameHint: buddyNameHint,
+        mode: 'command',
       );
       unawaited(File(recordedPath).delete().catchError((_) => File(recordedPath!)));
       if (serverTranscript != null) {
@@ -528,6 +531,7 @@ class BuddySttService {
   Future<String?> _uploadToServerStt({
     required String filePath,
     required String buddyNameHint,
+    String mode = 'command',
     Duration timeout = const Duration(seconds: 6),
   }) async {
     try {
@@ -537,6 +541,7 @@ class BuddySttService {
       final uri = Uri.parse('${LlmChatConfig.shared.baseUrl}/stt');
       final req = http.MultipartRequest('POST', uri)
         ..fields['hint'] = buddyNameHint
+        ..fields['mode'] = mode
         ..files.add(await http.MultipartFile.fromPath('file', filePath));
       final streamed = await _http.send(req).timeout(timeout);
       final resp = await http.Response.fromStream(streamed);

@@ -10,13 +10,14 @@ endpoint tetap menjawab (HTTP 200, `fallback: true`) dengan balasan darurat.
 """
 from __future__ import annotations
 
+import base64
 import logging
 import math
 import time
-from typing import Any, Callable, Dict, Optional, Tuple
+from typing import Any, Awaitable, Callable, Dict, Optional, Tuple
 
-from fastapi import APIRouter, HTTPException, Path, Query
-from fastapi.responses import StreamingResponse
+from fastapi import APIRouter, HTTPException, Path, Query, Request
+from fastapi.responses import JSONResponse, RedirectResponse, StreamingResponse
 
 from .audio_routes import build_audio_router
 from .client import BaseLLM, FallbackChainLLM, LLMError, make_llm
@@ -37,10 +38,14 @@ log = logging.getLogger("driving_buddy.llm")
 DEEP_CHECK_CACHE_S = 30.0
 
 
+InlineTtsFn = Callable[[str, str, str, str], Awaitable[Tuple[bytes, str]]]
+
+
 def build_router(
     settings: Optional[Settings] = None,
     llm: Optional[BaseLLM] = None,
     clock: Callable[[], float] = time.monotonic,
+    inline_tts_fn: Optional[InlineTtsFn] = None,
 ) -> APIRouter:
     """Buat router /chat, /stt, dan /tts. Tanpa argumen = baca konfigurasi dari environment / file .env."""
     auto_chain = settings is None and llm is None
@@ -90,7 +95,7 @@ def build_router(
             503: {"description": "LLM belum dikonfigurasi di server (cek GET /chat/health)."},
         },
     )
-    async def chat(req: ChatRequest) -> ChatResponse:
+    async def chat(req: ChatRequest, request: Request) -> ChatResponse:
         if llm is None:
             raise HTTPException(
                 status_code=503,
@@ -103,12 +108,16 @@ def build_router(
         fallback, error = False, None
         model_name = llm.model
         provider_used = settings.provider
+        audio_b64: Optional[str] = None
+        audio_mime: Optional[str] = None
+        tts_error: Optional[str] = None
+
         async with session.lock:
             if req.reset:
                 session.history.clear()
             web_ctx: Optional[str] = None
             if auto_chain and needs_live_web_search(req.message):
-                web_ctx = await search_live_web(req.message, timeout_s=2.0)
+                web_ctx = await search_live_web(req.message, timeout_s=2.8)
             messages = build_messages(
                 list(session.history),
                 req.message,
@@ -120,7 +129,12 @@ def build_router(
             )
             try:
                 result = await llm.complete(messages)
-                reply = clean_reply(result.text, settings.max_reply_chars)
+                reply = clean_reply(
+                    result.text,
+                    settings.max_reply_chars,
+                    voice_profile=req.voice_profile,
+                    buddy_name=req.buddy_name,
+                )
                 if not reply:
                     raise LLMError("empty", "balasan kosong setelah dibersihkan")
                 session.add_turn(req.message, reply)
@@ -137,6 +151,24 @@ def build_router(
                 reply = pick_fallback(req.driver_state, req.message, buddy_name=req.buddy_name)
                 log.exception("[LLM] error tak terduga di /chat")
 
+        if req.include_audio and inline_tts_fn is not None and not fallback and reply:
+            prof = (req.voice_profile or "furina").strip().lower()
+            client_ip = request.headers.get("x-forwarded-for") or (
+                request.client.host if request.client else ""
+            )
+            try:
+                audio_bytes, mime = await inline_tts_fn(reply, prof, req.language, client_ip)
+                if audio_bytes and len(audio_bytes) > 256:
+                    audio_b64 = base64.b64encode(audio_bytes).decode("ascii")
+                    audio_mime = mime
+            except HTTPException as exc:
+                if exc.status_code == 503 and prof == "furina":
+                    tts_error = "furina_exhausted"
+            except Exception as exc:
+                if prof == "furina" and "exhausted" in str(exc).lower():
+                    tts_error = "furina_exhausted"
+                log.debug("[LLM] inline TTS dilewati (%s)", exc)
+
         return ChatResponse(
             reply=reply,
             session_id=req.session_id,
@@ -145,6 +177,9 @@ def build_router(
             latency_ms=int((time.perf_counter() - started) * 1000),
             fallback=fallback,
             error=error,
+            audio_b64=audio_b64,
+            audio_mime=audio_mime,
+            tts_error=tts_error,
         )
 
     @router.delete("/chat/{session_id}", summary="Hapus riwayat percakapan satu sesi")
@@ -177,10 +212,51 @@ def build_router(
     async def music_stream(
         q: str = Query(..., min_length=1, max_length=180),
         dur: int = Query(210, ge=15, le=900),
-    ) -> StreamingResponse:
+        mode: str = Query("stream", description="'stream'=streaming bytes, 'url'=kembalikan URL CDN langsung sebagai JSON"),
+    ):
         info = await resolve_in_app_music_stream(q, target_dur_s=dur)
         if not info:
             raise HTTPException(status_code=404, detail={"error": "music_stream_not_found"})
+
+        # Mode 'url': kembalikan URL audio CDN langsung (progressive MP3/M4A atau HLS M3U8)
+        # agar audioplayers Flutter/ExoPlayer dapat memutarnya langsung tanpa server proxy.
+        if mode == "url":
+            stream_mode = info.get("mode")
+            if stream_mode == "direct_url":
+                # Progressive MP3 / M4A — langsung bisa diputar audioplayers
+                return JSONResponse({
+                    "url": info["url"],
+                    "mime": info.get("mime", "audio/mpeg"),
+                    "duration_s": info.get("duration_s", dur),
+                    "mode": "direct",
+                })
+            elif stream_mode == "fmp4_segments":
+                # HLS M3U8: ExoPlayer Android bisa handle ini secara native
+                segments: list = info.get("segments") or []
+                # Segmen pertama adalah init.mp4, segmen KEDUA dst adalah .m4s data —
+                # tapi M3U8 URL asli sudah kita simpan saat resolve — ekstrak dari URL referral
+                # Fallback: kembalikan list segments agar Flutter bisa stream manual
+                # Jika ada URL M3U8 asli (tersimpan di info), gunakan itu
+                m3u8_url = info.get("m3u8_url") or (segments[0] if segments and ".m3u8" in (segments[0] or "") else "")
+                if m3u8_url:
+                    return JSONResponse({
+                        "url": m3u8_url,
+                        "mime": "application/x-mpegURL",
+                        "duration_s": info.get("duration_s", dur),
+                        "mode": "hls",
+                    })
+                # Fallback: balik ke streaming server-side
+                return StreamingResponse(
+                    iter_resolved_music_bytes(info),
+                    media_type="audio/mp4",
+                    headers={
+                        "Cache-Control": "public, max-age=300",
+                        "X-Music-Duration": str(info.get("duration_s", dur)),
+                        "X-Music-Mode": "fmp4_stream",
+                    },
+                )
+
+        # Mode default 'stream': streaming bytes (kompatibilitas lama)
         return StreamingResponse(
             iter_resolved_music_bytes(info),
             media_type=info.get("mime", "audio/mp4"),

@@ -9,6 +9,7 @@ Mendukung:
 from __future__ import annotations
 
 import asyncio
+import datetime as dt
 import html
 import logging
 import re
@@ -26,8 +27,8 @@ _SEARCH_TRIGGER_PATTERNS = re.compile(
     r"cari\s+di\s+google|cari\s+tau|cari\s+tahu|coba\s+cari|tolong\s+cari|googling|search|"
     r"apakah\s+benar|bener\s+ga|bener\s+gak|benar\s+tidak|hoaks|hoax|cek\s+fakta|fakta\s+atau|"
     r"berita|kabar\s+terbaru|viral|isu\s+|gosip|melengserkan|lengser|pemilu|presiden|wapres|menteri|prabowo|gibran|"
-    r"skor|hasil\s+pertandingan|pertandingan|lawan|vs|versus|klasemen|liga\s+champions|premier\s+league|timnas|"
-    r"man\s+united|manchester|sporting|real\s+madrid|barcelona|arsenal|liverpool|chelsea|juventus|milan|inter|persib|persija|"
+    r"skor|berapa\s+skor|hasil\s+pertandingan|menang\s+berapa|kalah\s+berapa|pertandingan|lawan|vs|versus|klasemen|liga\s+champions|premier\s+league|liga\s+inggris|timnas|"
+    r"man\s+united|man\s+utd|man\s+u|mu\b|manchester|sporting|real\s+madrid|barcelona|barca|arsenal|liverpool|chelsea|juventus|milan|inter|bayern|psg|tottenham|persib|persija|"
     r"kemarin|tadi\s+malam|semalam|hari\s+ini|minggu\s+ini|bulan\s+ini|tahun\s+202[4-9]|terbaru|sekarang\s+siapa|"
     r"harga\s+|kurs\s+|rupiah|dollar|bitcoin|emas\s+hari\s+ini|cuaca\s+di|jadwal\s+"
     r")\b",
@@ -136,8 +137,164 @@ async def _fetch_wikipedia_summary(client: httpx.AsyncClient, query: str) -> Lis
         return []
 
 
-async def search_live_web(raw_message: str, timeout_s: float = 2.0) -> Optional[str]:
-    """Ambil ringkasan fakta real-time dari Google News ID/Global + Bing Web + Wikipedia dalam <2 detik."""
+_MONTH_MAP = {
+    "jan": 1, "januari": 1, "january": 1,
+    "feb": 2, "februari": 2, "february": 2, "peb": 2,
+    "mar": 3, "maret": 3, "march": 3,
+    "apr": 4, "april": 4,
+    "mei": 5, "may": 5,
+    "jun": 6, "juni": 6, "june": 6,
+    "jul": 7, "juli": 7, "july": 7,
+    "agu": 8, "ags": 8, "agustus": 8, "aug": 8, "august": 8,
+    "sep": 9, "sept": 9, "september": 9,
+    "okt": 10, "oktober": 10, "oct": 10, "october": 10,
+    "nov": 11, "november": 11, "nop": 11,
+    "des": 12, "desember": 12, "dec": 12, "december": 12,
+}
+
+_TEAM_ALIASES = (
+    (re.compile(r"\b(?:manchester\s+united|man\s+united|man\s+utd|man\s+u|mufc|mu)\b", re.I), "Manchester United", ("manchester united", "man utd", "man united")),
+    (re.compile(r"\b(?:manchester\s+city|man\s+city|mcfc)\b", re.I), "Manchester City", ("manchester city", "man city")),
+    (re.compile(r"\bliverpool\b", re.I), "Liverpool", ("liverpool",)),
+    (re.compile(r"\barsenal\b", re.I), "Arsenal", ("arsenal",)),
+    (re.compile(r"\bchelsea\b", re.I), "Chelsea", ("chelsea",)),
+    (re.compile(r"\b(?:tottenham|spurs)\b", re.I), "Tottenham", ("tottenham", "spurs")),
+    (re.compile(r"\b(?:real\s+madrid|madrid)\b", re.I), "Real Madrid", ("real madrid",)),
+    (re.compile(r"\b(?:barcelona|barca)\b", re.I), "Barcelona", ("barcelona",)),
+    (re.compile(r"\bsporting\b", re.I), "Sporting", ("sporting",)),
+    (re.compile(r"\bbayern\b", re.I), "Bayern Munich", ("bayern",)),
+    (re.compile(r"\b(?:inter\s+milan|inter)\b", re.I), "Inter", ("inter",)),
+    (re.compile(r"\b(?:ac\s+milan|milan)\b", re.I), "AC Milan", ("milan",)),
+    (re.compile(r"\bjuventus\b", re.I), "Juventus", ("juventus",)),
+    (re.compile(r"\bpsg\b", re.I), "PSG", ("psg", "paris saint-germain")),
+    (re.compile(r"\bpersib\b", re.I), "Persib", ("persib",)),
+    (re.compile(r"\bpersija\b", re.I), "Persija", ("persija",)),
+    (re.compile(r"\btimnas(?:\s+indonesia)?\b", re.I), "Indonesia", ("indonesia",)),
+)
+
+
+def _normalize_sports_query(query: str) -> str:
+    out = re.sub(r"\b(?:man\s+u|mu)\b", "Manchester United", query, flags=re.I)
+    out = re.sub(r"\bman\s+united\b", "Manchester United", out, flags=re.I)
+    out = re.sub(r"\bman\s+city\b", "Manchester City", out, flags=re.I)
+    out = re.sub(r"\bbarca\b", "Barcelona", out, flags=re.I)
+    return re.sub(r"\s+", " ", out).strip()
+
+
+def _extract_sports_dates_ymd(query: str, today: Optional[dt.date] = None) -> List[str]:
+    base_today = today or (dt.datetime.now(dt.timezone.utc) + dt.timedelta(hours=7)).date()
+    low = query.lower()
+    dates: List[str] = []
+
+    # 1) Tanggal eksplisit mis. "22 nov", "22 november", "22 november 2026"
+    m = re.search(
+        r"\b(\d{1,2})\s+(jan|januari|january|feb|februari|february|peb|mar|maret|march|apr|april|mei|may|jun|juni|june|jul|juli|july|agu|ags|agustus|aug|august|sep|sept|september|okt|oktober|oct|october|nov|november|nop|des|desember|dec|december)(?:\s+(20\d{2}))?\b",
+        low,
+    )
+    if m:
+        day = int(m.group(1))
+        month = _MONTH_MAP.get(m.group(2), 0)
+        year = int(m.group(3)) if m.group(3) else base_today.year
+        if 1 <= day <= 31 and 1 <= month <= 12:
+            try:
+                target = dt.date(year, month, day)
+                if not m.group(3) and (target - base_today).days > 14:
+                    target = dt.date(year - 1, month, day)
+                # Cek tanggal itu + +-1 hari untuk perbedaan zona waktu WIB vs UTC
+                for delta in (0, -1, 1):
+                    dates.append((target + dt.timedelta(days=delta)).strftime("%Y%m%d"))
+                return dates
+            except ValueError:
+                pass
+
+    # 2) Tanggal numerik dd/mm atau dd-mm
+    m_num = re.search(r"\b(\d{1,2})[/-](\d{1,2})(?:[/-](20\d{2}))?\b", low)
+    if m_num:
+        d_val, mo_val = int(m_num.group(1)), int(m_num.group(2))
+        y_val = int(m_num.group(3)) if m_num.group(3) else base_today.year
+        if 1 <= d_val <= 31 and 1 <= mo_val <= 12:
+            try:
+                target = dt.date(y_val, mo_val, d_val)
+                return [target.strftime("%Y%m%d")]
+            except ValueError:
+                pass
+
+    # 3) Kemarin / tadi malam / hari ini, atau 6 hari terakhir bila tanggal tidak disebutkan
+    if "kemarin" in low or "tadi malam" in low or "semalam" in low:
+        return [
+            (base_today - dt.timedelta(days=1)).strftime("%Y%m%d"),
+            base_today.strftime("%Y%m%d"),
+            (base_today - dt.timedelta(days=2)).strftime("%Y%m%d"),
+        ]
+    return [(base_today - dt.timedelta(days=d)).strftime("%Y%m%d") for d in range(0, 7)]
+
+
+async def _fetch_espn_scoreboard(client: httpx.AsyncClient, query: str) -> List[str]:
+    """Ambil skor resmi & pencetak gol langsung dari ESPN Public Scoreboard API (gratis, tanpa API key)."""
+    matched_teams: List[Tuple[str, Tuple[str, ...]]] = []
+    for pat, label, kws in _TEAM_ALIASES:
+        if pat.search(query):
+            matched_teams.append((label, kws))
+    if not matched_teams:
+        return []
+
+    dates_ymd = _extract_sports_dates_ymd(query)[:7]
+    urls = [
+        f"https://site.api.espn.com/apis/site/v2/sports/soccer/all/scoreboard?dates={ymd}"
+        for ymd in dates_ymd
+    ]
+
+    async def _get_day(url: str):
+        try:
+            r = await client.get(url)
+            if r.status_code == 200:
+                return r.json().get("events") or []
+        except Exception:
+            pass
+        return []
+
+    day_lists = await asyncio.gather(*(_get_day(u) for u in urls), return_exceptions=True)
+    out: List[str] = []
+    for events in day_lists:
+        if not isinstance(events, list):
+            continue
+        for ev in events:
+            for comp in ev.get("competitions") or []:
+                comps = comp.get("competitors") or []
+                if len(comps) < 2:
+                    continue
+                haystack = " ".join(
+                    f"{c.get('team', {}).get('displayName', '')} {c.get('team', {}).get('shortDisplayName', '')}"
+                    for c in comps
+                ).lower()
+                team_hits = sum(1 for _, kws in matched_teams if any(kw in haystack for kw in kws))
+                if team_hits < min(2, len(matched_teams)):
+                    continue
+
+                home = next((c for c in comps if c.get("homeAway") == "home"), comps[0])
+                away = next((c for c in comps if c.get("homeAway") == "away"), comps[1])
+                h_name = home.get("team", {}).get("shortDisplayName") or home.get("team", {}).get("displayName") or "Home"
+                a_name = away.get("team", {}).get("shortDisplayName") or away.get("team", {}).get("displayName") or "Away"
+                h_score = home.get("score", "?")
+                a_score = away.get("score", "?")
+                status_txt = (comp.get("status") or {}).get("type", {}).get("shortDetail") or "Result"
+                ev_date = (ev.get("date") or "")[:10]
+                league = ((ev.get("season") or {}).get("slug") or "").replace("-", " ").title()
+
+                scorers: List[str] = []
+                for det in (comp.get("details") or [])[:6]:
+                    clk = (det.get("clock") or {}).get("displayValue") or ""
+                    aths = det.get("athletesInvolved") or []
+                    pname = aths[0].get("shortName") if aths else ""
+                    if pname and det.get("scoringPlay"):
+                        scorers.append(f"{pname} {clk}".strip())
+                extra = f" | Gol: {', '.join(scorers)}" if scorers else ""
+                out.append(f"[Skor Resmi {ev_date} {league}] {h_name} {h_score} - {a_score} {a_name} ({status_txt}){extra}"[:240])
+    return out
+
+
+async def search_live_web(raw_message: str, timeout_s: float = 2.8) -> Optional[str]:
+    """Ambil ringkasan fakta real-time dari ESPN Scoreboard + Google News ID/Global + Bing + Wikipedia."""
     query = extract_clean_search_query(raw_message)
     if not query:
         return None
@@ -146,18 +303,37 @@ async def search_live_web(raw_message: str, timeout_s: float = 2.0) -> Optional[
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126.0 Safari/537.36",
         "Accept-Language": "id-ID,id;q=0.9,en-US;q=0.8",
     }
-    is_sports = bool(re.search(r"\b(?:skor|vs|versus|lawan|pertandingan|united|sporting|madrid|barca|liga)\b", query, re.I))
+    is_sports = bool(
+        re.search(
+            r"\b(?:skor|hasil|vs|versus|lawan|pertandingan|united|utd|man\s*u|liverpool|sporting|madrid|barca|arsenal|chelsea|liga|timnas|persib|persija)\b",
+            query,
+            re.I,
+        )
+    )
 
     try:
-        async with httpx.AsyncClient(timeout=httpx.Timeout(timeout_s, connect=1.0), headers=headers, follow_redirects=True) as client:
-            tasks = [
-                _fetch_google_news_rss(client, query, hl="id", gl="ID"),
-                _fetch_bing_rss(client, query),
-            ]
+        async with httpx.AsyncClient(timeout=httpx.Timeout(timeout_s, connect=1.2), headers=headers, follow_redirects=True) as client:
             if is_sports:
-                tasks.append(_fetch_google_news_rss(client, f"{query} score result", hl="en", gl="US"))
+                clean_sports = _normalize_sports_query(query)
+                # Hapus tanggal mentah di kueri berita agar artikel pasca-laga (H+1) tetap ditemukan!
+                rss_sports = re.sub(
+                    r"\b(?:\d{1,2}\s+(?:jan|januari|feb|februari|mar|maret|apr|april|mei|jun|juni|jul|juli|agu|agustus|sep|september|okt|oktober|nov|november|des|desember)(?:\s+20\d{2})?|kemarin|tadi\s+malam|semalam|skor|hasil|pertandingan)\b",
+                    " ",
+                    clean_sports,
+                    flags=re.I,
+                )
+                rss_sports = re.sub(r"\s+", " ", rss_sports).strip() or clean_sports
+                tasks = [
+                    _fetch_espn_scoreboard(client, query),
+                    _fetch_google_news_rss(client, f"hasil {rss_sports}", hl="id", gl="ID"),
+                    _fetch_google_news_rss(client, f"{rss_sports} score result", hl="en", gl="US"),
+                ]
             else:
-                tasks.append(_fetch_wikipedia_summary(client, query))
+                tasks = [
+                    _fetch_google_news_rss(client, query, hl="id", gl="ID"),
+                    _fetch_bing_rss(client, query),
+                    _fetch_wikipedia_summary(client, query),
+                ]
 
             results = await asyncio.gather(*tasks, return_exceptions=True)
     except Exception as exc:
@@ -181,8 +357,9 @@ async def search_live_web(raw_message: str, timeout_s: float = 2.0) -> Optional[
     if not merged:
         return None
 
+    now_wib = (dt.datetime.now(dt.timezone.utc) + dt.timedelta(hours=7)).strftime("%d %b %Y")
     return (
-        "HASIL PENCARIAN GOOGLE & BERITA TERKINI REAL-TIME (gunakan fakta di bawah ini untuk menjawab secara akurat; "
+        f"HASIL PENCARIAN GOOGLE & SKOR TERKINI REAL-TIME (tanggal sekarang {now_wib} WIB; gunakan fakta di bawah ini untuk menjawab akurat; "
         "jika berita berupa rumor/klaim belum terbukti, sampaikan jujur bahwa di berita itu masih isu/belum ada bukti resmi):\n- "
         + "\n- ".join(merged)
     )
@@ -469,6 +646,7 @@ async def _resolve_soundcloud_full_stream(
                     all_parts = [map_match.group(1), *seg_urls]
                     return {
                         "mode": "fmp4_segments",
+                        "m3u8_url": m3u8_url,  # Simpan URL M3U8 asli agar mode=url bisa redirect HLS ke ExoPlayer
                         "segments": all_parts,
                         "mime": "audio/mp4",
                         "duration_s": dur_s,

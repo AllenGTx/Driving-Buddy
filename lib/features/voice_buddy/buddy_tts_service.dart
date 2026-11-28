@@ -153,7 +153,6 @@ class BuddyTtsService {
         _finishNative();
       });
 
-      await Future<void>.delayed(const Duration(milliseconds: 100));
       await _tts.setVolume(1.0);
 
       bool idOk = false;
@@ -174,6 +173,9 @@ class BuddyTtsService {
       await _tts.setLanguage(_resolvedIdLocale);
     } catch (_) {}
   }
+
+  /// Hangatkan engine audio & TTS saat aplikasi dibuka agar panggilan pertama langsung responsif.
+  Future<void> warmUp() => _ensureInit();
 
   String pickWakeAckText([BuddyVoiceProfile? profile]) {
     final p = profile ?? BuddyVoiceConfig.instance.profile;
@@ -318,6 +320,8 @@ class BuddyTtsService {
     required String text,
     bool isTiredFallback = false,
     bool isDrowsyDriver = false,
+    Uint8List? prefetchedAudioBytes,
+    String? prefetchedAudioMime,
     VoidCallback? onPlaybackStart,
   }) async {
     if (isTiredFallback && profile == BuddyVoiceProfile.furina) {
@@ -334,6 +338,8 @@ class BuddyTtsService {
     final usedTiredHandoff = await _speakWithAssetOrDynamic(
       profile: profile,
       text: text,
+      prefetchedAudioBytes: prefetchedAudioBytes,
+      prefetchedAudioMime: prefetchedAudioMime,
       onPlaybackStart: onPlaybackStart,
     );
     if (usedTiredHandoff) {
@@ -344,7 +350,9 @@ class BuddyTtsService {
 
   List<String> _splitForStreamingTts(String text) {
     final trimmed = text.trim();
-    if (trimmed.length <= 145) return [trimmed];
+    // Pertahankan seluruh balasan dalam 1 panggilan TTS tunggal sampai 450 karakter
+    // agar warna suara & intonasi antar kalimat 100% konsisten (tidak berubah orang di tengah jalan).
+    if (trimmed.length <= 450) return [trimmed];
     final parts = trimmed
         .split(RegExp(r'(?<=[.!?])\s+'))
         .map((s) => s.trim())
@@ -352,7 +360,6 @@ class BuddyTtsService {
         .toList();
     if (parts.length <= 1) return [trimmed];
 
-    // Jangan pernah memisahkan kata seru pendek (seperti "Siap!", "Oke!", "Wah!") sendirian
     String first = parts.first;
     int idx = 1;
     while (first.length < 38 && idx < parts.length) {
@@ -368,6 +375,8 @@ class BuddyTtsService {
     required BuddyVoiceProfile profile,
     required String text,
     String? furinaAssetPath,
+    Uint8List? prefetchedAudioBytes,
+    String? prefetchedAudioMime,
     VoidCallback? onPlaybackStart,
   }) async {
     await stop();
@@ -403,8 +412,19 @@ class BuddyTtsService {
         }
       }
 
-      // Sentence-Split Parallel Prefetch: Kalimat pertama langsung bunyi dalam ~1 detik
-      // sementara kalimat kedua diunduh paralel di latar belakang tanpa jeda!
+      if (prefetchedAudioBytes != null && prefetchedAudioBytes.length > 256) {
+        final ok = await _playAudioBytes(
+          trimmed,
+          profile: profile,
+          bytes: prefetchedAudioBytes,
+          contentType: prefetchedAudioMime ?? 'audio/mpeg',
+          onAudioReady: fireStartOnce,
+        );
+        if (ok) return false;
+        if (_cancelled) return false;
+      }
+
+      // Sintesis tunggal utuh (atau split hanya jika > 450 karakter) agar intonasi & suara tetap seragam.
       final chunks = _splitForStreamingTts(trimmed);
       Future<http.Response?>? nextPrefetch;
       if (chunks.length > 1) {
@@ -557,16 +577,36 @@ class BuddyTtsService {
     required BuddyVoiceProfile profile,
     required http.Response resp,
     VoidCallback? onAudioReady,
+  }) {
+    return _playAudioBytes(
+      text,
+      profile: profile,
+      bytes: resp.bodyBytes,
+      contentType: resp.headers['content-type'] ?? '',
+      onAudioReady: onAudioReady,
+    );
+  }
+
+  Future<bool> _playAudioBytes(
+    String text, {
+    required BuddyVoiceProfile profile,
+    required Uint8List bytes,
+    required String contentType,
+    VoidCallback? onAudioReady,
   }) async {
     try {
       if (_cancelled) return false;
       final dir = await getTemporaryDirectory();
-      final isMp3 = (resp.headers['content-type'] ?? '').contains('mpeg');
+      final isMp3 = contentType.contains('mpeg') ||
+          contentType.contains('mp3') ||
+          (bytes.length >= 3 &&
+              ((bytes[0] == 0x49 && bytes[1] == 0x44 && bytes[2] == 0x33) ||
+                  (bytes[0] == 0xFF && (bytes[1] & 0xE0) == 0xE0)));
       final ext = isMp3 ? 'mp3' : 'wav';
       final file = File(
         '${dir.path}/buddy_${profile.name}_${DateTime.now().microsecondsSinceEpoch}.$ext',
       );
-      await file.writeAsBytes(resp.bodyBytes, flush: true);
+      await file.writeAsBytes(bytes, flush: true);
 
       if (_cancelled) {
         unawaited(file.delete().catchError((_) => file));
@@ -576,7 +616,7 @@ class BuddyTtsService {
       onAudioReady?.call();
       _startWavOrSyllableEnvelope(
         text,
-        wavBytes: isMp3 ? null : resp.bodyBytes,
+        wavBytes: isMp3 ? null : bytes,
       );
       final done = Completer<void>();
       _activeSpeak = done;
@@ -621,8 +661,47 @@ class BuddyTtsService {
 
     await _tts.setVolume(1.0);
     await _tts.setLanguage(targetLang);
+    try {
+      final rawVoices = await _tts.getVoices;
+      if (rawVoices is List) {
+        final langPrefix = isEn ? 'en' : 'id';
+        final candidates = rawVoices
+            .whereType<Map>()
+            .map((v) => Map<String, String>.fromEntries(
+                  v.entries.map((e) => MapEntry(e.key.toString(), e.value.toString())),
+                ))
+            .where((v) {
+              final loc = (v['locale'] ?? '').toLowerCase();
+              return loc.startsWith(langPrefix) || (!isEn && loc.startsWith('in'));
+            })
+            .toList();
+        if (candidates.isNotEmpty) {
+          Map<String, String>? picked;
+          if (wantMale) {
+            picked = candidates.cast<Map<String, String>?>().firstWhere(
+              (v) {
+                final n = (v!['name'] ?? '').toLowerCase();
+                return n.contains('male') || n.contains('ardi') || n.contains('idd') || n.contains('dfz') || n.contains('end') || n.contains('m0');
+              },
+              orElse: () => null,
+            );
+          } else {
+            picked = candidates.cast<Map<String, String>?>().firstWhere(
+              (v) {
+                final n = (v!['name'] ?? '').toLowerCase();
+                return n.contains('female') || n.contains('gadis') || n.contains('idc') || n.contains('f0');
+              },
+              orElse: () => null,
+            );
+          }
+          if (picked != null) {
+            await _tts.setVoice(picked);
+          }
+        }
+      }
+    } catch (_) {}
     await _tts.setSpeechRate(0.52);
-    await _tts.setPitch(wantMale ? 0.86 : 1.05);
+    await _tts.setPitch(wantMale ? 0.84 : 1.04);
   }
 
   void _startWavOrSyllableEnvelope(String text, {Uint8List? wavBytes}) {

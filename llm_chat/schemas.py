@@ -101,6 +101,12 @@ class ChatRequest(BaseModel):
         validation_alias=AliasChoices("nearby_places", "nearbyPlaces"),
     )
     reset: bool = Field(default=False, description="true = lupakan riwayat percakapan sebelum membalas.")
+    include_audio: bool = Field(
+        default=False,
+        validation_alias=AliasChoices("include_audio", "includeAudio"),
+        description="true = sertakan audio TTS terkompresi langsung dalam respons /chat untuk memangkas jeda.",
+    )
+    language: str = Field(default="id", max_length=12)
 
 
 class ChatResponse(BaseModel):
@@ -117,3 +123,6 @@ class ChatResponse(BaseModel):
         default=None,
         description="Jenis kegagalan kalau fallback=true: timeout, network, rate_limited, auth, upstream, ...",
     )
+    audio_b64: Optional[str] = Field(default=None, description="Audio balasan base64 bila include_audio=true.")
+    audio_mime: Optional[str] = Field(default=None, description="MIME type audio balasan (audio/mpeg atau audio/wav).")
+    tts_error: Optional[str] = Field(default=None, description="Kode status bila sintesis TTS inline gagal (mis. furina_exhausted).")

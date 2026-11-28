@@ -1,7 +1,9 @@
 import 'dart:async';
+import 'dart:convert';
+import 'dart:typed_data';
 
 import 'package:firebase_auth/firebase_auth.dart';
-import 'package:flutter/foundation.dart' show kIsWeb;
+import 'package:flutter/foundation.dart' show ValueListenable, kIsWeb;
 import 'package:flutter/widgets.dart';
 import 'package:permission_handler/permission_handler.dart';
 import 'package:shared_preferences/shared_preferences.dart';
@@ -101,8 +103,8 @@ class VoiceBuddyController extends ChangeNotifier {
   SiriOrbPhase _phase = SiriOrbPhase.hidden;
   String _transcriptText = '';
   String _replyText = '';
-  double _orbEnergy = 0.0;
-  double _orbFrequency = 0.45;
+  final ValueNotifier<double> _orbEnergyNotifier = ValueNotifier<double>(0.0);
+  final ValueNotifier<double> _orbFrequencyNotifier = ValueNotifier<double>(0.45);
   DateTime _lastDrowsySpeech = DateTime.fromMillisecondsSinceEpoch(0);
   Timer? _dismissTimer;
   Timer? _resumeAfterCallTimer;
@@ -123,8 +125,10 @@ class VoiceBuddyController extends ChangeNotifier {
   bool get isSheetVisible => _phase != SiriOrbPhase.hidden;
   String get transcriptText => _transcriptText;
   String get replyText => _replyText;
-  double get orbEnergy => _orbEnergy;
-  double get orbFrequency => _orbFrequency;
+  double get orbEnergy => _orbEnergyNotifier.value;
+  double get orbFrequency => _orbFrequencyNotifier.value;
+  ValueListenable<double> get orbEnergyListenable => _orbEnergyNotifier;
+  ValueListenable<double> get orbFrequencyListenable => _orbFrequencyNotifier;
   String get activeNickname => BuddyVoiceConfig.instance.activeNickname;
   BuddyVoiceProfile get voiceProfile => BuddyVoiceConfig.instance.profile;
 
@@ -244,6 +248,9 @@ class VoiceBuddyController extends ChangeNotifier {
     _insideAuthenticatedApp = insideMainApp;
     await BuddyVoiceConfig.instance.load();
     await SpotifyIslandController.instance.init();
+    // Hangatkan audio engine & koneksi HTTP server di latar belakang agar panggilan pertama langsung responsif!
+    unawaited(_tts.warmUp());
+    unawaited(_chatApi.warmUpConnection());
     try {
       final prefs = await SharedPreferences.getInstance();
       final savedEnabled = prefs.getBool(_prefEnabledKey) ?? false;
@@ -269,7 +276,7 @@ class VoiceBuddyController extends ChangeNotifier {
 
   void _syncEnergy() {
     double e = 0.0;
-    double f = _orbFrequency;
+    double f = _orbFrequencyNotifier.value;
     if (_phase == SiriOrbPhase.speaking) {
       e = _tts.speechEnergy.value;
       f = _tts.speechFrequency.value;
@@ -277,10 +284,11 @@ class VoiceBuddyController extends ChangeNotifier {
       e = _stt.inputEnergy.value;
       f = _stt.inputFrequency.value;
     }
-    if ((e - _orbEnergy).abs() > 0.015 || (f - _orbFrequency).abs() > 0.02) {
-      _orbEnergy = e;
-      _orbFrequency = f;
-      notifyListeners();
+    if ((e - _orbEnergyNotifier.value).abs() > 0.015) {
+      _orbEnergyNotifier.value = e;
+    }
+    if ((f - _orbFrequencyNotifier.value).abs() > 0.02) {
+      _orbFrequencyNotifier.value = f;
     }
   }
 
@@ -724,6 +732,7 @@ class VoiceBuddyController extends ChangeNotifier {
     );
     final sid = LlmChatApi.sanitizeSessionId(_sessionIdProvider());
 
+    final isEn = LanguageService.instance.isEnglish;
     final res = await _chatApi.sendSafe(
       sessionId: sid,
       message: userMessage,
@@ -731,6 +740,8 @@ class VoiceBuddyController extends ChangeNotifier {
       buddyName: activeNickname,
       voiceProfile: currentProf.name,
       nearbyPlaces: places,
+      includeAudio: true,
+      language: isEn ? 'en' : 'id',
     );
     if (myTurn != _turnId) return;
     if (!_isAllowedInCurrentScreen || _emergencyMuted || _phase == SiriOrbPhase.hidden) {
@@ -742,7 +753,6 @@ class VoiceBuddyController extends ChangeNotifier {
     final isNetworkSignalLost = res.fallback &&
         (res.error == 'unreachable' || res.error == 'timeout');
     if (isNetworkSignalLost) {
-      final isEn = LanguageService.instance.isEnglish;
       final offlineMsg = BuddyTtsService.offlineSignalTextFor(
         currentProf,
         isEnglish: isEn,
@@ -762,21 +772,29 @@ class VoiceBuddyController extends ChangeNotifier {
       return;
     }
 
-    final isFurinaTired = res.fallback && currentProf == BuddyVoiceProfile.furina;
+    final isFurinaTired =
+        (res.fallback || res.ttsError == 'furina_exhausted') &&
+        currentProf == BuddyVoiceProfile.furina;
     final displayReply = isFurinaTired
         ? BuddyTtsService.furinaTiredText
         : res.reply;
 
-    // Tampilkan teks jawaban seketika (~0.4 detik) begitu LLM selesai berpikir tanpa menunggu unduhan audio!
-    _replyText = displayReply;
-    notifyListeners();
+    Uint8List? inlineAudioBytes;
+    if (!isFurinaTired && res.audioB64 != null && res.audioB64!.isNotEmpty) {
+      try {
+        inlineAudioBytes = base64Decode(res.audioB64!);
+      } catch (_) {}
+    }
 
+    // Tampilkan teks jawaban tepat bersamaan saat suara mulai berbunyi (sinkron tanpa jeda membingungkan!)
     final shouldSwitchToJane = await _tts.speakReply(
       profile: currentProf,
       text: res.reply,
       isTiredFallback: isFurinaTired,
       isDrowsyDriver:
           det.status == DriverStatus.drowsy || det.status == DriverStatus.sleep,
+      prefetchedAudioBytes: inlineAudioBytes,
+      prefetchedAudioMime: res.audioMime,
       onPlaybackStart: () {
         if (myTurn != _turnId) return;
         _replyText = displayReply;
@@ -1274,6 +1292,8 @@ class VoiceBuddyController extends ChangeNotifier {
     _stt.livePartialText.removeListener(_onPartialChanged);
     _tts.speechEnergy.removeListener(_syncEnergy);
     _tts.speechFrequency.removeListener(_syncEnergy);
+    _orbEnergyNotifier.dispose();
+    _orbFrequencyNotifier.dispose();
     unawaited(_stt.dispose());
     unawaited(_tts.dispose());
     _directPlaces.close();
