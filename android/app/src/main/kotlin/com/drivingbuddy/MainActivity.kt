@@ -221,25 +221,34 @@ class MainActivity : FlutterActivity() {
                     }
 
                     val existingCtrl = SpotifyMediaHelper.findActiveSpotifyController(this)
-                    val actions = existingCtrl?.playbackState?.actions ?: 0L
-                    if (existingCtrl != null && (actions and PlaybackState.ACTION_PLAY_FROM_SEARCH) != 0L) {
-                        val beforeTitle = existingCtrl.metadata?.getString(MediaMetadata.METADATA_KEY_TITLE) ?: ""
+                    if (existingCtrl != null) {
+                        // Putar langsung di latar belakang lewat MediaSession tanpa membuka layar Spotify!
                         try {
                             existingCtrl.transportControls.playFromSearch(query, Bundle())
-                            mainHandler.postDelayed({
-                                val nowCtrl = SpotifyMediaHelper.findActiveSpotifyController(this@MainActivity)
-                                val nowTitle = nowCtrl?.metadata?.getString(MediaMetadata.METADATA_KEY_TITLE) ?: ""
-                                val nowState = nowCtrl?.playbackState?.state
-                                val started = (nowTitle.isNotEmpty() && nowTitle != beforeTitle) ||
-                                    nowState == PlaybackState.STATE_PLAYING
-                                if (!started) {
-                                    launchSpotifySearchIntent(pkg, query)
-                                }
-                            }, 1300L)
                             result.success(true)
                             return@setMethodCallHandler
                         } catch (_: Exception) {
                         }
+                    }
+
+                    // Jika Spotify belum aktif di MediaSession, bangunkan dulu di background via KEYCODE_MEDIA_PLAY
+                    try {
+                        audioManager.dispatchMediaKeyEvent(android.view.KeyEvent(android.view.KeyEvent.ACTION_DOWN, android.view.KeyEvent.KEYCODE_MEDIA_PLAY))
+                        audioManager.dispatchMediaKeyEvent(android.view.KeyEvent(android.view.KeyEvent.ACTION_UP, android.view.KeyEvent.KEYCODE_MEDIA_PLAY))
+                        mainHandler.postDelayed({
+                            val wokenCtrl = SpotifyMediaHelper.findActiveSpotifyController(this@MainActivity)
+                            if (wokenCtrl != null) {
+                                try {
+                                    wokenCtrl.transportControls.playFromSearch(query, Bundle())
+                                    return@postDelayed
+                                } catch (_: Exception) {
+                                }
+                            }
+                            launchSpotifySearchIntent(pkg, query)
+                        }, 650L)
+                        result.success(true)
+                        return@setMethodCallHandler
+                    } catch (_: Exception) {
                     }
 
                     result.success(launchSpotifySearchIntent(pkg, query))

@@ -12,6 +12,7 @@ import 'package:speech_to_text/speech_to_text.dart';
 
 import '../../services/device_control_service.dart';
 import '../llm_chat/llm_chat_config.dart';
+import 'buddy_voice_config.dart';
 
 class BuddySttService {
   BuddySttService({http.Client? httpClient})
@@ -203,20 +204,18 @@ class BuddySttService {
                 ? amp.current.clamp(-60.0, 0.0)
                 : -60.0;
 
-            // Kalibrasi cepat lantai bising di 3 tick pertama (~150ms) agar saat app baru dibuka tidak langsung false-trigger
-            if (windowTicks <= 3) {
-              rollingAmbientDb = windowTicks == 1
-                  ? curDb.clamp(-52.0, -24.0)
-                  : (rollingAmbientDb * 0.65 + curDb.clamp(-52.0, -24.0) * 0.35);
+            // Kalibrasi cepat lantai bising di 1 tick pertama (~50ms) agar awal sapaan tidak terpotong
+            if (windowTicks <= 1) {
+              rollingAmbientDb = curDb.clamp(-54.0, -26.0);
               return;
-            } else if (!heardBurst && curDb < rollingAmbientDb + 3.5) {
+            } else if (!heardBurst && curDb < rollingAmbientDb + 3.0) {
               rollingAmbientDb =
-                  (rollingAmbientDb * 0.90 + curDb * 0.10).clamp(-52.0, -24.0);
+                  (rollingAmbientDb * 0.90 + curDb * 0.10).clamp(-54.0, -26.0);
             }
 
-            final onsetDb = math.max(-35.0, rollingAmbientDb + 6.5);
+            final onsetDb = math.max(-41.0, rollingAmbientDb + 4.5);
             final endDb = heardBurst
-                ? math.max(rollingAmbientDb + 3.2, burstPeakDb - 10.5)
+                ? math.max(rollingAmbientDb + 2.5, burstPeakDb - 11.5)
                 : onsetDb;
 
             if (curDb >= endDb) {
@@ -262,10 +261,10 @@ class BuddySttService {
           break;
         }
 
-        if (heardBurst && speechTicks >= 2) {
+        if (heardBurst && speechTicks >= 1) {
           final text = await _uploadToServerStt(
             filePath: segPath,
-            buddyNameHint: '',
+            buddyNameHint: BuddyVoiceConfig.instance.activeNickname,
             mode: 'wake',
             timeout: const Duration(milliseconds: 3500),
           );

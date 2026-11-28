@@ -84,7 +84,7 @@ class WakeWordMatcher {
   };
 
   static final RegExp _gluedPrefixPattern = RegExp(
-    r'^(oi|oy|woi|woy|ei|ey|eh|hei|hey|hai|hi|halo|hallo|alo|yo|yoo)(rina|rinaa|furina|jane|jein|jeni|jan|jen|john|jon|jhon|buddy|badi)$',
+    r'^(oi|oy|woi|woy|ei|ey|eh|hei|heii|hey|heyy|hai|hi|halo|hallo|haloo|alo|yo|yoo|ya)(rina|rinaa|furina|jane|jein|jeni|jan|jen|john|jon|jhon|buddy|badi)$',
   );
 
   static bool _matchesAlias(String word, Set<String> aliases, String nickLow) {
@@ -181,21 +181,23 @@ class WakeWordMatcher {
           'rina', 'rinaa', 'rinna', 'riina', 'rin', 'reina', 'raina', 'rena',
           'ina', 'trina', 'brina', 'prina', 'srina', 'lina', 'fina', 'wina',
           'tina', 'karina', 'mina', 'nina', 'dina', 'vina',
-          'furina', 'furinaa', 'forina', 'farina', 'ferina', 'purina',
-          'furin', 'kurina', 'rinarina', 'eirina', 'heirina', 'oirina', 'halorina',
+          'furina', 'furinaa', 'forina', 'farina', 'ferina', 'purina', 'vurina',
+          'florina', 'felina', 'falina', 'furin', 'kurina', 'rinarina',
+          'eirina', 'heirina', 'oirina', 'halorina', 'hairina', 'yorina', 'yofurina', 'heifurina',
         });
         break;
       case BuddyVoiceProfile.john:
         base.addAll({
-          'john', 'jon', 'jhon', 'joni', 'johan', 'zon', 'don', 'jo',
-          'heijohn', 'oijohn', 'eijohn', 'halojohn', 'yojohn', 'yojon',
+          'john', 'jon', 'jhon', 'joni', 'johan', 'johny', 'johnny', 'zon', 'don', 'jo',
+          'yon', 'jong', 'yoon', 'jun', 'chon', 'jean', 'yojon', 'yojo',
+          'heijohn', 'heijon', 'haijohn', 'haijon', 'oijohn', 'oijon', 'eijohn', 'halojohn', 'yojohn',
         });
         break;
       case BuddyVoiceProfile.jane:
         base.addAll({
-          'jane', 'jen', 'jeni', 'jein', 'jenny', 'zen', 'jain', 'jeyn', 'jeane',
-          'jan', 'yohane', 'yozen',
-          'heijane', 'oijane', 'eijane', 'halojane', 'yojane', 'yojein', 'yojen',
+          'jane', 'jen', 'jeni', 'jein', 'jenny', 'jenn', 'jenna', 'zen', 'jain', 'jeyn', 'jeane',
+          'jan', 'jean', 'yen', 'yohane', 'yozen',
+          'heijane', 'heijen', 'haijane', 'haijen', 'oijane', 'oijen', 'eijane', 'eijen', 'halojane', 'halojen', 'yojane', 'yojein', 'yojen',
         });
         break;
     }
