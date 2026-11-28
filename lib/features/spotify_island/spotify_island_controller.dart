@@ -8,6 +8,7 @@ import 'package:flutter/widgets.dart';
 import 'package:http/http.dart' as http;
 import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:youtube_explode_dart/youtube_explode_dart.dart';
 
 import '../../services/device_control_service.dart';
 import '../llm_chat/llm_chat_config.dart';
@@ -612,6 +613,8 @@ class SpotifyIslandController extends ChangeNotifier {
     String? resolvedUrl;
     String? resolvedMode;
     String? resolvedMime;
+    String? resolvedYtVideoId;
+    int resolvedDur = 0;
     try {
       Map<String, dynamic>? data;
       if (_prewarmQuery == track.spotifyQuery.trim() && _prewarmFuture != null) {
@@ -628,7 +631,8 @@ class SpotifyIslandController extends ChangeNotifier {
         resolvedUrl = (data['url'] as String?)?.trim();
         resolvedMode = (data['mode'] as String?)?.trim();
         resolvedMime = (data['mime'] as String?)?.trim();
-        final resolvedDur = (data['duration_s'] as num?)?.toInt() ?? 0;
+        resolvedYtVideoId = (data['yt_video_id'] as String?)?.trim();
+        resolvedDur = (data['duration_s'] as num?)?.toInt() ?? 0;
         if (resolvedDur >= 60 && (resolvedDur - _durationSec).abs() >= 2.0) {
           _durationSec = resolvedDur.toDouble();
           notifyListeners();
@@ -637,6 +641,32 @@ class SpotifyIslandController extends ChangeNotifier {
     } catch (_) {}
 
     if (sessionToken != _playSessionToken || !_isVisible || _isClosing) return;
+
+    // ── LANGKAH 1B: Jika backend mengembalikan yt_video_id (karena server terblokir label),
+    // ekstrak langsung stream audio m4a/webm penuh menggunakan IP HP pengguna sendiri (0 download ke memori).
+    if (resolvedYtVideoId != null &&
+        resolvedYtVideoId.isNotEmpty &&
+        (resolvedMode == 'yt_video_id' || resolvedDur <= 45)) {
+      final yt = YoutubeExplode();
+      try {
+        final manifest = await yt.videos.streamsClient
+            .getManifest(resolvedYtVideoId)
+            .timeout(const Duration(seconds: 12));
+        if (sessionToken != _playSessionToken || !_isVisible || _isClosing) return;
+        final audioStream = manifest.audioOnly.withHighestBitrate();
+        final ytAudioUrl = audioStream.url.toString();
+        if (ytAudioUrl.startsWith('http')) {
+          await _audioPlayer.setVolume(0.92);
+          await _audioPlayer.play(UrlSource(ytAudioUrl));
+          if (sessionToken != _playSessionToken) return;
+          return;
+        }
+      } catch (_) {
+        if (sessionToken != _playSessionToken || !_isVisible || _isClosing) return;
+      } finally {
+        yt.close();
+      }
+    }
 
     // ── LANGKAH 2A: Putar dari URL progresif langsung (MP3/M4A)
     if (resolvedUrl != null && resolvedMode == 'direct' && resolvedUrl.startsWith('http')) {

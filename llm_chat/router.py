@@ -223,11 +223,22 @@ def build_router(
         if mode == "url":
             stream_mode = info.get("mode")
             if stream_mode == "direct_url":
-                return JSONResponse({
+                payload = {
                     "url": info["url"],
                     "mime": info.get("mime", "audio/mpeg"),
                     "duration_s": info.get("duration_s", dur),
                     "mode": "direct",
+                }
+                if info.get("yt_video_id"):
+                    payload["yt_video_id"] = info["yt_video_id"]
+                return JSONResponse(payload)
+            if stream_mode == "yt_video_id":
+                return JSONResponse({
+                    "url": "",
+                    "mime": info.get("mime", "audio/mp4"),
+                    "duration_s": info.get("duration_s", dur),
+                    "mode": "yt_video_id",
+                    "yt_video_id": info.get("yt_video_id", ""),
                 })
             # Untuk fmp4_segments tanpa DRM: arahkan Flutter mengunduh file utuh via mode=file (100% bisa diputar penuh!)
             return JSONResponse({

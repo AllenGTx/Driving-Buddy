@@ -1054,6 +1054,24 @@ async def _resolve_jiosaavn_full_track(
     return None
 
 
+async def _search_youtube_video_id(client: httpx.AsyncClient, query: str) -> Optional[str]:
+    """Cari videoId YouTube Music Official Topic untuk diekstrak langsung oleh klien Flutter di HP."""
+    try:
+        sq = urllib.parse.quote(f"{query} topic")
+        resp = await client.get(
+            f"https://www.youtube.com/results?search_query={sq}",
+            headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"},
+            timeout=4.5,
+        )
+        if resp.status_code == 200:
+            vids = re.findall(r"/watch\?v=([a-zA-Z0-9_-]{11})", resp.text)
+            if vids:
+                return vids[0]
+    except Exception as exc:
+        log.debug("[MusicStream] YouTube videoId search dilewati: %s", exc)
+    return None
+
+
 async def resolve_in_app_music_stream(query: str, target_dur_s: int = 210) -> Optional[Dict[str, Any]]:
     """Resolusi sumber audio terbaik untuk diputar otomatis di dalam Dynamic Island (0 perpindahan layar)."""
     clean_q = _clean_music_query(query)
@@ -1101,10 +1119,13 @@ async def resolve_in_app_music_stream(query: str, target_dur_s: int = 210) -> Op
             except Exception:
                 pass
 
-        # 3. Fallback ke preview studio resmi iTunes/Deezer (30 detik) bila semua sumber full gagal
+        # 3. Fallback ke YouTube videoId (untuk diekstrak langsung di HP) + preview studio resmi iTunes/Deezer (30 detik)
         if chosen is None:
-            meta = await search_music_track(clean_q, timeout_s=3.0)
-            prev = (meta.get("preview_url") or "").strip()
+            yt_vid, meta = await asyncio.gather(
+                _search_youtube_video_id(client, clean_q),
+                search_music_track(clean_q, timeout_s=3.0),
+            )
+            prev = (meta.get("preview_url") or "").strip() if isinstance(meta, dict) else ""
             if prev.startswith("http"):
                 chosen = {
                     "mode": "direct_url",
@@ -1112,6 +1133,17 @@ async def resolve_in_app_music_stream(query: str, target_dur_s: int = 210) -> Op
                     "mime": "audio/mp4" if ".m4a" in prev.lower() else "audio/mpeg",
                     "headers": {},
                     "duration_s": 30,
+                }
+                if yt_vid:
+                    chosen["yt_video_id"] = yt_vid
+            elif yt_vid:
+                chosen = {
+                    "mode": "yt_video_id",
+                    "url": "",
+                    "yt_video_id": yt_vid,
+                    "mime": "audio/mp4",
+                    "headers": {},
+                    "duration_s": target_dur_s,
                 }
 
     if chosen is not None:
