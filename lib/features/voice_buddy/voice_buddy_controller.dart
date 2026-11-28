@@ -1104,12 +1104,10 @@ class VoiceBuddyController extends ChangeNotifier {
         ? '${prevSnap.title}|${prevSnap.artist}'
         : '';
 
-    // Hentikan lagu lama bila sedang berputar supaya suara asisten jernih sebelum lagu baru mulai
-    if (spotifyCtrl.isPlaying) {
-      await spotifyCtrl.pausePlayback();
-    }
+    // Hentikan polling native sementara agar tidak bentrok dengan proses ganti lagu Spotify
+    spotifyCtrl.pauseNativePolling();
 
-    // 1. Putar lagu di Spotify 100% di latar belakang via MediaSession ("playing on NEF-JX9") tanpa keluar app!
+    // 1. Putar lagu di Spotify 100% di latar belakang via Spotify URI (lagu yang diminta, bukan lagu lama!)
     final launchStatus = await DeviceControlService.instance.playSpotifyQuery(
       track.spotifyQuery,
       title: track.title,
@@ -1118,6 +1116,7 @@ class VoiceBuddyController extends ChangeNotifier {
     if (turnId != _turnId) return true;
 
     if (launchStatus != 'ok') {
+      spotifyCtrl.resumeNativePolling();
       final errMsg = launchStatus == 'needs_notification_access'
           ? (isEn
                 ? 'Please enable Notification Access for Driving Buddy first so I can play Spotify in the background.'

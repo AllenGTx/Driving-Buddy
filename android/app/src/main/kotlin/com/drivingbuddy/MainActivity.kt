@@ -230,16 +230,19 @@ class MainActivity : FlutterActivity() {
                     }
 
                     val extras = Bundle().apply {
-                        putString(MediaStore.EXTRA_MEDIA_FOCUS, "vnd.android.cursor.item/audio")
+                        putString(MediaStore.EXTRA_MEDIA_FOCUS, MediaStore.Audio.Media.ENTRY_CONTENT_TYPE)
                         putString(SearchManager.QUERY, query)
                         if (title.isNotEmpty()) putString(MediaStore.EXTRA_MEDIA_TITLE, title)
                         if (artist.isNotEmpty()) putString(MediaStore.EXTRA_MEDIA_ARTIST, artist)
                     }
 
-                    // Jalur utama: kontrol langsung MediaSession Spotify di latar belakang (0 pindah layar)
+                    // Jalur UTAMA: kontrol langsung MediaSession Spotify di latar belakang (0 pindah layar)
                     val existingCtrl = SpotifyMediaHelper.findActiveSpotifyController(this)
                     if (existingCtrl != null) {
                         try {
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                                existingCtrl.transportControls.prepareFromSearch(query, extras)
+                            }
                             existingCtrl.transportControls.playFromSearch(query, extras)
                             result.success("ok")
                             return@setMethodCallHandler
@@ -256,8 +259,8 @@ class MainActivity : FlutterActivity() {
     }
 
     /**
-     * Bangunkan Spotify 100% di latar belakang (tanpa pernah memanggil startActivity / pindah aplikasi)
-     * melalui MediaBrowserService + polling MediaSession, lalu memanggil `playFromSearch`.
+     * Putar lagu di Spotify 100% di latar belakang (tanpa pernah memanggil startActivity / pindah aplikasi)
+     * melalui MediaBrowserService + polling MediaSession, lalu `prepareFromSearch` + `playFromSearch`.
      */
     private fun playSpotifyViaBackgroundService(
         pkg: String,
@@ -280,7 +283,7 @@ class MainActivity : FlutterActivity() {
             result.success(status)
         }
 
-        // 1. Coba bind MediaBrowserService milik Spotify secara senyap di latar belakang
+        // 1. Bind MediaBrowserService milik Spotify secara senyap di latar belakang
         try {
             val svcIntent = Intent("android.media.browse.MediaBrowserService").apply {
                 setPackage(pkg)
@@ -297,6 +300,9 @@ class MainActivity : FlutterActivity() {
                         try {
                             val token = mb.sessionToken
                             val ctrl = MediaController(this@MainActivity, token)
+                            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.N) {
+                                ctrl.transportControls.prepareFromSearch(query, extras)
+                            }
                             ctrl.transportControls.playFromSearch(query, extras)
                             finishWith("ok")
                         } catch (_: Exception) {

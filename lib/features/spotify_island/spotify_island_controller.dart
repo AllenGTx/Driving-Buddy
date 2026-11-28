@@ -399,9 +399,24 @@ class SpotifyIslandController extends ChangeNotifier {
 
   void _startNativePlaybackPolling() {
     _nativePollTimer?.cancel();
-    _nativePollTimer = Timer.periodic(const Duration(seconds: 1), (_) {
+    // Interval 2 detik mencegah MethodChannel terlalu sering memanggil AudioManager
+    // yang bisa menyebabkan stuttering pada beberapa ROM Android
+    _nativePollTimer = Timer.periodic(const Duration(seconds: 2), (_) {
       unawaited(syncFromNativeSpotifyNow());
     });
+  }
+
+  /// Hentikan polling sementara (misalnya saat ganti lagu) agar tidak bentrok.
+  void pauseNativePolling() {
+    _nativePollTimer?.cancel();
+    _nativePollTimer = null;
+  }
+
+  /// Lanjutkan polling setelah jeda (misalnya setelah lagu baru mulai).
+  void resumeNativePolling() {
+    if (_isVisible && _nativeSpotifyMode) {
+      _startNativePlaybackPolling();
+    }
   }
 
   /// Baca state real-time langsung dari MediaSession Spotify (judul, artis, iklan, durasi, posisi ms).
@@ -485,7 +500,7 @@ class SpotifyIslandController extends ChangeNotifier {
         _isPlaying = playing;
       }
       if (_isPlaying) {
-        _currentTimeSec = (_currentTimeSec + 1.0).clamp(0.0, _durationSec);
+        _currentTimeSec = (_currentTimeSec + 2.0).clamp(0.0, _durationSec);
       }
       notifyListeners();
     } catch (_) {

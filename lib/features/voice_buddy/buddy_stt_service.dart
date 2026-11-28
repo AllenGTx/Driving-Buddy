@@ -183,10 +183,10 @@ class BuddySttService {
               sampleRate: 16000,
               numChannels: 1,
               autoGain: true,
-              echoCancel: true,
-              noiseSuppress: true,
+              echoCancel: false,
+              noiseSuppress: false,
               androidConfig: AndroidRecordConfig(
-                audioSource: AndroidAudioSource.voiceRecognition,
+                audioSource: AndroidAudioSource.mic,
                 manageBluetooth: false,
               ),
             ),
@@ -215,9 +215,9 @@ class BuddySttService {
                   (rollingAmbientDb * 0.90 + curDb * 0.10).clamp(-54.0, -32.0);
             }
 
-            final onsetDb = math.max(-44.0, rollingAmbientDb + 3.8);
+            final onsetDb = math.max(-48.0, rollingAmbientDb + 2.5);
             final endDb = heardBurst
-                ? math.max(rollingAmbientDb + 1.8, burstPeakDb - 13.0)
+                ? math.max(rollingAmbientDb + 1.2, burstPeakDb - 15.0)
                 : onsetDb;
 
             if (curDb >= endDb) {
@@ -404,10 +404,10 @@ class BuddySttService {
             sampleRate: 16000,
             numChannels: 1,
             autoGain: true,
-            echoCancel: true,
-            noiseSuppress: true,
+            echoCancel: false,
+            noiseSuppress: false,
             androidConfig: AndroidRecordConfig(
-              audioSource: AndroidAudioSource.voiceRecognition,
+              audioSource: AndroidAudioSource.mic,
               manageBluetooth: false,
             ),
           ),

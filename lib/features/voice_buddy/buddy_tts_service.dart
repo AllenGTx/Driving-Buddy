@@ -58,7 +58,7 @@ class BuddyTtsService {
   static const List<(String, String)> _janeWakeReplies = [
     ('audio/jane/wake_1.wav', 'Ya? Ada yang bisa Jane bantu?'),
     ('audio/jane/wake_2.wav', 'Halo! Mau tanya apa nih?'),
-    ('audio/jane/wake_3.wav', 'Iya, Jane dengerin kok!'),
+    // wake_3.wav dihapus dari pool: TTS mengucapkan "kok" jadi "tok" (artefak Edge TTS)
   ];
 
   static const List<(String, String)> _johnWakeReplies = [
@@ -486,25 +486,34 @@ class BuddyTtsService {
         return true;
       }
 
-      // Jika terjadi gangguan jaringan seluler ("SOS saja" / terowongan), putar rekaman lokal offline
-      // supaya tetap bersuara natural di HP Huawei/non-GMS tanpa salah memicu "Furina capek"!
+      // networkError = timeout / 502 / koneksi putus saat TTS sedang diproses.
+      // Khusus Furina: JANGAN putar offline_signal.wav (bukan salah koneksi user, tapi Furina-nya yg timeout).
+      // Langsung fallback ke _speakNative supaya Furina tetap berbicara dengan suara default.
+      // Jane & John: tetap putar offline_signal.wav lokal karena mereka bergantung Edge TTS (butuh internet).
       if (!_cancelled) {
-        final offPath = offlineSignalAssetFor(profile);
-        final offBytes = await _loadAssetBytes('assets/$offPath');
-        if (offBytes != null && offBytes.lengthInBytes > 256) {
+        if (profile == BuddyVoiceProfile.furina) {
+          // Furina timeout/502 → pakai suara native langsung (tidak menyalahkan sinyal user!)
           fireStartOnce();
-          _startWavOrSyllableEnvelope(offlineSignalTextFor(profile), wavBytes: offBytes);
-          final done = Completer<void>();
-          _activeSpeak = done;
-          await _player.setReleaseMode(ReleaseMode.stop);
-          await _player.setVolume(1.0);
-          await _player.play(AssetSource(offPath));
-          await done.future.timeout(const Duration(seconds: 14), onTimeout: () {});
-          return false;
+          _startWavOrSyllableEnvelope(trimmed);
+          await _speakNative(profile, trimmed);
+        } else {
+          final offPath = offlineSignalAssetFor(profile);
+          final offBytes = await _loadAssetBytes('assets/$offPath');
+          if (offBytes != null && offBytes.lengthInBytes > 256) {
+            fireStartOnce();
+            _startWavOrSyllableEnvelope(offlineSignalTextFor(profile), wavBytes: offBytes);
+            final done = Completer<void>();
+            _activeSpeak = done;
+            await _player.setReleaseMode(ReleaseMode.stop);
+            await _player.setVolume(1.0);
+            await _player.play(AssetSource(offPath));
+            await done.future.timeout(const Duration(seconds: 14), onTimeout: () {});
+            return false;
+          }
+          fireStartOnce();
+          _startWavOrSyllableEnvelope(trimmed);
+          await _speakNative(profile, trimmed);
         }
-        fireStartOnce();
-        _startWavOrSyllableEnvelope(trimmed);
-        await _speakNative(profile, trimmed);
       }
       return false;
     } finally {
