@@ -26,7 +26,7 @@ log = logging.getLogger("driving_buddy.search")
 _SEARCH_TRIGGER_PATTERNS = re.compile(
     r"\b(?:"
     r"cari\s+di\s+google|cari\s+tau|cari\s+tahu|coba\s+cari|tolong\s+cari|googling|search|"
-    r"apakah\s+benar|bener\s+ga|bener\s+gak|benar\s+tidak|hoaks|hoax|cek\s+fakta|fakta\s+atau|"
+    r"apakah\s+benar|bener\s+ga|bener\s+gak|benar\s+tidak|hoaks|hoax|cek\s+fakta|fakta\s+atau|fakta\s+sejarah|\bsejarah\b|"
     r"berita|kabar\s+terbaru|viral|isu\s+|gosip|melengserkan|lengser|pemilu|presiden|wapres|menteri|prabowo|gibran|"
     # Sepak bola
     r"skor|berapa\s+skor|hasil\s+pertandingan|menang\s+berapa|kalah\s+berapa|pertandingan|lawan|vs|versus|klasemen|"
