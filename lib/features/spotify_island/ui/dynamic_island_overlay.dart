@@ -381,7 +381,9 @@ class _DynamicIslandOverlayState extends State<DynamicIslandOverlay>
                                                           Text(
                                                             _ctrl.isBuffering
                                                                 ? '${track.artist} · Memuat audio...'
-                                                                : track.artist,
+                                                                : (_ctrl.nextTrack != null
+                                                                    ? '${track.artist} · Berikutnya: ${_ctrl.nextTrack!.title}'
+                                                                    : track.artist),
                                                             maxLines: 1,
                                                             overflow:
                                                                 TextOverflow

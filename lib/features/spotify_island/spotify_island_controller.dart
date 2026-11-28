@@ -137,6 +137,9 @@ class SpotifyIslandController extends ChangeNotifier {
   double get currentTimeSec => _currentTimeSec;
   double get durationSec => _durationSec;
   SpotifyTrackInfo get currentTrack => _track;
+  SpotifyTrackInfo? get nextTrack =>
+      _playlist.length > 1 ? _playlist[(_playlistIndex + 1) % _playlist.length] : null;
+  int get playlistCount => _playlist.length;
 
   Future<void> init() async {
     if (_initialized) {
@@ -253,15 +256,21 @@ class SpotifyIslandController extends ChangeNotifier {
       _nativePollTimer = null;
     } else if (state == AppLifecycleState.resumed) {
       await refreshInstallStatus();
-      final sessionAlive =
-          await DeviceControlService.instance.isDynamicIslandSessionActive();
-      if (_isVisible && !sessionAlive) {
-        await _hideIslandImmediately();
-        return;
-      }
-      if (_isVisible && _nativeSpotifyMode && !_isClosing) {
-        await syncFromNativeSpotifyNow();
-        _startNativePlaybackPolling();
+      if (_isVisible && !_isClosing) {
+        if (_nativeSpotifyMode) {
+          final sessionAlive =
+              await DeviceControlService.instance.isDynamicIslandSessionActive();
+          if (!sessionAlive) {
+            await _hideIslandImmediately();
+            return;
+          }
+          await syncFromNativeSpotifyNow();
+          _startNativePlaybackPolling();
+        } else {
+          // Mode In-App Stream: Dynamic Island harus SELALU tetap ada selama musik diputar / aktif
+          await DeviceControlService.instance.setDynamicIslandSessionActive(true);
+          notifyListeners();
+        }
       }
     }
   }
@@ -532,6 +541,30 @@ class SpotifyIslandController extends ChangeNotifier {
     } catch (_) {}
   }
 
+  String _prewarmQuery = '';
+  Future<Map<String, dynamic>?>? _prewarmFuture;
+
+  /// Pre-resolve metadata stream audio secara paralel di background (mis. saat asisten berbicara konfirmasi).
+  Future<void> prewarmTrackStream(SpotifyTrackInfo track) async {
+    final q = track.spotifyQuery.trim();
+    if (q.isEmpty) return;
+    _prewarmQuery = q;
+    _prewarmFuture = () async {
+      try {
+        await LlmChatConfig.shared.load();
+        final baseUrl = LlmChatConfig.shared.baseUrl;
+        final encodedQ = Uri.encodeQueryComponent(q);
+        final metaUri = Uri.parse('$baseUrl/music/stream?q=$encodedQ&dur=${track.durationSec}&mode=url');
+        final metaResp = await _http.get(metaUri).timeout(const Duration(seconds: 9));
+        if (metaResp.statusCode == 200) {
+          return jsonDecode(metaResp.body) as Map<String, dynamic>;
+        }
+      } catch (_) {}
+      return null;
+    }();
+    await _prewarmFuture;
+  }
+
   /// Memutar lagu otomatis 100% di dalam Dynamic Island Driving Buddy tanpa pernah membuka layar Spotify!
   /// Timer (`0:00`) dan piringan vinyl ditahan diam selama buffering dan baru berjalan saat audio berbunyi.
   Future<void> playSongOnIsland(
@@ -540,6 +573,9 @@ class SpotifyIslandController extends ChangeNotifier {
   }) async {
     await init();
     final myToken = ++_playSessionToken;
+    _nativeSpotifyMode = false;
+    _nativePollTimer?.cancel();
+    _nativePollTimer = null;
 
     if (_playlist.isEmpty || _playlist.every((t) => t.spotifyQuery != track.spotifyQuery)) {
       _playlist = [track, ..._playlist.where((t) => t.spotifyQuery != track.spotifyQuery)].take(8).toList();
@@ -557,6 +593,7 @@ class SpotifyIslandController extends ChangeNotifier {
     _isBuffering = true;
     notifyListeners();
 
+    await DeviceControlService.instance.setDynamicIslandSessionActive(true);
     await _startInAppTrackStream(track, sessionToken: myToken);
   }
 
@@ -571,15 +608,23 @@ class SpotifyIslandController extends ChangeNotifier {
     final encodedQ = Uri.encodeQueryComponent(track.spotifyQuery);
     final dur = track.durationSec;
 
-    // ── LANGKAH 1: Minta metadata sumber audio utuh (direct MP3 atau download MP4 utuh)
+    // ── LANGKAH 1: Gunakan hasil prewarm jika query sama, atau minta metadata sumber audio utuh
     String? resolvedUrl;
     String? resolvedMode;
     String? resolvedMime;
     try {
-      final metaUri = Uri.parse('$baseUrl/music/stream?q=$encodedQ&dur=$dur&mode=url');
-      final metaResp = await _http.get(metaUri).timeout(const Duration(seconds: 10));
-      if (metaResp.statusCode == 200) {
-        final data = jsonDecode(metaResp.body) as Map<String, dynamic>;
+      Map<String, dynamic>? data;
+      if (_prewarmQuery == track.spotifyQuery.trim() && _prewarmFuture != null) {
+        data = await _prewarmFuture;
+      }
+      if (data == null) {
+        final metaUri = Uri.parse('$baseUrl/music/stream?q=$encodedQ&dur=$dur&mode=url');
+        final metaResp = await _http.get(metaUri).timeout(const Duration(seconds: 10));
+        if (metaResp.statusCode == 200) {
+          data = jsonDecode(metaResp.body) as Map<String, dynamic>;
+        }
+      }
+      if (data != null) {
         resolvedUrl = (data['url'] as String?)?.trim();
         resolvedMode = (data['mode'] as String?)?.trim();
         resolvedMime = (data['mime'] as String?)?.trim();

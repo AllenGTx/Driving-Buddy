@@ -32,6 +32,7 @@ enum SiriOrbPhase {
   idle,
   listening,
   thinking,
+  searchingMusic,
   speaking,
   dismissing,
 }
@@ -1065,9 +1066,16 @@ class VoiceBuddyController extends ChangeNotifier {
         .trim();
     if (rawSongQuery.isEmpty) return false;
 
-    // ── Ambil metadata lagu (judul, artis, preview) dari backend /music/search
+    // ── Tampilkan state khusus "Sedang mencari lagu..." selama mencari metadata
+    _replyText = '';
+    _setPhase(SiriOrbPhase.searchingMusic);
+
+    // ── Ambil metadata lagu (judul, artis, preview, & antrean rekomendasi) dari backend /music/search
     final track = await spotifyCtrl.fetchTrackMetadata(rawSongQuery);
     if (turnId != _turnId) return true;
+
+    // ── Pre-resolve / pre-warm URL stream audio secara paralel sementara AI mengucapkan konfirmasi!
+    unawaited(spotifyCtrl.prewarmTrackStream(track));
 
     // ── 1. Ucapkan konfirmasi AI TERLEBIH DAHULU sampai selesai, baru putar audio!
     // Ini mencegah audio lagu sempat berbunyi sebelum AI selesai berbicara.

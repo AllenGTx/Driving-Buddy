@@ -168,6 +168,8 @@ class _BuddyFloatingSheetState extends State<BuddyFloatingSheet>
                                 : 'Mendengarkan suaramu...')),
                 SiriOrbPhase.thinking =>
                   isEn ? 'Thinking of an answer...' : 'Memikirkan jawaban...',
+                SiriOrbPhase.searchingMusic =>
+                  isEn ? 'Searching for song...' : 'Sedang mencari lagu...',
                 SiriOrbPhase.speaking =>
                   isEn
                       ? '$nick is speaking · Tap orb to interrupt'
@@ -217,9 +219,11 @@ class _BuddyFloatingSheetState extends State<BuddyFloatingSheet>
                                   center: const Alignment(0.0, -0.18),
                                   radius: 0.95,
                                   colors: [
-                                    (controller.phase == SiriOrbPhase.thinking
-                                            ? const Color(0xFF280707)
-                                            : const Color(0xFF1E0D06))
+                                    (controller.phase == SiriOrbPhase.thinking ||
+                                            controller.phase ==
+                                                SiriOrbPhase.searchingMusic
+                                        ? const Color(0xFF280707)
+                                        : const Color(0xFF1E0D06))
                                         .withValues(alpha: 0.86),
                                     const Color(0xFF040406)
                                         .withValues(alpha: 0.94),
@@ -333,8 +337,11 @@ class _BuddyFloatingSheetState extends State<BuddyFloatingSheet>
                                         text: statusLabel,
                                         shimmerAnimation: _shimmerCtrl,
                                         isThinking:
-                                            controller.phase ==
-                                                SiriOrbPhase.thinking &&
+                                            (controller.phase ==
+                                                    SiriOrbPhase.thinking ||
+                                                controller.phase ==
+                                                    SiriOrbPhase
+                                                        .searchingMusic) &&
                                             !reducedMotion,
                                       ),
                                     ),

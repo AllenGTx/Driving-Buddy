@@ -201,7 +201,7 @@ class _SiriOrangeOrbState extends State<SiriOrangeOrb>
 
   _MarbleStateTone _targetToneFor(SiriOrbPhase p) {
     return switch (p) {
-      SiriOrbPhase.thinking => _toneThinkingRed,
+      SiriOrbPhase.thinking || SiriOrbPhase.searchingMusic => _toneThinkingRed,
       SiriOrbPhase.listening => _MarbleStateTone.lerp(
         _toneListeningAmber,
         const _MarbleStateTone(
@@ -253,7 +253,7 @@ class _SiriOrangeOrbState extends State<SiriOrangeOrb>
 
     final sinAsk = math.sin(2.4 * _clockSec);
     final double stateTargetEnergy = switch (widget.phase) {
-      SiriOrbPhase.thinking => 0.65 + 0.15 * math.sin(3.1 * _clockSec),
+      SiriOrbPhase.thinking || SiriOrbPhase.searchingMusic => 0.65 + 0.15 * math.sin(3.1 * _clockSec),
       SiriOrbPhase.listening => math.max(
         liveVoice * 1.15,
         0.38 + 0.36 * (sinAsk * sinAsk),
@@ -269,7 +269,7 @@ class _SiriOrangeOrbState extends State<SiriOrangeOrb>
     _paintState.easedEnergy += (targetEnergy - _paintState.easedEnergy) * energyAlpha;
 
     final double baseSpeed = switch (widget.phase) {
-      SiriOrbPhase.thinking => 0.80,
+      SiriOrbPhase.thinking || SiriOrbPhase.searchingMusic => 0.80,
       SiriOrbPhase.listening => 0.22 + liveVoice * 0.32,
       SiriOrbPhase.speaking => 0.24 + liveVoice * 0.38,
       SiriOrbPhase.summon => 0.42,
@@ -286,12 +286,15 @@ class _SiriOrangeOrbState extends State<SiriOrangeOrb>
       _paintState.auraMorphPhase += dt * (1.15 + 1.45 * liveVoice);
     }
 
-    _paintState.isThinking = widget.phase == SiriOrbPhase.thinking;
+    _paintState.isThinking =
+        widget.phase == SiriOrbPhase.thinking ||
+        widget.phase == SiriOrbPhase.searchingMusic;
     _paintState.isVoiceInteractive =
         widget.phase == SiriOrbPhase.listening ||
         widget.phase == SiriOrbPhase.speaking ||
         widget.phase == SiriOrbPhase.summon ||
-        widget.phase == SiriOrbPhase.thinking;
+        widget.phase == SiriOrbPhase.thinking ||
+        widget.phase == SiriOrbPhase.searchingMusic;
 
     _paintState.breathScale = reducedMotion
         ? 1.0

@@ -573,7 +573,7 @@ async def search_music_track(query: str, timeout_s: float = 4.2) -> Dict[str, An
     headers = {"User-Agent": "DrivingBuddy/1.0"}
     candidates: List[Tuple[float, Dict[str, Any]]] = []
 
-    async with httpx.AsyncClient(timeout=httpx.Timeout(timeout_s, connect=1.5), headers=headers, follow_redirects=True) as client:
+    async with httpx.AsyncClient(timeout=httpx.Timeout(min(timeout_s, 2.8), connect=1.2), headers=headers, follow_redirects=True) as client:
         it_task = client.get(
             f"https://itunes.apple.com/search?term={urllib.parse.quote(clean_q)}&media=music&entity=song&limit=10"
         )
@@ -734,6 +734,53 @@ async def _get_soundcloud_client_id(client: httpx.AsyncClient) -> Optional[str]:
     return _SC_CLIENT_ID
 
 
+def _is_unwanted_variant(text: str, query: str) -> bool:
+    """Tolak versi cover, acoustic, slowed, pitched, remix, dll kecuali diminta eksplisit di query."""
+    t_low = (text or "").lower()
+    q_low = (query or "").lower()
+    bad_terms = (
+        "cover",
+        "acoustic",
+        "slowed",
+        "reverb",
+        "pitched",
+        "nightcore",
+        "sped up",
+        "speed up",
+        "karaoke",
+        "instrumental",
+        "8d audio",
+        "8d ",
+        "remix",
+        "bootleg",
+        "mashup",
+        "tribute",
+        "lo-fi",
+        "lofi",
+        "bass boosted",
+        "piano version",
+        "guitar cover",
+        "parody",
+        "reaction",
+        "tutorial",
+    )
+    for term in bad_terms:
+        if term in t_low and term.strip() not in q_low:
+            return True
+    if re.search(r"\blive\b", t_low) and not re.search(r"\blive\b", q_low):
+        return True
+    return False
+
+
+def _query_overlap_ratio(query: str, candidate_text: str) -> float:
+    q_words = [w for w in re.findall(r"\w+", (query or "").lower()) if len(w) >= 2]
+    if not q_words:
+        return 0.0
+    c_low = (candidate_text or "").lower()
+    matched = sum(1 for w in q_words if w in c_low)
+    return matched / len(q_words)
+
+
 def _resolve_ytdlp_sync(query: str, target_dur_s: int = 210) -> Optional[Dict[str, Any]]:
     """Coba ekstrak URL audio m4a/mp3 studio penuh via yt-dlp jika diizinkan jaringan server."""
     try:
@@ -746,12 +793,13 @@ def _resolve_ytdlp_sync(query: str, target_dur_s: int = 210) -> Optional[Dict[st
         "quiet": True,
         "no_warnings": True,
         "noplaylist": True,
-        "socket_timeout": 4,
+        "socket_timeout": 3.5,
         "extract_flat": False,
+        "extractor_args": {"youtube": {"player_client": ["android", "ios", "web"]}},
     }
     try:
         with yt_dlp.YoutubeDL(ydl_opts) as ydl:
-            info = ydl.extract_info(f"ytsearch2:{query} official audio", download=False)
+            info = ydl.extract_info(f"ytsearch3:{query} official audio", download=False)
             entries = (info or {}).get("entries") or []
             for ent in entries:
                 if not ent:
@@ -759,6 +807,12 @@ def _resolve_ytdlp_sync(query: str, target_dur_s: int = 210) -> Optional[Dict[st
                 u = ent.get("url") or ""
                 dur = int(ent.get("duration") or 0)
                 ext = (ent.get("ext") or "m4a").lower()
+                ent_title = ent.get("title") or ""
+                uploader = ent.get("uploader") or ent.get("channel") or ""
+                if _is_unwanted_variant(ent_title, query):
+                    continue
+                if _query_overlap_ratio(query, f"{ent_title} {uploader}") < 0.5:
+                    continue
                 if u.startswith("http") and 60 <= dur <= 720 and "manifest.googlevideo.com" not in u:
                     mime = "audio/mpeg" if ext == "mp3" else "audio/mp4"
                     return {
@@ -778,18 +832,14 @@ async def _resolve_soundcloud_full_stream(
     query: str,
     target_dur_s: int = 210,
 ) -> Optional[Dict[str, Any]]:
-    """Resolusi lagu utuh penuh (2–6 menit) via SoundCloud v2: Progressive MP3 atau CMAF fMP4 160kbps."""
+    """Resolusi lagu utuh penuh (2–6 menit) via SoundCloud v2: hanya terima rekaman asli yang cocok, tolak cover/pitched."""
     cid = await _get_soundcloud_client_id(client)
     if not cid:
         return None
 
-    q_low = query.lower()
-    wants_sped = "sped" in q_low or "nightcore" in q_low
-    wants_remix = "remix" in q_low or "dj" in q_low
-
     search_url = (
         f"https://api-v2.soundcloud.com/search/tracks?q={urllib.parse.quote(query)}"
-        f"&client_id={cid}&limit=16"
+        f"&client_id={cid}&limit=12"
     )
     resp = await client.get(search_url)
     if resp.status_code != 200:
@@ -808,17 +858,29 @@ async def _resolve_soundcloud_full_stream(
         if not tcs:
             continue
 
-        title_low = (tr.get("title") or "").lower()
-        score = 100.0
-        # Prioritaskan durasi yang paling dekat dengan rekaman studio asli
+        title_raw = (tr.get("title") or "").strip()
+        user_obj = tr.get("user") or {}
+        uploader = (user_obj.get("username") or "").strip()
+        is_verified = bool(user_obj.get("verified"))
+
+        # TOLAK KERAS cover, acoustic, slowed, pitched, remix, dll jika user tidak memintanya!
+        if _is_unwanted_variant(title_raw, query):
+            continue
+
+        # Wajib ada kecocokan kata kunci query pada judul + nama uploader
+        overlap = _query_overlap_ratio(query, f"{title_raw} {uploader}")
+        if overlap < 0.55:
+            continue
+
+        score = 100.0 + overlap * 25.0
+        if is_verified:
+            score += 25.0
+        # Jika durasi berbeda jauh (> 25 detik) dari durasi studio asli, kemungkinan besar versi berbeda/pitched
         if target_dur_s > 45:
-            score -= min(45.0, abs(dur_s - target_dur_s) * 0.42)
-        if not wants_sped and any(w in title_low for w in ("sped up", "nightcore", "slowed", "8d audio", "chipmunk")):
-            score -= 28.0
-        if not wants_remix and any(w in title_low for w in ("remix", "bootleg", "dj ", "karaoke", "instrumental")):
-            score -= 24.0
-        if "cover" in title_low and "cover" not in q_low:
-            score -= 10.0
+            diff_s = abs(dur_s - target_dur_s)
+            if diff_s > 35:
+                continue
+            score -= min(35.0, diff_s * 0.65)
 
         has_prog = any(
             tc.get("format", {}).get("protocol") == "progressive" and not tc.get("snipped")
@@ -830,7 +892,7 @@ async def _resolve_soundcloud_full_stream(
 
     candidates.sort(key=lambda pair: pair[0], reverse=True)
 
-    for _, tr in candidates[:6]:
+    for _, tr in candidates[:4]:
         tcs = tr.get("media", {}).get("transcodings") or []
         dur_s = max(60, int((tr.get("duration") or 210000) // 1000))
 
