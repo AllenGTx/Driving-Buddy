@@ -12,7 +12,9 @@ from __future__ import annotations
 import asyncio
 import datetime as dt
 import html
+import json
 import logging
+import math
 import re
 import time
 import unicodedata
@@ -756,7 +758,10 @@ def _is_unwanted_variant(text: str, query: str) -> bool:
     q_low = (query or "").lower()
     bad_terms = (
         "cover",
+        "커버",
+        "커버곡",
         "acoustic",
+        "unplugged",
         "slowed",
         "reverb",
         "pitched",
@@ -767,6 +772,7 @@ def _is_unwanted_variant(text: str, query: str) -> bool:
         "instrumental",
         "8d audio",
         "8d ",
+        "432hz",
         "remix",
         "bootleg",
         "mashup",
@@ -783,10 +789,6 @@ def _is_unwanted_variant(text: str, query: str) -> bool:
         "remake",
         "amapiano",
         "blend",
-        # Tambahan: tolak video lirik / visualizer (sering cover atau non-official)
-        "lyric video",
-        "lyrics video",
-        "visualizer",
         "fan made",
         "fan-made",
         "unofficial",
@@ -799,11 +801,22 @@ def _is_unwanted_variant(text: str, query: str) -> bool:
         "ukulele cover",
         "flute cover",
         "piano cover",
+        "almost official",
+        "tiktok version",
+        "1 hour",
+        "1 jam",
+        "loop video",
+        "jerseyclub",
+        "jersey club",
+        "dimi edit",
     )
     for term in bad_terms:
         if term in t_low and term.strip() not in q_low:
             return True
-    if re.search(r"\blive\b", t_low) and not re.search(r"\blive\b", q_low):
+    # Tolak visualizer HANYA jika bukan unggahan resmi (Official Visualizer / Visualizer Resmi)
+    if "visualizer" in t_low and "official" not in t_low and "resmi" not in t_low and "visualizer" not in q_low:
+        return True
+    if re.search(r"\b(?:live|v2)\b", t_low) and not re.search(r"\b(?:live|v2)\b", q_low):
         return True
     return False
 
@@ -921,6 +934,11 @@ async def _resolve_soundcloud_full_stream(
             uploader = (user_obj.get("username") or "").strip()
             is_verified = bool(user_obj.get("verified"))
 
+            # WAJIB terverifikasi di SoundCloud: akun random hampir selalu re-upload cover/palsu!
+            # Bila artis tidak punya track utuh terverifikasi (misal SNIP), serahkan ke YouTube Official.
+            if not is_verified:
+                continue
+
             # TOLAK KERAS cover, acoustic, slowed, pitched, remix, dll jika user tidak memintanya!
             if _is_unwanted_variant(title_raw, active_q):
                 continue
@@ -930,13 +948,7 @@ async def _resolve_soundcloud_full_stream(
             if overlap < 0.65:
                 continue
 
-            score = 100.0 + overlap * 25.0
-            if is_verified:
-                # Bonus besar untuk akun terverifikasi (artis resmi / label)
-                score += 60.0
-            elif not is_verified:
-                # Penalti uploader tidak terverifikasi — kemungkinan cover/fan upload
-                score -= 20.0
+            score = 100.0 + overlap * 25.0 + 60.0
             # Jika durasi berbeda jauh (> 35 detik) dari durasi studio asli, kemungkinan besar versi berbeda/pitched
             if target_dur_s > 45:
                 diff_s = abs(dur_s - target_dur_s)
@@ -1075,45 +1087,161 @@ async def _resolve_jiosaavn_full_track(
     return None
 
 
-async def _search_youtube_video_id(client: httpx.AsyncClient, query: str) -> Optional[str]:
-    """Cari videoId YouTube Music Official Topic untuk diekstrak langsung oleh klien Flutter di HP.
-    Urutan pencarian: Topic channel → Official Audio → Official video → fallback dari query biasa.
-    Hanya ambil video yang bukan cover/karaoke/slowed berdasarkan judul."""
+def _parse_yt_duration_s(length_text: str) -> int:
+    """Ubah format durasi YouTube ('3:56', '3.56', '1:02:03') ke detik."""
+    parts = [int(p) for p in re.findall(r"\d+", length_text or "")]
+    if not parts:
+        return 0
+    if len(parts) == 2:
+        return parts[0] * 60 + parts[1]
+    if len(parts) == 3:
+        return parts[0] * 3600 + parts[1] * 60 + parts[2]
+    return parts[0]
+
+
+def _parse_yt_views(view_text: str) -> int:
+    """Ekstrak angka views dari viewCountText ('56,379,310 views' / '56.379.310 x ditonton')."""
+    digits = re.sub(r"\D", "", view_text or "")
+    return int(digits) if digits else 0
+
+
+def _collect_yt_video_renderers(obj: Any, out: List[Dict[str, Any]]) -> None:
+    if isinstance(obj, dict):
+        if "videoRenderer" in obj and isinstance(obj["videoRenderer"], dict):
+            out.append(obj["videoRenderer"])
+        for val in obj.values():
+            _collect_yt_video_renderers(val, out)
+    elif isinstance(obj, list):
+        for item in obj:
+            _collect_yt_video_renderers(item, out)
+
+
+async def _search_youtube_video_id(
+    client: httpx.AsyncClient,
+    query: str,
+    target_dur_s: int = 210,
+) -> Optional[str]:
+    """Cari videoId resmi YouTube Music / Official Artist Channel untuk diekstrak di HP.
+    Memilih kandidat berdasarkan badge Official Artist Channel / - Topic + views tertinggi + kecocokan durasi."""
     search_queries = [
-        f"{query} topic",
         f"{query} official audio",
-        f"{query} official video",
-        query,
+        f"{query} topic",
     ]
-    for sq in search_queries:
+    best_by_vid: Dict[str, Tuple[float, str]] = {}
+
+    # Ambil hasil pencarian paralel untuk mempercepat resolusi
+    async def _fetch_search(sq: str) -> str:
         try:
             encoded_sq = urllib.parse.quote(sq)
             resp = await client.get(
                 f"https://www.youtube.com/results?search_query={encoded_sq}",
                 headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"},
-                timeout=5.0,
+                timeout=4.5,
             )
-            if resp.status_code != 200:
-                continue
-            # Ekstrak semua pasangan videoId + judul dari initialData JSON YouTube
-            # Format: {"videoId":"XXXXXXXXXXX"}...{"title":{"runs":[{"text":"..."}]}}
-            raw = resp.text
-            # Ambil videoId kandidat dari halaman
-            video_ids = re.findall(r'"videoId"\s*:\s*"([a-zA-Z0-9_-]{11})"', raw)
-            # Ambil judul di dekat masing-masing videoId — gunakan pendekatan sederhana
-            # Cari pasangan "videoId":"ID" diikuti "text":"JUDUL" dalam 500 karakter
-            pairs: List[Tuple[str, str]] = []
-            for m in re.finditer(r'"videoId"\s*:\s*"([a-zA-Z0-9_-]{11})"', raw):
-                vid_id = m.group(1)
-                snippet = raw[m.start():m.start() + 600]
-                title_m = re.search(r'"text"\s*:\s*"([^"]{3,120})"', snippet)
-                title = title_m.group(1) if title_m else ""
-                if title and not _is_unwanted_variant(title, query):
-                    pairs.append((vid_id, title))
-            if pairs:
-                return pairs[0][0]
+            return resp.text if resp.status_code == 200 else ""
         except Exception as exc:
             log.debug("[MusicStream] YouTube videoId search dilewati (%s): %s", sq, exc)
+            return ""
+
+    pages = await asyncio.gather(*(_fetch_search(sq) for sq in search_queries), return_exceptions=True)
+
+    for raw in pages:
+        if not isinstance(raw, str) or not raw:
+            continue
+        m_init = re.search(r"var\s+ytInitialData\s*=\s*(\{.*?\});</script>", raw)
+        if not m_init:
+            continue
+        try:
+            data = json.loads(m_init.group(1))
+        except Exception:
+            continue
+
+        renderers: List[Dict[str, Any]] = []
+        _collect_yt_video_renderers(data, renderers)
+
+        for vr in renderers:
+            vid_id = (vr.get("videoId") or "").strip()
+            if not vid_id or len(vid_id) != 11:
+                continue
+            title = "".join(r.get("text", "") for r in vr.get("title", {}).get("runs", [])).strip()
+            owner = "".join(r.get("text", "") for r in vr.get("ownerText", {}).get("runs", [])).strip()
+            if not title or _is_unwanted_variant(title, query):
+                continue
+
+            dur_txt = (vr.get("lengthText") or {}).get("simpleText") or ""
+            dur_s = _parse_yt_duration_s(dur_txt)
+            # Tolak video terlampau pendek (< 60s) atau video loop/1 jam (> 720s)
+            if dur_s < 60 or dur_s > 720:
+                continue
+
+            overlap = _query_overlap_ratio(query, f"{title} {owner}")
+            if overlap < 0.55:
+                continue
+
+            # Pastikan KATA JUDUL LAGU (kata di query yang bukan nama channel/owner) benar-benar
+            # cocok di judul video! Mencegah "You Owe Me - Malcolm Todd" dipilih untuk "Roommates",
+            # atau "Summer Love" dipilih untuk "My Love".
+            q_tokens = [w for w in re.findall(r"\w+", _strip_accents(query).lower()) if len(w) >= 2]
+            owner_norm = _strip_accents(owner).lower()
+            title_norm = _strip_accents(title).lower()
+            song_tokens = [w for w in q_tokens if w not in owner_norm]
+            if song_tokens:
+                song_matched = sum(1 for w in song_tokens if re.search(rf"\b{re.escape(w)}\b", title_norm) or (len(w) >= 4 and w in title_norm))
+                song_ratio = song_matched / len(song_tokens)
+                # Wajib hampir seluruh kata query yang bukan nama channel cocok di judul video
+                # (100% jika <= 3 kata, >= 85% jika >= 4 kata) — mencegah kolaborasi lagu lain menang via views
+                if song_ratio < (1.0 if len(song_tokens) <= 3 else 0.85):
+                    continue
+            else:
+                song_ratio = overlap
+
+            views_txt = (vr.get("viewCountText") or {}).get("simpleText") or ""
+            views = _parse_yt_views(views_txt)
+            styles = [
+                (b.get("metadataBadgeRenderer") or {}).get("style") or ""
+                for b in (vr.get("ownerBadges") or [])
+            ]
+            is_official_artist = (
+                "BADGE_STYLE_TYPE_VERIFIED_ARTIST" in styles
+                or owner.lower().endswith("- topic")
+            )
+            is_verified = "BADGE_STYLE_TYPE_VERIFIED" in styles
+
+            title_low = title.lower()
+            is_lyric_or_sub = any(
+                k in title_low
+                for k in ("lyric", "lirik", "vietsub", "sub thai", "sub indo", "terjemahan", "가사")
+            )
+
+            score = overlap * 35.0 + song_ratio * 45.0
+            if is_official_artist:
+                score += 120.0
+            elif is_verified and not is_lyric_or_sub:
+                score += 35.0
+            if any(k in title_low for k in ("official audio", "official visualizer", "visualizer resmi", "official music video", "official video")):
+                score += 40.0
+            if is_lyric_or_sub:
+                score -= 40.0
+
+            # Tambahan skor logaritmik untuk jumlah views (video resmi populer mendapat poin tertinggi)
+            score += math.log10(max(1, views) + 1) * 12.0
+
+            # Penalti jika durasi melenceng jauh dari durasi asli lagu
+            # (Official artist music video kadang punya intro/skit hingga +120s, tetap diterima)
+            if target_dur_s > 45:
+                diff_s = abs(dur_s - target_dur_s)
+                max_diff = 140 if is_official_artist else 60
+                if diff_s > max_diff:
+                    continue
+                score -= min(30.0, diff_s * 0.35)
+
+            prev_best = best_by_vid.get(vid_id)
+            if prev_best is None or score > prev_best[0]:
+                best_by_vid[vid_id] = (score, vid_id)
+
+    if best_by_vid:
+        ranked = sorted(best_by_vid.values(), key=lambda x: x[0], reverse=True)
+        return ranked[0][1]
     return None
 
 
@@ -1168,7 +1296,7 @@ async def resolve_in_app_music_stream(query: str, target_dur_s: int = 210) -> Op
         # Jika yt_video_id ditemukan, inject ke chosen apapun hasilnya (termasuk preview 30s).
         # Ini memastikan Flutter SELALU bisa memutar lagu full via YoutubeExplode meski server
         # gagal mendapat stream — cukup asal yt_video_id-nya valid & official.
-        yt_vid_task = _search_youtube_video_id(client, clean_q)
+        yt_vid_task = _search_youtube_video_id(client, clean_q, target_dur_s=target_dur_s)
 
         if chosen is None:
             yt_vid, meta = await asyncio.gather(

@@ -241,12 +241,15 @@ def build_router(
                     "yt_video_id": info.get("yt_video_id", ""),
                 })
             # Untuk fmp4_segments tanpa DRM: arahkan Flutter mengunduh file utuh via mode=file (100% bisa diputar penuh!)
-            return JSONResponse({
+            dl_payload = {
                 "url": f"/music/stream?q={urllib.parse.quote(q)}&dur={dur}&mode=file",
                 "mime": info.get("mime", "audio/mp4"),
                 "duration_s": info.get("duration_s", dur),
                 "mode": "download",
-            })
+            }
+            if info.get("yt_video_id"):
+                dl_payload["yt_video_id"] = info["yt_video_id"]
+            return JSONResponse(dl_payload)
 
         if mode == "file":
             full_bytes = await assemble_full_music_bytes(info)

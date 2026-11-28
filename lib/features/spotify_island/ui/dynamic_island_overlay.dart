@@ -4,6 +4,7 @@ import 'dart:typed_data';
 import 'package:flutter/material.dart';
 import 'package:flutter/scheduler.dart';
 
+import '../../../services/language_service.dart';
 import '../spotify_island_controller.dart';
 import 'spotify_logo_mark.dart';
 
@@ -380,10 +381,8 @@ class _DynamicIslandOverlayState extends State<DynamicIslandOverlay>
                                                           ),
                                                           Text(
                                                             _ctrl.isBuffering
-                                                                ? '${track.artist} · Memuat audio...'
-                                                                : (_ctrl.nextTrack != null
-                                                                    ? '${track.artist} · Berikutnya: ${_ctrl.nextTrack!.title}'
-                                                                    : track.artist),
+                                                                ? '${track.artist} · ${LanguageService.instance.isEnglish ? 'Loading audio...' : 'Memuat audio...'}'
+                                                                : track.artist,
                                                             maxLines: 1,
                                                             overflow:
                                                                 TextOverflow

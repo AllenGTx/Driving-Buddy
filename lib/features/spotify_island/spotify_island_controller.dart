@@ -660,27 +660,75 @@ class SpotifyIslandController extends ChangeNotifier {
             .timeout(const Duration(seconds: 20));
         if (sessionToken != _playSessionToken || !_isVisible || _isClosing) return;
 
-        // ── Filter hanya format m4a/mp4 agar Android audioplayers tidak keluar suara aneh (WebM/Opus)
+        // ── Filter hanya format m4a/mp4 agar Android audioplayers tidak keluar suara aneh (WebM/Opus).
+        // Utamakan bitrate efisien (<= 160kbps) agar unduhan ke file temp cepat (~1-2 detik), fallback m4a tertinggi.
         final m4aStreams = manifest.audioOnly
             .where((s) =>
                 s.codec.mimeType.contains('mp4') ||
                 s.codec.mimeType.contains('m4a'))
             .toList();
-        final audioStream = m4aStreams.isNotEmpty
-            ? m4aStreams.reduce((a, b) =>
+        final poolStreams = m4aStreams.isNotEmpty
+            ? m4aStreams
+            : manifest.audioOnly.toList();
+        final compactM4a = poolStreams
+            .where((s) => s.bitrate.kiloBitsPerSecond <= 165)
+            .toList();
+        final pickFrom = compactM4a.isNotEmpty ? compactM4a : poolStreams;
+        final audioStream = pickFrom.isNotEmpty
+            ? pickFrom.reduce((a, b) =>
                 a.bitrate.bitsPerSecond > b.bitrate.bitsPerSecond ? a : b)
             : manifest.audioOnly.withHighestBitrate();
 
+        // 1) Unduh stream resmi m4a melalui YoutubeHttpClient ke file temp sementara (~2-4 MB),
+        //    lalu putar via DeviceFileSource: bebas 403 Forbidden, seek slider instan, & file lama otomatis dihapus!
+        try {
+          final dir = await getTemporaryDirectory();
+          final nextFile = File('${dir.path}/buddy_track_$sessionToken.m4a');
+          final sink = nextFile.openWrite();
+          try {
+            await for (final chunk in yt.videos.streamsClient
+                .get(audioStream)
+                .timeout(const Duration(seconds: 22))) {
+              if (sessionToken != _playSessionToken || !_isVisible || _isClosing) {
+                break;
+              }
+              sink.add(chunk);
+            }
+            await sink.flush();
+          } finally {
+            await sink.close();
+          }
+
+          if (sessionToken != _playSessionToken || !_isVisible || _isClosing) {
+            unawaited(nextFile.delete().catchError((_) => nextFile));
+            return;
+          }
+
+          if (nextFile.existsSync() && nextFile.lengthSync() > 16384) {
+            final prevFile = _activeMusicFile;
+            _activeMusicFile = nextFile;
+            if (prevFile != null && prevFile.path != nextFile.path) {
+              unawaited(prevFile.delete().catchError((_) => prevFile));
+            }
+            if (resolvedDur > 60 && (_durationSec - resolvedDur).abs() >= 2) {
+              _durationSec = resolvedDur.toDouble();
+              notifyListeners();
+            }
+            await _audioPlayer.setVolume(0.92);
+            await _audioPlayer.play(DeviceFileSource(nextFile.path));
+            return;
+          } else {
+            unawaited(nextFile.delete().catchError((_) => nextFile));
+          }
+        } catch (_) {
+          if (sessionToken != _playSessionToken || !_isVisible || _isClosing) return;
+        }
+
+        // 2) Fallback: coba UrlSource langsung jika download chunk gagal
         final ytAudioUrl = audioStream.url.toString();
         if (ytAudioUrl.startsWith('http')) {
-          // Update durasi asli dari YouTube agar progress bar benar
-          final ytDurSec = audioStream.size.totalBytes > 0
-              ? resolvedDur
-              : (manifest.audioOnly.isNotEmpty
-                  ? resolvedDur
-                  : resolvedDur);
-          if (ytDurSec > 60 && (_durationSec - ytDurSec).abs() >= 2) {
-            _durationSec = ytDurSec.toDouble();
+          if (resolvedDur > 60 && (_durationSec - resolvedDur).abs() >= 2) {
+            _durationSec = resolvedDur.toDouble();
             notifyListeners();
           }
           await _audioPlayer.setVolume(0.92);
