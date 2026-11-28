@@ -138,7 +138,8 @@ class BuddySttService {
   }
 
   Future<void> _runAcousticWakeLoop() async {
-    double rollingAmbientDb = -42.0;
+    double rollingAmbientDb = -44.0;
+    bool calibratedOnce = false;
 
     try {
       final tempDir = await getTemporaryDirectory();
@@ -168,9 +169,9 @@ class BuddySttService {
         int speechTicks = 0;
         int quietAfterSpeechTicks = 0;
         int windowTicks = 0;
-        double burstPeakDb = -40.0;
+        double burstPeakDb = -42.0;
 
-        final int pollMs = _ecoMode ? 85 : 50;
+        final int pollMs = _ecoMode ? 90 : 60;
         final windowDone = Completer<void>();
         _wakeWindowCompleter = windowDone;
         StreamSubscription<Amplitude>? sub;
@@ -182,10 +183,10 @@ class BuddySttService {
               sampleRate: 16000,
               numChannels: 1,
               autoGain: true,
-              echoCancel: false,
-              noiseSuppress: false,
+              echoCancel: true,
+              noiseSuppress: true,
               androidConfig: AndroidRecordConfig(
-                audioSource: AndroidAudioSource.mic,
+                audioSource: AndroidAudioSource.voiceRecognition,
                 manageBluetooth: false,
               ),
             ),
@@ -204,18 +205,19 @@ class BuddySttService {
                 ? amp.current.clamp(-60.0, 0.0)
                 : -60.0;
 
-            // Kalibrasi cepat lantai bising di 1 tick pertama (~50ms) agar awal sapaan tidak terpotong
-            if (windowTicks <= 1) {
-              rollingAmbientDb = curDb.clamp(-54.0, -26.0);
-              return;
+            // Kalibrasi baseline SEKALI di awal tanpa meracuni lantai bising tiap jendela berulang!
+            // Jika suara keras muncul tepat saat awal loop, cap pada -38 dB agar tetap peka.
+            if (!calibratedOnce) {
+              rollingAmbientDb = curDb.clamp(-54.0, -38.0);
+              calibratedOnce = true;
             } else if (!heardBurst && curDb < rollingAmbientDb + 3.0) {
               rollingAmbientDb =
-                  (rollingAmbientDb * 0.90 + curDb * 0.10).clamp(-54.0, -26.0);
+                  (rollingAmbientDb * 0.90 + curDb * 0.10).clamp(-54.0, -32.0);
             }
 
-            final onsetDb = math.max(-41.0, rollingAmbientDb + 4.5);
+            final onsetDb = math.max(-44.0, rollingAmbientDb + 3.8);
             final endDb = heardBurst
-                ? math.max(rollingAmbientDb + 2.5, burstPeakDb - 11.5)
+                ? math.max(rollingAmbientDb + 1.8, burstPeakDb - 13.0)
                 : onsetDb;
 
             if (curDb >= endDb) {
@@ -225,18 +227,18 @@ class BuddySttService {
               if (speechTicks >= 1) {
                 heardBurst = true;
               }
-              if (heardBurst && speechTicks >= 64 && !windowDone.isCompleted) {
+              if (heardBurst && speechTicks >= 58 && !windowDone.isCompleted) {
                 windowDone.complete();
               }
             } else if (heardBurst) {
               quietAfterSpeechTicks++;
-              // Jeda ~200ms (4 tick x 50ms) sesudah sapaan -> langsung proses! (lebih responsif)
-              if (quietAfterSpeechTicks >= 4 && !windowDone.isCompleted) {
+              // Jeda ~420ms (7 tick x 60ms) agar sapaan 2 kata ("Yo John", "Hei Jane") tidak terpotong di tengah!
+              if (quietAfterSpeechTicks >= 7 && !windowDone.isCompleted) {
                 windowDone.complete();
               }
             } else {
               speechTicks = 0;
-              if (windowTicks >= 110 && !windowDone.isCompleted) {
+              if (windowTicks >= 95 && !windowDone.isCompleted) {
                 windowDone.complete();
               }
             }
@@ -305,7 +307,7 @@ class BuddySttService {
           partialResults: true,
           cancelOnError: false,
           listenFor: const Duration(seconds: 6),
-          pauseFor: const Duration(seconds: 2),
+          pauseFor: const Duration(seconds: 1),
         ),
         onResult: (res) {
           heard = res.recognizedWords.trim();
@@ -402,10 +404,10 @@ class BuddySttService {
             sampleRate: 16000,
             numChannels: 1,
             autoGain: true,
-            echoCancel: false,
-            noiseSuppress: false,
+            echoCancel: true,
+            noiseSuppress: true,
             androidConfig: AndroidRecordConfig(
-              audioSource: AndroidAudioSource.mic,
+              audioSource: AndroidAudioSource.voiceRecognition,
               manageBluetooth: false,
             ),
           ),
@@ -439,9 +441,9 @@ class BuddySttService {
             peakSpeechDb = curDb;
           }
 
-          final onsetThresholdDb = math.max(-35.0, ambientFloorDb + 6.5);
+          final onsetThresholdDb = math.max(-42.0, ambientFloorDb + 4.5);
           final sustainThresholdDb = heardVoice
-              ? math.max(ambientFloorDb + 4.0, peakSpeechDb - 11.5)
+              ? math.max(ambientFloorDb + 2.5, peakSpeechDb - 13.0)
               : onsetThresholdDb;
 
           final isSpeakingNow = curDb >= sustainThresholdDb;
@@ -652,3 +654,4 @@ class BuddySttService {
     inputEnergy.value = clamped;
   }
 }
+

@@ -23,7 +23,8 @@ STT_VOCAB_PROMPT = (
     "Skor Man United vs Liverpool, Real Madrid, Barcelona, Arsenal, Chelsea, NBA Lakers Celtics, "
     "hasil MPL Mobile Legends RRQ ONIC, Formula 1 Verstappen, Olimpiade bulutangkis, fakta sejarah. "
     "Tolong arahkan saya ke Indomaret, Alfamart, SPBU Pertamina, rest area terdekat. "
-    "Tolong setelkan lagu Still Into You, Hard Times by Paramore, Last Night on Earth Green Day, Cancer My Chemical Romance di Spotify."
+    "Tolong setelkan lagu Still Into You Paramore, Ain't It Fun Paramore, Hard Times Paramore, "
+    "Last Night on Earth Green Day, Cancer My Chemical Romance, Mirrors Justin Timberlake di Spotify."
 )
 
 _STT_CORRECTIONS = (
@@ -45,9 +46,16 @@ _STT_CORRECTIONS = (
     (re.compile(r"\b(?:yo|hei|halo|hai)\s+j(?:ane|en|an)\b", re.IGNORECASE), "Yo Jane"),
     (re.compile(r"\b(?:yo|hei|halo|hai)\s+j(?:on|ohn|onn)\b", re.IGNORECASE), "Yo John"),
     # Musik & band populer yang sering salah eja fonetik
-    (re.compile(r"\b(?:para\s*mor|para\s*more|parama|para\s+baru)\b", re.IGNORECASE), "Paramore"),
-    (re.compile(r"\bstil\s+into\s+you\b", re.IGNORECASE), "Still Into You"),
-    (re.compile(r"\bain'?t\s+it\s+fun\b", re.IGNORECASE), "Ain't It Fun"),
+    (re.compile(r"\bbayi\s+para\s+baru\b", re.IGNORECASE), "by Paramore"),
+    (re.compile(r"\b(?:para\s*mor[ae]?|parama|para\s+baru|para\s+more?|paramor)\b", re.IGNORECASE), "Paramore"),
+    # "Still Into You" — Whisper ID sering mengeja fonetik seperti "ncuyu" / "nyucu"
+    (re.compile(r"\b(?:stil(?:l)?\s+in\s*to\s+you|n?cuyu|nyucu)\b", re.IGNORECASE), "Still Into You"),
+    (re.compile(r"\bsaya\s*,?\s+it\s+ain'?t\s*,?\s*(?:eh\s*,?\s*)?into\s+you\b", re.IGNORECASE), "Still Into You"),
+    # "Ain't It Fun"
+    (re.compile(r"\b(?:ain'?t\s+it\s+fun|en\s+it\s+fun|ain\s+it\s+fun)\b", re.IGNORECASE), "Ain't It Fun"),
+    # Hard Times
+    (re.compile(r"\bhard\s*taim(?:s)?\b", re.IGNORECASE), "Hard Times"),
+    (re.compile(r"\bhardtimes\b", re.IGNORECASE), "Hard Times"),
     (re.compile(r"\bgreen\s+dei\b", re.IGNORECASE), "Green Day"),
     (re.compile(r"\bspotif(?:ai|y)?\b", re.IGNORECASE), "Spotify"),
 )

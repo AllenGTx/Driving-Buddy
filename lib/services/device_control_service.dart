@@ -124,15 +124,23 @@ class DeviceControlService {
     }
   }
 
-  Future<bool> playSpotifyQuery(String query) async {
-    if (kIsWeb) return false;
+  Future<String> playSpotifyQuery(
+    String query, {
+    String title = '',
+    String artist = '',
+  }) async {
+    if (kIsWeb) return 'failed';
     try {
-      final res = await _channel.invokeMethod<bool>('playSpotifyQuery', {
+      final res = await _channel.invokeMethod<dynamic>('playSpotifyQuery', {
         'query': query,
+        'title': title,
+        'artist': artist,
       });
-      return res ?? false;
+      if (res is String && res.isNotEmpty) return res;
+      if (res == true) return 'ok';
+      return 'failed';
     } catch (_) {
-      return false;
+      return 'failed';
     }
   }
 

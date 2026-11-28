@@ -2,6 +2,7 @@ package com.drivingbuddy
 
 import android.app.Activity
 import android.app.SearchManager
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
@@ -9,6 +10,8 @@ import android.media.AudioAttributes
 import android.media.AudioFocusRequest
 import android.media.AudioManager
 import android.media.MediaMetadata
+import android.media.browse.MediaBrowser
+import android.media.session.MediaController
 import android.media.session.PlaybackState
 import android.net.Uri
 import android.os.Build
@@ -210,77 +213,157 @@ class MainActivity : FlutterActivity() {
                 }
                 "playSpotifyQuery" -> {
                     val query = call.argument<String>("query") ?: ""
+                    val title = call.argument<String>("title") ?: ""
+                    val artist = call.argument<String>("artist") ?: ""
                     val pkg = when {
                         isPkgInstalled("com.spotify.music") -> "com.spotify.music"
                         isPkgInstalled("com.spotify.lite") -> "com.spotify.lite"
                         else -> null
                     }
                     if (pkg == null) {
-                        result.success(false)
+                        result.success("not_installed")
+                        return@setMethodCallHandler
+                    }
+                    if (!SpotifyMediaHelper.isNotificationAccessGranted(this)) {
+                        result.success("needs_notification_access")
                         return@setMethodCallHandler
                     }
 
+                    val extras = Bundle().apply {
+                        putString(MediaStore.EXTRA_MEDIA_FOCUS, "vnd.android.cursor.item/audio")
+                        putString(SearchManager.QUERY, query)
+                        if (title.isNotEmpty()) putString(MediaStore.EXTRA_MEDIA_TITLE, title)
+                        if (artist.isNotEmpty()) putString(MediaStore.EXTRA_MEDIA_ARTIST, artist)
+                    }
+
+                    // Jalur utama: kontrol langsung MediaSession Spotify di latar belakang (0 pindah layar)
                     val existingCtrl = SpotifyMediaHelper.findActiveSpotifyController(this)
                     if (existingCtrl != null) {
-                        // Putar langsung di latar belakang lewat MediaSession tanpa membuka layar Spotify!
                         try {
-                            existingCtrl.transportControls.playFromSearch(query, Bundle())
-                            result.success(true)
+                            existingCtrl.transportControls.playFromSearch(query, extras)
+                            result.success("ok")
                             return@setMethodCallHandler
                         } catch (_: Exception) {
                         }
                     }
 
-                    // Jika Spotify belum aktif di MediaSession, bangunkan dulu di background via KEYCODE_MEDIA_PLAY
-                    try {
-                        audioManager.dispatchMediaKeyEvent(android.view.KeyEvent(android.view.KeyEvent.ACTION_DOWN, android.view.KeyEvent.KEYCODE_MEDIA_PLAY))
-                        audioManager.dispatchMediaKeyEvent(android.view.KeyEvent(android.view.KeyEvent.ACTION_UP, android.view.KeyEvent.KEYCODE_MEDIA_PLAY))
-                        mainHandler.postDelayed({
-                            val wokenCtrl = SpotifyMediaHelper.findActiveSpotifyController(this@MainActivity)
-                            if (wokenCtrl != null) {
-                                try {
-                                    wokenCtrl.transportControls.playFromSearch(query, Bundle())
-                                    return@postDelayed
-                                } catch (_: Exception) {
-                                }
-                            }
-                            launchSpotifySearchIntent(pkg, query)
-                        }, 650L)
-                        result.success(true)
-                        return@setMethodCallHandler
-                    } catch (_: Exception) {
-                    }
-
-                    result.success(launchSpotifySearchIntent(pkg, query))
+                    // Jika Spotify belum punya sesi aktif, bangunkan MediaBrowserService di background tanpa startActivity
+                    playSpotifyViaBackgroundService(pkg, query, extras, audioManager, result)
                 }
                 else -> result.notImplemented()
             }
         }
     }
 
-    private fun launchSpotifySearchIntent(pkg: String, query: String): Boolean {
-        return try {
-            val playIntent = Intent(MediaStore.INTENT_ACTION_MEDIA_PLAY_FROM_SEARCH).apply {
-                setPackage(pkg)
-                putExtra(MediaStore.EXTRA_MEDIA_FOCUS, "vnd.android.cursor.item/*")
-                putExtra(SearchManager.QUERY, query)
-                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-            }
-            startActivity(playIntent)
-            true
-        } catch (_: Exception) {
+    /**
+     * Bangunkan Spotify 100% di latar belakang (tanpa pernah memanggil startActivity / pindah aplikasi)
+     * melalui MediaBrowserService + polling MediaSession, lalu memanggil `playFromSearch`.
+     */
+    private fun playSpotifyViaBackgroundService(
+        pkg: String,
+        query: String,
+        extras: Bundle,
+        audioManager: AudioManager,
+        result: MethodChannel.Result,
+    ) {
+        var replied = false
+        var browser: MediaBrowser? = null
+
+        fun finishWith(status: String) {
+            if (replied) return
+            replied = true
             try {
-                val searchUri = Uri.parse("spotify:search:${Uri.encode(query)}")
-                val fallback = Intent(Intent.ACTION_VIEW, searchUri).apply {
-                    setPackage(pkg)
-                    addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                }
-                startActivity(fallback)
-                true
+                browser?.disconnect()
             } catch (_: Exception) {
-                false
+            }
+            browser = null
+            result.success(status)
+        }
+
+        // 1. Coba bind MediaBrowserService milik Spotify secara senyap di latar belakang
+        try {
+            val svcIntent = Intent("android.media.browse.MediaBrowserService").apply {
+                setPackage(pkg)
+            }
+            @Suppress("DEPRECATION")
+            val matches = packageManager.queryIntentServices(svcIntent, 0)
+            val svcInfo = matches.firstOrNull()?.serviceInfo
+            if (svcInfo != null) {
+                val comp = ComponentName(svcInfo.packageName, svcInfo.name)
+                lateinit var mb: MediaBrowser
+                val cb = object : MediaBrowser.ConnectionCallback() {
+                    override fun onConnected() {
+                        if (replied) return
+                        try {
+                            val token = mb.sessionToken
+                            val ctrl = MediaController(this@MainActivity, token)
+                            ctrl.transportControls.playFromSearch(query, extras)
+                            finishWith("ok")
+                        } catch (_: Exception) {
+                        }
+                    }
+                }
+                mb = MediaBrowser(this, comp, cb, null)
+                browser = mb
+                mb.connect()
+            }
+        } catch (_: Exception) {
+        }
+
+        // 2. Polling hingga 5x (tiap 220ms) menunggu MediaSession aktif sesudah service dibangunkan
+        fun pollController(attempt: Int) {
+            if (replied) return
+            val ctrl = SpotifyMediaHelper.findActiveSpotifyController(this@MainActivity)
+            if (ctrl != null) {
+                try {
+                    ctrl.transportControls.playFromSearch(query, extras)
+                    finishWith("ok")
+                    return
+                } catch (_: Exception) {
+                }
+            }
+            if (attempt < 5) {
+                mainHandler.postDelayed({ pollController(attempt + 1) }, 220L)
+                return
+            }
+
+            // 3. Fallback senyap terakhir: bangunkan via KEYCODE_MEDIA_PLAY lalu langsung timpa dengan playFromSearch;
+            // bila tetap tidak muncul sesi aktif, langsung PAUSE agar lagu lama tidak lanjut berputar.
+            try {
+                audioManager.dispatchMediaKeyEvent(
+                    android.view.KeyEvent(android.view.KeyEvent.ACTION_DOWN, android.view.KeyEvent.KEYCODE_MEDIA_PLAY),
+                )
+                audioManager.dispatchMediaKeyEvent(
+                    android.view.KeyEvent(android.view.KeyEvent.ACTION_UP, android.view.KeyEvent.KEYCODE_MEDIA_PLAY),
+                )
+                mainHandler.postDelayed({
+                    if (replied) return@postDelayed
+                    val wokenCtrl = SpotifyMediaHelper.findActiveSpotifyController(this@MainActivity)
+                    if (wokenCtrl != null) {
+                        try {
+                            wokenCtrl.transportControls.playFromSearch(query, extras)
+                            finishWith("ok")
+                            return@postDelayed
+                        } catch (_: Exception) {
+                        }
+                    }
+                    try {
+                        audioManager.dispatchMediaKeyEvent(
+                            android.view.KeyEvent(android.view.KeyEvent.ACTION_DOWN, android.view.KeyEvent.KEYCODE_MEDIA_PAUSE),
+                        )
+                        audioManager.dispatchMediaKeyEvent(
+                            android.view.KeyEvent(android.view.KeyEvent.ACTION_UP, android.view.KeyEvent.KEYCODE_MEDIA_PAUSE),
+                        )
+                    } catch (_: Exception) {
+                    }
+                    finishWith("spotify_not_active")
+                }, 650L)
+            } catch (_: Exception) {
+                finishWith("failed")
             }
         }
+
+        mainHandler.postDelayed({ pollController(0) }, 240L)
     }
 
     private fun isPkgInstalled(pkg: String): Boolean {

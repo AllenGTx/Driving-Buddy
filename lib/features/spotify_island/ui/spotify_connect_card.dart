@@ -110,6 +110,8 @@ class _SpotifyConnectCardState extends State<SpotifyConnectCard> {
         final isEn = LanguageService.instance.isEnglish;
         final connected = _spotify.isConnected;
         final installed = _spotify.isSpotifyInstalled;
+        final notifGranted = _spotify.isNotificationAccessGranted;
+        final fullyReady = connected && notifGranted;
 
         return Container(
           width: double.infinity,
@@ -118,16 +120,18 @@ class _SpotifyConnectCardState extends State<SpotifyConnectCard> {
             color: isDark ? AppColors.darkCardBg : Colors.white,
             borderRadius: BorderRadius.circular(DbRadius.r20),
             border: Border.all(
-              color: connected
+              color: fullyReady
                   ? const Color(0xFF1ED760).withValues(alpha: isDark ? 0.50 : 0.42)
-                  : (isDark ? AppColors.darkCardBorder : const Color(0xFFECEEF2)),
+                  : (connected
+                        ? const Color(0xFFF59E0B).withValues(alpha: 0.48)
+                        : (isDark ? AppColors.darkCardBorder : const Color(0xFFECEEF2))),
               width: connected ? 1.4 : 1.0,
             ),
             boxShadow: [
               BoxShadow(
                 color: isDark
                     ? Colors.black.withValues(alpha: 0.24)
-                    : const Color(0xFF1ED760).withValues(alpha: connected ? 0.08 : 0.03),
+                    : const Color(0xFF1ED760).withValues(alpha: fullyReady ? 0.08 : 0.03),
                 blurRadius: 14,
                 offset: const Offset(0, 3),
               ),
@@ -142,7 +146,10 @@ class _SpotifyConnectCardState extends State<SpotifyConnectCard> {
                   color: const Color(0xFF0A0A0C),
                   borderRadius: BorderRadius.circular(14),
                   border: Border.all(
-                    color: const Color(0xFF1ED760).withValues(alpha: 0.32),
+                    color: (fullyReady
+                            ? const Color(0xFF1ED760)
+                            : const Color(0xFFF59E0B))
+                        .withValues(alpha: 0.32),
                   ),
                 ),
                 child: const SpotifyLogoMark(size: 32),
@@ -175,26 +182,32 @@ class _SpotifyConnectCardState extends State<SpotifyConnectCard> {
                             vertical: 2,
                           ),
                           decoration: BoxDecoration(
-                            color: connected
+                            color: fullyReady
                                 ? const Color(0xFF1ED760).withValues(alpha: 0.14)
-                                : (isDark
-                                      ? AppColors.darkCardBgSoft
-                                      : const Color(0xFFF1F5F9)),
+                                : (connected
+                                      ? const Color(0xFFF59E0B).withValues(alpha: 0.15)
+                                      : (isDark
+                                            ? AppColors.darkCardBgSoft
+                                            : const Color(0xFFF1F5F9))),
                             borderRadius: BorderRadius.circular(999),
                           ),
                           child: Text(
-                            connected
+                            fullyReady
                                 ? (isEn ? 'CONNECTED' : 'TERHUBUNG')
-                                : (isEn ? 'OFF' : 'BELUM AKTIF'),
+                                : (connected
+                                      ? (isEn ? 'ALLOW ACCESS' : 'PERLU IZIN')
+                                      : (isEn ? 'OFF' : 'BELUM AKTIF')),
                             style: TextStyle(
                               fontSize: 9,
                               fontWeight: FontWeight.w800,
                               letterSpacing: 0.5,
-                              color: connected
+                              color: fullyReady
                                   ? const Color(0xFF16A34A)
-                                  : (isDark
-                                        ? AppColors.darkTextSecondary
-                                        : const Color(0xFF64748B)),
+                                  : (connected
+                                        ? const Color(0xFFD97706)
+                                        : (isDark
+                                              ? AppColors.darkTextSecondary
+                                              : const Color(0xFF64748B))),
                             ),
                           ),
                         ),
@@ -202,17 +215,21 @@ class _SpotifyConnectCardState extends State<SpotifyConnectCard> {
                     ),
                     const SizedBox(height: 3),
                     Text(
-                      connected
+                      fullyReady
                           ? (isEn
-                                ? 'Say "Play [Song Name] on Spotify" to launch Dynamic Island.'
-                                : 'Ucapkan "Setelkan lagu [Judul] di Spotify" ke Buddy kapan saja.')
-                          : (installed
+                                ? 'Say "Play [Song Name] on Spotify" to play silently in background.'
+                                : 'Ucapkan "Setelkan lagu [Judul]" untuk putar diam-diam di latar belakang.')
+                          : (connected
                                 ? (isEn
-                                      ? 'Spotify app detected on phone · Connect for hands-free music'
-                                      : 'Aplikasi Spotify terdeteksi di HP · Hubungkan untuk putar lewat suara')
-                                : (isEn
-                                      ? 'Connect Spotify to play music via voice on Dynamic Island'
-                                      : 'Hubungkan Spotify agar Buddy bisa menyetel lagu di Dynamic Island')),
+                                      ? 'Enable Notification Access so Buddy controls Spotify in background.'
+                                      : 'Aktifkan Akses Notifikasi agar Spotify putar di latar belakang & sinkron.')
+                                : (installed
+                                      ? (isEn
+                                            ? 'Spotify app detected on phone · Connect for hands-free music'
+                                            : 'Aplikasi Spotify terdeteksi di HP · Hubungkan untuk putar lewat suara')
+                                      : (isEn
+                                            ? 'Connect Spotify to play music via voice on Dynamic Island'
+                                            : 'Hubungkan Spotify agar Buddy bisa menyetel lagu di Dynamic Island'))),
                       maxLines: 2,
                       overflow: TextOverflow.ellipsis,
                       style: TextStyle(
@@ -227,39 +244,63 @@ class _SpotifyConnectCardState extends State<SpotifyConnectCard> {
                 ),
               ),
               const SizedBox(width: 10),
-              InkWell(
-                borderRadius: BorderRadius.circular(12),
-                onTap: _busy ? null : _handleToggleConnect,
-                child: AnimatedContainer(
-                  duration: const Duration(milliseconds: 180),
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 12,
-                    vertical: 9,
+              if (connected && !notifGranted)
+                InkWell(
+                  borderRadius: BorderRadius.circular(12),
+                  onTap: () => DeviceControlService.instance.openNotificationAccessSettings(),
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 9,
+                    ),
+                    decoration: BoxDecoration(
+                      color: const Color(0xFFF59E0B),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      isEn ? 'Allow' : 'Izinkan',
+                      style: const TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w800,
+                        color: Color(0xFF09090B),
+                      ),
+                    ),
                   ),
-                  decoration: BoxDecoration(
-                    color: connected
-                        ? (isDark
-                              ? const Color(0xFF1E293B)
-                              : const Color(0xFFF1F5F9))
-                        : const Color(0xFF1ED760),
-                    borderRadius: BorderRadius.circular(12),
-                  ),
-                  child: Text(
-                    connected
-                        ? (isEn ? 'Disconnect' : 'Putuskan')
-                        : (isEn ? 'Connect' : 'Hubungkan'),
-                    style: TextStyle(
-                      fontSize: 11.5,
-                      fontWeight: FontWeight.w800,
+                )
+              else
+                InkWell(
+                  borderRadius: BorderRadius.circular(12),
+                  onTap: _busy ? null : _handleToggleConnect,
+                  child: AnimatedContainer(
+                    duration: const Duration(milliseconds: 180),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 12,
+                      vertical: 9,
+                    ),
+                    decoration: BoxDecoration(
                       color: connected
                           ? (isDark
-                                ? AppColors.darkTextPrimary
-                                : const Color(0xFF0F172A))
-                          : const Color(0xFF09090B),
+                                ? const Color(0xFF1E293B)
+                                : const Color(0xFFF1F5F9))
+                          : const Color(0xFF1ED760),
+                      borderRadius: BorderRadius.circular(12),
+                    ),
+                    child: Text(
+                      connected
+                          ? (isEn ? 'Disconnect' : 'Putuskan')
+                          : (isEn ? 'Connect' : 'Hubungkan'),
+                      style: TextStyle(
+                        fontSize: 11.5,
+                        fontWeight: FontWeight.w800,
+                        color: connected
+                            ? (isDark
+                                  ? AppColors.darkTextPrimary
+                                  : const Color(0xFF0F172A))
+                            : const Color(0xFF09090B),
+                      ),
                     ),
                   ),
                 ),
-              ),
             ],
           ),
         );

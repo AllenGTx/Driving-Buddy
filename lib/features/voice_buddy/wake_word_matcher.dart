@@ -180,7 +180,8 @@ class WakeWordMatcher {
         base.addAll({
           'rina', 'rinaa', 'rinna', 'riina', 'rin', 'reina', 'raina', 'rena',
           'ina', 'trina', 'brina', 'prina', 'srina', 'lina', 'fina', 'wina',
-          'tina', 'karina', 'mina', 'nina', 'dina', 'vina',
+          'tina', 'karina', 'mina', 'nina', 'dina', 'vina', 'verina', 'arina',
+          'orina', 'irina', 'erina', 'urina', 'forin', 'furinah', 'rinah',
           'furina', 'furinaa', 'forina', 'farina', 'ferina', 'purina', 'vurina',
           'florina', 'felina', 'falina', 'furin', 'kurina', 'rinarina',
           'eirina', 'heirina', 'oirina', 'halorina', 'hairina', 'yorina', 'yofurina', 'heifurina',
@@ -189,14 +190,15 @@ class WakeWordMatcher {
       case BuddyVoiceProfile.john:
         base.addAll({
           'john', 'jon', 'jhon', 'joni', 'johan', 'johny', 'johnny', 'zon', 'don', 'jo',
-          'yon', 'jong', 'yoon', 'jun', 'chon', 'jean', 'yojon', 'yojo',
+          'yon', 'jong', 'yoon', 'jun', 'chon', 'jean', 'shan', 'shon', 'yohan', 'yohn',
+          'yoan', 'joan', 'joon', 'sean', 'shawn', 'zone', 'yojon', 'yojo',
           'heijohn', 'heijon', 'haijohn', 'haijon', 'oijohn', 'oijon', 'eijohn', 'halojohn', 'yojohn',
         });
         break;
       case BuddyVoiceProfile.jane:
         base.addAll({
           'jane', 'jen', 'jeni', 'jein', 'jenny', 'jenn', 'jenna', 'zen', 'jain', 'jeyn', 'jeane',
-          'jan', 'jean', 'yen', 'yohane', 'yozen',
+          'jan', 'jean', 'yen', 'yohane', 'yozen', 'jaen', 'jaine', 'jehn', 'jeny',
           'heijane', 'heijen', 'haijane', 'haijen', 'oijane', 'oijen', 'eijane', 'eijen', 'halojane', 'halojen', 'yojane', 'yojein', 'yojen',
         });
         break;
