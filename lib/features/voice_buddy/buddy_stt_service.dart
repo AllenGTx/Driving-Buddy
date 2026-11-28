@@ -223,7 +223,7 @@ class BuddySttService {
               speechTicks++;
               quietAfterSpeechTicks = 0;
               if (curDb > burstPeakDb) burstPeakDb = curDb;
-              if (speechTicks >= 2) {
+              if (speechTicks >= 1) {
                 heardBurst = true;
               }
               if (heardBurst && speechTicks >= 64 && !windowDone.isCompleted) {
@@ -231,8 +231,8 @@ class BuddySttService {
               }
             } else if (heardBurst) {
               quietAfterSpeechTicks++;
-              // Jeda ~300ms (6 tick x 50ms) sesudah sapaan -> langsung proses!
-              if (quietAfterSpeechTicks >= 6 && !windowDone.isCompleted) {
+              // Jeda ~200ms (4 tick x 50ms) sesudah sapaan -> langsung proses! (lebih responsif)
+              if (quietAfterSpeechTicks >= 4 && !windowDone.isCompleted) {
                 windowDone.complete();
               }
             } else {

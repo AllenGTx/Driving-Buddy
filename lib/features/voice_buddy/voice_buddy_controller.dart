@@ -457,7 +457,11 @@ class VoiceBuddyController extends ChangeNotifier {
       notifyListeners();
       return;
     } else if (_busyTurn && _phase != SiriOrbPhase.dismissing) {
-      return;
+      // PTT selalu bisa interrupt meskipun giliran sebelumnya belum selesai (misal saat token habis)
+      _turnId++;
+      _busyTurn = false;
+      await _tts.stop();
+      // lanjut ke bawah untuk mulai giliran PTT baru
     }
 
     final myTurn = ++_turnId;
@@ -750,8 +754,31 @@ class VoiceBuddyController extends ChangeNotifier {
     }
 
     // Pisahkan error putus sinyal seluler ("SOS saja" / terowongan) vs kuota server habis!
+    // rate_limited = semua LLM provider kena rate-limit sementara → bukan "capek", bukan sinyal mati!
     final isNetworkSignalLost = res.fallback &&
         (res.error == 'unreachable' || res.error == 'timeout');
+    final isRateLimited = res.fallback && res.error == 'rate_limited';
+    if (isRateLimited) {
+      // Semua provider sedang sibuk sementara → beritahu user, lalu dismiss (jangan loop "capek")
+      final isEn = LanguageService.instance.isEnglish;
+      final busyMsg = isEn
+          ? 'All AI providers are busy right now. Please try again in a moment.'
+          : 'Semua provider AI sedang sibuk. Coba lagi sebentar ya.';
+      _replyText = busyMsg;
+      notifyListeners();
+      await _tts.speakReply(
+        profile: currentProf,
+        text: busyMsg,
+        onPlaybackStart: () {
+          if (myTurn != _turnId) return;
+          _replyText = busyMsg;
+          _setPhase(SiriOrbPhase.speaking);
+        },
+      );
+      if (myTurn != _turnId) return;
+      _scheduleDismissAndResume();
+      return;
+    }
     if (isNetworkSignalLost) {
       final offlineMsg = BuddyTtsService.offlineSignalTextFor(
         currentProf,
@@ -772,8 +799,10 @@ class VoiceBuddyController extends ChangeNotifier {
       return;
     }
 
+    // "Furina capek" hanya saat semua 4 provider RVC habis (ttsError=furina_exhausted),
+    // BUKAN saat LLM rate_limited → itu sudah ditangani di atas!
     final isFurinaTired =
-        (res.fallback || res.ttsError == 'furina_exhausted') &&
+        res.ttsError == 'furina_exhausted' &&
         currentProf == BuddyVoiceProfile.furina;
     final displayReply = isFurinaTired
         ? BuddyTtsService.furinaTiredText
@@ -1061,9 +1090,14 @@ class VoiceBuddyController extends ChangeNotifier {
     );
     if (turnId != _turnId) return true;
 
-    // Sembunyikan Orb ke mode idle, lalu langsung jalankan stream di Dynamic Island (TANPA keluar ke halaman Spotify!)
+    // Sembunyikan Orb ke mode idle, lalu jalankan Spotify native (untuk sinkron "playing on NEF-JX9")
+    // dan tampilkan metadata di Dynamic Island tanpa stream internal Driving Buddy.
     await dismissSheet();
-    await spotifyCtrl.playSongOnIsland(track, isDrivingSession: _isDrivingActive);
+    // 1. Buka Spotify native via MediaPlayFromSearch intent → Spotify yang handle audio sepenuhnya
+    await DeviceControlService.instance.playSpotifyQuery(track.spotifyQuery);
+    // 2. Tampilkan Dynamic Island dengan metadata lagu (cover art, judul, artis, timer pasif)
+    //    tapi TANPA memulai stream internal (Spotify yang streaming, bukan kita)
+    await spotifyCtrl.showIslandMetadataOnly(track, isDrivingSession: _isDrivingActive);
     return true;
   }
 

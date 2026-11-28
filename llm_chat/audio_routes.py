@@ -15,120 +15,40 @@ from .config import _collect_env
 
 log = logging.getLogger("driving_buddy.llm")
 
-# PENTING: Whisper `prompt` adalah contoh kalimat transkrip sebelumnya, BUKAN instruksi sistem!
-# Jangan gunakan kata seperti "Ejaan nama tepat:" karena memicu halusinasi "X dieja X-Y-Z".
-# Prompt diperluas ke 50+ konteks agar akurasi kata-kata khusus (nama tim, angka, istilah teknis) meningkat.
+# PENTING: Whisper `prompt` dibatasi 224 token (~150 kata) dan bekerja sebagai konteks kalimat.
+# Prompt terlalu panjang akan terpotong dan merusak pengenalan kata Bahasa Inggris/Indonesia!
 STT_VOCAB_PROMPT = (
-    # === Wake word & panggilan buddy ===
-    "Yo Rina, Yo Furina, Yo Jane, Yo John, halo Rina, hai John, hai Jane, hei Jane. "
-    # === Matematika & hitung-hitungan ===
-    "Berapa 5 kali 5, 10 tambah 5, 20 bagi 4, 100 dikali 2, akar dari 144, 7 pangkat 2, 50 persen dari 200. "
-    # === Sepak bola lokal & internasional ===
-    "Skor Man United vs Liverpool, Man Utd, Manchester United, Manchester City, Man City, Arsenal, Chelsea, Tottenham Hotspur, Spurs. "
-    "Real Madrid, Barcelona, Barca, Atletico Madrid, PSG, Bayern Munich, Borussia Dortmund, Juventus, Inter Milan, AC Milan, Napoli. "
-    "Sporting Lisbon, Ajax, Porto, Benfica, Celtic, Rangers. "
-    "Premier League, Liga Champions UCL, UEFA Champions League, Europa League, La Liga, Serie A, Bundesliga, Ligue 1. "
-    "Persib Bandung, Persija Jakarta, Arema FC, Bali United, PSM Makassar, Bhayangkara FC, Madura United, Borneo FC. "
-    "Timnas Indonesia, Timnas U23, Shin Tae-yong, STY, SEA Games, Piala AFF, ASEAN Cup. "
-    "Klasemen Liga Inggris, top skor, pencetak gol, kartu merah, kartu kuning, offside, VAR, penalti. "
-    # === Basket NBA & FIBA ===
-    "NBA, skor Lakers, Los Angeles Lakers, Golden State Warriors, Boston Celtics, Miami Heat, Chicago Bulls, Phoenix Suns. "
-    "LeBron James, Stephen Curry, Kevin Durant, Giannis Antetokounmpo, Nikola Jokic, Luka Doncic, Jayson Tatum. "
-    "NBA Finals, All-Star, slam dunk, three-pointer, triple-double, assist, rebound, steal, block. "
-    "IBL Indonesia Basketball League, Satria Muda, Prawira Harum. "
-    # === E-sport & Mobile Gaming ===
-    "MPL Indonesia, MPL ID Season 14, Mobile Legends Bang Bang, MLBB, skor MPL, juara MPL. "
-    "RRQ Hoshi, EVOS Legends, ONIC Esports, Alter Ego, Aura Fire, Bigetron, Team Flash, Falcons. "
-    "VALORANT, VCT Pacific, Paper Rex, PRX, Team Liquid, NAVI, Sentinels, Fnatic, NRG. "
-    "Free Fire, FFWS, Free Fire World Series, PUBG Mobile, PMWI, PMGC. "
-    "Dota 2, The International, TI, ti satu, ti dua belas, MSS, Team Spirit, Team Secret, OG. "
-    "League of Legends, Worlds Championship, LCK, LPL, LEC, T1, SKT, Gen.G, C9, Cloud9. "
-    "CSGO, CS2, ESL, FACEIT Major, s1mple, ZywOo, NiKo, device. "
-    "hero, gold, kda, kills deaths assists, rank, mythic, legend, epic, grandmaster. "
-    # === Olimpiade & multi-olahraga ===
-    "Olimpiade Paris 2024, Asian Games, SEA Games, paralimpik, medali emas perak perunggu. "
-    "bulu tangkis, bulutangkis, Kevin Sanjaya, Marcus Fernaldi, Apriyani, Greysia Polii, Anthony Ginting, Jonatan Christie. "
-    "renang, atletik, lari 100 meter, maraton, loncat jauh, tolak peluru, angkat besi, tinju, karate, taekwondo, judo. "
-    "cabang olahraga, atlet, pelatih, wasit, medali, podium, rekor dunia, rekor nasional. "
-    # === Formula 1 & balap ===
-    "Formula 1, F1, Grand Prix, GP Monaco, GP Singapura, GP Jepang, Monza, Silverstone, Suzuka, Spa. "
-    "Max Verstappen, Lewis Hamilton, Charles Leclerc, Lando Norris, Carlos Sainz, Fernando Alonso, Sergio Perez. "
-    "Red Bull Racing, Ferrari, Mercedes, McLaren, Aston Martin, Williams, Alpine, Haas. "
-    "podium, pole position, fastest lap, pit stop, safety car, DRS, undercut, overcut. "
-    # === Tinju & MMA & WWE ===
-    "tinju, Manny Pacquiao, Mike Tyson, Muhammad Ali, MMA, UFC, ONE Championship, Conor McGregor, Khabib. "
-    "KO, knockout, TKO, submission, knockdown, round, referee, champion, belt. "
-    # === Berita & politik Indonesia ===
-    "Prabowo Subianto, Gibran Rakabuming, Jokowi, Joko Widodo, DPR, MPR, Mahkamah Konstitusi, MK. "
-    "kabinet, menteri, presiden, wakil presiden, gubernur, bupati, walikota, Pilgub, Pilkada, Pemilu. "
-    "BUMN, Pertamina, PLN, Telkom, Garuda Indonesia, rupiah, inflasi, subsidi, anggaran, APBN. "
-    # === Ekonomi & keuangan ===
-    "kurs rupiah, dolar, euro, yen, harga emas hari ini, Bitcoin, Ethereum, kripto, saham, IHSG, Bursa Efek Indonesia. "
-    "inflasi, suku bunga, Bank Indonesia, BI Rate, tabungan, deposito, investasi, reksa dana. "
-    # === Teknologi & gadget ===
-    "iPhone, Samsung Galaxy, Xiaomi, OPPO, Vivo, Realme, Android, iOS, chipset Snapdragon, MediaTek Dimensity. "
-    "ChatGPT, Gemini, Claude, Llama, Mistral, kecerdasan buatan, AI generatif, machine learning. "
-    "5G, WiFi, Bluetooth, NFC, USB-C, RAM, ROM, baterai, fast charging, kamera megapiksel. "
-    # === Budaya populer & hiburan ===
-    "Blackpink, BTS, NewJeans, aespa, TWICE, EXO, NCT, Stray Kids, SEVENTEEN, IVE, LE SSERAFIM. "
-    "Taylor Swift, Ed Sheeran, Coldplay, Adele, Billie Eilish, The Weeknd, Harry Styles, Dua Lipa. "
-    "Raisa, Tulus, Didi Kempot, Rhoma Irama, Noah Band, Sheila on 7, Padi Reborn, Slank, Dewa 19. "
-    "film box office, Marvel, DC, Avengers, Spider-Man, Batman, sinema, trailer, rilis, bioskop, Netflix, Disney Plus. "
-    # === Perintah driving & navigasi ===
-    "Tolong arahkan saya ke Indomaret, Alfamart, Alfamidi, SPBU Pertamina, Shell, rest area, hotel terdekat. "
-    "Navigasi ke rumah sakit, klinik, pom bensin, masjid, mushola, restoran Padang, warteg, McDonalds, KFC. "
-    "macet, kemacetan, jalan alternatif, tol, jalur tikus, putar balik, lampu merah, bundaran. "
-    # === Musik di Spotify ===
-    "Tolong setelkan lagu Last Night on Earth Green Day, Cancer My Chemical Romance, Bohemian Rhapsody Queen. "
-    "Wonderwall Oasis, Don't Look Back in Anger, Champagne Supernova, Stop Crying Your Heart Out. "
-    "Oh Lord Foxy Shazam, Killin It, Dreamer Foxy Shazam, Unstoppable. "
-    "hentikan lagu, ganti lagu, lagu berikutnya, lagu sebelumnya, pause, play, volume naik, volume turun. "
-    # === Percakapan santai & slang ===
-    "Cerpennya kok pendek banget belum selesai, lanjutin ceritanya dong, gitu aja jir, wkwk, beneran, santai aja bro. "
-    "anjay, asik, keren banget, mantap jiwa, gaskeun, gak apa apa, okelah, siap bos, nanti dulu. "
-    "kamu ini AI atau LLM apa, coba cari di Google, apakah benar, berita terbaru, viral, hoaks atau fakta. "
-    # === Fakta sejarah & trivia ===
-    "siapa presiden pertama Indonesia, kapan kemerdekaan Indonesia, 17 Agustus 1945, Soekarno Hatta. "
-    "siapa penemu telepon, siapa yang mendarat di bulan pertama, Neil Armstrong, Apollo 11. "
-    "ibu kota Indonesia, ibu kota baru Nusantara, Kalimantan Timur. "
+    "Yo Rina, Yo Furina, Yo Jane, Yo John, halo Rina, hai John. "
+    "Berapa 5 kali 5, 10 tambah 5, 20 bagi 4. "
+    "Skor Man United vs Liverpool, Real Madrid, Barcelona, Arsenal, Chelsea, NBA Lakers Celtics, "
+    "hasil MPL Mobile Legends RRQ ONIC, Formula 1 Verstappen, Olimpiade bulutangkis, fakta sejarah. "
+    "Tolong arahkan saya ke Indomaret, Alfamart, SPBU Pertamina, rest area terdekat. "
+    "Tolong setelkan lagu Still Into You, Hard Times by Paramore, Last Night on Earth Green Day, Cancer My Chemical Romance di Spotify."
 )
 
 _STT_CORRECTIONS = (
-    # Sepak bola
+    # Sepak bola & olahraga
     (re.compile(r"\bskrol\s+(?:ro)?man(?:chester)?\s+united\b", re.IGNORECASE), "skor Man United"),
     (re.compile(r"\bskroll?\s+(?:mu|man\s*u)\b", re.IGNORECASE), "skor Man U"),
     (re.compile(r"\bskroll?\s+(?:roman|raman)\s+united\b", re.IGNORECASE), "skor Man United"),
     (re.compile(r"\bskroll?\s+(?:lfc|liver\s*pool)\b", re.IGNORECASE), "skor Liverpool"),
-    (re.compile(r"\bpremier\s+lig\b", re.IGNORECASE), "Premier League"),
-    (re.compile(r"\bliga\s+camp(?:ion|ion)?s?\b", re.IGNORECASE), "Liga Champions"),
-    (re.compile(r"\bucl\b", re.IGNORECASE), "UCL Liga Champions"),
     # Angka & matematika
     (re.compile(r"\b(?:li|ri|ni)ma\s+kali\s+(?:li|ri|ni)ma\b", re.IGNORECASE), "5 kali 5"),
     (re.compile(r"\be\s*5\b"), "5 kali 5"),
-    (re.compile(r"\bsatu\s+(?:nol|noll?)\s+tambah\b", re.IGNORECASE), "10 tambah"),
     # E-sport & gaming
     (re.compile(r"\bmpl\s+(?:i\s*d|id|indonesia)\b", re.IGNORECASE), "MPL Indonesia"),
     (re.compile(r"\brrq\s+hosi\b", re.IGNORECASE), "RRQ Hoshi"),
     (re.compile(r"\bonic\s+(?:e\s*sport|sport)s?\b", re.IGNORECASE), "ONIC Esports"),
     (re.compile(r"\bml\s*bb\b", re.IGNORECASE), "MLBB Mobile Legends"),
-    (re.compile(r"\bvalo(?:rant)?\b", re.IGNORECASE), "VALORANT"),
-    (re.compile(r"\bvct\b", re.IGNORECASE), "VCT VALORANT"),
-    (re.compile(r"\bdota\s+(?:dua|2)\b", re.IGNORECASE), "Dota 2"),
-    (re.compile(r"\bnba\b", re.IGNORECASE), "NBA"),
-    (re.compile(r"\bформула\s+(?:сатy|сatu|1|one)\b", re.IGNORECASE), "Formula 1"),
-    (re.compile(r"\bformula\s+(?:satu|one|1)\b", re.IGNORECASE), "Formula 1"),
-    # Buddy names misheard
+    # Buddy names
     (re.compile(r"\b(?:yo|hei|halo|hai)\s+ri(?:na|nah)\b", re.IGNORECASE), "Yo Rina"),
     (re.compile(r"\b(?:yo|hei|halo|hai)\s+j(?:ane|en|an)\b", re.IGNORECASE), "Yo Jane"),
     (re.compile(r"\b(?:yo|hei|halo|hai)\s+j(?:on|ohn|onn)\b", re.IGNORECASE), "Yo John"),
-    # Navigasi
-    (re.compile(r"\bindo\s*maret\b", re.IGNORECASE), "Indomaret"),
-    (re.compile(r"\balfa\s*mart\b", re.IGNORECASE), "Alfamart"),
-    (re.compile(r"\bpert(?:am|amin)?ina\b", re.IGNORECASE), "Pertamina"),
-    # Musik
+    # Musik & band populer yang sering salah eja fonetik
+    (re.compile(r"\b(?:para\s*mor|para\s*more|parama|para\s+baru)\b", re.IGNORECASE), "Paramore"),
+    (re.compile(r"\bstil\s+into\s+you\b", re.IGNORECASE), "Still Into You"),
+    (re.compile(r"\bain'?t\s+it\s+fun\b", re.IGNORECASE), "Ain't It Fun"),
     (re.compile(r"\bgreen\s+dei\b", re.IGNORECASE), "Green Day"),
-    (re.compile(r"\bmy\s+kem(?:ical|ikal)\s+roman(?:s|ce)?\b", re.IGNORECASE), "My Chemical Romance"),
-    (re.compile(r"\boassis\b", re.IGNORECASE), "Oasis"),
     (re.compile(r"\bspotif(?:ai|y)?\b", re.IGNORECASE), "Spotify"),
 )
 

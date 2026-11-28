@@ -263,6 +263,67 @@ class SpotifyIslandController extends ChangeNotifier {
     return fallback;
   }
 
+  /// Tampilkan metadata lagu di Dynamic Island TANPA memulai stream internal.
+  /// Digunakan saat Spotify native yang memutar lagu (via MediaPlayFromSearch intent).
+  /// Dynamic Island hanya menampilkan cover art, judul, artis, dan timer pasif.
+  Future<void> showIslandMetadataOnly(
+    SpotifyTrackInfo track, {
+    bool isDrivingSession = false,
+  }) async {
+    await init();
+    _playSessionToken++;           // batalkan stream lama jika ada
+
+    if (_playlist.isEmpty || _playlist.every((t) => t.spotifyQuery != track.spotifyQuery)) {
+      _playlist = [track, ..._playlist.where((t) => t.spotifyQuery != track.spotifyQuery)].take(8).toList();
+      _playlistIndex = 0;
+    }
+
+    // Hentikan stream internal (Spotify native yang handle audio sekarang)
+    await _audioPlayer.stop();
+    final oldFile = _activeMusicFile;
+    _activeMusicFile = null;
+    if (oldFile != null) unawaited(oldFile.delete().catchError((_) => oldFile));
+
+    _track = track;
+    _currentTimeSec = 0.0;
+    _durationSec = track.durationSec.toDouble();
+    _isClosing = false;
+    _isVisible = true;
+    _isPlaying = true;    // Spotify native sedang play — anggap playing untuk tampilan awal
+    _isBuffering = false;
+    notifyListeners();
+
+    // Poll status music system setiap 2 detik untuk sinkron play/pause dari Spotify native
+    _startNativePlaybackPolling();
+  }
+
+  Timer? _nativePollTimer;
+
+  void _startNativePlaybackPolling() {
+    _nativePollTimer?.cancel();
+    _nativePollTimer = Timer.periodic(const Duration(seconds: 2), (_) async {
+      if (!_isVisible || _isClosing) {
+        _nativePollTimer?.cancel();
+        return;
+      }
+      try {
+        final playing = await DeviceControlService.instance.isSystemMusicActive();
+        if (_isPlaying != playing) {
+          _isPlaying = playing;
+          notifyListeners();
+        }
+        // Update timer pasif berdasarkan waktu nyata (hanya saat playing)
+        if (_isPlaying) {
+          _currentTimeSec = (_currentTimeSec + 2.0).clamp(0.0, _durationSec);
+          if (_currentTimeSec >= _durationSec) {
+            _nativePollTimer?.cancel();
+          }
+          notifyListeners();
+        }
+      } catch (_) {}
+    });
+  }
+
   /// Memutar lagu otomatis 100% di dalam Dynamic Island Driving Buddy tanpa pernah membuka layar Spotify!
   /// Timer (`0:00`) dan piringan vinyl ditahan diam selama buffering dan baru berjalan saat audio berbunyi.
   Future<void> playSongOnIsland(
