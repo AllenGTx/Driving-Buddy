@@ -959,6 +959,58 @@ async def _resolve_soundcloud_full_stream(
     return None
 
 
+async def _resolve_jiosaavn_full_track(
+    client: httpx.AsyncClient,
+    query: str,
+    target_dur_s: int = 210,
+) -> Optional[Dict[str, Any]]:
+    """Resolusi lagu studio penuh dari JioSaavn (label resmi: 320kbps MP3, tanpa DRM, bebas diunduh).
+    Hanya untuk rekaman studio asli; bukan covers atau remix tidak terkenal.
+    """
+    try:
+        saavn_url = f"https://saavn.dev/api/search/songs?query={urllib.parse.quote(query)}&limit=6"
+        resp = await client.get(saavn_url)
+        if resp.status_code != 200:
+            return None
+        body = resp.json()
+        results = (body.get("data") or {}).get("results") or []
+        for tr in results:
+            name = (tr.get("name") or "").strip()
+            primary_artists = tr.get("primaryArtists") or tr.get("artists", {}).get("primary") or []
+            if isinstance(primary_artists, list):
+                artist_str = " ".join(a.get("name", "") for a in primary_artists if a.get("name"))
+            else:
+                artist_str = str(primary_artists)
+            # Tolak covers, remixes, karaoke kecuali diminta
+            if _is_unwanted_variant(name, query):
+                continue
+            # Pastikan ada kecocokan kata kunci
+            if _query_overlap_ratio(query, f"{name} {artist_str}") < 0.5:
+                continue
+            dur_s = int(tr.get("duration") or 0)
+            if dur_s > 0 and abs(dur_s - target_dur_s) > 60:
+                continue
+            # Ambil URL 320kbps
+            download_urls = tr.get("downloadUrl") or []
+            if isinstance(download_urls, list):
+                # Prioritas kualitas: 320kbps > 160kbps > 96kbps
+                for quality in ("320kbps", "160kbps", "96kbps"):
+                    for entry in download_urls:
+                        if isinstance(entry, dict) and entry.get("quality") == quality:
+                            mp3_url = (entry.get("url") or "").strip()
+                            if mp3_url.startswith("http"):
+                                return {
+                                    "mode": "direct_url",
+                                    "url": mp3_url,
+                                    "mime": "audio/mpeg",
+                                    "headers": {},
+                                    "duration_s": max(dur_s, 30),
+                                }
+    except Exception as exc:
+        log.debug("[MusicStream] JioSaavn dilewati: %s", exc)
+    return None
+
+
 async def resolve_in_app_music_stream(query: str, target_dur_s: int = 210) -> Optional[Dict[str, Any]]:
     """Resolusi sumber audio terbaik untuk diputar otomatis di dalam Dynamic Island (0 perpindahan layar)."""
     clean_q = _clean_music_query(query)
@@ -997,7 +1049,16 @@ async def resolve_in_app_music_stream(query: str, target_dur_s: int = 210) -> Op
         if chosen is None and isinstance(sc_res, dict):
             chosen = sc_res
 
-        # 3. Fallback ke preview jernih iTunes/Deezer bila jaringan penuh
+        # 2. Fallback ke JioSaavn (full-track MP3 320kbps tanpa DRM, label resmi)
+        if chosen is None:
+            try:
+                saavn_chosen = await _resolve_jiosaavn_full_track(client, clean_q, target_dur_s)
+                if saavn_chosen:
+                    chosen = saavn_chosen
+            except Exception:
+                pass
+
+        # 3. Fallback ke preview studio resmi iTunes/Deezer (30 detik) bila semua sumber full gagal
         if chosen is None:
             meta = await search_music_track(clean_q, timeout_s=3.0)
             prev = (meta.get("preview_url") or "").strip()

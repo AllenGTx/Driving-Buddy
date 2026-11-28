@@ -1026,9 +1026,18 @@ class VoiceBuddyController extends ChangeNotifier {
 
     final playMatch = switchSpecificMatch ??
         RegExp(
-          r'(?:tolong\s+|coba\s+)?(?:setelkan|setelin|setel|putarkan|putarin|putar|play|nyalakan|nyalain|mainkan)\s+(?:lagu\s+|musik\s+)?(.+?)(?:\s+di\s+spotify|\s+lewat\s+spotify|\s+dong|\s+ya)?$',
+          r'(?:tolong\s+|coba\s+)?(?:setelkan|setelin|setel|putarkan|putarin|putar|play|nyalakan|nyalain|mainkan)\s+(?:lagu\s+|musik\s+)?(.+?)(?:\s+dong|\s+ya)?$',
           caseSensitive: false,
         ).firstMatch(trimmedMsg);
+
+    // Cek apakah user secara eksplisit meminta "via spotify" / "lewat spotify" / "pake spotify"
+    final bool requestedViaSpotify =
+        low.contains('via spotify') ||
+        low.contains('lewat spotify') ||
+        low.contains('pake spotify') ||
+        low.contains('pakai spotify') ||
+        low.contains('through spotify') ||
+        low.contains('using spotify');
 
     final bool mentionsSpotifyConnect =
         low.contains('hubungkan spotify') || low.contains('konek spotify') || low.contains('connect spotify');
@@ -1062,7 +1071,7 @@ class VoiceBuddyController extends ChangeNotifier {
     }
 
     final rawSongQuery = (playMatch?.group(1) ?? '')
-        .replaceAll(RegExp(r'\bspotify\b', caseSensitive: false), '')
+        .replaceAll(RegExp(r'\bvia\s+spotify\b|\blewat\s+spotify\b|\bpake\s+spotify\b|\bpakai\s+spotify\b|\bspotify\b', caseSensitive: false), '')
         .trim();
     if (rawSongQuery.isEmpty) return false;
 
@@ -1073,6 +1082,85 @@ class VoiceBuddyController extends ChangeNotifier {
     // ── Ambil metadata lagu (judul, artis, preview, & antrean rekomendasi) dari backend /music/search
     final track = await spotifyCtrl.fetchTrackMetadata(rawSongQuery);
     if (turnId != _turnId) return true;
+
+    // ── CASE 2: User meminta eksplisit "via spotify" → pakai Spotify native (perlu Premium untuk on-demand)
+    if (requestedViaSpotify) {
+      final isPremium = spotifyCtrl.isConnected && spotifyCtrl.isNotificationAccessGranted;
+
+      // Jika Spotify tidak terhubung sama sekali, berikan pesan error
+      if (!spotifyCtrl.isSpotifyInstalled || !spotifyCtrl.isConnected) {
+        final errMsg = isEn
+            ? 'Spotify is not connected. Connect Spotify on the Home screen first to use this mode.'
+            : 'Spotify belum terhubung. Hubungkan Spotify di kartu beranda dulu ya untuk mode ini.';
+        _replyText = errMsg;
+        notifyListeners();
+        await _tts.speakReply(profile: profile, text: errMsg, onPlaybackStart: () {
+          if (turnId != _turnId) return;
+          _replyText = errMsg;
+          _setPhase(SiriOrbPhase.speaking);
+        });
+        if (turnId != _turnId) return true;
+        _scheduleDismissAndResume();
+        return true;
+      }
+
+      // Konfirmasi dulu sebelum putar
+      final spotConfirmMsg = isEn
+          ? 'Playing ${track.title} by ${track.artist} via Spotify!'
+          : 'Oke, aku puterin ${track.title} dari ${track.artist} lewat Spotify ya!';
+      _replyText = spotConfirmMsg;
+      notifyListeners();
+      await _tts.speakReply(profile: profile, text: spotConfirmMsg, onPlaybackStart: () {
+        if (turnId != _turnId) return;
+        _replyText = spotConfirmMsg;
+        _setPhase(SiriOrbPhase.speaking);
+      });
+      if (turnId != _turnId) return true;
+
+      if (isPremium) {
+        // Premium → on-demand playback via MediaSession + Dynamic Island native
+        spotifyCtrl.pauseNativePolling();
+        final prevSnap = await DeviceControlService.instance.getSpotifyPlaybackState();
+        final prevSig = prevSnap != null && prevSnap.hasSession
+            ? '${prevSnap.title}|${prevSnap.artist}'
+            : '';
+        final launchStatus = await DeviceControlService.instance.playSpotifyQuery(
+          track.spotifyQuery,
+          title: track.title,
+          artist: track.artist,
+        );
+        if (turnId != _turnId) return true;
+        if (launchStatus == 'ok') {
+          await spotifyCtrl.showIslandMetadataOnly(
+            track,
+            isDrivingSession: _isDrivingActive,
+            previousSessionSignature: prevSig,
+          );
+          await dismissSheet();
+          return true;
+        }
+        // Jika launch gagal, fallback ke in-app stream
+        spotifyCtrl.resumeNativePolling();
+      } else {
+        // Free tier → beritahu user lagu tidak bisa diminta spesifik via Spotify Free
+        // Sistem akan melanjutkan/shuffle antrean aktif Spotify terakhir
+        final freeMsg = isEn
+            ? 'Spotify Free doesn\'t allow song requests on demand. Resuming your current Spotify queue or station instead.'
+            : 'Spotify Free tidak mendukung request lagu tertentu. Aku lanjutkan antrean atau radio Spotify kamu yang terakhir ya.';
+        _replyText = freeMsg;
+        notifyListeners();
+        await _tts.speakReply(profile: profile, text: freeMsg, onPlaybackStart: () {
+          if (turnId != _turnId) return;
+          _replyText = freeMsg;
+          _setPhase(SiriOrbPhase.speaking);
+        });
+        if (turnId != _turnId) return true;
+        // Resume / play Spotify native (akan melanjutkan antrean terakhir)
+        await DeviceControlService.instance.sendMediaCommand('play');
+        await dismissSheet();
+        return true;
+      }
+    }
 
     // ── Pre-resolve / pre-warm URL stream audio secara paralel sementara AI mengucapkan konfirmasi!
     unawaited(spotifyCtrl.prewarmTrackStream(track));

@@ -217,16 +217,17 @@ class BuddySttService {
             // Kalibrasi baseline SEKALI di awal tanpa meracuni lantai bising tiap jendela berulang!
             // Jika suara keras muncul tepat saat awal loop, cap pada -38 dB agar tetap peka.
             if (!calibratedOnce) {
-              rollingAmbientDb = curDb.clamp(-54.0, -38.0);
+              rollingAmbientDb = curDb.clamp(-58.0, -40.0);
               calibratedOnce = true;
             } else if (!heardBurst && curDb < rollingAmbientDb + 3.0) {
               rollingAmbientDb =
-                  (rollingAmbientDb * 0.90 + curDb * 0.10).clamp(-54.0, -32.0);
+                  (rollingAmbientDb * 0.90 + curDb * 0.10).clamp(-58.0, -32.0);
             }
 
-            final onsetDb = math.max(-48.0, rollingAmbientDb + 2.5);
+            // onsetDb: lebih rendah = lebih sensitif dari jarak jauh (posisi mengemudi ~50-70cm)
+            final onsetDb = math.max(-52.0, rollingAmbientDb + 1.5);
             final endDb = heardBurst
-                ? math.max(rollingAmbientDb + 1.2, burstPeakDb - 15.0)
+                ? math.max(rollingAmbientDb + 0.8, burstPeakDb - 16.0)
                 : onsetDb;
 
             if (curDb >= endDb) {
