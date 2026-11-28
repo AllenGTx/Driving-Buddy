@@ -535,6 +535,16 @@ def _score_track_match(clean_q: str, title: str, artist: str) -> float:
             score += 2.5
     if base_t and base_t in clean_q.lower():
         score += 6.0
+    # Bonus besar jika artis persis cocok dengan kata-kata di query (mis. "paramore" → Paramore)
+    # Ini mencegah lagu artis lain yang kebetulan berjudul mirip muncul duluan
+    q_low = clean_q.lower()
+    artist_words = [w for w in re.findall(r"\w+", a_low) if len(w) >= 3]
+    exact_artist_matches = sum(1 for w in artist_words if w in q_low)
+    if artist_words and exact_artist_matches == len(artist_words):
+        # Semua kata artis cocok di query → bonus besar (artis eksak)
+        score += 8.0
+    elif exact_artist_matches > 0:
+        score += 3.0 * exact_artist_matches
     if any(w in t_low for w in ("karaoke", "tribute", "instrumental", "8-bit", "ringtone", "cover")):
         score -= 8.0
     return score

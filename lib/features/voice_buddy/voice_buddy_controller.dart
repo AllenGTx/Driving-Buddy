@@ -1039,42 +1039,11 @@ class VoiceBuddyController extends ChangeNotifier {
     await spotifyCtrl.init();
     if (turnId != _turnId) return true;
 
-    // Case 1: Cek dulu apakah Spotify di Beranda sudah terhubung & Spotify terpasang!
-    // Jangan auto-connect dan jangan munculkan Dynamic Island kalau user belum menghubungkan Spotify.
-    if (!spotifyCtrl.isSpotifyInstalled ||
-        !spotifyCtrl.isConnected ||
-        !spotifyCtrl.isNotificationAccessGranted) {
-      final needConnectMsg = !spotifyCtrl.isSpotifyInstalled
-          ? (isEn
-                ? 'Spotify app is not installed on your phone yet. Please install Spotify, log in, then tap Connect on the Home screen.'
-                : 'Aplikasi Spotify belum terpasang di HP kamu nih. Install dan login Spotify dulu, lalu tekan Hubungkan di beranda ya.')
-          : (!spotifyCtrl.isConnected
-                ? (isEn
-                      ? 'Spotify is not connected on your Home screen yet. Please tap Connect Spotify on the Home screen first before playing music.'
-                      : 'Spotify kamu di beranda belum terhubung nih. Hubungkan Spotify dulu di kartu beranda sebelum menyetel lagu ya.')
-                : (isEn
-                      ? 'Notification Access for Driving Buddy is not enabled yet. Tap Allow on the Spotify card on Home so I can play Spotify silently in the background.'
-                      : 'Izin Akses Notifikasi Driving Buddy belum aktif nih. Ketuk Izinkan di kartu Spotify pada beranda dulu ya, supaya lagunya bisa diputar diam-diam di latar belakang.'));
-      _replyText = needConnectMsg;
-      notifyListeners();
-      await _tts.speakReply(
-        profile: profile,
-        text: needConnectMsg,
-        onPlaybackStart: () {
-          if (turnId != _turnId) return;
-          _replyText = needConnectMsg;
-          _setPhase(SiriOrbPhase.speaking);
-        },
-      );
-      if (turnId != _turnId) return true;
-      _scheduleDismissAndResume();
-      return true;
-    }
-
+    // Case 1: Jika user menyebut "hubungkan spotify" tapi bukan minta putar lagu
     if (mentionsSpotifyConnect && playMatch == null) {
       final alreadyMsg = isEn
-          ? 'Spotify is already connected! Just tell me what song you want to hear.'
-          : 'Spotify kamu di beranda sudah terhubung kok, tinggal bilang mau diputerin lagu apa ya.';
+          ? 'Just tell me what song you want to hear and I\'ll play it for you!'
+          : 'Bilang aja mau diputerin lagu apa, aku langsung puterin buat kamu ya.';
       _replyText = alreadyMsg;
       notifyListeners();
       await _tts.speakReply(
@@ -1096,22 +1065,15 @@ class VoiceBuddyController extends ChangeNotifier {
         .trim();
     if (rawSongQuery.isEmpty) return false;
 
+    // ── Ambil metadata lagu (judul, artis, preview) dari backend /music/search
     final track = await spotifyCtrl.fetchTrackMetadata(rawSongQuery);
     if (turnId != _turnId) return true;
 
-    final prevSnap = await DeviceControlService.instance.getSpotifyPlaybackState();
-    final prevSig = prevSnap != null && prevSnap.hasSession
-        ? '${prevSnap.title}|${prevSnap.artist}'
-        : '';
-
-    // Hentikan polling native sementara agar tidak bentrok dengan proses ganti lagu Spotify
-    spotifyCtrl.pauseNativePolling();
-
-    // 1. Ucapkan konfirmasi AI TERLEBIH DAHULU sampai selesai, baru putar musik Spotify!
-    // Ini mencegah lagu lama sempat berbunyi 1 detik sebelum AI selesai berbicara.
+    // ── 1. Ucapkan konfirmasi AI TERLEBIH DAHULU sampai selesai, baru putar audio!
+    // Ini mencegah audio lagu sempat berbunyi sebelum AI selesai berbicara.
     final confirmMsg = isEn
-        ? 'Okay, playing ${track.title} by ${track.artist} on Spotify in the background.'
-        : 'Oke, aku puterin lagu ${track.title} dari ${track.artist} di Spotify di latar belakang ya.';
+        ? 'Okay, playing ${track.title} by ${track.artist} now!'
+        : 'Oke, aku puterin ${track.title} dari ${track.artist} sekarang ya!';
     _replyText = confirmMsg;
     notifyListeners();
     await _tts.speakReply(
@@ -1125,23 +1087,18 @@ class VoiceBuddyController extends ChangeNotifier {
     );
     if (turnId != _turnId) return true;
 
-    // 2. Setelah AI selesai bicara, putar lagu di Spotify 100% di latar belakang via MediaSession
-    final launchStatus = await DeviceControlService.instance.playSpotifyQuery(
-      track.spotifyQuery,
-      title: track.title,
-      artist: track.artist,
-    );
-    if (turnId != _turnId) return true;
-
-    if (launchStatus != 'ok') {
-      spotifyCtrl.resumeNativePolling();
-      final errMsg = launchStatus == 'needs_notification_access'
-          ? (isEn
-                ? 'Please enable Notification Access for Driving Buddy first so I can play Spotify in the background.'
-                : 'Aktifkan dulu izin Akses Notifikasi untuk Driving Buddy ya, agar aku bisa menyetel Spotify di latar belakang.')
-          : (isEn
-                ? 'Spotify is completely asleep right now. Please open Spotify once in the background, then ask me to play any song without leaving this app.'
-                : 'Sesi Spotify di HP sedang tertutup penuh. Buka Spotify sebentar sekali saja, setelah itu kamu bisa putar lagu apa saja dari sini di latar belakang.');
+    // ── 2. Putar lagu langsung via In-App Stream Engine (tidak perlu Spotify Premium / tidak buka Spotify)
+    // playSongOnIsland: ambil audio dari backend /music/stream → putar di AudioPlayer Flutter di dalam app
+    try {
+      await spotifyCtrl.playSongOnIsland(
+        track,
+        isDrivingSession: _isDrivingActive,
+      );
+    } catch (e) {
+      // Fallback: beritahu user jika gagal stream
+      final errMsg = isEn
+          ? 'Sorry, I couldn\'t stream that song right now. Please check your internet connection and try again.'
+          : 'Maaf, lagunya belum bisa diputar sekarang. Periksa koneksi internet kamu dan coba lagi ya.';
       _replyText = errMsg;
       notifyListeners();
       await _tts.speakReply(
@@ -1158,12 +1115,7 @@ class VoiceBuddyController extends ChangeNotifier {
       return true;
     }
 
-    // 3. Tampilkan Dynamic Island & mulai sinkronisasi live MediaSession Spotify (judul, rekomendasi, iklan, jam real-time)
-    await spotifyCtrl.showIslandMetadataOnly(
-      track,
-      isDrivingSession: _isDrivingActive,
-      previousSessionSignature: prevSig,
-    );
+    if (turnId != _turnId) return true;
     await dismissSheet();
     return true;
   }
