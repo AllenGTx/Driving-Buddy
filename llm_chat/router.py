@@ -14,10 +14,11 @@ import base64
 import logging
 import math
 import time
+import urllib.parse
 from typing import Any, Awaitable, Callable, Dict, Optional, Tuple
 
 from fastapi import APIRouter, HTTPException, Path, Query, Request
-from fastapi.responses import JSONResponse, RedirectResponse, StreamingResponse
+from fastapi.responses import JSONResponse, RedirectResponse, Response, StreamingResponse
 
 from .audio_routes import build_audio_router
 from .client import BaseLLM, FallbackChainLLM, LLMError, make_llm
@@ -26,6 +27,7 @@ from .prompts import build_messages, clean_reply, pick_fallback
 from .schemas import SESSION_ID_PATTERN, ChatRequest, ChatResponse
 from .store import RateLimiter, SessionStore
 from .web_search import (
+    assemble_full_music_bytes,
     iter_resolved_music_bytes,
     needs_live_web_search,
     resolve_in_app_music_stream,
@@ -212,51 +214,44 @@ def build_router(
     async def music_stream(
         q: str = Query(..., min_length=1, max_length=180),
         dur: int = Query(210, ge=15, le=900),
-        mode: str = Query("stream", description="'stream'=streaming bytes, 'url'=kembalikan URL CDN langsung sebagai JSON"),
+        mode: str = Query("stream", description="'stream'=streaming bytes, 'url'=JSON URL langsung/download, 'file'=file utuh seekable"),
     ):
         info = await resolve_in_app_music_stream(q, target_dur_s=dur)
         if not info:
             raise HTTPException(status_code=404, detail={"error": "music_stream_not_found"})
 
-        # Mode 'url': kembalikan URL audio CDN langsung (progressive MP3/M4A atau HLS M3U8)
-        # agar audioplayers Flutter/ExoPlayer dapat memutarnya langsung tanpa server proxy.
         if mode == "url":
             stream_mode = info.get("mode")
             if stream_mode == "direct_url":
-                # Progressive MP3 / M4A — langsung bisa diputar audioplayers
                 return JSONResponse({
                     "url": info["url"],
                     "mime": info.get("mime", "audio/mpeg"),
                     "duration_s": info.get("duration_s", dur),
                     "mode": "direct",
                 })
-            elif stream_mode == "fmp4_segments":
-                # HLS M3U8: ExoPlayer Android bisa handle ini secara native
-                segments: list = info.get("segments") or []
-                # Segmen pertama adalah init.mp4, segmen KEDUA dst adalah .m4s data —
-                # tapi M3U8 URL asli sudah kita simpan saat resolve — ekstrak dari URL referral
-                # Fallback: kembalikan list segments agar Flutter bisa stream manual
-                # Jika ada URL M3U8 asli (tersimpan di info), gunakan itu
-                m3u8_url = info.get("m3u8_url") or (segments[0] if segments and ".m3u8" in (segments[0] or "") else "")
-                if m3u8_url:
-                    return JSONResponse({
-                        "url": m3u8_url,
-                        "mime": "application/x-mpegURL",
-                        "duration_s": info.get("duration_s", dur),
-                        "mode": "hls",
-                    })
-                # Fallback: balik ke streaming server-side
-                return StreamingResponse(
-                    iter_resolved_music_bytes(info),
-                    media_type="audio/mp4",
-                    headers={
-                        "Cache-Control": "public, max-age=300",
-                        "X-Music-Duration": str(info.get("duration_s", dur)),
-                        "X-Music-Mode": "fmp4_stream",
-                    },
-                )
+            # Untuk fmp4_segments tanpa DRM: arahkan Flutter mengunduh file utuh via mode=file (100% bisa diputar penuh!)
+            return JSONResponse({
+                "url": f"/music/stream?q={urllib.parse.quote(q)}&dur={dur}&mode=file",
+                "mime": info.get("mime", "audio/mp4"),
+                "duration_s": info.get("duration_s", dur),
+                "mode": "download",
+            })
 
-        # Mode default 'stream': streaming bytes (kompatibilitas lama)
+        if mode == "file":
+            full_bytes = await assemble_full_music_bytes(info)
+            if not full_bytes or len(full_bytes) < 4096:
+                raise HTTPException(status_code=502, detail={"error": "music_assembly_failed"})
+            return Response(
+                content=full_bytes,
+                media_type=info.get("mime", "audio/mp4"),
+                headers={
+                    "Cache-Control": "public, max-age=300",
+                    "Accept-Ranges": "bytes",
+                    "Content-Length": str(len(full_bytes)),
+                    "X-Music-Duration": str(info.get("duration_s", dur)),
+                },
+            )
+
         return StreamingResponse(
             iter_resolved_music_bytes(info),
             media_type=info.get("mime", "audio/mp4"),

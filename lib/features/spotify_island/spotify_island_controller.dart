@@ -1,9 +1,11 @@
 import 'dart:async';
 import 'dart:convert';
+import 'dart:io';
 
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/foundation.dart';
 import 'package:http/http.dart' as http;
+import 'package:path_provider/path_provider.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 
 import '../../services/device_control_service.dart';
@@ -69,6 +71,7 @@ class SpotifyIslandController extends ChangeNotifier {
   bool _isPlaying = false;
   bool _isBuffering = false;
   int _playSessionToken = 0;
+  File? _activeMusicFile;
 
   double _currentTimeSec = 0.0;
   double _durationSec = 210.0;
@@ -299,18 +302,18 @@ class SpotifyIslandController extends ChangeNotifier {
     final encodedQ = Uri.encodeQueryComponent(track.spotifyQuery);
     final dur = track.durationSec;
 
-    // ── LANGKAH 1: Minta URL audio CDN langsung (progressive MP3/M4A atau HLS M3U8)
-    // Endpoint mode=url mengembalikan JSON {"url":"https://...","mime":"...","duration_s":N}
-    // Ini memungkinkan audioplayers/ExoPlayer memainkan audio seekable tanpa server proxy.
-    String? directUrl;
-    String? directMime;
+    // ── LANGKAH 1: Minta metadata sumber audio utuh (direct MP3 atau download MP4 utuh)
+    String? resolvedUrl;
+    String? resolvedMode;
+    String? resolvedMime;
     try {
       final metaUri = Uri.parse('$baseUrl/music/stream?q=$encodedQ&dur=$dur&mode=url');
       final metaResp = await _http.get(metaUri).timeout(const Duration(seconds: 10));
       if (metaResp.statusCode == 200) {
         final data = jsonDecode(metaResp.body) as Map<String, dynamic>;
-        directUrl = (data['url'] as String?)?.trim();
-        directMime = (data['mime'] as String?)?.trim();
+        resolvedUrl = (data['url'] as String?)?.trim();
+        resolvedMode = (data['mode'] as String?)?.trim();
+        resolvedMime = (data['mime'] as String?)?.trim();
         final resolvedDur = (data['duration_s'] as num?)?.toInt() ?? 0;
         if (resolvedDur >= 60 && (resolvedDur - _durationSec).abs() >= 2.0) {
           _durationSec = resolvedDur.toDouble();
@@ -321,20 +324,52 @@ class SpotifyIslandController extends ChangeNotifier {
 
     if (sessionToken != _playSessionToken || !_isVisible || _isClosing) return;
 
-    // ── LANGKAH 2: Putar dari URL CDN langsung (progressive MP3 / HLS M3U8)
-    if (directUrl != null && directUrl.startsWith('http')) {
+    // ── LANGKAH 2A: Putar dari URL progresif langsung (MP3/M4A)
+    if (resolvedUrl != null && resolvedMode == 'direct' && resolvedUrl.startsWith('http')) {
       try {
         await _audioPlayer.setVolume(0.92);
-        // audioplayers v5 + ExoPlayer mendukung HLS (m3u8) dan progressive MP3/M4A
-        await _audioPlayer.play(UrlSource(directUrl));
+        await _audioPlayer.play(UrlSource(resolvedUrl));
         if (sessionToken != _playSessionToken) return;
-        return; // Sukses!
+        return;
       } catch (_) {
         if (sessionToken != _playSessionToken || !_isVisible || _isClosing) return;
       }
     }
 
-    // ── LANGKAH 3: Fallback ke preview 30 detik dari iTunes/Deezer (tetap tanpa keluar app)
+    // ── LANGKAH 2B: Unduh file audio penuh ke cache lokal lalu putar lewat DeviceFileSource (0:00 -> selesai!)
+    if (resolvedUrl != null && resolvedUrl.isNotEmpty) {
+      final fullDownloadUrl = resolvedUrl.startsWith('http')
+          ? resolvedUrl
+          : '$baseUrl$resolvedUrl';
+      try {
+        final fileResp = await _http
+            .get(Uri.parse(fullDownloadUrl))
+            .timeout(const Duration(seconds: 18));
+        if (sessionToken != _playSessionToken || !_isVisible || _isClosing) return;
+        if (fileResp.statusCode == 200 && fileResp.bodyBytes.length > 8192) {
+          final dir = await getTemporaryDirectory();
+          final ext = (resolvedMime ?? '').contains('mpeg') ? 'mp3' : 'mp4';
+          final nextFile = File('${dir.path}/buddy_track_$sessionToken.$ext');
+          await nextFile.writeAsBytes(fileResp.bodyBytes, flush: true);
+          if (sessionToken != _playSessionToken || !_isVisible || _isClosing) {
+            unawaited(nextFile.delete().catchError((_) => nextFile));
+            return;
+          }
+          final prevFile = _activeMusicFile;
+          _activeMusicFile = nextFile;
+          if (prevFile != null && prevFile.path != nextFile.path) {
+            unawaited(prevFile.delete().catchError((_) => prevFile));
+          }
+          await _audioPlayer.setVolume(0.92);
+          await _audioPlayer.play(DeviceFileSource(nextFile.path));
+          return;
+        }
+      } catch (_) {
+        if (sessionToken != _playSessionToken || !_isVisible || _isClosing) return;
+      }
+    }
+
+    // ── LANGKAH 3: Fallback ke preview 30 detik resmi bila sumber lagu penuh diblokir jaringan
     if (track.previewUrl.isNotEmpty) {
       try {
         _durationSec = 30.0;
@@ -345,7 +380,6 @@ class SpotifyIslandController extends ChangeNotifier {
       } catch (_) {}
     }
 
-    // ── LANGKAH 4: Semua sumber gagal — reset buffering tanpa auto-skip
     if (sessionToken == _playSessionToken) {
       _isBuffering = false;
       _isPlaying = false;
@@ -455,6 +489,11 @@ class SpotifyIslandController extends ChangeNotifier {
 
     await _audioPlayer.stop();
     _currentTimeSec = 0.0;
+    final oldFile = _activeMusicFile;
+    _activeMusicFile = null;
+    if (oldFile != null) {
+      unawaited(oldFile.delete().catchError((_) => oldFile));
+    }
 
     await Future<void>.delayed(const Duration(milliseconds: 280));
     _isVisible = false;

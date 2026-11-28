@@ -370,88 +370,165 @@ def _clean_music_query(query: str) -> str:
     return re.sub(r"\s+", " ", clean_q).strip()
 
 
-async def search_music_track(query: str, timeout_s: float = 3.8) -> Dict[str, Any]:
-    """Cari lagu resmi + antrean playlist (hingga 5 lagu terkait) untuk Dynamic Island in-app."""
+def _base_song_title(title: str) -> str:
+    t = re.sub(r"\s*[\(\[].*?[\)\]]", "", (title or "")).strip()
+    t = re.sub(r"\s*[-–]\s*(?:remaster(?:ed)?|live|acoustic|radio\s+edit|single\s+version).*$", "", t, flags=re.I)
+    return re.sub(r"[^\w\s]", "", t.lower()).strip()
+
+
+def _score_track_match(clean_q: str, title: str, artist: str) -> float:
+    q_words = [w for w in re.findall(r"\w+", clean_q.lower()) if len(w) >= 2]
+    t_low = title.lower()
+    a_low = artist.lower()
+    base_t = _base_song_title(title)
+    score = 0.0
+    for w in q_words:
+        if w in base_t:
+            score += 3.0
+        elif w in t_low:
+            score += 2.0
+        if w in a_low:
+            score += 2.5
+    if base_t and base_t in clean_q.lower():
+        score += 6.0
+    if any(w in t_low for w in ("karaoke", "tribute", "instrumental", "8-bit", "ringtone", "cover")):
+        score -= 8.0
+    return score
+
+
+def _make_track_dict(title: str, artist: str, album: str, cover_url: str, preview_url: str, dur_s: int) -> Dict[str, Any]:
+    sp_q = f"{title} {artist}".strip()
+    return {
+        "title": title,
+        "artist": artist,
+        "album": album,
+        "cover_url": cover_url,
+        "preview_url": preview_url,
+        "duration_s": max(30, dur_s),
+        "spotify_query": sp_q,
+        "stream_path": f"/music/stream?q={urllib.parse.quote(sp_q)}&dur={max(30, dur_s)}",
+    }
+
+
+async def search_music_track(query: str, timeout_s: float = 4.2) -> Dict[str, Any]:
+    """Cari lagu utama yang diminta + antrean rekomendasi lagu lain dari artis/genre terkait."""
     clean_q = _clean_music_query(query)
     if not clean_q:
         return {"found": False, "tracks": []}
 
     headers = {"User-Agent": "DrivingBuddy/1.0"}
-    tracks: List[Dict[str, Any]] = []
+    candidates: List[Tuple[float, Dict[str, Any]]] = []
 
     async with httpx.AsyncClient(timeout=httpx.Timeout(timeout_s, connect=1.5), headers=headers, follow_redirects=True) as client:
-        # 1. iTunes Search API (sampul HD resmi + durasi studio akurat + daftar lagu terkait untuk tombol Next/Prev)
-        try:
-            it_url = f"https://itunes.apple.com/search?term={urllib.parse.quote(clean_q)}&media=music&entity=song&limit=6"
-            it_resp = await client.get(it_url)
-            if it_resp.status_code == 200:
-                items = it_resp.json().get("results") or []
-                seen_keys: set[str] = set()
-                for it in items:
-                    title = (it.get("trackName") or "").strip()
-                    artist = (it.get("artistName") or "Spotify").strip()
-                    if not title:
-                        continue
-                    dedup = f"{title.lower()}::{artist.lower()}"
-                    if dedup in seen_keys:
-                        continue
-                    seen_keys.add(dedup)
-                    art = (it.get("artworkUrl100") or "").replace("100x100bb", "300x300bb")
-                    dur_s = max(30, int((it.get("trackTimeMillis") or 210000) / 1000))
-                    sp_q = f"{title} {artist}".strip()
-                    tracks.append(
-                        {
-                            "title": title,
-                            "artist": artist,
-                            "album": it.get("collectionName") or "",
-                            "cover_url": art,
-                            "preview_url": it.get("previewUrl") or "",
-                            "duration_s": dur_s,
-                            "spotify_query": sp_q,
-                            "stream_path": f"/music/stream?q={urllib.parse.quote(sp_q)}&dur={dur_s}",
-                        }
-                    )
+        it_task = client.get(
+            f"https://itunes.apple.com/search?term={urllib.parse.quote(clean_q)}&media=music&entity=song&limit=10"
+        )
+        dz_task = client.get(
+            f"https://api.deezer.com/search?q={urllib.parse.quote(clean_q)}&limit=10"
+        )
+        it_resp, dz_resp = await asyncio.gather(it_task, dz_task, return_exceptions=True)
+
+        if isinstance(it_resp, httpx.Response) and it_resp.status_code == 200:
+            for it in (it_resp.json().get("results") or []):
+                title = (it.get("trackName") or "").strip()
+                artist = (it.get("artistName") or "Spotify").strip()
+                if not title:
+                    continue
+                art = (it.get("artworkUrl100") or "").replace("100x100bb", "300x300bb")
+                dur_s = int((it.get("trackTimeMillis") or 210000) / 1000)
+                tr = _make_track_dict(title, artist, it.get("collectionName") or "", art, it.get("previewUrl") or "", dur_s)
+                candidates.append((_score_track_match(clean_q, title, artist) + 0.5, tr))
+
+        if isinstance(dz_resp, httpx.Response) and dz_resp.status_code == 200:
+            for it in (dz_resp.json().get("data") or []):
+                title = (it.get("title") or "").strip()
+                artist = ((it.get("artist") or {}).get("name") or "Spotify").strip()
+                if not title:
+                    continue
+                album_obj = it.get("album") or {}
+                dur_s = int(it.get("duration") or 210)
+                tr = _make_track_dict(
+                    title,
+                    artist,
+                    album_obj.get("title") or "",
+                    album_obj.get("cover_medium") or album_obj.get("cover") or "",
+                    it.get("preview") or "",
+                    dur_s,
+                )
+                candidates.append((_score_track_match(clean_q, title, artist), tr))
+
+        tracks: List[Dict[str, Any]] = []
+        seen_base_titles: set[str] = set()
+        if candidates:
+            candidates.sort(key=lambda pair: pair[0], reverse=True)
+            primary = candidates[0][1]
+            tracks.append(primary)
+            seen_base_titles.add(_base_song_title(primary["title"]))
+
+            # Ambil rekomendasi lagu LAIN yang berbeda judul dari artis yang sama (seperti Radio Spotify!)
+            primary_artist = primary["artist"]
+            try:
+                rec_it_task = client.get(
+                    f"https://itunes.apple.com/search?term={urllib.parse.quote(primary_artist)}&media=music&entity=song&attribute=artistTerm&limit=15"
+                )
+                artist_q = urllib.parse.quote(f'artist:"{primary_artist}"')
+                rec_dz_task = client.get(
+                    f"https://api.deezer.com/search?q={artist_q}&order=RANKING&limit=15"
+                )
+                rec_it, rec_dz = await asyncio.gather(rec_it_task, rec_dz_task, return_exceptions=True)
+                rec_pool: List[Dict[str, Any]] = []
+                if isinstance(rec_dz, httpx.Response) and rec_dz.status_code == 200:
+                    for it in (rec_dz.json().get("data") or []):
+                        t_name = (it.get("title") or "").strip()
+                        a_name = ((it.get("artist") or {}).get("name") or primary_artist).strip()
+                        alb = it.get("album") or {}
+                        if t_name:
+                            rec_pool.append(_make_track_dict(
+                                t_name, a_name, alb.get("title") or "",
+                                alb.get("cover_medium") or alb.get("cover") or "",
+                                it.get("preview") or "", int(it.get("duration") or 210),
+                            ))
+                if isinstance(rec_it, httpx.Response) and rec_it.status_code == 200:
+                    for it in (rec_it.json().get("results") or []):
+                        t_name = (it.get("trackName") or "").strip()
+                        a_name = (it.get("artistName") or primary_artist).strip()
+                        if t_name:
+                            rec_pool.append(_make_track_dict(
+                                t_name, a_name, it.get("collectionName") or "",
+                                (it.get("artworkUrl100") or "").replace("100x100bb", "300x300bb"),
+                                it.get("previewUrl") or "", int((it.get("trackTimeMillis") or 210000) / 1000),
+                            ))
+                target_artist_low = primary_artist.strip().lower()
+                # Pass 1: prioritaskan lagu dari artis yang persis sama (misal Oasis -> Oasis, bukan "Oasis Music Artist")
+                for strict_artist in (True, False):
                     if len(tracks) >= 5:
                         break
-        except Exception:
-            pass
-
-        # 2. Fallback Deezer Public Search API bila iTunes kosong
-        if not tracks:
-            try:
-                dz_url = f"https://api.deezer.com/search?q={urllib.parse.quote(clean_q)}&limit=6"
-                dz_resp = await client.get(dz_url)
-                if dz_resp.status_code == 200:
-                    items = dz_resp.json().get("data") or []
-                    seen_keys = set()
-                    for it in items:
-                        title = (it.get("title") or "").strip()
-                        artist = ((it.get("artist") or {}).get("name") or "Spotify").strip()
-                        if not title:
+                    for cand in rec_pool:
+                        cand_artist_low = (cand.get("artist") or "").strip().lower()
+                        if strict_artist and cand_artist_low != target_artist_low:
                             continue
-                        dedup = f"{title.lower()}::{artist.lower()}"
-                        if dedup in seen_keys:
+                        bt = _base_song_title(cand["title"])
+                        if not bt or bt in seen_base_titles:
                             continue
-                        seen_keys.add(dedup)
-                        album_obj = it.get("album") or {}
-                        dur_s = max(30, int(it.get("duration") or 210))
-                        sp_q = f"{title} {artist}".strip()
-                        tracks.append(
-                            {
-                                "title": title,
-                                "artist": artist,
-                                "album": album_obj.get("title") or "",
-                                "cover_url": album_obj.get("cover_medium") or album_obj.get("cover") or "",
-                                "preview_url": it.get("preview") or "",
-                                "duration_s": dur_s,
-                                "spotify_query": sp_q,
-                                "stream_path": f"/music/stream?q={urllib.parse.quote(sp_q)}&dur={dur_s}",
-                            }
-                        )
+                        if any(w in cand["title"].lower() for w in ("karaoke", "instrumental", "tribute")):
+                            continue
+                        seen_base_titles.add(bt)
+                        tracks.append(cand)
                         if len(tracks) >= 5:
                             break
             except Exception:
                 pass
+
+            # Lengkapi sampai 5 lagu dari hasil pencarian awal bila masih kurang
+            if len(tracks) < 5:
+                for _, cand in candidates[1:]:
+                    bt = _base_song_title(cand["title"])
+                    if not bt or bt in seen_base_titles:
+                        continue
+                    seen_base_titles.add(bt)
+                    tracks.append(cand)
+                    if len(tracks) >= 5:
+                        break
 
     if tracks:
         best = dict(tracks[0])
@@ -599,7 +676,7 @@ async def _resolve_soundcloud_full_stream(
 
     candidates.sort(key=lambda pair: pair[0], reverse=True)
 
-    for _, tr in candidates[:4]:
+    for _, tr in candidates[:6]:
         tcs = tr.get("media", {}).get("transcodings") or []
         dur_s = max(60, int((tr.get("duration") or 210000) // 1000))
 
@@ -611,7 +688,7 @@ async def _resolve_soundcloud_full_stream(
                 r = await client.get(f"{tc['url']}{sep}client_id={cid}")
                 if r.status_code == 200:
                     mp3_url = r.json().get("url") or ""
-                    if mp3_url.startswith("http"):
+                    if mp3_url.startswith("http") and "/cbcs/" not in mp3_url:
                         return {
                             "mode": "direct_url",
                             "url": mp3_url,
@@ -620,37 +697,49 @@ async def _resolve_soundcloud_full_stream(
                             "duration_s": dur_s,
                         }
 
-        # 2) Gunakan HLS CMAF fMP4 (init.mp4 + data*.m4s) yang disatukan mulus sebagai audio/mp4 utuh!
+        # 2) Gunakan HLS CMAF fMP4 atau HLS MP3 TANPA DRM (#EXT-X-KEY / /cbcs/ wajib dilewati!)
         for tc in tcs:
             fmt = tc.get("format") or {}
             mime = fmt.get("mime_type") or ""
-            if not tc.get("snipped") and "mp4" in mime:
-                sep = "&" if "?" in tc.get("url", "") else "?"
-                r = await client.get(f"{tc['url']}{sep}client_id={cid}")
-                if r.status_code != 200:
-                    continue
-                m3u8_url = r.json().get("url") or ""
-                if not m3u8_url.startswith("http"):
-                    continue
-                m3u8_resp = await client.get(m3u8_url)
-                if m3u8_resp.status_code != 200:
-                    continue
-                m3u8_txt = m3u8_resp.text
-                map_match = re.search(r'#EXT-X-MAP:URI="([^"]+)"', m3u8_txt)
-                seg_urls = [
-                    ln.strip()
-                    for ln in m3u8_txt.splitlines()
-                    if ln.strip().startswith("http")
-                ]
-                if map_match and seg_urls:
-                    all_parts = [map_match.group(1), *seg_urls]
-                    return {
-                        "mode": "fmp4_segments",
-                        "m3u8_url": m3u8_url,  # Simpan URL M3U8 asli agar mode=url bisa redirect HLS ke ExoPlayer
-                        "segments": all_parts,
-                        "mime": "audio/mp4",
-                        "duration_s": dur_s,
-                    }
+            if tc.get("snipped") or ("mp4" not in mime and "mpeg" not in mime):
+                continue
+            sep = "&" if "?" in tc.get("url", "") else "?"
+            r = await client.get(f"{tc['url']}{sep}client_id={cid}")
+            if r.status_code != 200:
+                continue
+            m3u8_url = r.json().get("url") or ""
+            if not m3u8_url.startswith("http") or "/cbcs/" in m3u8_url:
+                continue
+            m3u8_resp = await client.get(m3u8_url)
+            if m3u8_resp.status_code != 200:
+                continue
+            m3u8_txt = m3u8_resp.text
+            # TOLAK FairPlay / SAMPLE-AES DRM karena tidak akan berbunyi di ExoPlayer Android!
+            if "#EXT-X-KEY" in m3u8_txt or "SAMPLE-AES" in m3u8_txt or "skd://" in m3u8_txt:
+                continue
+            map_match = re.search(r'#EXT-X-MAP:URI="([^"]+)"', m3u8_txt)
+            seg_urls = [
+                ln.strip()
+                for ln in m3u8_txt.splitlines()
+                if ln.strip().startswith("http")
+            ]
+            if map_match and seg_urls:
+                all_parts = [map_match.group(1), *seg_urls]
+                return {
+                    "mode": "fmp4_segments",
+                    "m3u8_url": m3u8_url,
+                    "segments": all_parts,
+                    "mime": "audio/mp4",
+                    "duration_s": dur_s,
+                }
+            if seg_urls and "mpeg" in mime:
+                return {
+                    "mode": "fmp4_segments",
+                    "m3u8_url": m3u8_url,
+                    "segments": seg_urls,
+                    "mime": "audio/mpeg",
+                    "duration_s": dur_s,
+                }
     return None
 
 
@@ -740,3 +829,34 @@ async def iter_resolved_music_bytes(stream_info: Dict[str, Any]) -> AsyncIterato
                 resp = await client.get(seg_url)
                 if resp.status_code in (200, 206) and resp.content:
                     yield resp.content
+
+
+async def assemble_full_music_bytes(stream_info: Dict[str, Any]) -> bytes:
+    """Unduh seluruh segmen audio secara paralel agar menjadi 1 file utuh seekable (0:00 -> selesai)."""
+    headers = {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 Chrome/126.0 Safari/537.36",
+    }
+    extra_headers = stream_info.get("headers") or {}
+    merged_headers = {**headers, **extra_headers}
+    mode = stream_info.get("mode")
+
+    async with httpx.AsyncClient(
+        timeout=httpx.Timeout(25.0, connect=4.0),
+        headers=merged_headers,
+        follow_redirects=True,
+    ) as client:
+        if mode == "direct_url":
+            resp = await client.get(stream_info["url"])
+            resp.raise_for_status()
+            return resp.content
+
+        segments: List[str] = stream_info.get("segments") or []
+        sem = asyncio.Semaphore(8)
+
+        async def _fetch_one(u: str) -> bytes:
+            async with sem:
+                r = await client.get(u)
+                return r.content if r.status_code in (200, 206) else b""
+
+        parts = await asyncio.gather(*(_fetch_one(u) for u in segments))
+        return b"".join(parts)
