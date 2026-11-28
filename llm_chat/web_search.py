@@ -776,12 +776,29 @@ def _is_unwanted_variant(text: str, query: str) -> bool:
         "bass boosted",
         "piano version",
         "guitar cover",
+        "guitar version",
         "parody",
         "reaction",
         "tutorial",
         "remake",
         "amapiano",
         "blend",
+        # Tambahan: tolak video lirik / visualizer (sering cover atau non-official)
+        "lyric video",
+        "lyrics video",
+        "visualizer",
+        "fan made",
+        "fan-made",
+        "unofficial",
+        "tribute to",
+        "inspired by",
+        "in the style of",
+        "how to sing",
+        "vocal cover",
+        "violin cover",
+        "ukulele cover",
+        "flute cover",
+        "piano cover",
     )
     for term in bad_terms:
         if term in t_low and term.strip() not in q_low:
@@ -910,12 +927,16 @@ async def _resolve_soundcloud_full_stream(
 
             # Wajib ada kecocokan kata kunci query pada judul + nama uploader
             overlap = _query_overlap_ratio(active_q, f"{title_raw} {uploader}")
-            if overlap < 0.55:
+            if overlap < 0.65:
                 continue
 
             score = 100.0 + overlap * 25.0
             if is_verified:
-                score += 25.0
+                # Bonus besar untuk akun terverifikasi (artis resmi / label)
+                score += 60.0
+            elif not is_verified:
+                # Penalti uploader tidak terverifikasi — kemungkinan cover/fan upload
+                score -= 20.0
             # Jika durasi berbeda jauh (> 35 detik) dari durasi studio asli, kemungkinan besar versi berbeda/pitched
             if target_dur_s > 45:
                 diff_s = abs(dur_s - target_dur_s)
@@ -1055,20 +1076,44 @@ async def _resolve_jiosaavn_full_track(
 
 
 async def _search_youtube_video_id(client: httpx.AsyncClient, query: str) -> Optional[str]:
-    """Cari videoId YouTube Music Official Topic untuk diekstrak langsung oleh klien Flutter di HP."""
-    try:
-        sq = urllib.parse.quote(f"{query} topic")
-        resp = await client.get(
-            f"https://www.youtube.com/results?search_query={sq}",
-            headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"},
-            timeout=4.5,
-        )
-        if resp.status_code == 200:
-            vids = re.findall(r"/watch\?v=([a-zA-Z0-9_-]{11})", resp.text)
-            if vids:
-                return vids[0]
-    except Exception as exc:
-        log.debug("[MusicStream] YouTube videoId search dilewati: %s", exc)
+    """Cari videoId YouTube Music Official Topic untuk diekstrak langsung oleh klien Flutter di HP.
+    Urutan pencarian: Topic channel → Official Audio → Official video → fallback dari query biasa.
+    Hanya ambil video yang bukan cover/karaoke/slowed berdasarkan judul."""
+    search_queries = [
+        f"{query} topic",
+        f"{query} official audio",
+        f"{query} official video",
+        query,
+    ]
+    for sq in search_queries:
+        try:
+            encoded_sq = urllib.parse.quote(sq)
+            resp = await client.get(
+                f"https://www.youtube.com/results?search_query={encoded_sq}",
+                headers={"User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36"},
+                timeout=5.0,
+            )
+            if resp.status_code != 200:
+                continue
+            # Ekstrak semua pasangan videoId + judul dari initialData JSON YouTube
+            # Format: {"videoId":"XXXXXXXXXXX"}...{"title":{"runs":[{"text":"..."}]}}
+            raw = resp.text
+            # Ambil videoId kandidat dari halaman
+            video_ids = re.findall(r'"videoId"\s*:\s*"([a-zA-Z0-9_-]{11})"', raw)
+            # Ambil judul di dekat masing-masing videoId — gunakan pendekatan sederhana
+            # Cari pasangan "videoId":"ID" diikuti "text":"JUDUL" dalam 500 karakter
+            pairs: List[Tuple[str, str]] = []
+            for m in re.finditer(r'"videoId"\s*:\s*"([a-zA-Z0-9_-]{11})"', raw):
+                vid_id = m.group(1)
+                snippet = raw[m.start():m.start() + 600]
+                title_m = re.search(r'"text"\s*:\s*"([^"]{3,120})"', snippet)
+                title = title_m.group(1) if title_m else ""
+                if title and not _is_unwanted_variant(title, query):
+                    pairs.append((vid_id, title))
+            if pairs:
+                return pairs[0][0]
+        except Exception as exc:
+            log.debug("[MusicStream] YouTube videoId search dilewati (%s): %s", sq, exc)
     return None
 
 

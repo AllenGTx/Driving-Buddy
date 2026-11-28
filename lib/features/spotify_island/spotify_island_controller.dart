@@ -643,25 +643,49 @@ class SpotifyIslandController extends ChangeNotifier {
     if (sessionToken != _playSessionToken || !_isVisible || _isClosing) return;
 
     // ── LANGKAH 1B: Jika backend mengembalikan yt_video_id (karena server terblokir label),
-    // ekstrak langsung stream audio m4a/webm penuh menggunakan IP HP pengguna sendiri (0 download ke memori).
+    // ekstrak langsung stream audio m4a penuh menggunakan IP HP pengguna sendiri (0 download ke memori).
+    // PENTING: Jika yt_video_id tersedia, jangan putar preview dulu — langsung tunggu YoutubeExplode.
     if (resolvedYtVideoId != null &&
         resolvedYtVideoId.isNotEmpty &&
         (resolvedMode == 'yt_video_id' || resolvedDur <= 45)) {
       final yt = YoutubeExplode();
       try {
+        // Timeout 20 detik — lebih lama agar server YouTube sempat menjawab cipher
         final manifest = await yt.videos.streamsClient
             .getManifest(resolvedYtVideoId)
-            .timeout(const Duration(seconds: 12));
+            .timeout(const Duration(seconds: 20));
         if (sessionToken != _playSessionToken || !_isVisible || _isClosing) return;
-        final audioStream = manifest.audioOnly.withHighestBitrate();
+
+        // ── Filter hanya format m4a/mp4 agar Android audioplayers tidak keluar suara aneh (WebM/Opus)
+        final m4aStreams = manifest.audioOnly
+            .where((s) =>
+                s.codec.mimeType.contains('mp4') ||
+                s.codec.mimeType.contains('m4a'))
+            .toList();
+        final audioStream = m4aStreams.isNotEmpty
+            ? m4aStreams.reduce((a, b) =>
+                a.bitrate.bitsPerSecond > b.bitrate.bitsPerSecond ? a : b)
+            : manifest.audioOnly.withHighestBitrate();
+
         final ytAudioUrl = audioStream.url.toString();
         if (ytAudioUrl.startsWith('http')) {
+          // Update durasi asli dari YouTube agar progress bar benar
+          final ytDurSec = audioStream.size.totalBytes > 0
+              ? resolvedDur
+              : (manifest.audioOnly.isNotEmpty
+                  ? resolvedDur
+                  : resolvedDur);
+          if (ytDurSec > 60 && (_durationSec - ytDurSec).abs() >= 2) {
+            _durationSec = ytDurSec.toDouble();
+            notifyListeners();
+          }
           await _audioPlayer.setVolume(0.92);
           await _audioPlayer.play(UrlSource(ytAudioUrl));
           if (sessionToken != _playSessionToken) return;
           return;
         }
       } catch (_) {
+        // YoutubeExplode gagal/timeout → lanjut ke fallback berikutnya
         if (sessionToken != _playSessionToken || !_isVisible || _isClosing) return;
       } finally {
         yt.close();

@@ -316,6 +316,7 @@ class _SpotifyConnectCardState extends State<SpotifyConnectCard> {
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
                     Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
                         const Icon(
                           Icons.workspace_premium_rounded,
@@ -323,14 +324,19 @@ class _SpotifyConnectCardState extends State<SpotifyConnectCard> {
                           color: Color(0xFFD97706),
                         ),
                         const SizedBox(width: 5),
-                        Text(
-                          isEn
-                              ? 'Recommended: Spotify Premium for best experience'
-                              : 'Disarankan: Spotify Premium untuk pengalaman terbaik',
-                          style: const TextStyle(
-                            fontSize: 11,
-                            fontWeight: FontWeight.w700,
-                            color: Color(0xFFD97706),
+                        // Flexible agar teks tidak nembus batas card
+                        Flexible(
+                          child: Text(
+                            isEn
+                                ? 'Recommended: Spotify Premium for best experience'
+                                : 'Disarankan: Spotify Premium untuk pengalaman terbaik',
+                            maxLines: 2,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.w700,
+                              color: Color(0xFFD97706),
+                            ),
                           ),
                         ),
                       ],
